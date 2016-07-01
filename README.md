@@ -1,2 +1,1 @@
-# cyqdata
-.net orm which is name cyqdata's source
+# cyq.data is not only a orm,but also a data access layer,it's very special and diffirent from others,who use who love it.
