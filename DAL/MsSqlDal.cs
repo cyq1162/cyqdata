@@ -1,0 +1,63 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Data.SqlClient;
+using System.Data;
+
+namespace CYQ.Data
+{
+    internal class MsSqlDal : DbBase
+    {
+        public MsSqlDal(ConnObject co)
+            : base(co)
+        { }
+        public override void AddReturnPara()
+        {
+            AddParameters("ReturnValue", null, DbType.Int32, 32, ParameterDirection.ReturnValue);
+        }
+
+        internal override void AddCustomePara(string paraName, ParaType paraType, object value)
+        {
+            if (Com.Parameters.Contains(paraName))
+            {
+                return;
+            }
+            switch (paraType)
+            {
+                case ParaType.OutPut:
+                case ParaType.ReturnValue:
+                    SqlParameter para = new SqlParameter();
+                    para.ParameterName = paraName;
+
+                    if (paraType == ParaType.OutPut)
+                    {
+                        para.SqlDbType = SqlDbType.NVarChar;
+                        para.Size = 2000;
+                        para.Direction = ParameterDirection.Output;
+                    }
+                    else
+                    {
+                        para.SqlDbType = SqlDbType.Int;
+                        para.Direction = ParameterDirection.ReturnValue;
+                    }
+                    Com.Parameters.Add(para);
+                    break;
+            }
+        }
+
+        protected override bool IsExistsDbName(string dbName)
+        {
+            try
+            {
+                IsAllowRecordSql = false;
+                bool result = ExeScalar("select 1 from master..sysdatabases where [name]='" + dbName + "'", false) != null;
+                IsAllowRecordSql = true;
+                return result;
+            }
+            catch
+            {
+                return true;
+            }
+        }
+    }
+}

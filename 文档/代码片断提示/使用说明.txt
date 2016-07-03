@@ -1,0 +1,4 @@
+文件放在以下路径：
+VS安装目录\Microsoft Visual Studio 版本号\VC#\Snippets\2052\Visual C#
+
+文件介绍：http://www.cnblogs.com/cyq1162/archive/2013/06/14/3135373.html

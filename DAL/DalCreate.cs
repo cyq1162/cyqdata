@@ -1,0 +1,294 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Configuration;
+using CYQ.Data.Tool;
+
+
+namespace CYQ.Data
+{
+    /// <summary>
+    /// 数据库类型操作类
+    /// </summary>
+    internal class DalCreate
+    {
+        public const string SqlClient = "System.Data.SqlClient";
+        public const string OleDb = "System.Data.OleDb";
+        public const string OracleClient = "System.Data.OracleClient";
+        public const string SQLiteClient = "System.Data.SQLite";
+        public const string MySqlClient = "MySql.Data.MySqlClient";
+        public const string SybaseClient = "Sybase.Data.AseClient";
+        public const string TxtClient = "CYQ.Data.TxtClient";
+        public const string XmlClient = "CYQ.Data.XmlClient";
+        public const string XHtmlClient = "CYQ.Data.XHtmlClient";
+
+        public static DbBase CreateDal(string dbConn)
+        {
+            return GetDbBaseBy(GetConnObject(dbConn));
+            //ConnEntity cEntity = GetConnString(dbConn);
+            //DbBase db = GetDbBaseBy(cEntity.Conn, cEntity.ProviderName);
+            //db.connObject = cEntity;
+            //return db;
+
+        }
+
+        public static DalType GetDalTypeByConn(string conn)
+        {
+            return GetConnBean(conn).ConnDalType;
+        }
+        public static string GetProvider(string connString)
+        {
+            connString = connString.ToLower().Replace(" ", "");//去掉空格
+            if (connString.Contains("microsoft.jet.oledb.4.0") || connString.Contains("microsoft.ace.oledb") || connString.Contains(".mdb"))
+            {
+                return OleDb;
+            }
+            else if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
+                || connString.Contains("description=") || connString.Contains("fororacle"))
+            {
+                return OracleClient;
+            }
+            else if (connString.Contains("failifmissing=") || (connString.StartsWith("datasource=") && connString.EndsWith(".db")))
+            {
+                return SQLiteClient;
+            }
+            else if (connString.Contains("convert zero datetime") || (connString.Contains("host=") && connString.Contains("port=") && connString.Contains("database=")))
+            {
+                return MySqlClient;
+            }
+            else if (connString.Contains("provider=ase") || (connString.Contains("datasource=") && connString.Contains("port=") && connString.Contains("database=")))
+            {
+                return SybaseClient;
+            }
+            else if (connString.Contains("txtpath="))
+            {
+                return TxtClient;
+            }
+            else if (connString.Contains("xmlpath="))
+            {
+                return XmlClient;
+            }
+            else
+            {
+                return SqlClient;
+            }
+        }
+        public static DalType GetDalType(string providerName)
+        {
+            switch (providerName)
+            {
+                case SqlClient:
+                    return DalType.MsSql;
+                case OleDb:
+                    return DalType.Access;
+                case OracleClient:
+                    return DalType.Oracle;
+                case SQLiteClient:
+                    return DalType.SQLite;
+                case MySqlClient:
+                    return DalType.MySql;
+                case SybaseClient:
+                    return DalType.Sybase;
+                case TxtClient:
+                    return DalType.Txt;
+                case XmlClient:
+                    return DalType.Xml;
+            }
+            return (DalType)Error.Throw(string.Format("GetDalType:{0} No Be Support Now!", providerName));
+        }
+
+        private static DbBase GetDbBaseBy(ConnObject co)
+        {
+            string providerName = co.Master.ProviderName;
+            //License.Check(providerName);//框架模块授权检测。
+            switch (providerName)
+            {
+                case SqlClient:
+                    return new MsSqlDal(co);
+                case OleDb:
+                    return new OleDbDal(co);
+                case OracleClient:
+                    return new OracleDal(co);
+                case SQLiteClient:
+                    return new SQLiteDal(co);
+                case MySqlClient:
+                    return new MySQLDal(co);
+                case SybaseClient:
+                    return new SybaseDal(co);
+                case TxtClient:
+                case XmlClient:
+                    return new NoSqlDal(co);
+            }
+            return (DbBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", providerName));
+        }
+
+        #region 注释的代码
+        /*
+          private static MDictionary<string, ConnEntity> connCache = new MDictionary<string, ConnEntity>();
+
+
+        internal static ConnEntity GetConnString(string dbConn) // 思考备份链接的问题。=》下一步思考读写分离的问题。
+        {
+            if (connCache.ContainsKey(dbConn))
+            {
+                return connCache[dbConn];
+            }
+
+            ConnEntity cEntity = new ConnEntity();
+
+            cEntity.Conn = string.IsNullOrEmpty(dbConn) ? AppConfig.DB.DefaultConn : dbConn;
+
+            if (cEntity.Conn.Length < 32 && cEntity.Conn.Split(' ').Length == 1)//配置项
+            {
+                if (ConfigurationManager.ConnectionStrings[cEntity.Conn] == null && cEntity.Conn != AppConfig.DB.DefaultConn)
+                {
+                    cEntity.Conn = AppConfig.DB.DefaultConn;//转取默认配置；
+                    if (cEntity.Conn.Length >= 32 || cEntity.Conn.Trim().Contains(" "))
+                    {
+                        goto er;
+                    }
+                }
+                if (ConfigurationManager.ConnectionStrings[cEntity.Conn] != null)
+                {
+                    string p = string.Empty, c = string.Empty;
+                    #region 获取备份链接
+                    string bakKey = cEntity.Conn + "_Bak";
+                    if (ConfigurationManager.ConnectionStrings[cEntity.Conn + "_Bak"] == null && cEntity.Conn == AppConfig.DB.DefaultConn && AppConfig.DB.DefaultConnBak != cEntity.Conn + "_Bak")
+                    {
+                        bakKey = AppConfig.DB.DefaultConnBak;
+                    }
+                    string connBak = AppConfig.GetConn(bakKey, out p);
+                    if (connBak.Length >= 32 || connBak.Trim().Contains(" "))//如果有完整的数据库链接
+                    {
+                        cEntity.ConnBak = AppConfig.GetConn(bakKey, out p);
+                        cEntity.ProviderNameBak = p;
+                    }
+                    #endregion
+
+                    cEntity.Conn = AppConfig.GetConn(cEntity.Conn, out p);
+                    cEntity.ProviderName = p;
+                }
+                else
+                {
+                    Error.Throw(string.Format("Can't find the connection key '{0}' from web.config!", cEntity.Conn));
+                }
+            }
+            else if (cEntity.Conn == AppConfig.DB.DefaultConn && string.IsNullOrEmpty(cEntity.ConnBak))
+            {
+                string connBak = AppConfig.GetConn(AppConfig.DB.DefaultConnBak);//先赋默认备份值。
+                if (connBak.Length >= 32 || connBak.Trim().Contains(" "))//如果有完整的数据库链接
+                {
+                    cEntity.ConnBak = connBak;
+                }
+            }
+        er:
+            if (string.IsNullOrEmpty(cEntity.ProviderName))
+            {
+                cEntity.ProviderName = GetProvider(cEntity.Conn);
+                cEntity.ConnDalType = GetDalType(cEntity.ProviderName);
+            }
+
+            if (string.IsNullOrEmpty(cEntity.ProviderNameBak) && !string.IsNullOrEmpty(cEntity.ConnBak))
+            {
+                cEntity.ProviderNameBak = DalCreate.GetProvider(cEntity.ConnBak);
+                cEntity.ConnBakDalType = GetDalType(cEntity.ProviderNameBak);
+            }
+            cEntity.Conn = string.Format(cEntity.Conn, AppDomain.CurrentDomain.BaseDirectory);
+            cEntity.ConnBak = string.Format(cEntity.ConnBak ?? string.Empty, AppDomain.CurrentDomain.BaseDirectory);
+            if (!connCache.ContainsKey(dbConn))
+            {
+                connCache.Add(dbConn, cEntity);
+            }
+            return cEntity;
+        }
+         */
+        #endregion
+
+        internal static string FormatConn(DalType dal, string connString)
+        {
+            if (dal != DalType.Access)
+            {
+                string conn = connString.ToLower();
+                int index = conn.IndexOf("provider");
+                if (index > -1 && index < connString.Length - 5 && (connString[index + 8] == '=' || connString[index + 9] == '='))
+                {
+                    int end = conn.IndexOf(';', index);
+                    if (end > index)
+                    {
+                        connString = conn.Remove(index, end - index + 1);
+                    }
+                }
+            }
+            return connString;
+        }
+
+        private static MDictionary<string, ConnObject> connDicCache = new MDictionary<string, ConnObject>();
+        internal static ConnObject GetConnObject(string dbConn)
+        {
+            dbConn = string.IsNullOrEmpty(dbConn) ? AppConfig.DB.DefaultConn : dbConn;
+            if (connDicCache.ContainsKey(dbConn))
+            {
+                return connDicCache[dbConn];
+            }
+            ConnBean cbMaster = GetConnBean(dbConn);
+            if (cbMaster == null)
+            {
+
+                if (dbConn == AppConfig.DB.DefaultConn)
+                {
+                    Error.Throw(string.Format("Can't find the connection key '{0}' from web.config or app.config!", dbConn));
+                }
+                else
+                {
+                    ConnBean cb = GetConnBean(AppConfig.DB.DefaultConn);
+                    cbMaster = cb.Clone();//获取默认的值。
+                }
+            }
+            ConnObject co = new ConnObject();
+            co.Master = cbMaster;
+            if (dbConn != null && dbConn.Length < 32 && !dbConn.Trim().Contains(" ")) // 为configKey
+            {
+                ConnBean coBak = GetConnBean(dbConn + "_Bak");
+                if (coBak != null && coBak.ProviderName == cbMaster.ProviderName)
+                {
+                    co.BackUp = coBak;
+                }
+                for (int i = 1; i < 1000; i++)
+                {
+                    ConnBean cbSlave = GetConnBean(dbConn + "_Slave" + i);
+                    if (cbSlave == null)
+                    {
+                        break;
+                    }
+                    co.Slave.Add(cbSlave);
+                }
+            }
+            if (!connDicCache.ContainsKey(dbConn))
+            {
+                connDicCache.Add(dbConn, co);
+            }
+            return co;
+        }
+
+        private static ConnBean GetConnBean(string dbConn)
+        {
+            string provider;
+            string conn = string.Format(AppConfig.GetConn(dbConn, out provider), AppDomain.CurrentDomain.BaseDirectory);
+            if (string.IsNullOrEmpty(conn))
+            {
+                return null;
+            }
+            ConnBean cb = new ConnBean();
+            cb.Conn = conn;
+            if (string.IsNullOrEmpty(provider))
+            {
+                provider = GetProvider(cb.Conn);
+            }
+            cb.ProviderName = provider;
+            cb.ConnDalType = GetDalType(provider);
+            return cb;
+        }
+    }
+
+
+}
