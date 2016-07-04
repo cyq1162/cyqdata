@@ -211,6 +211,33 @@ namespace CYQ.Data.Tool
             return GetColumns(tName, conn);
         }
         /// <summary>
+        /// 获取表列架构（链接错误时，抛异常）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="conn">数据库链接</param>
+        /// <param name="errInfo">出错时的错误信息</param>
+        /// <returns></returns>
+        public static MDataColumn GetColumns(string tableName, string conn, out string errInfo)
+        {
+            errInfo = string.Empty;
+            DbBase helper = DalCreate.CreateDal(conn);
+            helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
+            if (!helper.TestConn())
+            {
+                errInfo = helper.debugInfo.ToString();
+                if (string.IsNullOrEmpty(errInfo))
+                {
+                    errInfo = "Open database fail : " + tableName;
+                }
+                helper.Dispose();
+                Error.Throw(errInfo);
+                return null;
+            }
+            MDataColumn mdc = TableSchema.GetColumns(tableName, ref helper);
+            helper.Dispose();
+            return mdc;
+        }
+        /// <summary>
         /// 获取表列架构
         /// </summary>
         /// <param name="tableName">表名</param>
@@ -218,17 +245,8 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static MDataColumn GetColumns(string tableName, string conn)
         {
-            DbBase helper = DalCreate.CreateDal(conn);
-            helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
-            if (!helper.TestConn())
-            {
-                Log.WriteLogToTxt(helper.debugInfo.ToString());
-                helper.Dispose();
-                return null;
-            }
-            MDataColumn mdc = TableSchema.GetColumns(tableName, ref helper);
-            helper.Dispose();
-            return mdc;
+            string err;
+            return GetColumns(tableName, conn, out err);
         }
         /// <summary>
         /// 获取数据库表
@@ -239,17 +257,33 @@ namespace CYQ.Data.Tool
             return GetTables(conn, out dbName);
         }
         /// <summary>
-        /// 获取所有表（表名+表说明）
+        /// 获取数据库表
+        /// </summary>
+        public static Dictionary<string, string> GetTables(string conn, out string dbName)
+        {
+            string errInfo;
+            return GetTables(conn, out dbName, out errInfo);
+        }
+        /// <summary>
+        /// 获取所有表（表名+表说明）【链接错误时，抛异常】
         /// </summary>
         /// <param name="conn">数据库链接</param>
         /// <param name="dbName">返回指定链接的数据库名称</param>
-        public static Dictionary<string, string> GetTables(string conn, out string dbName)
+        /// <param name="errInfo">链接错误时的信息信息</param>
+        public static Dictionary<string, string> GetTables(string conn, out string dbName,out string errInfo)
         {
+            errInfo = string.Empty;
             DbBase helper = DalCreate.CreateDal(conn);
             helper.IsAllowRecordSql = false;
             dbName = helper.DataBase;
             if (!helper.TestConn())
             {
+                errInfo = helper.debugInfo.ToString();
+                if (string.IsNullOrEmpty(errInfo))
+                {
+                    errInfo = "Open database fail : " + dbName;
+                }
+                helper.Dispose();
                 return null;
             }
             Dictionary<string, string> tables = TableSchema.GetTables(ref helper);

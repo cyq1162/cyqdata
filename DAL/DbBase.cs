@@ -673,7 +673,7 @@ namespace CYQ.Data
         /// </summary>
         private void WriteTime()
         {
-            if (IsAllowRecordSql)
+            if (IsAllowRecordSql && _watch != null)
             {
                 _watch.Stop();
                 double ms = _watch.Elapsed.TotalMilliseconds;
@@ -755,7 +755,7 @@ namespace CYQ.Data
         }
         internal bool OpenCon()
         {
-            bool result= OpenCon(connObject.Master);
+            bool result = OpenCon(connObject.Master);
             if (_IsAllowRecordSql)
             {
                 connObject.SetNotAllowSlave();
@@ -820,10 +820,19 @@ namespace CYQ.Data
                 }
                 _con.Open();
             }
-            if (isOpenTrans && _tran == null)
+            if (isOpenTrans)
             {
-                _tran = _con.BeginTransaction(tranLevel);
-                _com.Transaction = _tran;
+                if (_tran == null)
+                {
+                    _tran = _con.BeginTransaction(tranLevel);
+                    _com.Transaction = _tran;
+                }
+                else if (_tran.Connection == null)
+                {
+                    //ADO.NET Bug：在 guid='123' 时不抛异常，但自动关闭链接，不关闭对象，会引发后续的业务不在事务中。
+                    Dispose();
+                    Error.Throw("Transation：Last execute command has syntax error：" + debugInfo.ToString());
+                }
             }
         }
         /*
@@ -865,7 +874,10 @@ namespace CYQ.Data
                     if (_tran != null)
                     {
                         isOpenTrans = false;
-                        _tran.Commit();
+                        if (_tran.Connection != null)
+                        {
+                            _tran.Commit();
+                        }
                         _tran = null;
                     }
                     _con.Close();
@@ -884,7 +896,10 @@ namespace CYQ.Data
             {
                 try
                 {
-                    _tran.Commit();
+                    if (_tran.Connection != null)
+                    {
+                        _tran.Commit();
+                    }
                 }
                 catch (Exception err)
                 {
@@ -910,11 +925,13 @@ namespace CYQ.Data
             {
                 try
                 {
-                    _tran.Rollback();
+                    if (_tran.Connection != null)
+                    {
+                        _tran.Rollback();
+                    }
                 }
                 catch (Exception err)
                 {
-                    WriteError("RollBack():" + err.Message);
                     return false;
                 }
                 finally
@@ -949,7 +966,10 @@ namespace CYQ.Data
                 {
 
                 }
-
+            }
+            if (isOpenTrans)
+            {
+                Dispose();//事务中发生语句语法错误，直接关掉资源，避免因后续代码继续执行。
             }
         }
         #endregion

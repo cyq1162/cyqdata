@@ -12,15 +12,15 @@ namespace CYQ.Data
     /// </summary>
     internal class DalCreate
     {
-        public const string SqlClient = "System.Data.SqlClient";
-        public const string OleDb = "System.Data.OleDb";
-        public const string OracleClient = "System.Data.OracleClient";
-        public const string SQLiteClient = "System.Data.SQLite";
-        public const string MySqlClient = "MySql.Data.MySqlClient";
-        public const string SybaseClient = "Sybase.Data.AseClient";
-        public const string TxtClient = "CYQ.Data.TxtClient";
-        public const string XmlClient = "CYQ.Data.XmlClient";
-        public const string XHtmlClient = "CYQ.Data.XHtmlClient";
+        private const string SqlClient = "system.data.sqlclient";
+        private const string OleDb = "system.data.oledb";
+        private const string OracleClient = "system.data.oracleclient";
+        private const string SQLiteClient = "system.data.sqlite";
+        private const string MySqlClient = "mySql.data.mysqlclient";
+        private const string SybaseClient = "sybase.data.aseclient";
+        private const string TxtClient = "cyq.data.txtclient";
+        private const string XmlClient = "cyq.data.xmlclient";
+        private const string XHtmlClient = "cyq.data.xhtmlclient";
 
         public static DbBase CreateDal(string dbConn)
         {
@@ -75,7 +75,7 @@ namespace CYQ.Data
         }
         public static DalType GetDalType(string providerName)
         {
-            switch (providerName)
+            switch (providerName.ToLower())
             {
                 case SqlClient:
                     return DalType.MsSql;
@@ -215,7 +215,7 @@ namespace CYQ.Data
                     int end = conn.IndexOf(';', index);
                     if (end > index)
                     {
-                        connString = conn.Remove(index, end - index + 1);
+                        connString = connString.Remove(index, end - index + 1);
                     }
                 }
             }

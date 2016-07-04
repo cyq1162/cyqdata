@@ -109,11 +109,11 @@ namespace CYQ.Data.Orm
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
         {
+            conn = string.IsNullOrEmpty(conn) ? AppConfig.DB.DefaultConn : conn;
+            entity = entityInstance;
+            typeInfo = entity.GetType();
             try
             {
-                conn = string.IsNullOrEmpty(conn) ? AppConfig.DB.DefaultConn : conn;
-                entity = entityInstance;
-                typeInfo = entity.GetType();
                 if (string.IsNullOrEmpty(tableName))
                 {
                     tableName = typeInfo.Name;
@@ -124,10 +124,14 @@ namespace CYQ.Data.Orm
                 {
                     DalType dal = DBTool.GetDalType(conn);
                     bool isTxtDal = dal == DalType.Txt || dal == DalType.Xml;
-
-                    Columns = DBTool.GetColumns(tableName, conn);
+                    string errMsg = string.Empty;
+                    Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
                     if (Columns == null || Columns.Count == 0)
                     {
+                        if (errMsg != string.Empty)
+                        {
+                            Error.Throw(errMsg);
+                        }
                         Columns = TableSchema.GetColumns(typeInfo);
                         if (!DBTool.ExistsTable(tableName, conn))
                         {
@@ -166,7 +170,10 @@ namespace CYQ.Data.Orm
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                if (typeInfo.Name != "SysLogs")
+                {
+                    Log.WriteLogToTxt(err);
+                }
                 throw;
             }
         }

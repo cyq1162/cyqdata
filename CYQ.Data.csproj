@@ -222,6 +222,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
     <None Include="更新记录.txt" />
   </ItemGroup>
   <ItemGroup>

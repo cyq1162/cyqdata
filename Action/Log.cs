@@ -18,11 +18,11 @@ namespace CYQ.Data
         /// <param name="msg"></param>
         internal static object Throw(string msg)
         {
-#if DEBUG
-            return "";
-#else
+            //#if DEBUG
+            //            return "";
+            //#else
             throw new Exception("V" + AppConfig.Version + " " + msg);
-#endif
+            //#endif
         }
     }
     /// <summary>
@@ -67,9 +67,16 @@ namespace CYQ.Data
         }
         internal static void WriteLog(bool isWriteLog, string message)
         {
-            if (isWriteLog || AppConfig.Log.IsWriteLog)
+            if (isWriteLog || AppConfig.Log.IsWriteLog) 
             {
-                WriteLogToDB(message, LogType.Error);
+                if (message.Contains(":OpenCon()"))//数据库链接异常不再写数据库（因为很多情况都指向同一个库）
+                {
+                    WriteLogToTxt(message, LogType.Error);
+                }
+                else
+                {
+                    WriteLogToDB(message, LogType.Error);
+                }
             }
             else
             {
@@ -214,9 +221,9 @@ namespace CYQ.Data
                 IOHelper.Save(filePath, message, true, false);
 
             }
-            catch (Exception err)
+            catch //(Exception err)
             {
-                Error.Throw("Log.WriteLogToTxt() : " + err.Message);
+                //Error.Throw("Log.WriteLogToTxt() : " + err.Message);
             }
         }
 
