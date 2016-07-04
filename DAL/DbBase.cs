@@ -896,10 +896,12 @@ namespace CYQ.Data
             {
                 try
                 {
-                    if (_tran.Connection != null)
+                    if (_tran.Connection == null)
                     {
-                        _tran.Commit();
+                        return false;//上一个执行语句发生了异常（特殊情况在ExeReader guid='xxx' 但不抛异常)
                     }
+                    _tran.Commit();
+
                 }
                 catch (Exception err)
                 {
