@@ -12,15 +12,15 @@ namespace CYQ.Data
     /// </summary>
     internal class DalCreate
     {
-        private const string SqlClient = "system.data.sqlclient";
-        private const string OleDb = "system.data.oledb";
-        private const string OracleClient = "system.data.oracleclient";
-        private const string SQLiteClient = "system.data.sqlite";
-        private const string MySqlClient = "mySql.data.mysqlclient";
-        private const string SybaseClient = "sybase.data.aseclient";
-        private const string TxtClient = "cyq.data.txtclient";
-        private const string XmlClient = "cyq.data.xmlclient";
-        private const string XHtmlClient = "cyq.data.xhtmlclient";
+        private const string SqlClient = "System.Data.SqlClient";
+        private const string OleDb = "System.Data.OleDb";
+        private const string OracleClient = "System.Data.OracleClient";
+        private const string SQLiteClient = "System.Data.SQLite";
+        private const string MySqlClient = "MySql.Data.MySqlClient";
+        private const string SybaseClient = "Sybase.Data.AseClient";
+        private const string TxtClient = "CYQ.Data.TxtClient";
+        private const string XmlClient = "CYQ.Data.XmlClient";
+        private const string XHtmlClient = "CYQ.Data.XHtmlClient";
 
         public static DbBase CreateDal(string dbConn)
         {
@@ -75,7 +75,7 @@ namespace CYQ.Data
         }
         public static DalType GetDalType(string providerName)
         {
-            switch (providerName.ToLower())
+            switch (providerName)
             {
                 case SqlClient:
                     return DalType.MsSql;
