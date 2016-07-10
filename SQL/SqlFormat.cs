@@ -3,6 +3,7 @@ using CYQ.Data.Extension;
 using CYQ.Data.Table;
 using System;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace CYQ.Data.SQL
 {
@@ -172,6 +173,49 @@ namespace CYQ.Data.SQL
                 }
             }
             return where;
+        }
+
+
+        internal static List<string> GetTableNamesFromSql(string sql)
+        {
+            List<string> nameList = new List<string>();
+
+            //获取原始表名
+            string[] items = sql.Split(' ');
+            if (items.Length == 1) { return nameList; }//单表名
+            if (items.Length > 3) // 总是包含空格的select * from xxx
+            {
+                bool isKeywork = false;
+                foreach (string item in items)
+                {
+                    if (!string.IsNullOrEmpty(item))
+                    {
+                        string lowerItem = item.ToLower();
+                        switch (lowerItem)
+                        {
+                            case "from":
+                            case "update":
+                            case "into":
+                            case "join":
+                            case "table":
+                                isKeywork = true;
+                                break;
+                            default:
+                                if (isKeywork)
+                                {
+                                    if (item[0] == '(' || item.IndexOf('.') > -1) { isKeywork = false; }
+                                    else
+                                    {
+                                        isKeywork = false;
+                                        nameList.Add(NotKeyword(item));
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            return nameList;
         }
 
         #region IField处理

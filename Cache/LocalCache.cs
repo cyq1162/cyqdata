@@ -115,9 +115,13 @@ namespace CYQ.Data.Cache
                 {
                     workTime = startTime.AddMinutes((taskCount + 1) * taskInterval);
                     TimeSpan ts = workTime - DateTime.Now;
-                    Thread.Sleep(ts);//taskInterval * 60 * 1000);//10分钟休眠时间
+                    
                     try
                     {
+                        if (ts.TotalSeconds > 0)
+                        {
+                            Thread.Sleep(ts);//taskInterval * 60 * 1000);//10分钟休眠时间
+                        }
                         #region 新的机制
                         if (keyTime.ContainsKey(taskCount))
                         {
@@ -157,9 +161,11 @@ namespace CYQ.Data.Cache
                     catch (Exception err)
                     {
                         Log.WriteLogToTxt(err);
-                        //Thread.Sleep(TimeSpan.FromMinutes(30));//五分钟休眠时间
                     }
-                    taskCount++;
+                    finally
+                    {
+                        taskCount++;
+                    }
                     if (taskCount % gcTime == 0)
                     {
                         GC.Collect();
@@ -543,6 +549,11 @@ namespace CYQ.Data.Cache
                 return (bool)theCache.Get("Cache:Temp_" + key);
             }
             return false;
+        }
+
+        public override CacheType CacheType
+        {
+            get { return CacheType.LocalCache; }
         }
     }
 }

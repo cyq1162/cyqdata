@@ -34,6 +34,10 @@ namespace CYQ.Data.Aop
         /// </summary>
         GetCount,
         /// <summary>
+        /// MProc查询返回List<MDataTable>方法 [参数为顺序为：AopEnum.ExeMDataTableList, out result, procName, isProc, DbParameterCollection, aopInfo]
+        /// </summary>
+        ExeMDataTableList,
+        /// <summary>
         /// MProc查询返回MDataTable方法 [参数为顺序为：AopEnum.ExeMDataTable, out result, procName, isProc, DbParameterCollection, aopInfo]
         /// </summary>
         ExeMDataTable,

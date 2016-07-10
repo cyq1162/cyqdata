@@ -16,6 +16,11 @@ namespace CYQ.Data.Tool
         {
 
         }
+        public MDictionary(IEqualityComparer<K> comparer)
+            : base(comparer)
+        {
+
+        }
         public MDictionary(int capacity)
             : base(capacity)
         {

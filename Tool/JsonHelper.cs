@@ -615,6 +615,12 @@ namespace CYQ.Data.Tool
                     Add("IsPrimaryKey", item.IsPrimaryKey.ToString().ToLower(), true);
                     Add("DefaultValue", Convert.ToString(item.DefaultValue));
                     Add("Description", item.Description);
+                    //新增属性
+                    Add("TableName", item.TableName);
+                    Add("IsUniqueKey", item.IsUniqueKey.ToString().ToLower(), true);
+                    Add("IsForeignKey", item.IsForeignKey.ToString().ToLower(), true);
+                    Add("FKTableName", item.FKTableName);
+
                     AddBr();
                 }
             }
@@ -685,13 +691,13 @@ namespace CYQ.Data.Tool
                 #region 获取Json字符串
                 if (!jsonOrFileName.StartsWith("{") && !jsonOrFileName.StartsWith("["))//读取文件。
                 {
-                    table.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
-                    if (table.Columns.Count == 0)
-                    {
-                        table.Columns = MDataColumn.CreateFrom(jsonOrFileName, false);
-                    }
                     if (System.IO.File.Exists(jsonOrFileName))
                     {
+                        table.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
+                        if (table.Columns.Count == 0)
+                        {
+                            table.Columns = MDataColumn.CreateFrom(jsonOrFileName, false);
+                        }
                         json = IOHelper.ReadAllText(jsonOrFileName).Trim(',', ' ', '\r', '\n');
                     }
                 }

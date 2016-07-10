@@ -4,6 +4,7 @@ using CYQ.Data.Table;
 using System.Web.Caching;
 using CYQ.Data.Tool;
 using System;
+using CYQ.Data.SQL;
 namespace CYQ.Data.Cache
 {
     /// <summary>
@@ -18,8 +19,10 @@ namespace CYQ.Data.Cache
     /// 获取：       MDataTable table=cache.Get("路过秋天") as MDataTable;
     ///          }
     /// </code></example>
-    public abstract class CacheManage
+    public abstract partial class CacheManage
     {
+
+
         #region 对外实例
         /// <summary>
         /// 返回唯一实例(根据是否配置AppConfig.Cache.MemCacheServers的服务器决定启用本地缓存或分布式缓存）
@@ -33,7 +36,7 @@ namespace CYQ.Data.Cache
                     return LocalShell.instance;
                 }
                 else
-                { 
+                {
                     return MemShell.instance;
                 }
             }
@@ -59,6 +62,7 @@ namespace CYQ.Data.Cache
             internal static readonly MemCache instance = new MemCache();
         }
         #endregion
+        public abstract CacheType CacheType { get; }
         /// <summary>
         /// 添加一个Cache对象
         /// </summary>
@@ -143,7 +147,56 @@ namespace CYQ.Data.Cache
         public abstract string WorkInfo { get; }
 
     }
-
-
-
+    public abstract partial class CacheManage
+    {
+        /// <summary>
+        /// 获取系统内部缓存Key
+        /// </summary>
+        public static string GetKey(CacheKeyType ckt, string tableName)
+        {
+            return GetKey(ckt, tableName, AppConfig.DB.DefaultDataBase, AppConfig.DB.DefaultDalType);
+        }
+        /// <summary>
+        /// 获取系统内部缓存Key
+        /// </summary>
+        public static string GetKey(CacheKeyType ckt, string tableName, string dbName, DalType dalType)
+        {
+            switch (ckt)
+            {
+                case CacheKeyType.Schema:
+                    return TableSchema.GetSchemaKey(tableName, dbName, dalType);
+                case CacheKeyType.AutoCache:
+                    return AutoCache.GetBaseKey(dalType, dbName, tableName);
+            }
+            return string.Empty;
+        }
+    }
+    /// <summary>
+    /// 支持的Cache类型
+    /// </summary>
+    public enum CacheType
+    {
+        /// <summary>
+        /// 本地缓存
+        /// </summary>
+        LocalCache,
+        /// <summary>
+        /// 分布式MemCached缓存
+        /// </summary>
+        MemCache
+    }
+    /// <summary>
+    /// Cache的Key类型
+    /// </summary>
+    public enum CacheKeyType
+    {
+        /// <summary>
+        /// 表架构的Key
+        /// </summary>
+        Schema,
+        /// <summary>
+        /// 智能缓存Key
+        /// </summary>
+        AutoCache
+    }
 }

@@ -25,7 +25,8 @@ namespace CYQ.Data.Table
         /// </summary>
         List<int> jointPrimaryIndex;
         MDataTable mdt, sourceTable;
-        DalType dalTypeTo = DalType.None;
+        internal DalType dalTypeTo = DalType.None;
+        internal string database = string.Empty;
         string _Conn = string.Empty;
         /// <summary>
         /// 内部操作对象（需要同一个事务处理）。
@@ -60,7 +61,7 @@ namespace CYQ.Data.Table
             }
 
             _Conn = !string.IsNullOrEmpty(conn) ? conn : mTable.Conn;
-            if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo))
+            if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
             {
                 DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn);
             }
@@ -190,12 +191,11 @@ namespace CYQ.Data.Table
         {
             try
             {
-
                 if (dalTypeTo == DalType.MsSql)
                 {
                     return MsSqlBulkCopyInsert(keepID);
                 }
-                else if (dalTypeTo == DalType.Oracle && keepID && OracleDal.isUseOdpNet == 1 && _dalHelper==null)
+                else if (dalTypeTo == DalType.Oracle && keepID && OracleDal.isUseOdpNet == 1 && _dalHelper == null)
                 {
                     return OracleBulkCopyInsert();
                 }
@@ -357,14 +357,15 @@ namespace CYQ.Data.Table
         }
         internal bool MySqlBulkCopyInsert(bool keepID)
         {
-
+            bool fillGUID = CheckGUIDAndDateTime(DalType.MySql);
             string conn = DalCreate.FormatConn(DalType.MySql, AppConfig.GetConn(_Conn));
             bool isNeedCreateDal = (_dalHelper == null);
             if (isNeedCreateDal)
             {
                 _dalHelper = DalCreate.CreateDal(conn);
+                _dalHelper.isAllowInterWriteLog = false;
             }
-            string path = MDataTableToFile(mdt, keepID);
+            string path = MDataTableToFile(mdt, fillGUID ? true : keepID);
             string sql = string.Format(SqlCreate.MySqlBulkCopySql, path, SqlFormat.Keyword(mdt.TableName, DalType.MySql),
                 AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepID, DalType.MySql));
 
@@ -392,7 +393,7 @@ namespace CYQ.Data.Table
                     _dalHelper.Dispose();
                     _dalHelper = null;
                 }
-               // File.Delete(path);
+                // File.Delete(path);
             }
             return false;
         }
@@ -681,8 +682,9 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 检测GUID，若空，补值。
         /// </summary>
-        private void CheckGUIDAndDateTime(DalType dal)
+        private bool CheckGUIDAndDateTime(DalType dal)
         {
+            bool fillGUID = false;
             int groupID;
             for (int i = 0; i < mdt.Columns.Count; i++)
             {
@@ -706,6 +708,10 @@ namespace CYQ.Data.Table
                 {
                     string defaultValue = Convert.ToString(ms.DefaultValue);
                     bool isGuid = defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.GUID;
+                    if (isGuid && !fillGUID)
+                    {
+                        fillGUID = true;
+                    }
                     for (int k = 0; k < mdt.Rows.Count; k++)
                     {
                         if (mdt.Rows[k][i].IsNullOrEmpty)
@@ -715,6 +721,7 @@ namespace CYQ.Data.Table
                     }
                 }
             }
+            return fillGUID;
         }
     }
     //[Flags]

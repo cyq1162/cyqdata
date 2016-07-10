@@ -82,9 +82,10 @@
     </Compile>
     <Compile Include="Action\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
+    <Compile Include="Cache\AutoCache.cs" />
     <Compile Include="Cache\CacheDependencyInfo.cs" />
     <Compile Include="Cache\CacheManage.cs" />
-    <Compile Include="Aop\Aop.cs" />
+    <Compile Include="Aop\InterAop.cs" />
     <Compile Include="Aop\AopEnum.cs" />
     <Compile Include="Aop\IAop.cs" />
     <Compile Include="Cache\MemCache.cs" />

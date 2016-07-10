@@ -38,8 +38,8 @@ namespace CYQ.Data
 
         internal DbBase dalHelper;
         private NoSqlCommand _noSqlCommand;
-        private Aop.IAop _aop = Aop.Aop.Instance;//切入点
-        private AopInfo _aopInfo = new AopInfo();
+        private InterAop _aop = new InterAop();
+        // private AopInfo _aopInfo = new AopInfo();
         private string _procName = string.Empty;
         private bool _isProc = true;
         private string _debugInfo = string.Empty;
@@ -216,11 +216,11 @@ namespace CYQ.Data
                     _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
                     break;
             }
-            Aop.IAop myAop = Aop.Aop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
-            if (myAop != null)
-            {
-                SetAop(myAop);
-            }
+            //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
+            //if (myAop != null)
+            //{
+            //    SetAop(myAop);
+            //}
         }
         /// <summary>
         ///  表切存储过程,在操作完A存储过程后，如果需要操作B存储过程,不需要重新new一个MProc,可直接换用本函数切换
@@ -254,15 +254,14 @@ namespace CYQ.Data
         }
         private AopResult SetAopResult(AopEnum action)
         {
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MProc = this;
-                _aopInfo.ProcName = _procName;
-                _aopInfo.IsProc = _isProc;
-                _aopInfo.DBParameters = dalHelper.Com.Parameters;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                return _aop.Begin(action, _aopInfo);
+                _aop.Para.MProc = this;
+                _aop.Para.ProcName = _procName;
+                _aop.Para.IsProc = _isProc;
+                _aop.Para.DBParameters = dalHelper.Com.Parameters;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                return _aop.Begin(action);
             }
             return AopResult.Default;
         }
@@ -276,7 +275,7 @@ namespace CYQ.Data
             AopResult aopResult = SetAopResult(AopEnum.ExeMDataTable);
             if (aopResult == AopResult.Return)
             {
-                return _aopInfo.Table;
+                return _aop.Para.Table;
             }
             else
             {
@@ -286,21 +285,21 @@ namespace CYQ.Data
                     {
                         case DalType.Txt:
                         case DalType.Xml:
-                            _aopInfo.Table = _noSqlCommand.ExeMDataTable();
+                            _aop.Para.Table = _noSqlCommand.ExeMDataTable();
                             break;
                         default:
-                            _aopInfo.Table = dalHelper.ExeDataReader(_procName, _isProc);
-                            _aopInfo.Table.Columns.dalType = DalType;
-                           // dalHelper.ResetConn();//重置Slave
+                            _aop.Para.Table = dalHelper.ExeDataReader(_procName, _isProc);
+                            _aop.Para.Table.Columns.dalType = DalType;
+                            // dalHelper.ResetConn();//重置Slave
                             break;
                     }
-                    _aopInfo.Table.Conn = _conn;
+                    _aop.Para.Table.Conn = _conn;
                 }
                 if (aopResult != AopResult.Default)
                 {
-                    _aop.End(AopEnum.ExeMDataTable, _aopInfo);
+                    _aop.End(AopEnum.ExeMDataTable);
                 }
-                return _aopInfo.Table;
+                return _aop.Para.Table;
             }
         }
 
@@ -311,21 +310,50 @@ namespace CYQ.Data
         public List<MDataTable> ExeMDataTableList()
         {
             CheckDisposed();
-            DbDataReader reader = dalHelper.ExeDataReader(_procName, _isProc);
-            List<MDataTable> dtList = new List<MDataTable>();
-            if (reader != null)
+            AopResult aopResult = SetAopResult(AopEnum.ExeMDataTableList);
+            if (aopResult == AopResult.Return)
             {
-                do
-                {
-                    dtList.Add(MDataTable.CreateFrom(reader));
-                }
-                while (reader.NextResult());
-                reader.Close();
-                reader.Dispose();
-                reader = null;
+                return _aop.Para.TableList;
             }
-            //dalHelper.ResetConn();//重置Slave
-            return dtList;
+            else
+            {
+                if (aopResult != AopResult.Break)
+                {
+                    List<MDataTable> dtList = new List<MDataTable>();
+                    switch (dalHelper.dalType)
+                    {
+                        case DalType.Txt:
+                        case DalType.Xml:
+                            foreach (string sql in _procName.Split(';'))
+                            {
+                                _noSqlCommand.CommandText = sql;
+                                dtList.Add(_noSqlCommand.ExeMDataTable());
+                            }
+                            break;
+                        default:
+                            DbDataReader reader = dalHelper.ExeDataReader(_procName, _isProc);
+
+                            if (reader != null)
+                            {
+                                do
+                                {
+                                    dtList.Add(MDataTable.CreateFrom(reader));
+                                }
+                                while (reader.NextResult());
+                                reader.Close();
+                                reader.Dispose();
+                                reader = null;
+                            }
+                            break;
+                    }
+                    _aop.Para.TableList = dtList;
+                }
+                if (aopResult != AopResult.Default)
+                {
+                    _aop.End(AopEnum.ExeMDataTableList);
+                }
+                return _aop.Para.TableList;
+            }
         }
 
         /// <summary>
@@ -338,7 +366,7 @@ namespace CYQ.Data
             AopResult aopResult = SetAopResult(AopEnum.ExeNonQuery);
             if (aopResult == AopResult.Return)
             {
-                return _aopInfo.RowCount;
+                return _aop.Para.RowCount;
             }
             else
             {
@@ -348,18 +376,18 @@ namespace CYQ.Data
                     {
                         case DalType.Txt:
                         case DalType.Xml:
-                            _aopInfo.RowCount = _noSqlCommand.ExeNonQuery();
+                            _aop.Para.RowCount = _noSqlCommand.ExeNonQuery();
                             break;
                         default:
-                            _aopInfo.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
+                            _aop.Para.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
                             break;
                     }
                 }
                 if (aopResult != AopResult.Default)
                 {
-                    _aop.End(AopEnum.ExeNonQuery, _aopInfo);
+                    _aop.End(AopEnum.ExeNonQuery);
                 }
-                return _aopInfo.RowCount;
+                return _aop.Para.RowCount;
             }
         }
         /// <summary>
@@ -375,23 +403,23 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.ExeResult = _noSqlCommand.ExeScalar();
+                        _aop.Para.ExeResult = _noSqlCommand.ExeScalar();
                         break;
                     default:
-                        _aopInfo.ExeResult = dalHelper.ExeScalar(_procName, _isProc);
+                        _aop.Para.ExeResult = dalHelper.ExeScalar(_procName, _isProc);
                         break;
                 }
             }
             if (aopResult == AopResult.Continue || aopResult == AopResult.Break)
             {
-                _aop.End(AopEnum.ExeScalar, _aopInfo);
+                _aop.End(AopEnum.ExeScalar);
             }
-            if (_aopInfo.ExeResult == null || _aopInfo.ExeResult == DBNull.Value)
+            if (_aop.Para.ExeResult == null || _aop.Para.ExeResult == DBNull.Value)
             {
                 return default(T);
             }
             Type t = typeof(T);
-            object value = _aopInfo.ExeResult;
+            object value = _aop.Para.ExeResult;
             switch (t.Name)
             {
                 case "Int32":
@@ -470,7 +498,7 @@ namespace CYQ.Data
         /// </summary>
         public void Clear()
         {
-            dalHelper.ClearParameters(); 
+            dalHelper.ClearParameters();
         }
         /// <summary>
         /// 存储过程的返回值
@@ -499,46 +527,50 @@ namespace CYQ.Data
         /// <summary>
         /// 临时备份Aop，用于切换后的还原。
         /// </summary>
-        Aop.IAop _aopBak = null;
+        // Aop.IAop _aopBak = null;
 
         /// <summary>
         /// 取消AOP
         /// </summary>
         public MProc SetAopOff()
         {
-            if (_aopInfo.IsCustomAop)
-            {
-                _aopBak = _aop;//设置好备份。
-                _aop = Aop.Aop.Instance;
-                _aopInfo.IsCustomAop = false;
-            } return this;
+            _aop.IsCustomAop = false;
+            //if (_aopInfo.IsCustomAop)
+            //{
+            //    _aopBak = _aop;//设置好备份。
+            //    _aop = Aop.InterAop.Instance;
+            //    _aopInfo.IsCustomAop = false;
+            //} 
+            return this;
         }
         /// <summary>
         /// 恢复默认配置的Aop。
         /// </summary>
         public MProc SetAopOn()
         {
-            if (!_aopInfo.IsCustomAop)
-            {
-                SetAop(_aopBak);
-            } return this;
+            _aop.IsCustomAop = true;
+            //if (!_aopInfo.IsCustomAop)
+            //{
+            //    SetAop(_aopBak);
+            //}
+            return this;
         }
         /// <summary>
         /// 设置Aop对象。
         /// </summary>
-        private MProc SetAop(Aop.IAop aop)
-        {
-            _aop = aop;
-            _aopInfo.IsCustomAop = true;
-            return this;
-        }
+        //private MProc SetAop(Aop.IAop aop)
+        //{
+        //    _aop = aop;
+        //    _aopInfo.IsCustomAop = true;
+        //    return this;
+        //}
         /// <summary>
         /// 需要传递额外的参数供Aop使用时可设置。
         /// </summary>
         /// <param name="para"></param>
         public MProc SetAopPara(object para)
         {
-            _aopInfo.AopPara = para; return this;
+            _aop.Para.AopPara = para; return this;
         }
 
         void helper_OnExceptionEvent(string errorMsg)
@@ -564,7 +596,7 @@ namespace CYQ.Data
         /// </summary>
         public void BeginTransation()
         {
-            dalHelper.isOpenTrans = true; 
+            dalHelper.isOpenTrans = true;
         }
         /// <summary>
         /// 提交结束事务[默认调用Close/Disponse时会自动调用]
@@ -585,7 +617,7 @@ namespace CYQ.Data
         {
             if (dalHelper != null && dalHelper.isOpenTrans)
             {
-               return dalHelper.RollBack();
+                return dalHelper.RollBack();
             }
             return false;
         }

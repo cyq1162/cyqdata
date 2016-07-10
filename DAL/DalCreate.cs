@@ -222,7 +222,7 @@ namespace CYQ.Data
             return connString;
         }
 
-        private static MDictionary<string, ConnObject> connDicCache = new MDictionary<string, ConnObject>();
+        private static MDictionary<string, ConnObject> connDicCache = new MDictionary<string, ConnObject>(StringComparer.OrdinalIgnoreCase);
         internal static ConnObject GetConnObject(string dbConn)
         {
             dbConn = string.IsNullOrEmpty(dbConn) ? AppConfig.DB.DefaultConn : dbConn;

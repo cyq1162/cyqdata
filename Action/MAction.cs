@@ -91,6 +91,14 @@ namespace CYQ.Data
                 }
                 return _debugInfo;
             }
+            set
+            {
+                if (dalHelper != null)
+                {
+                    dalHelper.debugInfo.Length = 0;
+                    dalHelper.debugInfo.Append(value);
+                }
+            }
         }
         /// <summary>
         /// 当前操作的数据库类型[Access/Mssql/Oracle/SQLite/MySql/Txt/Xml等]
@@ -283,11 +291,11 @@ namespace CYQ.Data
             InitSqlHelper(newRow, dbName);
             InitRowSchema(newRow, true);
             InitGlobalObject(true);
-            Aop.IAop myAop = Aop.Aop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
-            if (myAop != null)
-            {
-                SetAop(myAop);
-            }
+            //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
+            //if (myAop != null)
+            //{
+            //    SetAop(myAop);
+            //}
         }
         private void InitConn(object tableObj, string conn, out MDataRow newRow)
         {
@@ -581,16 +589,15 @@ namespace CYQ.Data
                 _UI.GetAll(true);
             }
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.AutoSetValue = autoSetValue;
-                _aopInfo.InsertOp = option;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.Insert, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.AutoSetValue = autoSetValue;
+                _aop.Para.InsertOp = option;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Insert);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -598,31 +605,31 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.IsSuccess = _noSqlAction.Insert(dalHelper.isOpenTrans);
+                        _aop.Para.IsSuccess = _noSqlAction.Insert(dalHelper.isOpenTrans);
                         break;
                     default:
                         ClearParameters();
                         string sql = _sqlCreate.GetInsertSql();
                         _isInsertCommand = true;
                         _option = option;
-                        _aopInfo.IsSuccess = InsertOrUpdate(sql);
+                        _aop.Para.IsSuccess = InsertOrUpdate(sql);
                         break;
                 }
             }
             else if (option != InsertOp.None)
             {
-                _Data = _aopInfo.Row;
+                _Data = _aop.Para.Row;
                 InitGlobalObject(false);
             }
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aop.End(Aop.AopEnum.Insert, _aopInfo);
+                _aop.End(Aop.AopEnum.Insert);
             }
             if (dalHelper.recordsAffected == -2)
             {
                 OnError();
             }
-            return _aopInfo.IsSuccess;
+            return _aop.Para.IsSuccess;
         }
         #endregion
 
@@ -690,17 +697,17 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                _aopInfo.Where = where;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.AutoSetValue = autoSetValue;
-                _aopInfo.UpdateExpression = _sqlCreate.updateExpression;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.Update, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                //_aop.Para.AopPara = aopPara;
+                _aop.Para.AutoSetValue = autoSetValue;
+                _aop.Para.UpdateExpression = _sqlCreate.updateExpression;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Update);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -708,24 +715,24 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where));
+                        _aop.Para.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where));
                         break;
                     default:
                         ClearParameters();
                         string sql = _sqlCreate.GetUpdateSql(where);
-                        _aopInfo.IsSuccess = InsertOrUpdate(sql);
+                        _aop.Para.IsSuccess = InsertOrUpdate(sql);
                         break;
                 }
             }
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aop.End(Aop.AopEnum.Update, _aopInfo);
+                _aop.End(Aop.AopEnum.Update);
             }
             if (dalHelper.recordsAffected == -2)
             {
                 OnError();
             }
-            return _aopInfo.IsSuccess;
+            return _aop.Para.IsSuccess;
         }
         #endregion
 
@@ -749,15 +756,15 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                _aopInfo.Where = where;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.Delete, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                //_aop.Para.AopPara = aopPara;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Delete);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -771,29 +778,29 @@ namespace CYQ.Data
                         if (isToUpdate)
                         {
                             _Data.Set(deleteField, true);
-                            _aopInfo.IsSuccess = _noSqlAction.Update(sqlWhere);
+                            _aop.Para.IsSuccess = _noSqlAction.Update(sqlWhere);
                         }
                         else
                         {
-                            _aopInfo.IsSuccess = _noSqlAction.Delete(sqlWhere);
+                            _aop.Para.IsSuccess = _noSqlAction.Delete(sqlWhere);
                         }
                         break;
                     default:
                         ClearParameters();
                         string sql = isToUpdate ? _sqlCreate.GetDeleteToUpdateSql(where) : _sqlCreate.GetDeleteSql(where);
-                        _aopInfo.IsSuccess = dalHelper.ExeNonQuery(sql, false) > 0;
+                        _aop.Para.IsSuccess = dalHelper.ExeNonQuery(sql, false) > 0;
                         break;
                 }
             }
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aop.End(Aop.AopEnum.Delete, _aopInfo);
+                _aop.End(Aop.AopEnum.Delete);
             }
             if (dalHelper.recordsAffected == -2)
             {
                 OnError();
             }
-            return _aopInfo.IsSuccess;
+            return _aop.Para.IsSuccess;
         }
 
         /// <summary>
@@ -841,18 +848,18 @@ namespace CYQ.Data
             CheckDisposed();
             rowCount = 0;
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.PageIndex = pageIndex;
-                _aopInfo.PageSize = pageSize;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                _aopInfo.Where = where;
-                _aopInfo.SelectColumns = _sqlCreate.selectColumns;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.Select, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.PageIndex = pageIndex;
+                _aop.Para.PageSize = pageSize;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                _aop.Para.SelectColumns = _sqlCreate.selectColumns;
+                //_aop.Para.AopPara = aopPara;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Select);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -861,11 +868,11 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.Table = _noSqlAction.Select(pageIndex, pageSize, _sqlCreate.FormatWhere(where), out rowCount, _sqlCreate.selectColumns);
+                        _aop.Para.Table = _noSqlAction.Select(pageIndex, pageSize, _sqlCreate.FormatWhere(where), out rowCount, _sqlCreate.selectColumns);
                         break;
                     default:
-                        _aopInfo.Table = new MDataTable(_TableName.Contains("(") ? "SysDefaultCustomTable" : _TableName);
-                        _aopInfo.Table.LoadRow(_Data);
+                        _aop.Para.Table = new MDataTable(_TableName.Contains("(") ? "SysDefaultCustomTable" : _TableName);
+                        _aop.Para.Table.LoadRow(_Data);
                         ClearParameters();//------------------------参数清除
                         DbDataReader sdReader = null;
                         string whereSql = string.Empty;//已格式化过的原生whereSql语句
@@ -880,6 +887,7 @@ namespace CYQ.Data
                         bool byPager = pageIndex > 0 && pageSize > 0;//分页查询(第一页也要分页查询，因为要计算总数）
                         if (byPager && AppConfig.DB.PagerBySelectBase && dalHelper.dalType == DalType.MsSql && !dalHelper.Version.StartsWith("08"))// || dalHelper.dalType == DalType.Oracle
                         {
+                            #region 存储过程执行
                             if (dalHelper.Com.Parameters.Count > 0)
                             {
                                 dalHelper.debugInfo.Append(AppConst.HR + "error : select method deny call SetPara() method to add custom parameters!");
@@ -892,9 +900,11 @@ namespace CYQ.Data
 
                             dalHelper.AddParameters("@Where", whereSql, DbType.String, -1, ParameterDirection.Input);
                             sdReader = dalHelper.ExeDataReader("SelectBase", true);
+                            #endregion
                         }
                         else
                         {
+                            #region SQL语句分页执行
                             if (byPager)
                             {
                                 rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
@@ -904,44 +914,44 @@ namespace CYQ.Data
                                 string sql = SqlCreateForPager.GetSql(dalHelper.dalType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.dalType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
                                 sdReader = dalHelper.ExeDataReader(sql, false);
                             }
+                            #endregion
                         }
                         if (sdReader != null)
                         {
-                            _aopInfo.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
-                            //dalHelper.ResetConn();//重置Slave
-                            // sdReader.Close();
+                            _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
                             if (!byPager)
                             {
-                                rowCount = _aopInfo.Table.Rows.Count;
+                                rowCount = _aop.Para.Table.Rows.Count;
                             }
                             else if (dalHelper.dalType == DalType.MsSql && AppConfig.DB.PagerBySelectBase)
                             {
                                 rowCount = dalHelper.ReturnValue;
                             }
+                            _aop.Para.Table.RecordsAffected = rowCount;
                         }
                         else
                         {
-                            _aopInfo.Table.Rows.Clear();//预防之前的插入操作产生了一个数据行。
+                            _aop.Para.Table.Rows.Clear();//预防之前的插入操作产生了一个数据行。
                         }
                         ClearParameters();//------------------------参数清除
                         break;
                 }
             }
-            else if (_aopInfo.RowCount > 0)
+            else if (_aop.Para.Table.RecordsAffected > 0)
             {
-                rowCount = _aopInfo.RowCount;//返回记录总数
+                rowCount = _aop.Para.Table.RecordsAffected;//返回记录总数
             }
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aop.End(Aop.AopEnum.Select, _aopInfo);
+                _aop.End(Aop.AopEnum.Select);
             }
-            _aopInfo.Table.Conn = _Data.Conn;
-            _aopInfo.Table.RecordsAffected = rowCount;
+            _aop.Para.Table.TableName = TableName;//Aop从Json缓存加载时会丢失表名。
+            _aop.Para.Table.Conn = _Data.Conn;
             if (_sqlCreate != null)
             {
                 _sqlCreate.selectColumns = null;
             }
-            return _aopInfo.Table;
+            return _aop.Para.Table;
         }
 
         /// <summary>
@@ -974,16 +984,16 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                _aopInfo.Where = where;
-                _aopInfo.SelectColumns = _sqlCreate.selectColumns;
-                //_aopInfo.AopPara = aopPara;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.Fill, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                _aop.Para.SelectColumns = _sqlCreate.selectColumns;
+                //_aop.Para.AopPara = aopPara;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Fill);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -991,7 +1001,7 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.IsSuccess = _noSqlAction.Fill(_sqlCreate.FormatWhere(where));
+                        _aop.Para.IsSuccess = _noSqlAction.Fill(_sqlCreate.FormatWhere(where));
                         break;
                     default:
                         ClearParameters();
@@ -1000,26 +1010,26 @@ namespace CYQ.Data
                         if (mTable != null && mTable.Rows.Count > 0)
                         {
                             _Data.LoadFrom(mTable.Rows[0], RowOp.None, true);//setselectcolumn("aa as bb")时
-                            _aopInfo.IsSuccess = true;
+                            _aop.Para.IsSuccess = true;
                         }
                         else
                         {
-                            _aopInfo.IsSuccess = false;
+                            _aop.Para.IsSuccess = false;
                         }
                         break;
                 }
             }
-            else if (_aopInfo.IsSuccess)
+            else if (_aop.Para.IsSuccess)
             {
-                _Data.LoadFrom(_aopInfo.Row, RowOp.None, true);
+                _Data.LoadFrom(_aop.Para.Row, RowOp.None, true);
             }
 
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aopInfo.Row = _Data;
-                _aop.End(Aop.AopEnum.Fill, _aopInfo);
+                _aop.Para.Row = _Data;
+                _aop.End(Aop.AopEnum.Fill);
             }
-            if (_aopInfo.IsSuccess)
+            if (_aop.Para.IsSuccess)
             {
                 if (_sqlCreate.selectColumns != null)
                 {
@@ -1050,7 +1060,7 @@ namespace CYQ.Data
             {
                 _sqlCreate.selectColumns = null;
             }
-            return _aopInfo.IsSuccess;
+            return _aop.Para.IsSuccess;
         }
         /// <summary>
         /// 返回记录总数
@@ -1067,15 +1077,15 @@ namespace CYQ.Data
         {
             CheckDisposed();
             AopResult aopResult = AopResult.Default;
-            if (_aopInfo.IsCustomAop)
+            if (_aop.IsCustomAop)
             {
-                _aopInfo.MAction = this;
-                _aopInfo.TableName = _sourceTableName;
-                _aopInfo.Row = _Data;
-                _aopInfo.Where = where;
-                // _aopInfo.AopPara = aopPara;
-                _aopInfo.IsTransaction = dalHelper.isOpenTrans;
-                aopResult = _aop.Begin(Aop.AopEnum.GetCount, _aopInfo);
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                // _aop.Para.AopPara = aopPara;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.GetCount);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
@@ -1083,36 +1093,36 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aopInfo.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
+                        _aop.Para.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
                         break;
                     default:
                         ClearParameters();//清除系统参数
                         string countSql = _sqlCreate.GetCountSql(where);
                         object result = dalHelper.ExeScalar(countSql, false);
 
-                        _aopInfo.IsSuccess = result != null;
-                        if (_aopInfo.IsSuccess)
+                        _aop.Para.IsSuccess = result != null;
+                        if (_aop.Para.IsSuccess)
                         {
-                            _aopInfo.RowCount = Convert.ToInt32(result);
+                            _aop.Para.RowCount = Convert.ToInt32(result);
                         }
                         else
                         {
-                            _aopInfo.RowCount = -1;
+                            _aop.Para.RowCount = -1;
                         }
 
                         //ClearSysPara(); //清除内部自定义参数[FormatWhere带自定义参数]
                         break;
                 }
             }
-            if (_aopInfo.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
-                _aop.End(Aop.AopEnum.GetCount, _aopInfo);
+                _aop.End(Aop.AopEnum.GetCount);
             }
             if (dalHelper.recordsAffected == -2)
             {
                 OnError();
             }
-            return _aopInfo.RowCount;
+            return _aop.Para.RowCount;
         }
         /// <summary>
         /// 是否存在指定条件的数据
@@ -1199,9 +1209,9 @@ namespace CYQ.Data
                 para.Value = value;
                 para.ParaDbType = dbType;
                 customParaNames.Add(para);
-                if (_aopInfo.IsCustomAop)
+                if (_aop.IsCustomAop)
                 {
-                    _aopInfo.CustomDbPara = customParaNames;
+                    _aop.Para.CustomDbPara = customParaNames;
                 }
             }
             return this;
@@ -1433,23 +1443,25 @@ namespace CYQ.Data
     public partial class MAction
     {
         #region Aop操作
-        private IAop _aop = Aop.Aop.Instance;//切入点
-        private AopInfo _aopInfo = new AopInfo();
+        private InterAop _aop = new InterAop();
+        //private IAop _aop = Aop.InterAop.Instance;//切入点
+        //private AopInfo _aopInfo = new AopInfo();
         /// <summary>
         /// 临时备份Aop，用于切换后的还原。
         /// </summary>
-        Aop.IAop _aopBak = null;
+        // Aop.IAop _aopBak = null;
         /// <summary>
         /// 取消Aop，在Aop独立模块使用MAction时必须调用
         /// </summary>
         public MAction SetAopOff()
         {
-            if (_aopInfo.IsCustomAop)
-            {
-                _aopBak = _aop;//设置好备份。
-                _aop = Aop.Aop.Instance;
-                _aopInfo.IsCustomAop = false;
-            }
+            _aop.IsCustomAop = false;
+            //if (_aop.IsCustomAop)
+            //{
+            //    _aopBak = _aop;//设置好备份。
+            //    _aop = Aop.InterAop.Instance;
+            //    _aop.IsCustomAop = false;
+            //}
             return this;
         }
         /// <summary>
@@ -1457,29 +1469,30 @@ namespace CYQ.Data
         /// </summary>
         public MAction SetAopOn()
         {
-            if (!_aopInfo.IsCustomAop)
-            {
-                SetAop(_aopBak);
-            }
+            _aop.IsCustomAop = true;
+            //if (!_aop.IsCustomAop)
+            //{
+            //    SetAop(_aopBak);
+            //}
             return this;
         }
         /// <summary>
         /// 主动设置注入新的Aop，一般情况下不需要用到。
         /// </summary>
         /// <param name="aop"></param>
-        private MAction SetAop(Aop.IAop aop)
-        {
-            _aop = aop;
-            _aopInfo.IsCustomAop = true;
-            return this;
-        }
+        //private MAction SetAop(Aop.IAop aop)
+        //{
+        //    _aop = aop;
+        //    _aop.IsCustomAop = true;
+        //    return this;
+        //}
         /// <summary>
         /// 需要传递额外的参数供Aop使用时可设置。
         /// </summary>
         /// <param name="para"></param>
         public MAction SetAopPara(object para)
         {
-            _aopInfo.AopPara = para;
+            _aop.Para.AopPara = para;
             return this;
         }
 

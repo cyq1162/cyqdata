@@ -12,7 +12,7 @@ namespace CYQ.Data
     public static class AppConfig
     {
         #region 基方法
-        private static MDictionary<string, string> configs = new MDictionary<string, string>();
+        private static MDictionary<string, string> configs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 设置Web.config或App.config的值。
         /// </summary>
@@ -591,6 +591,29 @@ namespace CYQ.Data
                     SetApp("DefaultCacheTime", value.ToString());
                 }
             }
+
+            private static int _IsAutoCache= -1;
+            /// <summary>
+            /// 是否智能缓存数据（默认开启）
+            /// </summary>
+            public static bool IsAutoCache
+            {
+                get
+                {
+                    if (_IsAutoCache == -1)
+                    {
+                        _IsAutoCache = AppConfig.GetApp("IsAutoCache").ToLower() == "false" ? 0 : 1;//默认开启
+
+                    }
+                    return _IsAutoCache == 1;
+                }
+                set
+                {
+                    _IsAutoCache = value ? 1 : 0;
+                }
+            }
+
+
             /*
             /// <summary>
             ///  Cache.CacheManage 内置线程-缓存的同步时间[(默认5)分钟同步一次]

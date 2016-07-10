@@ -4,16 +4,15 @@ using System.Collections.Generic;
 using System.Text;
 using System.Data;
 using System.Data.SqlClient;
-using CYQ.Data.SQL;
 using System.Reflection;
 using System.Xml;
-using CYQ.Data.Tool;
 using System.IO;
 using System.Data.Common;
 using System.ComponentModel;
 using CYQ.Data.UI;
-
-
+using CYQ.Data.Cache;
+using CYQ.Data.SQL;
+using CYQ.Data.Tool;
 namespace CYQ.Data.Table
 {
 
@@ -623,24 +622,34 @@ namespace CYQ.Data.Table
         /// <param name="jointPrimaryKeys">AcceptOp为Update或Auto时，若需要设置联合主键为唯一检测或更新条件，则可设置多个字段名</param>
         public bool AcceptChanges(AcceptOp op, string newConn, params object[] jointPrimaryKeys)
         {
+            bool result = false;
             if (Columns.Count == 0 || Rows.Count == 0)
             {
-                return true;//木有可更新的，返回true。
+                return false;//木有可更新的。
             }
             MDataTableBatchAction action = new MDataTableBatchAction(this, newConn);
             action.SetJoinPrimaryKeys(jointPrimaryKeys);
             switch (op)
             {
                 case AcceptOp.Insert:
-                    return action.Insert(false);
+                    result = action.Insert(false);
+                    break;
                 case AcceptOp.InsertWithID:
-                    return action.Insert(true);
+                    result = action.Insert(true);
+                    break;
                 case AcceptOp.Update:
-                    return action.Update();
+                    result = action.Update();
+                    break;
                 case AcceptOp.Auto:
-                    return action.Auto();
+                    result = action.Auto();
+                    break;
             }
-            return false;
+            if (result && AppConfig.Cache.IsAutoCache)
+            {
+                //取消AOP缓存。
+                AutoCache.ReadyForRemove(AutoCache.GetBaseKey(action.dalTypeTo, action.database, TableName));
+            }
+            return result;
         }
         /// <summary>
         /// 获取修改过的数据
@@ -1150,29 +1159,38 @@ namespace CYQ.Data.Table
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {
+
                 //从DataReader读取表结构，不管有没有数据。
-                string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
-                MCellStruct mStruct;
-                for (int i = 0; i < sdr.FieldCount; i++)
+                //  string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
+                //MCellStruct mStruct;
+                #region 读表结构
+                //for (int i = 0; i < sdr.FieldCount; i++)
+                //{
+                //    string name = sdr.GetName(i);
+                //    if (string.IsNullOrEmpty(name))
+                //    {
+                //        name = "Empty_" + i;
+                //    }
+                //    bool isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
+                //    if (!isHiddenField)
+                //    {
+                //        mStruct = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
+                //        mStruct.ReaderIndex = i;
+                //        mTable.Columns.Add(mStruct);
+                //    }
+                //}
+                DataTable dt = sdr.GetSchemaTable();
+                if (dt != null && dt.Rows.Count > 0)
                 {
-                    string name = sdr.GetName(i);
-                    if (string.IsNullOrEmpty(name))
-                    {
-                        name = "Empty_" + i;
-                    }
-                    bool isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
-                    if (!isHiddenField)
-                    {
-                        mStruct = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
-                        mStruct.ReaderIndex = i;
-                        mTable.Columns.Add(mStruct);
-                    }
+                    mTable.Columns = TableSchema.GetColumns(dt);
                 }
+                #endregion
                 if (sdr.HasRows)
                 {
                     MDataRow mRecord = null;
                     while (sdr.Read())
                     {
+                        #region 读数据行
                         mRecord = mTable.NewRow(true);
 
                         for (int i = 0; i < mTable.Columns.Count; i++)
@@ -1194,6 +1212,7 @@ namespace CYQ.Data.Table
                                 mRecord[i].Value = value; //sdr.GetValue(i);
                             }
                         }
+                        #endregion
                     }
                 }
             }

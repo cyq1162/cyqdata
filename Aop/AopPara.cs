@@ -12,7 +12,8 @@ namespace CYQ.Data.Aop
     /// </summary>
     public partial class AopInfo
     {
-        internal bool IsCustomAop = false;
+        // internal bool IsCustomAop = false;
+
         private string _TableName;
         /// <summary>
         /// 表名
@@ -22,6 +23,62 @@ namespace CYQ.Data.Aop
             get { return _TableName; }
             set { _TableName = value; }
         }
+        //private bool _IsView;
+        ///// <summary>
+        ///// 是否视图（或视图语句）
+        ///// </summary>
+        //public bool IsView
+        //{
+        //    get { return _IsView; }
+        //    set { _IsView = value; }
+        //}
+        private DalType _DalType = DalType.None;
+        /// <summary>
+        /// 数据类型
+        /// </summary>
+        public DalType DalType
+        {
+            get
+            {
+                if (_DalType == DalType.None)
+                {
+                    if (MAction != null)
+                    {
+                        _DalType = MAction.DalType;
+                    }
+                    else if (MProc != null)
+                    {
+                        _DalType = MProc.DalType;
+                    }
+                }
+                return _DalType;
+            }
+            set { _DalType = value; }
+        }
+        private string _DataBase;
+        /// <summary>
+        /// 数据库名称
+        /// </summary>
+        public string DataBase
+        {
+            get {
+                if (string.IsNullOrEmpty(_DataBase))
+                {
+                    if (MAction != null)
+                    {
+                        _DataBase = MAction.dalHelper.DataBase;
+                    }
+                    else if (MProc != null)
+                    {
+                        _DataBase = MProc.dalHelper.DataBase;
+                    }
+                }
+                return _DataBase;
+            }
+            set { _DataBase = value; }
+        }
+
+
         private object _AopPara;
         /// <summary>
         /// AOP的自定义参数
@@ -52,6 +109,15 @@ namespace CYQ.Data.Aop
         {
             get { return _MAction; }
             set { _MAction = value; }
+        }
+        private List<MDataTable> _TableList;
+        /// <summary>
+        /// 数据列表
+        /// </summary>
+        public List<MDataTable> TableList
+        {
+            get { return _TableList; }
+            set { _TableList = value; }
         }
 
         private MDataTable _Table;

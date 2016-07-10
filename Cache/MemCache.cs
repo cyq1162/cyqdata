@@ -150,7 +150,7 @@ namespace CYQ.Data.Cache
 
         public override void Set(string key, object value)
         {
-            client.Set(key, value, DateTime.Now.AddMilliseconds(AppConfig.Cache.DefaultCacheTime));
+            client.Set(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
         }
 
         public override void Set(string key, object value, double cacheMinutes)
@@ -194,6 +194,11 @@ namespace CYQ.Data.Cache
                 }
                 return workInfo;
             }
+        }
+
+        public override CacheType CacheType
+        {
+            get { return CacheType.MemCache; }
         }
     }
 }

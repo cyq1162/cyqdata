@@ -214,8 +214,14 @@ namespace CYQ.Data.SQL
                 {
                     continue;//跳过自增或主键列。
                 }
+                
                 if (cell.cellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
                 {
+                    if (cell.Struct.SqlType == SqlDbType.Timestamp && (_action.DalType == DalType.MsSql || _action.DalType == DalType.Sybase))
+                    {
+                        //更新时间戳不允许更新。
+                        continue;
+                    }
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
                     if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.strValue == "" && !cell.Struct.IsCanNull)

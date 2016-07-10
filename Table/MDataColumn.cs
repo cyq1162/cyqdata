@@ -71,6 +71,11 @@ namespace CYQ.Data.Table
             MDataColumn mcs = new MDataColumn();
             mcs.dalType = dalType;
             mcs.CheckDuplicate = false;
+            mcs.isViewOwner = isViewOwner;
+            foreach (string item in relationTables)
+            {
+                mcs.AddRelateionTableName(item);
+            }
             for (int i = 0; i < base.Count; i++)
             {
                 mcs.Add(base[i].Clone());
@@ -148,7 +153,10 @@ namespace CYQ.Data.Table
         {
             MDataRow row = new MDataRow(this);
             row.TableName = tableName;
+            row.Columns.CheckDuplicate = CheckDuplicate;
+            row.Columns.dalType = dalType;
             row.Columns.isViewOwner = isViewOwner;
+            row.Columns.relationTables = relationTables;
             return row;
         }
         /// <summary>
@@ -231,7 +239,7 @@ namespace CYQ.Data.Table
                         ms = item;
                     }
                 }
-                if (ms == null)
+                if (ms == null && this.Count > 0)
                 {
                     ms = this[0];
                 }
@@ -247,6 +255,14 @@ namespace CYQ.Data.Table
         /// 该结构是否由视图拥有
         /// </summary>
         internal bool isViewOwner = false;
+        internal List<string> relationTables = new List<string>();
+        internal void AddRelateionTableName(string tableName)
+        {
+            if (!string.IsNullOrEmpty(tableName) && !relationTables.Contains(tableName))
+            {
+                relationTables.Add(tableName);
+            }
+        }
     }
     public partial class MDataColumn
     {
@@ -453,11 +469,22 @@ namespace CYQ.Data.Table
                         {
                             foreach (MDataRow row in dt.Rows)
                             {
-                                MCellStruct cs = new MCellStruct(row.Get<string>("ColumnName"), DataType.GetSqlType(row.Get<string>("SqlType", "string")),
-                                    row.Get<bool>("IsAutoIncrement", false), row.Get<bool>("IsCanNull", false), row.Get<int>("MaxSize", -1));
+                                MCellStruct cs = new MCellStruct(
+                                    row.Get<string>("ColumnName"), 
+                                    DataType.GetSqlType(row.Get<string>("SqlType", "string")),
+                                    row.Get<bool>("IsAutoIncrement", false), 
+                                    row.Get<bool>("IsCanNull", false), 
+                                    row.Get<int>("MaxSize", -1));
                                 cs.Scale = row.Get<short>("Scale");
                                 cs.IsPrimaryKey = row.Get<bool>("IsPrimaryKey", false);
                                 cs.DefaultValue = row.Get<string>("DefaultValue");
+
+
+                                //新增属性
+                                cs.TableName = row.Get<string>("TableName");
+                                cs.IsUniqueKey = row.Get<bool>("IsUniqueKey", false);
+                                cs.IsForeignKey = row.Get<bool>("IsForeignKey", false);
+                                cs.FKTableName = row.Get<string>("FKTableName");
                                 mdc.Add(cs);
                             }
                         }

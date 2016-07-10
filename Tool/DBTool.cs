@@ -90,13 +90,26 @@ namespace CYQ.Data.Tool
         /// <param name="dalType">数据库类型</param>
         public static bool ExistsTable(string tableName, string conn, out DalType dalType)
         {
+            string database;
+            return ExistsTable(tableName, conn, out dalType, out database);
+        }
+        /// <summary>
+        /// 检测表是否存在
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="conn">数据库链接</param>
+        /// <param name="dalType">数据库类型</param>
+        public static bool ExistsTable(string tableName, string conn, out DalType dalType, out string database)
+        {
             dalType = DalType.None;
+            database = string.Empty;
             if (string.IsNullOrEmpty(tableName) || tableName.Contains("(") && tableName.Contains(")"))
             {
                 return false;
             }
             DbBase helper = DalCreate.CreateDal(conn);
             dalType = helper.dalType;
+            database = helper.DataBase;
             bool result = TableSchema.Exists("U", tableName, ref helper);
             helper.Dispose();
             return result;
@@ -163,21 +176,7 @@ namespace CYQ.Data.Tool
             helper.Dispose();
             return dt;
         }
-        /// <summary>
-        /// 获取缓存表架构Key
-        /// </summary>
-        public static string GetSchemaCacheKey(string tableName)
-        {
 
-            return GetSchemaCacheKey(tableName, AppConfig.DB.DefaultDataBase, AppConfig.DB.DefaultDalType);
-        }
-        /// <summary>
-        /// 获取缓存表架构Key
-        /// </summary>
-        public static string GetSchemaCacheKey(string tableName, string dbName, DalType dalType)
-        {
-            return TableSchema.GetSchemaKey(tableName, dbName, dalType);
-        }
         /// <summary>
         /// 获取表列架构
         /// </summary>
@@ -270,7 +269,7 @@ namespace CYQ.Data.Tool
         /// <param name="conn">数据库链接</param>
         /// <param name="dbName">返回指定链接的数据库名称</param>
         /// <param name="errInfo">链接错误时的信息信息</param>
-        public static Dictionary<string, string> GetTables(string conn, out string dbName,out string errInfo)
+        public static Dictionary<string, string> GetTables(string conn, out string dbName, out string errInfo)
         {
             errInfo = string.Empty;
             DbBase helper = DalCreate.CreateDal(conn);
@@ -502,8 +501,13 @@ namespace CYQ.Data.Tool
             List<string> sqls = SqlCreateForSchema.AlterTableSql(tableName, columns, conn);
             if (sqls.Count > 0)
             {
+                DalType dalType= DalType.None;
+                string database=string.Empty;
+                
                 using (MProc proc = new MProc(null, conn))
                 {
+                    dalType=proc.DalType;
+                    database=proc.dalHelper.DataBase;
                     proc.SetAopOff();
                     if (proc.DalType == DalType.MsSql)
                     {
@@ -522,8 +526,10 @@ namespace CYQ.Data.Tool
                     proc.EndTransation();
                 }
                 //清缓存
-                string key = GetSchemaCacheKey(tableName);
+                string key= Cache.CacheManage.GetKey(Cache.CacheKeyType.Schema, tableName, database, dalType);
                 Cache.CacheManage.LocalInstance.Remove(key);
+                key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, database, dalType);
+                Cache.AutoCache.ReadyForRemove(key);
                 return true;
             }
             return false;

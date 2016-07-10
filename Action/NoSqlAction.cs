@@ -35,10 +35,10 @@ namespace CYQ.Data
         /// <summary>
         ///  是否需要更新：0未更新；1仅插入[往后面插数据]；2更新删除或插入[重新保存]
         /// </summary>
-        private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>();//需要更新[全局的可以有效处理并发]
-        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>();//自增加ID锁
-        private static MDictionary<string, object> _lockWriteTxtObj = new MDictionary<string, object>();//文件写入锁
-        private static MDictionary<string, int> _maxID = new MDictionary<string, int>();//当前表的最大ID
+        private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);//需要更新[全局的可以有效处理并发]
+        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>(StringComparer.OrdinalIgnoreCase);//自增加ID锁
+        private static MDictionary<string, object> _lockWriteTxtObj = new MDictionary<string, object>(StringComparer.OrdinalIgnoreCase);//文件写入锁
+        private static MDictionary<string, int> _maxID = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);//当前表的最大ID
         private List<MDataRow> _insertRows = new List<MDataRow>();//新插入的集合，仅是引用MDataTable的索引
         /// <summary>
         /// 最后的写入时间

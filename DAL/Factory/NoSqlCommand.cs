@@ -10,13 +10,26 @@ namespace CYQ.Data
     {
         string tableName = string.Empty;
         string whereSql = string.Empty;
-
+        string sourceSql = string.Empty;//传过来的SQL语句
+        public string CommandText
+        {
+            get
+            {
+                return sourceSql;
+            }
+            set
+            {
+                sourceSql = value;
+                FormatSqlText(sourceSql);
+            }
+        }
 
         NoSqlAction action = null;
         public NoSqlCommand(string sqlText, DbBase dbBase)
         {
             try
             {
+                sourceSql = sqlText;
                 FormatSqlText(sqlText);
             }
             catch (Exception err)

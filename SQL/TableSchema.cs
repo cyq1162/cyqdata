@@ -177,7 +177,7 @@ namespace CYQ.Data.SQL
             }
             return defaultValue;
         }
-        private static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>();
+        private static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
         public static MDataColumn GetColumns(Type typeInfo)
         {
             if (columnCache.ContainsKey(typeInfo.FullName))
@@ -274,10 +274,11 @@ namespace CYQ.Data.SQL
                 if (isView)
                 {
                     string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
-                    GetViewColumns(sqlText, mdcs, ref helper);
+                    mdcs = GetViewColumns(sqlText, ref helper);
                 }
                 else
                 {
+                    mdcs.AddRelateionTableName(SqlFormat.NotKeyword(tableName));
                     switch (dalType)
                     {
                         case DalType.MsSql:
@@ -526,51 +527,58 @@ namespace CYQ.Data.SQL
             }
             return mdcs;
         }
-        private static void GetViewColumns(string sqlText, MDataColumn mdcs, ref DbBase helper)
+        internal static MDataColumn GetColumns(DataTable tableSchema)
         {
-            helper.OpenCon(null);
-            helper.Com.CommandText = sqlText;
-            DbDataReader sdr = helper.Com.ExecuteReader(CommandBehavior.KeyInfo);
-            DataTable keyDt = null;
-            if (sdr != null)
-            {
-                keyDt = sdr.GetSchemaTable();
-                sdr.Close();
-            }
-            //helper.CloseCon();
-            if (keyDt != null && keyDt.Rows.Count > 0)
+            MDataColumn mdcs = new MDataColumn();
+            if (tableSchema != null && tableSchema.Rows.Count > 0)
             {
                 mdcs.isViewOwner = true;
-                //DataColumnCollection dcList = helper.ExeDataTable(sqlText, false).Columns;
                 string columnName = string.Empty, sqlTypeName = string.Empty, tableName = string.Empty;
                 bool isKey = false, isCanNull = true, isAutoIncrement = false;
                 int maxSize = -1;
                 short maxSizeScale = 0;
                 SqlDbType sqlDbType;
                 string dataTypeName = "DataTypeName";
-                if (!keyDt.Columns.Contains(dataTypeName))
+                if (!tableSchema.Columns.Contains(dataTypeName))
                 {
                     dataTypeName = "DataType";
                 }
-                bool isHasAutoIncrement = keyDt.Columns.Contains("IsAutoIncrement");
-                bool isHasHidden = keyDt.Columns.Contains("IsHidden");
-                foreach (DataRow row in keyDt.Rows)
+                bool isHasAutoIncrement = tableSchema.Columns.Contains("IsAutoIncrement");
+                bool isHasHidden = tableSchema.Columns.Contains("IsHidden");
+                string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
+                for (int i = 0; i < tableSchema.Rows.Count; i++)
                 {
+                    DataRow row = tableSchema.Rows[i];
+                    tableName = Convert.ToString(row["BaseTableName"]);
+                    mdcs.AddRelateionTableName(tableName);
                     if (isHasHidden && Convert.ToString(row["IsHidden"]) == "True")// !dcList.Contains(columnName))
                     {
                         continue;//后面那个会多出关联字段。
                     }
                     columnName = row["ColumnName"].ToString();
+                    if (string.IsNullOrEmpty(columnName))
+                    {
+                        columnName = "Empty_" + i;
+                    }
+                    #region 处理是否隐藏列
+                    bool isHiddenField = hiddenFields.IndexOf("," + columnName + ",", StringComparison.OrdinalIgnoreCase) > -1;
+                    if (isHiddenField)
+                    {
+                        continue;
+                    }
+                    #endregion
 
-                    isKey = Convert.ToBoolean(row["IsKey"]);//IsKey
-                    isCanNull = Convert.ToBoolean(row["AllowDBNull"]);//AllowDBNull
+                    bool.TryParse(Convert.ToString(row["IsKey"]), out isKey);
+                    bool.TryParse(Convert.ToString(row["AllowDBNull"]), out isCanNull);
+                   // isKey = Convert.ToBoolean();//IsKey
+                    //isCanNull = Convert.ToBoolean(row["AllowDBNull"]);//AllowDBNull
                     if (isHasAutoIncrement)
                     {
                         isAutoIncrement = Convert.ToBoolean(row["IsAutoIncrement"]);
                     }
                     sqlTypeName = Convert.ToString(row[dataTypeName]);
                     sqlDbType = DataType.GetSqlType(sqlTypeName);
-                    tableName = Convert.ToString(row["BaseTableName"]);
+
                     if (short.TryParse(Convert.ToString(row["NumericScale"]), out maxSizeScale) && maxSizeScale == 255)
                     {
                         maxSizeScale = 0;
@@ -599,8 +607,23 @@ namespace CYQ.Data.SQL
                     mdcs.Add(mStruct);
 
                 }
-                keyDt = null;
+                tableSchema = null;
             }
+            return mdcs;
+        }
+        private static MDataColumn GetViewColumns(string sqlText, ref DbBase helper)
+        {
+            helper.OpenCon(null);
+            helper.Com.CommandText = sqlText;
+            DbDataReader sdr = helper.Com.ExecuteReader(CommandBehavior.KeyInfo);
+            DataTable keyDt = null;
+            if (sdr != null)
+            {
+                keyDt = sdr.GetSchemaTable();
+                sdr.Close();
+            }
+            return GetColumns(keyDt);
+
         }
         public static Dictionary<string, string> GetTables(ref DbBase helper)
         {
@@ -896,7 +919,7 @@ namespace CYQ.Data.SQL
                      s4.value as Description
                      from {0}..syscolumns s1 right join {0}..systypes s2 on s2.xtype =s1.xtype  
                      left join {0}..syscomments s3 on s1.cdefault=s3.id  " +
-                     (for2000 ? "left join {0}..sysproperties s4 on s4.id=s1.id and s4.smallid=s1.colid  ": "left join {0}.sys.extended_properties s4 on s4.major_id=s1.id and s4.minor_id=s1.colid")
+                     (for2000 ? "left join {0}..sysproperties s4 on s4.id=s1.id and s4.smallid=s1.colid  " : "left join {0}.sys.extended_properties s4 on s4.major_id=s1.id and s4.minor_id=s1.colid")
                      + " left join {0}..sysforeignkeys s5 on s5.fkeyid=s1.id and s5.fkey=s1.colid where s1.id=object_id(@TableName) and s2.name<>'sysname' and s2.usertype<100 order by s1.colid", "[" + dbName + "]");
         }
         internal static string GetOracleColumns()
