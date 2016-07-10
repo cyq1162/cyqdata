@@ -106,7 +106,10 @@ namespace CYQ.Data.Cache
             bool isKnownTable;
             SetBaseKeys(aopInfo, key, out isKnownTable);//存档Key，后续缓存失效 批量删除
             double cacheTime = (24 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存到夜里1点
-            cacheTime = isKnownTable ? cacheTime : 2;////未知道操作何表时，只缓存2分钟（比如存储过程等语句）
+            if (!isKnownTable || aopInfo.PageIndex > 3) // 后面的页数，缓存时间可以短一些
+            {
+                cacheTime = 3;//未知道操作何表时，只缓存3分钟（比如存储过程等语句）
+            }
             switch (action)
             {
                 case AopEnum.ExeMDataTableList:
