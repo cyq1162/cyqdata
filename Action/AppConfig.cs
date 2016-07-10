@@ -699,12 +699,20 @@ namespace CYQ.Data
                     if (string.IsNullOrEmpty(_LogPath))
                     {
                         _LogPath = AppConfig.GetApp("LogPath", "Logs\\");
+                        if (!_LogPath.EndsWith("\\"))
+                        {
+                            _LogPath = _LogPath.TrimEnd('/') + "\\";
+                        }
                     }
                     return _LogPath;
                 }
                 set
                 {
                     _LogPath = value;
+                    if (!_LogPath.EndsWith("\\"))
+                    {
+                        _LogPath = _LogPath.TrimEnd('/') + "\\";
+                    }
                 }
             }
             private static int _IsWriteLog = -1;
