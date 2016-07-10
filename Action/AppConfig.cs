@@ -455,7 +455,12 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("SchemaMapPath", string.Empty);
+                    string path = GetApp("SchemaMapPath", string.Empty);
+                    if (!path.EndsWith("\\"))
+                    {
+                        path = path.TrimEnd('/') + "\\";
+                    }
+                    return path;
                 }
                 set
                 {
@@ -592,7 +597,7 @@ namespace CYQ.Data
                 }
             }
 
-            private static int _IsAutoCache= -1;
+            private static int _IsAutoCache = -1;
             /// <summary>
             /// 是否智能缓存数据（默认开启）
             /// </summary>
