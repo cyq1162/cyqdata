@@ -184,7 +184,7 @@ namespace CYQ.Data
                     try
                     {
                         Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
-                        path = System.IO.Path.GetDirectoryName(ass.CodeBase).Replace(AppConst.Lic_FilePre, string.Empty);
+                        path = System.IO.Path.GetDirectoryName(ass.CodeBase).Replace(AppConst.FilePre, string.Empty);
                         ass = null;
                     }
                     catch

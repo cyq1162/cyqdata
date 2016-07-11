@@ -163,7 +163,6 @@ namespace CYQ.Data.Table
             return dt;
         }
 
-
         /// <summary>
         /// 从DataTable隐式转换成MDataTable
         /// </summary>
@@ -208,6 +207,17 @@ namespace CYQ.Data.Table
             mdt.Columns = rows[0].Columns;
             mdt.Rows.AddRange(rows);
             return mdt;
+        }
+        /// <summary>
+        /// 将一行数据装载成一个表。
+        /// </summary>
+        /// <returns></returns>
+        public static implicit operator MDataTable(MDataRow row)
+        {
+            MDataTable mTable = new MDataTable(row.TableName);
+            mTable.Conn = row.Conn;
+            mTable.LoadRow(row);
+            return mTable;
         }
         #endregion
 

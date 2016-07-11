@@ -11,22 +11,22 @@ namespace CYQ.Data
     internal static class AppConst
     {
         #region License 常量
-        internal const string Lic_Error_Contact = "\r\nContact email:cyq1162@126.com;QQ:272657997\r\n site : http://www.cyqdata.com/cyqdata";
-        //internal const string Lic_Error_AtNight = "Sorry ! You need to get a license key when you run it at night!";
-        internal const string Lic_Error_NotBuyProvider = "Sorry ! Your license key not contains this provider function : ";
-        internal const string Lic_Error_InvalidVersion = "Sorry ! Your license key version invalid!";
-        internal const string Lic_Error_InvalidKey = "Sorry ! Your license key is invalid!";
-        internal const string Lic_PublicKey = "CYQ.Data.License";
-        internal const string Lic_FilePre = "file:\\";
-        internal const string Lic_UseKeyFileName = "cyq.data.keys";
-        //internal const string Lic_DevKeyFileName = "/cyq.data.dev.keys";
-        internal const string Lic_MacKeyType = "mac";
-        internal const string Lic_DllKeyType = "dll";
-        internal const string Lic_AriesCore = "Aries.Core";
-        internal const string Lic_AriesLogic = "Aries.Logic";
+        //internal const string Lic_Error_Contact = "\r\nContact email:cyq1162@126.com;QQ:272657997\r\n site : http://www.cyqdata.com/cyqdata";
+        ////internal const string Lic_Error_AtNight = "Sorry ! You need to get a license key when you run it at night!";
+        //internal const string Lic_Error_NotBuyProvider = "Sorry ! Your license key not contains this provider function : ";
+        //internal const string Lic_Error_InvalidVersion = "Sorry ! Your license key version invalid!";
+        //internal const string Lic_Error_InvalidKey = "Sorry ! Your license key is invalid!";
+        //internal const string Lic_PublicKey = "CYQ.Data.License";
+        //internal const string Lic_UseKeyFileName = "cyq.data.keys";
+        ////internal const string Lic_DevKeyFileName = "/cyq.data.dev.keys";
+        //internal const string Lic_MacKeyType = "mac";
+        //internal const string Lic_DllKeyType = "dll";
+        //internal const string Lic_AriesCore = "Aries.Core";
+        //internal const string Lic_AriesLogic = "Aries.Logic";
         #endregion
 
         #region 全局
+        internal const string FilePre = "file:\\";
         internal const string Global_NotImplemented = "The method or operation is not implemented.";
         #endregion
 
@@ -87,7 +87,7 @@ namespace CYQ.Data
                     Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
                     _DLLFullName = ass.FullName;
                     _RunfolderPath = ass.CodeBase;
-                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath).Replace(AppConst.Lic_FilePre, string.Empty)+"\\";
+                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath).Replace(AppConst.FilePre, string.Empty)+"\\";
                 }
                 return _RunfolderPath;
             }

@@ -498,4 +498,6 @@
 285: 处理MSSQL的Timestamp字段不允许更新的问题（2016-07-10）
 286: 处理SQLite的SQLiteDataReader对datetime的处理能力弱引发的异常问题（2016-07-11）
 287: 修正MDataTable的Join方法追求列没显示的问题（2016-07-11）
+288: MDataTable增加对MDataRow的隐式转换（2016-07-11）
+289：MDataRow和MDataColumns增加ToTable()方法（2016-07-11）
 

@@ -301,13 +301,18 @@ namespace CYQ.Data.Table
 
 
         /// <summary>
-        /// 转成MDataTable
+        /// 将行的数据转成两列（ColumnName、Value）的表
         /// </summary>
         public MDataTable ToTable()
         {
-            MDataTable mTable = new MDataTable(_TableName);
-            mTable.LoadRow(this);
-            return mTable;
+            MDataTable dt = new MDataTable(TableName);
+            dt.Columns.Add("ColumnName");
+            dt.Columns.Add("Value");
+            for (int i = 0; i < Count; i++)
+            {
+                dt.NewRow(true).Set(0, this[i].ColumnName).Set(1, this[i].ToString());
+            }
+            return dt;
         }
 
 
@@ -1196,7 +1201,6 @@ namespace CYQ.Data.Table
                 Log.WriteLogToTxt(msg);
             }
         }
-
 
     }
     public partial class MDataRow : System.ComponentModel.ICustomTypeDescriptor

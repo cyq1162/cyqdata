@@ -263,6 +263,52 @@ namespace CYQ.Data.Table
                 relationTables.Add(tableName);
             }
         }
+
+        /// <summary>
+        /// 将表结构的数据转成Table显示
+        /// </summary>
+        /// <returns></returns>
+        public MDataTable ToTable()
+        {
+            string tableName = string.Empty;
+            if (_Table != null)
+            {
+                tableName = _Table.TableName;
+            }
+            MDataTable dt = new MDataTable(tableName);
+            dt.Columns.Add("ColumnName");
+            dt.Columns.Add("MaxSize");
+            dt.Columns.Add("Scale");
+            dt.Columns.Add("IsCanNull");
+            dt.Columns.Add("IsAutoIncrement");
+            dt.Columns.Add("SqlType");
+            dt.Columns.Add("IsPrimaryKey");
+            dt.Columns.Add("IsUniqueKey");
+            dt.Columns.Add("IsPrimaryKey");
+            dt.Columns.Add("FKTableName");
+            dt.Columns.Add("DefaultValue");
+            dt.Columns.Add("Description");
+
+
+            for (int i = 0; i < Count; i++)
+            {
+                MCellStruct ms = this[i];
+                dt.NewRow(true)
+                    .Set(0, ms.ColumnName)
+                    .Set(1, ms.MaxSize)
+                    .Set(2, ms.Scale)
+                    .Set(3, ms.IsCanNull)
+                    .Set(4, ms.IsAutoIncrement)
+                    .Set(5, ms.SqlType)
+                    .Set(6, ms.IsPrimaryKey)
+                    .Set(7, ms.IsUniqueKey)
+                    .Set(8, ms.IsForeignKey)
+                    .Set(9, ms.FKTableName)
+                    .Set(10, ms.DefaultValue)
+                    .Set(11, ms.Description);
+            }
+            return dt;
+        }
     }
     public partial class MDataColumn
     {
@@ -470,10 +516,10 @@ namespace CYQ.Data.Table
                             foreach (MDataRow row in dt.Rows)
                             {
                                 MCellStruct cs = new MCellStruct(
-                                    row.Get<string>("ColumnName"), 
+                                    row.Get<string>("ColumnName"),
                                     DataType.GetSqlType(row.Get<string>("SqlType", "string")),
-                                    row.Get<bool>("IsAutoIncrement", false), 
-                                    row.Get<bool>("IsCanNull", false), 
+                                    row.Get<bool>("IsAutoIncrement", false),
+                                    row.Get<bool>("IsCanNull", false),
                                     row.Get<int>("MaxSize", -1));
                                 cs.Scale = row.Get<short>("Scale");
                                 cs.IsPrimaryKey = row.Get<bool>("IsPrimaryKey", false);
@@ -502,21 +548,21 @@ namespace CYQ.Data.Table
             return mdc;
         }
 
-        internal bool AcceptChanges(AcceptOp op)
-        {
-            if (_Table == null)
-            {
-                return false;
-            }
-            return AcceptChanges(op, _Table.TableName, _Table.Conn);
-        }
-        internal bool AcceptChanges(AcceptOp op, string tableName, string newConn)
-        {
-            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(newConn) || Count == 0)
-            {
-                return false;
-            }
-            return true;
-        }
+        //internal bool AcceptChanges(AcceptOp op)
+        //{
+        //    if (_Table == null)
+        //    {
+        //        return false;
+        //    }
+        //    return AcceptChanges(op, _Table.TableName, _Table.Conn);
+        //}
+        //internal bool AcceptChanges(AcceptOp op, string tableName, string newConn)
+        //{
+        //    if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(newConn) || Count == 0)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
     }
 }
