@@ -37,7 +37,7 @@ namespace CYQ.Data.Table
                     string name = string.Empty;
 
                     string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
-                    bool isHiddenField = false, isContain = false;
+                    bool isHiddenField = false;
                     for (int i = 0; i < sdr.FieldCount; i++)
                     {
                         name = sdr.GetName(i);
@@ -46,10 +46,11 @@ namespace CYQ.Data.Table
                             name = "Empty_" + i;
                         }
                         isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
-                        isContain = Columns.Contains(name);
+                        MCellStruct ms = Columns[name];
+                        //isContain = Columns.Contains(name);
                         if (isHiddenField)
                         {
-                            if (isContain)
+                            if (ms != null)
                             {
                                 Columns.Remove(name);
                             }
@@ -60,16 +61,17 @@ namespace CYQ.Data.Table
                         }
                         else
                         {
-                            if (isContain)
+                            if (ms != null)
                             {
+                                ms.ReaderIndex = i;//设置和SDR对应的索引
                                 Columns.SetOrdinal(name, i);
                             }
                             else
                             {
-                                MCellStruct ms = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
-                                ms.ReaderIndex = i;
-                                MDataCell mdc = new MDataCell(ref ms);
-                                Columns.Add(ms);
+                                MCellStruct ms2 = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
+                                ms2.ReaderIndex = i;
+                                MDataCell mdc = new MDataCell(ref ms2);
+                                Columns.Add(ms2);
                             }
                         }
                         columns.Add(name.ToLower());
@@ -89,13 +91,35 @@ namespace CYQ.Data.Table
                     {
                         MDataRow mRecord = null;
                         object value = null;
+                        List<int> errIndex = new List<int>();
                         while (sdr.Read())
                         {
                             mRecord = this.NewRow();
                             for (int i = 0; i < Columns.Count; i++)
                             {
+                                #region 读取数据
                                 MCellStruct ms = Columns[i];
-                                value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
+                                try
+                                {
+                                    if (!errIndex.Contains(i))
+                                    {
+                                        value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
+                                    }
+                                    else
+                                    {
+                                        value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                    }
+                                }
+                                catch
+                                {
+                                    if (!errIndex.Contains(i))
+                                    {
+                                        errIndex.Add(i);
+                                    }
+                                    value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                }
+
+
                                 if (value == null || value == DBNull.Value)
                                 {
                                     mRecord[i].cellValue.Value = DBNull.Value;
@@ -108,13 +132,12 @@ namespace CYQ.Data.Table
                                 else
                                 {
                                     mRecord[i].Value = value;
-                                }
-
+                                } 
+                                #endregion
                             }
                             Rows.Add(mRecord);
                         }
-
-
+                        errIndex = null;
                     }
                     #endregion
                 }
@@ -1183,11 +1206,21 @@ namespace CYQ.Data.Table
                 if (dt != null && dt.Rows.Count > 0)
                 {
                     mTable.Columns = TableSchema.GetColumns(dt);
+                    MCellStruct ms;
+                    for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
+                    {
+                        ms = mTable.Columns[sdr.GetName(i)];
+                        if (ms != null)
+                        {
+                            ms.ReaderIndex = i;
+                        }
+                    }
                 }
                 #endregion
                 if (sdr.HasRows)
                 {
                     MDataRow mRecord = null;
+                    List<int> errIndex = new List<int>();//SQLite提供的dll不靠谱，sdr[x]类型转不过时，会直接抛异常
                     while (sdr.Read())
                     {
                         #region 读数据行
@@ -1196,7 +1229,26 @@ namespace CYQ.Data.Table
                         for (int i = 0; i < mTable.Columns.Count; i++)
                         {
                             MCellStruct ms = mTable.Columns[i];
-                            object value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
+                            object value = null;
+                            try
+                            {
+                                if (errIndex.Contains(i))
+                                {
+                                    value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                }
+                                else
+                                {
+                                    value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
+                                }
+                            }
+                            catch
+                            {
+                                if (!errIndex.Contains(i))
+                                {
+                                    errIndex.Add(i);
+                                }
+                                value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                            }
 
                             if (value == null || value == DBNull.Value)
                             {

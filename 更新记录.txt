@@ -496,3 +496,6 @@
 283：DBTool取消两个获取系统内部缓存Key的方法，移到CacheManage类下(并增加AutoCache的Key的获取）（2016-07-10）
 284：处理MySql批量插入时GUID为空赋值的情况（2016-07-10）
 285: 处理MSSQL的Timestamp字段不允许更新的问题（2016-07-10）
+286: 处理SQLite的SQLiteDataReader对datetime的处理能力弱引发的异常问题（2016-07-11）
+287: 修正MDataTable的Join方法追求列没显示的问题（2016-07-11）
+

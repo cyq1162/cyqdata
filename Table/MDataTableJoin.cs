@@ -75,7 +75,13 @@ namespace CYQ.Data.Table
                 action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
                 if (appendColumns.Length > 0)
                 {
-                    action.SetSelectColumns(joinOnName, appendColumns);
+                    List<string> items = new List<string>(appendColumns.Length + 1);
+                    items.AddRange(appendColumns);
+                    if (!items.Contains(joinOnName))
+                    {
+                        items.Add(joinOnName);
+                    }
+                    action.SetSelectColumns(items.ToArray());
                 }
                 string whereIn = SqlCreate.GetWhereIn(action.Data[joinOnName].Struct, dtA.GetColumnItems<string>(dtA.joinOnIndex, BreakOp.NullOrEmpty, true), action.DalType);
                 dtB = action.Select(whereIn);
