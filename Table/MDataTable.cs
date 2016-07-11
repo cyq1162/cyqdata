@@ -45,6 +45,7 @@ namespace CYQ.Data.Table
                         {
                             name = "Empty_" + i;
                         }
+                        name = name.Trim('"');//sqlite的双引号问题。
                         isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
                         MCellStruct ms = Columns[name];
                         //isContain = Columns.Contains(name);
@@ -132,7 +133,7 @@ namespace CYQ.Data.Table
                                 else
                                 {
                                     mRecord[i].Value = value;
-                                } 
+                                }
                                 #endregion
                             }
                             Rows.Add(mRecord);
@@ -1209,7 +1210,7 @@ namespace CYQ.Data.Table
                     MCellStruct ms;
                     for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
                     {
-                        ms = mTable.Columns[sdr.GetName(i)];
+                        ms = mTable.Columns[sdr.GetName(i).Trim('"')];//sqlite的双引号问题
                         if (ms != null)
                         {
                             ms.ReaderIndex = i;
