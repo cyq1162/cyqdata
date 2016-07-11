@@ -456,7 +456,7 @@ namespace CYQ.Data
                 get
                 {
                     string path = GetApp("SchemaMapPath", string.Empty);
-                    if (!path.EndsWith("\\"))
+                    if (!string.IsNullOrEmpty(path) && !path.EndsWith("\\"))
                     {
                         path = path.TrimEnd('/') + "\\";
                     }
