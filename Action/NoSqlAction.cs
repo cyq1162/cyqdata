@@ -292,7 +292,7 @@ namespace CYQ.Data
                 {
                     int groupID = DataType.GetGroup(cell.Struct.SqlType);
                     string existWhere = cell.ColumnName + (groupID == 1 ? "={0}" : "='{0}'");
-                    if (cell.IsNull || cell.cellValue.State == 0 || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
+                    if (cell.IsNull || cell.cellValue.State == 0 || cell.strValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
                     {
                         switch (groupID)
                         {

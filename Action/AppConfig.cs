@@ -742,7 +742,7 @@ namespace CYQ.Data
             }
             private static string _LogTableName;
             /// <summary>
-            /// 异常日志表名（默认为ErrorLogs，可配置）
+            /// 异常日志表名（默认为SysLogs，可配置）
             /// </summary>
             public static string LogTableName
             {
@@ -772,7 +772,7 @@ namespace CYQ.Data
             #region 配置文件的其它属性
             private static int _SqlFilter = -2;
             /// <summary>
-            ///毫秒数（将所有长时间(ms)的SQL语句写入日志，对应配置项LogPath的路径）
+            ///毫秒数（这个是在对所有SQL语句的：将所有长时间(ms)的SQL语句写入日志，对应配置项LogPath的路径）
             /// </summary>
             public static int SqlFilter
             {
@@ -791,7 +791,7 @@ namespace CYQ.Data
             }
             private static int _InfoFilter = -1;
             /// <summary>
-            /// 毫秒数（可通过此项设置条件过滤出时间(ms)较长的SQL语句）
+            /// 毫秒数（这个是在AppDebug开启后的：可通过此项设置条件过滤出时间(ms)较长的SQL语句）
             /// </summary>
             public static int InfoFilter
             {
