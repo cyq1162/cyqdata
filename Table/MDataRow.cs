@@ -660,31 +660,35 @@ namespace CYQ.Data.Table
     //扩展交互部分
     public partial class MDataRow
     {
-        internal static MDataRow CreateFrom(object dic)
+        /// <summary>
+        /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
+        /// </summary>
+        /// <returns></returns>
+        public static MDataRow CreateFrom(object anyObj)
         {
-            return CreateFrom(dic, null);
+            return CreateFrom(anyObj, null);
         }
         /// <summary>
-        /// 从一个字典集合创建数据行。
+        /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
         /// </summary>
-        internal static MDataRow CreateFrom(object dic, Type valueType)
+        public static MDataRow CreateFrom(object anyObj, Type valueType)
         {
             MDataRow row = new MDataRow();
-            if (dic is string)
+            if (anyObj is string)
             {
-                row.LoadFrom(dic as string);
+                row.LoadFrom(anyObj as string);
             }
-            else if (dic is IEnumerable)
+            else if (anyObj is IEnumerable)
             {
-                row.LoadFrom(dic as IEnumerable, valueType);
+                row.LoadFrom(anyObj as IEnumerable, valueType);
             }
-            else if (dic is MDataRow)
+            else if (anyObj is MDataRow)
             {
                 row.LoadFrom(row);
             }
             else
             {
-                row.LoadFrom(dic);
+                row.LoadFrom(anyObj);
             }
             return row;
         }
