@@ -68,7 +68,12 @@ namespace CYQ.Data.Cache
                 case AopEnum.Fill:
                     if (obj != null)
                     {
-                        aopInfo.Row = ((MDataRow)obj).Clone();
+                        MDataRow row = obj as MDataRow;
+                        if (_MemCache.CacheType == CacheType.LocalCache)
+                        {
+                            row = row.Clone();
+                        }
+                        aopInfo.Row = row;
                         aopInfo.IsSuccess = true;
                     }
                     break;
@@ -100,6 +105,10 @@ namespace CYQ.Data.Cache
             }
 
             if (!IsCanOperateCache(baseKey))
+            {
+                return;
+            }
+            if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.RemainMemoryPercentage < 15)//可用内存低于15%
             {
                 return;
             }
@@ -219,7 +228,6 @@ namespace CYQ.Data.Cache
                     _MemCache.Set(baseKey, sb);
                 }
             }
-
         }
         private static bool IsCanOperateCache(string baseKey)
         {
