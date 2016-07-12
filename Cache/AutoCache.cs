@@ -113,17 +113,23 @@ namespace CYQ.Data.Cache
             switch (action)
             {
                 case AopEnum.ExeMDataTableList:
-                    JsonHelper js = new JsonHelper(false, false);
-                    foreach (MDataTable table in aopInfo.TableList)
+                    if (IsCanCache(aopInfo.TableList))
                     {
-                        js.Add(table.TableName, table.ToJson(true, true, RowOp.IgnoreNull));
+                        JsonHelper js = new JsonHelper(false, false);
+                        foreach (MDataTable table in aopInfo.TableList)
+                        {
+                            js.Add(table.TableName, table.ToJson(true, true, RowOp.IgnoreNull));
+                        }
+                        js.AddBr();
+                        _MemCache.Set(key, js.ToString(), cacheTime);
                     }
-                    js.AddBr();
-                    _MemCache.Set(key, js.ToString(), cacheTime);
                     break;
                 case AopEnum.Select:
                 case AopEnum.ExeMDataTable:
-                    _MemCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull), cacheTime);
+                    if (IsCanCache(aopInfo.Table))
+                    {
+                        _MemCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull), cacheTime);
+                    }
                     break;
                 case AopEnum.ExeScalar:
                     _MemCache.Set(key, aopInfo.ExeResult, cacheTime);
@@ -138,6 +144,31 @@ namespace CYQ.Data.Cache
 
         }
 
+        #region 检测过滤
+        bool IsCanCache(List<MDataTable> dtList)
+        {
+            foreach (MDataTable item in dtList)
+            {
+                if (!IsCanCache(item))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        bool IsCanCache(MDataTable dt)
+        {
+            foreach (MCellStruct item in dt.Columns)
+            {
+                if (DataType.GetGroup(item.SqlType) == 999)//只存档基础类型
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        #endregion
 
         #region 缓存Key的管理
         /// <summary>
@@ -195,7 +226,7 @@ namespace CYQ.Data.Cache
             TimeSpan ts = DateTime.Now - _MemCache.Get<DateTime>("Del:" + baseKey);
             return ts.TotalSeconds > 6;//5秒内无缓存。
         }
-      
+
         private string GetBaseKey(AopInfo para)
         {
             return GetBaseKey(para, null);
@@ -327,7 +358,8 @@ namespace CYQ.Data.Cache
         #endregion
 
         #region 定时清理Cache机制
-
+        //根据移除的频率，控制该项缓存的存在。
+        //此缓存算法，后续增加
         private static Queue<string> removeList = new Queue<string>();
         public static void ReadyForRemove(string baseKey)
         {
@@ -345,6 +377,7 @@ namespace CYQ.Data.Cache
 
             }
         }
+
         public void ClearCache(object threadID)
         {
             while (true)
@@ -360,36 +393,46 @@ namespace CYQ.Data.Cache
                 }
             }
         }
+        private static readonly object lockObj = new object();
+        private static DateTime errTime = DateTime.MinValue;
         internal void RemoveCache(string baseKey)
         {
             try
             {
-
-                string keys = string.Empty;
-                if (_MemCache.CacheType == CacheType.LocalCache)
+                lock (lockObj)
                 {
-                    if (cacheKeys.ContainsKey(baseKey))
+                    string keys = string.Empty;
+                    if (_MemCache.CacheType == CacheType.LocalCache)
                     {
-                        keys = cacheKeys[baseKey].ToString();
-                        cacheKeys.Remove(baseKey);
+                        if (cacheKeys.ContainsKey(baseKey))
+                        {
+                            keys = cacheKeys[baseKey].ToString();
+                            cacheKeys.Remove(baseKey);
+                        }
                     }
-                }
-                else
-                {
-                    keys = _MemCache.Get<string>(baseKey);
-                }
-                if (!string.IsNullOrEmpty(keys))
-                {
-                    foreach (string item in keys.Split(','))
+                    else
                     {
-                        _MemCache.Remove(item);
+                        keys = _MemCache.Get<string>(baseKey);
                     }
-
+                    if (!string.IsNullOrEmpty(keys))
+                    {
+                        foreach (string item in keys.Split(','))
+                        {
+                            _MemCache.Remove(item);
+                        }
+                    }
                 }
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
+                {
+                    errTime = DateTime.Now;
+                    if (!(err is OutOfMemoryException))
+                    {
+                        Log.WriteLogToTxt(err);
+                    }
+                }
             }
         }
         #endregion

@@ -43,8 +43,6 @@ namespace CYQ.Data.Table
         }
         private void Init(MDataTable mTable, string conn)
         {
-            //try
-            //{
             if (mTable.Columns == null || mTable.Columns.Count == 0)
             {
                 Error.Throw("MDataTable's columns can't be null or columns'length can't be zero");
@@ -54,7 +52,7 @@ namespace CYQ.Data.Table
                 Error.Throw("MDataTable's tablename can't  null or empty");
             }
             mdt = sourceTable = mTable;
-            SetTransaction();
+
             if (mdt.TableName.IndexOfAny(new char[] { '(', ')' }) > -1)
             {
                 mdt.TableName = mdt.TableName.Substring(mdt.TableName.LastIndexOf(')') + 1).Trim();
@@ -71,15 +69,9 @@ namespace CYQ.Data.Table
             {
                 Error.Throw("After fix table columns, length can't be zero");
             }
-
-            //}
-            //catch (Exception err)
-            //{
-            //    Log.WriteLogToTxt(err);
-            //}
-
+            SetDbBaseForTransaction();
         }
-        private void SetTransaction()
+        private void SetDbBaseForTransaction()
         {
             if (mdt.DynamicData != null)
             {
@@ -94,7 +86,7 @@ namespace CYQ.Data.Table
             }
         }
         /// <summary>
-        /// 进行列修正
+        /// 进行列修正（只有移除 和 修正类型，若无主键列，则新增主键列）
         /// </summary>
         private void FixTable(MDataColumn column)
         {
@@ -507,8 +499,11 @@ namespace CYQ.Data.Table
                 {
                     action.dalHelper = _dalHelper;
                 }
+                else
+                {
+                    action.BeginTransation();//事务由外部控制
+                }
                 action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
-                action.BeginTransation();
                 if (keepID)
                 {
                     action.SetIdentityInsertOn();
@@ -533,13 +528,41 @@ namespace CYQ.Data.Table
                 {
                     action.SetIdentityInsertOff();
                 }
-                action.EndTransation();
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
                 action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
                 action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
             }
             return result;
         }
+
         internal bool Update()
+        {
+            bool hasFK = (jointPrimaryIndex != null && jointPrimaryIndex.Count > 1) || mdt.Columns.JointPrimary.Count > 1;
+            if (!hasFK)
+            {
+                foreach (MCellStruct item in mdt.Columns)
+                {
+                    if ((item.IsForeignKey && string.IsNullOrEmpty(item.FKTableName)) || item.MaxSize > 8000 || DataType.GetGroup(item.SqlType) == 999)
+                    {
+                        hasFK = true;
+                        break;
+                    }
+                }
+            }
+            if (hasFK)
+            {
+                return NormalUpdate();
+            }
+            else
+            {
+                return BulkCopyUpdate();//只有一个主键，没有外键关联，同时只有基础类型。
+            }
+        }
+
+        internal bool NormalUpdate()
         {
             List<int> indexList = new List<int>();
             bool result = true;
@@ -551,9 +574,12 @@ namespace CYQ.Data.Table
                 {
                     action.dalHelper = _dalHelper;
                 }
+                else
+                {
+                    action.BeginTransation();
+                }
                 action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
-                //action._DalHelper._IsAllowInterWriteLog = false;
-                action.BeginTransation();
+
                 MDataRow row;
                 for (int i = 0; i < mdt.Rows.Count; i++)
                 {
@@ -577,9 +603,15 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                action.EndTransation();
                 action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
-                action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+                }
             }
             if (result)
             {
@@ -592,10 +624,68 @@ namespace CYQ.Data.Table
             }
             return result;
         }
+
+        internal bool BulkCopyUpdate()
+        {
+            int count = 0, pageSize = 5000;
+            MDataTable dt = null;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                if (action.DalVersion.StartsWith("08"))
+                {
+                    pageSize = 1000;
+                }
+                count = mdt.Rows.Count / pageSize;
+                DbBase sourceHelper = action.dalHelper;
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();
+                }
+
+                bool result = false;
+                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
+                string columnName = keyColumn.ColumnName;
+                for (int i = 0; i < count; i++)
+                {
+                    dt = mdt.Select(i + 1, pageSize, null);//分页读取
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        #region 核心逻辑
+                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                        MDataTable dtData = action.Select(whereIn);//获取远程数据。
+                        dtData.Load(dt);//重新加载赋值。
+                        result = action.Delete(whereIn);
+                        if (result)
+                        {
+                            dtData.DynamicData = action;
+                            result = dtData.AcceptChanges(AcceptOp.InsertWithID);
+                        }
+                        if (!result)
+                        {
+                            break;
+                        }
+                        #endregion
+                    }
+                }
+                if (_dalHelper == null)
+                {
+                    action.BeginTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//还原。
+                }
+            }
+            return true;
+        }
         internal bool Auto()
         {
             bool result = true;
-            MDataTable dt;
+
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopOff();
@@ -604,16 +694,68 @@ namespace CYQ.Data.Table
                 {
                     action.dalHelper = _dalHelper;
                 }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
-                //MDataCell[] jpc = GetJoinPrimaryCell(mdt.Columns.JointPrimary);
-                if (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000 && (!action.DalVersion.StartsWith("08") || mdt.Rows.Count < 1001)) //只有一个主键-》组合成In远程查询返回数据-》本地比较分拆两个表格【更新和插入】-》分开独立处理。
+                else
                 {
+                    action.BeginTransation();
+                }
+                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
+
+                if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || mdt.Columns.JointPrimary.Count == 1)
+                //jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000
+                //&& (!action.DalVersion.StartsWith("08") || mdt.Rows.Count < 1001)) //只有一个主键-》组合成In远程查询返回数据-》
+                {
+                    #region 新逻辑
+
+                    MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
+                    string columnName = keyColumn.ColumnName;
+                    //计算分组处理
+                    int pageSize = 5000;
+                    if (action.DalVersion.StartsWith("08")) { pageSize = 1000; }
+                    int count = mdt.Rows.Count / pageSize + 1;
+                    for (int i = 0; i < count; i++)
+                    {
+                        MDataTable dt = mdt.Select(i + 1, pageSize, null);//分页读取
+                        if (dt != null && dt.Rows.Count > 0)
+                        {
+                            string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                            action.SetSelectColumns(columnName);
+                            MDataTable keyTable = action.Select(whereIn);//拿到数据，准备分拆上市
+
+                            MDataTable[] dt2 = dt.Split(SqlCreate.GetWhereIn(keyColumn, keyTable.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DalType.None));//这里不需要格式化查询条件。
+                            result = dt2[0].Rows.Count == 0;
+                            if (!result)
+                            {
+                                MDataTable updateTable = dt2[0];
+                                updateTable.SetState(2, BreakOp.Null);
+                                updateTable.DynamicData = action;
+                                result = updateTable.AcceptChanges(AcceptOp.Update, _Conn, columnName);
+                                if (!result)
+                                {
+                                    sourceTable.DynamicData = updateTable.DynamicData;
+                                }
+                            }
+                            if (result && dt2[1].Rows.Count > 0)
+                            {
+                                MDataTable insertTable = dt2[1];
+                                insertTable.DynamicData = action;
+                                bool keepID = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
+                                result = insertTable.AcceptChanges((keepID ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
+                                if (!result)
+                                {
+                                    sourceTable.DynamicData = insertTable.DynamicData;
+                                }
+                            }
+                        }
+                    }
+                    
+                    #endregion
+                    
+                    #region 旧逻辑，已不用 分拆处理 本地比较分拆两个表格【更新和插入】-》分开独立处理。
+                    /*
                     string columnName = mdt.Columns.FirstPrimary.ColumnName;
-                    DalType dalType = action.DalType;
-                    string whereIn = SqlCreate.GetWhereIn(mdt.Columns.FirstPrimary, mdt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), dalType);
+                    string whereIn = SqlCreate.GetWhereIn(mdt.Columns.FirstPrimary, mdt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
                     action.SetSelectColumns(mdt.Columns.FirstPrimary.ColumnName);
                     dt = action.Select(whereIn);
-                    // action.Dispose();//提前关闭链接。
 
                     MDataTable[] dt2 = mdt.Split(SqlCreate.GetWhereIn(mdt.Columns.FirstPrimary, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DalType.None));//这里不需要格式化查询条件。
                     result = dt2[0].Rows.Count == 0;
@@ -640,12 +782,16 @@ namespace CYQ.Data.Table
                             sourceTable.DynamicData = dt2[1].DynamicData;
                         }
                     }
+                     */
+                    #endregion
+
                 }
                 else
                 {
-                    action.BeginTransation();
+                    // action.BeginTransation();
                     foreach (MDataRow row in mdt.Rows)
                     {
+                        #region 循环处理
                         action.ResetTable(row, false);
                         string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
                         if (!action.Exists(where))//row.PrimaryCell.IsNullOrEmpty || 
@@ -669,11 +815,19 @@ namespace CYQ.Data.Table
                             Log.WriteLogToTxt(msg);
                             break;
                         }
+                        #endregion
                     }
-                    action.EndTransation();
+
                 }
                 action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
-                action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//还原
+                }
             }
 
             return result;

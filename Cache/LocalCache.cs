@@ -97,10 +97,16 @@ namespace CYQ.Data.Cache
         }
         internal LocalCache()
         {
-            //License.CheckOnApplicationStart();//检测授权。
-            theCache = H.Cache;
-            //workTime = DateTime.Now.AddMinutes(5);
-            ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
+            try
+            {
+                theCache = H.Cache;//如果配置文件错误会引发此异常。
+                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
+            }
+            catch (Exception err)
+            {
+                Log.WriteLogToTxt(err);
+               // throw;
+            }
         }
         int taskCount = 0, taskInterval = 10;//10分钟清一次缓存。
         private void ClearState(object threadID)
@@ -115,7 +121,7 @@ namespace CYQ.Data.Cache
                 {
                     workTime = startTime.AddMinutes((taskCount + 1) * taskInterval);
                     TimeSpan ts = workTime - DateTime.Now;
-                    
+
                     try
                     {
                         if (ts.TotalSeconds > 0)
@@ -293,12 +299,12 @@ namespace CYQ.Data.Cache
         /// <param name="value">对象值</param>
         public override void Add(string key, object value)
         {
-            Add(key, value, null, 0);
+            Add(key, value, null, AppConfig.Cache.DefaultCacheTime);
         }
         /// <param name="fileName">关联的文件</param>
         public override void Add(string key, object value, string fileName)
         {
-            Add(key, value, fileName, 0);//再插入Cache
+            Add(key, value, fileName, AppConfig.Cache.DefaultCacheTime);//再插入Cache
         }
         /// <param name="cacheMinutes">缓存时间(单位分钟)</param>
         public override void Add(string key, object value, double cacheMinutes)
@@ -325,7 +331,7 @@ namespace CYQ.Data.Cache
         /// </summary>
         public override void Set(string key, object value)
         {
-            Set(key, value, 0);
+            Set(key, value, AppConfig.Cache.DefaultCacheTime);
         }
         public override void Set(string key, object value, double cacheMinutes)
         {

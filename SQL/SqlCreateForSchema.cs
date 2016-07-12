@@ -209,7 +209,7 @@ namespace CYQ.Data.SQL
                             goto er;
                         }
                     }
-                    defaultValue = TableSchema.FormatDefaultValue(dalType, column.DefaultValue, 1, column.SqlType);
+                    defaultValue = SqlFormat.FormatDefaultValue(dalType, column.DefaultValue, 1, column.SqlType);
                     if (!string.IsNullOrEmpty(defaultValue))
                     {
                         if (dalType == DalType.MySql) { defaultValue = defaultValue.Trim('(', ')'); }

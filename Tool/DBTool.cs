@@ -317,7 +317,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
         {
-            return TableSchema.FormatDefaultValue(dalType, value, flag, sqlDbType);
+            return SqlFormat.FormatDefaultValue(dalType, value, flag, sqlDbType);
         }
         /// <summary>
         /// 获取指定数据库的数据类型

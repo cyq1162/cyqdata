@@ -19,170 +19,14 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class TableSchema
     {
-        /// <summary>
-        /// 将各数据库默认值格式化成标准值，将标准值还原成各数据库默认值
-        /// </summary>
-        /// <param name="flag">[0:转成标准值],[1:转成各数据库值],[2:转成各数据库值并补充字符串前后缀]</param>
-        /// <param name="sqlDbType">该列的值</param>
-        /// <returns></returns>
-        public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
-        {
-            string defaultValue = Convert.ToString(value).TrimEnd('\n');//oracle会自带\n结尾
-            if (dalType != DalType.Access)
-            {
-                defaultValue = defaultValue.Replace("GenGUID()", string.Empty);
-            }
-            if (defaultValue.Length == 0)
-            {
-                return null;
-            }
-            int groupID = DataType.GetGroup(sqlDbType);
-            if (flag == 0)
-            {
-                if (groupID == 2)//日期的标准值
-                {
-                    return SqlValue.GetDate;
-                }
-                else if (groupID == 4)
-                {
-                    return SqlValue.GUID;
-                }
-                switch (dalType)
-                {
-                    case DalType.MySql://用转\' \"，所以不用替换。
-                        defaultValue = defaultValue.Replace("\\\"", "\"").Replace("\\\'", "\'");
-                        break;
-                    case DalType.Access:
-                    case DalType.SQLite:
-                        defaultValue = defaultValue.Replace("\"\"", "≮");
-                        break;
-                    default:
-                        defaultValue = defaultValue.Replace("''", "≯");
-                        break;
-                }
-                switch (defaultValue.ToLower().Trim('(', ')'))
-                {
-                    case "newid":
-                    case "guid":
-                    case "sys_guid":
-                    case "genguid":
-                    case "uuid":
-                        return SqlValue.GUID;
-                }
-            }
-            else
-            {
-                if (defaultValue == SqlValue.GUID)
-                {
-                    switch (dalType)
-                    {
-                        case DalType.MsSql:
-                        case DalType.Oracle:
-                        case DalType.Sybase:
-                            return SqlCompatible.FormatGUID(defaultValue, dalType);
-                        default:
-                            return "";
-                    }
-
-                }
-            }
-            switch (dalType)
-            {
-                case DalType.Access:
-                    if (flag == 0)
-                    {
-                        if (defaultValue[0] == '"' && defaultValue[defaultValue.Length - 1] == '"')
-                        {
-                            defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
-                        }
-                    }
-                    else
-                    {
-                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "Now()").Replace("\"", "\"\"");
-                        if (groupID == 0)
-                        {
-                            defaultValue = "\"" + defaultValue + "\"";
-                        }
-                    }
-                    break;
-                case DalType.MsSql:
-                case DalType.Sybase:
-                    if (flag == 0)
-                    {
-                        if (defaultValue.StartsWith("(") && defaultValue.EndsWith(")"))//避免 (newid()) 被去掉()
-                        {
-                            defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
-                        }
-                        defaultValue = defaultValue.Trim('N', '\'');//'(', ')',
-                    }
-                    else
-                    {
-                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "getdate()").Replace("'", "''");
-                        if (groupID == 0)
-                        {
-                            defaultValue = "(N'" + defaultValue + "')";
-                        }
-                    }
-                    break;
-                case DalType.Oracle:
-                    if (flag == 0)
-                    {
-                        defaultValue = defaultValue.Trim('\'');
-                    }
-                    else
-                    {
-                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "sysdate").Replace("'", "''");
-                        if (groupID == 0)
-                        {
-                            defaultValue = "'" + defaultValue + "'";
-                        }
-                    }
-                    break;
-                case DalType.MySql:
-                    if (flag == 0)
-                    {
-                        defaultValue = defaultValue.Replace("b'0", "0").Replace("b'1", "1").Trim('\'');
-                    }
-                    else
-                    {
-                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("'", "\\'").Replace("\"", "\\\"");
-                        if (groupID == 0)
-                        {
-                            defaultValue = "\"" + defaultValue + "\"";
-                        }
-                    }
-                    break;
-                case DalType.SQLite:
-                    if (flag == 0)
-                    {
-                        defaultValue = defaultValue.Trim('"');
-                        if (groupID > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
-                        {
-                            defaultValue = defaultValue.Trim('\'');
-                        }
-                    }
-                    else
-                    {
-                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("\"", "\"\"");
-                        if (groupID == 0)
-                        {
-                            defaultValue = "\"" + defaultValue + "\"";
-                        }
-                    }
-                    break;
-            }
-            if (flag == 0)
-            {
-                return defaultValue.Replace("≮", "\"").Replace("≯", "'");
-            }
-            return defaultValue;
-        }
+        private static Dictionary<string, Dictionary<string, string>> tableCache = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
         public static MDataColumn GetColumns(Type typeInfo)
         {
-            if (columnCache.ContainsKey(typeInfo.FullName))
+            string key = "ColumnCache:" + typeInfo.FullName;
+            if (columnCache.ContainsKey(key))
             {
-                return columnCache[typeInfo.FullName];
+                return columnCache[key];
             }
             else
             {
@@ -231,10 +75,14 @@ namespace CYQ.Data.SQL
                         column.DefaultValue = SqlValue.GetDate;
                     }
                 }
+                pis = null;
                 #endregion
 
-                columnCache.Add(typeInfo.FullName, mdc);
-                pis = null;
+                if (!columnCache.ContainsKey(key))
+                {
+                    columnCache.Add(typeInfo.FullName, mdc);
+                }
+
                 return mdc;
             }
 
@@ -244,6 +92,11 @@ namespace CYQ.Data.SQL
             tableName = Convert.ToString(SqlCreate.SqlToViewSql(tableName));
             DalType dalType = dbHelper.dalType;
             tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
+            string key = "ColumnCache:" + dalType + "." + dbHelper.DataBase + "." + tableName.GetHashCode();
+            if (columnCache.ContainsKey(key))
+            {
+                return columnCache[key];
+            }
             switch (dalType)
             {
                 case DalType.SQLite:
@@ -351,7 +204,7 @@ namespace CYQ.Data.SQL
                                     mStruct.MaxSize = (int)maxLength;
                                     mStruct.Scale = scale;
                                     mStruct.Description = Convert.ToString(sdr["Description"]);
-                                    mStruct.DefaultValue = FormatDefaultValue(dalType, sdr["DefaultValue"], 0, sqlType);
+                                    mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, sdr["DefaultValue"], 0, sqlType);
                                     mStruct.IsPrimaryKey = Convert.ToString(sdr["IsPrimaryKey"]) == "1";
                                     switch (dalType)
                                     {
@@ -421,7 +274,7 @@ namespace CYQ.Data.SQL
                                 mStruct = new MCellStruct(row["COLUMN_NAME"].ToString(), sqlType, Convert.ToBoolean(row["AUTOINCREMENT"]), Convert.ToBoolean(row["IS_NULLABLE"]), size);
                                 mStruct.Scale = sizeScale;
                                 mStruct.Description = Convert.ToString(row["DESCRIPTION"]);
-                                mStruct.DefaultValue = FormatDefaultValue(dalType, row["COLUMN_DEFAULT"], 0, sqlType);//"COLUMN_DEFAULT"
+                                mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, row["COLUMN_DEFAULT"], 0, sqlType);//"COLUMN_DEFAULT"
                                 mStruct.IsPrimaryKey = Convert.ToBoolean(row["PRIMARY_KEY"]);
                                 mStruct.SqlTypeName = dataTypeName;
                                 mStruct.TableName = SqlFormat.NotKeyword(tableName);
@@ -484,7 +337,7 @@ namespace CYQ.Data.SQL
                                         {
                                             if (item[8].ToString() != "")
                                             {
-                                                mStruct.DefaultValue = FormatDefaultValue(dalType, item[8], 0, sqlDbType);//"COLUMN_DEFAULT"
+                                                mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, item[8], 0, sqlDbType);//"COLUMN_DEFAULT"
                                             }
                                             break;
                                         }
@@ -518,12 +371,16 @@ namespace CYQ.Data.SQL
                 string[] fields = AppConfig.DB.HiddenFields.Split(',');
                 foreach (string item in fields)
                 {
-                    string key = item.Trim();
-                    if (!string.IsNullOrEmpty(key) & mdcs.Contains(key))
+                    string field = item.Trim();
+                    if (!string.IsNullOrEmpty(field) & mdcs.Contains(field))
                     {
-                        mdcs.Remove(key);
+                        mdcs.Remove(field);
                     }
                 }
+            }
+            if (!columnCache.ContainsKey(key))
+            {
+                columnCache.Add(key, mdcs);
             }
             return mdcs;
         }
@@ -570,7 +427,7 @@ namespace CYQ.Data.SQL
 
                     bool.TryParse(Convert.ToString(row["IsKey"]), out isKey);
                     bool.TryParse(Convert.ToString(row["AllowDBNull"]), out isCanNull);
-                   // isKey = Convert.ToBoolean();//IsKey
+                    // isKey = Convert.ToBoolean();//IsKey
                     //isCanNull = Convert.ToBoolean(row["AllowDBNull"]);//AllowDBNull
                     if (isHasAutoIncrement)
                     {
@@ -625,8 +482,16 @@ namespace CYQ.Data.SQL
             return GetColumns(keyDt);
 
         }
+        /// <summary>
+        /// 获取表（带缓存）
+        /// </summary>
         public static Dictionary<string, string> GetTables(ref DbBase helper)
         {
+            string key = "TableCache:" + helper.dalType + "." + helper.DataBase;
+            if (tableCache.ContainsKey(key))
+            {
+                return tableCache[key];
+            }
             helper.IsAllowRecordSql = false;
             string sql = string.Empty;
             Dictionary<string, string> tables = null;
@@ -696,6 +561,10 @@ namespace CYQ.Data.SQL
                     sdr.Close();
                     sdr = null;
                 }
+            }
+            if (!tableCache.ContainsKey(key))
+            {
+                tableCache.Add(key, tables);
             }
             return tables;
         }
@@ -826,6 +695,14 @@ namespace CYQ.Data.SQL
         /// <param name="name">表名或视图名</param>
         public static bool Exists(string type, string name, ref DbBase helper)
         {
+            if (type == "U" && tableCache.Count > 0)
+            {
+                string key = "TableCache:" + helper.dalType + "." + helper.DataBase;
+                if (tableCache.ContainsKey(key))
+                {
+                    return tableCache[key].ContainsKey(name);
+                }
+            }
             int result = 0;
             string exist = string.Empty;
             helper.IsAllowRecordSql = false;
@@ -913,14 +790,14 @@ namespace CYQ.Data.SQL
                      indid in(SELECT indid FROM {0}..sysindexkeys WHERE id=s1.id AND colid=s1.colid))) then 1 else 0 end as [IsPrimaryKey],
                      case when exists(SELECT 1 FROM {0}..sysobjects where xtype='UQ' and name in (SELECT name FROM {0}..sysindexes WHERE id=s1.id and 
                      indid in(SELECT indid FROM {0}..sysindexkeys WHERE id=s1.id AND colid=s1.colid))) then 1 else 0 end as [IsUniqueKey],
-                     case when s5.constid>0 then 1 else 0 end as [IsForeignKey],
-                     case when s5.rkeyid>0 then object_name(s5.rkeyid) else null end [FKTableName],
+                     case when s5.rkey=s1.colid or s5.fkey=s1.colid then 1 else 0 end as [IsForeignKey],
+                     case when s5.fkey=s1.colid then object_name(s5.rkeyid) else null end [FKTableName],
                      isnull(s3.text,'') as [DefaultValue],
                      s4.value as Description
                      from {0}..syscolumns s1 right join {0}..systypes s2 on s2.xtype =s1.xtype  
                      left join {0}..syscomments s3 on s1.cdefault=s3.id  " +
                      (for2000 ? "left join {0}..sysproperties s4 on s4.id=s1.id and s4.smallid=s1.colid  " : "left join {0}.sys.extended_properties s4 on s4.major_id=s1.id and s4.minor_id=s1.colid")
-                     + " left join {0}..sysforeignkeys s5 on s5.fkeyid=s1.id and s5.fkey=s1.colid where s1.id=object_id(@TableName) and s2.name<>'sysname' and s2.usertype<100 order by s1.colid", "[" + dbName + "]");
+                     + " left join {0}..sysforeignkeys s5 on (s5.rkeyid=s1.id and s5.rkey=s1.colid) or (s5.fkeyid=s1.id and s5.fkey=s1.colid) where s1.id=object_id(@TableName) and s2.name<>'sysname' and s2.usertype<100 order by s1.colid", "[" + dbName + "]");
         }
         internal static string GetOracleColumns()
         {

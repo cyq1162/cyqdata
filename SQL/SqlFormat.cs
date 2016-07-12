@@ -4,6 +4,7 @@ using CYQ.Data.Table;
 using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Data;
 
 namespace CYQ.Data.SQL
 {
@@ -235,5 +236,164 @@ namespace CYQ.Data.SQL
             return Convert.ToString(whereObj);
         }
         #endregion
+
+        /// <summary>
+        /// 将各数据库默认值格式化成标准值，将标准值还原成各数据库默认值
+        /// </summary>
+        /// <param name="flag">[0:转成标准值],[1:转成各数据库值],[2:转成各数据库值并补充字符串前后缀]</param>
+        /// <param name="sqlDbType">该列的值</param>
+        /// <returns></returns>
+        public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
+        {
+            string defaultValue = Convert.ToString(value).TrimEnd('\n');//oracle会自带\n结尾
+            if (dalType != DalType.Access)
+            {
+                defaultValue = defaultValue.Replace("GenGUID()", string.Empty);
+            }
+            if (defaultValue.Length == 0)
+            {
+                return null;
+            }
+            int groupID = DataType.GetGroup(sqlDbType);
+            if (flag == 0)
+            {
+                if (groupID == 2)//日期的标准值
+                {
+                    return SqlValue.GetDate;
+                }
+                else if (groupID == 4)
+                {
+                    return SqlValue.GUID;
+                }
+                switch (dalType)
+                {
+                    case DalType.MySql://用转\' \"，所以不用替换。
+                        defaultValue = defaultValue.Replace("\\\"", "\"").Replace("\\\'", "\'");
+                        break;
+                    case DalType.Access:
+                    case DalType.SQLite:
+                        defaultValue = defaultValue.Replace("\"\"", "≮");
+                        break;
+                    default:
+                        defaultValue = defaultValue.Replace("''", "≯");
+                        break;
+                }
+                switch (defaultValue.ToLower().Trim('(', ')'))
+                {
+                    case "newid":
+                    case "guid":
+                    case "sys_guid":
+                    case "genguid":
+                    case "uuid":
+                        return SqlValue.GUID;
+                }
+            }
+            else
+            {
+                if (defaultValue == SqlValue.GUID)
+                {
+                    switch (dalType)
+                    {
+                        case DalType.MsSql:
+                        case DalType.Oracle:
+                        case DalType.Sybase:
+                            return SqlCompatible.FormatGUID(defaultValue, dalType);
+                        default:
+                            return "";
+                    }
+
+                }
+            }
+            switch (dalType)
+            {
+                case DalType.Access:
+                    if (flag == 0)
+                    {
+                        if (defaultValue[0] == '"' && defaultValue[defaultValue.Length - 1] == '"')
+                        {
+                            defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
+                        }
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "Now()").Replace("\"", "\"\"");
+                        if (groupID == 0)
+                        {
+                            defaultValue = "\"" + defaultValue + "\"";
+                        }
+                    }
+                    break;
+                case DalType.MsSql:
+                case DalType.Sybase:
+                    if (flag == 0)
+                    {
+                        if (defaultValue.StartsWith("(") && defaultValue.EndsWith(")"))//避免 (newid()) 被去掉()
+                        {
+                            defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
+                        }
+                        defaultValue = defaultValue.Trim('N', '\'');//'(', ')',
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "getdate()").Replace("'", "''");
+                        if (groupID == 0)
+                        {
+                            defaultValue = "(N'" + defaultValue + "')";
+                        }
+                    }
+                    break;
+                case DalType.Oracle:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim('\'');
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "sysdate").Replace("'", "''");
+                        if (groupID == 0)
+                        {
+                            defaultValue = "'" + defaultValue + "'";
+                        }
+                    }
+                    break;
+                case DalType.MySql:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Replace("b'0", "0").Replace("b'1", "1").Trim('\'');
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("'", "\\'").Replace("\"", "\\\"");
+                        if (groupID == 0)
+                        {
+                            defaultValue = "\"" + defaultValue + "\"";
+                        }
+                    }
+                    break;
+                case DalType.SQLite:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim('"');
+                        if (groupID > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        {
+                            defaultValue = defaultValue.Trim('\'');
+                        }
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("\"", "\"\"");
+                        if (groupID == 0)
+                        {
+                            defaultValue = "\"" + defaultValue + "\"";
+                        }
+                    }
+                    break;
+            }
+            if (flag == 0)
+            {
+                return defaultValue.Replace("≮", "\"").Replace("≯", "'");
+            }
+            return defaultValue;
+        }
     }
 }

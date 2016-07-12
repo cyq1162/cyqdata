@@ -703,6 +703,10 @@ namespace CYQ.Data.Table
             MDataTable dt = new MDataTable(_TableName);
             dt.Columns = Columns;
             dt.Conn = Conn;
+            dt.DynamicData = DynamicData;
+            dt.joinOnIndex = joinOnIndex;
+            dt.JoinOnName = dt.JoinOnName;
+            dt.RecordsAffected = RecordsAffected;
             if (this.Rows.Count > 0)
             {
                 if (rowOp == RowOp.Insert || rowOp == RowOp.Update)
@@ -1183,6 +1187,8 @@ namespace CYQ.Data.Table
     }
     public partial class MDataTable
     {
+        #region 静态方法 CreateFrom
+
         /// <summary>
         /// 不关闭Sdr（因为外部MProc.ExeMDataTableList还需要使用）
         /// </summary>
@@ -1218,9 +1224,15 @@ namespace CYQ.Data.Table
                 {
                     mTable.Columns = TableSchema.GetColumns(dt);
                     MCellStruct ms;
+                    string name;
                     for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
                     {
-                        ms = mTable.Columns[sdr.GetName(i).Trim('"')];//sqlite的双引号问题
+                        name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            name = "Empty_" + i;
+                        }
+                        ms = mTable.Columns[name];//sqlite的双引号问题
                         if (ms != null)
                         {
                             ms.ReaderIndex = i;
@@ -1491,6 +1503,7 @@ namespace CYQ.Data.Table
             }
             return dt;
         }
+        #endregion
 
         #region 列的取值：Min、Max、Sum、Avg
         private T GetMinMaxValue<T>(string columnName, string ascOrDesc)
@@ -1699,6 +1712,28 @@ namespace CYQ.Data.Table
             return dt;
         }
         #endregion
+
+
+        internal void Load(MDataTable dt)
+        {
+            if (dt == null || dt.Rows.Count == 0)
+            {
+                return;
+            }
+            string pkName = Columns.FirstPrimary.ColumnName;
+            int i1 = Columns.GetIndex(pkName);
+            MDataRow rowA, rowB;
+
+            for (int i = 0; i < Rows.Count; i++)
+            {
+                rowA = Rows[i];
+                rowB = dt.FindRow(pkName + "='" + rowA[i1].strValue + "'");
+                if (rowB != null)
+                {
+                    rowA.LoadFrom(rowB);
+                }
+            }
+        }
 
         #region 注释掉代码
         /*
