@@ -101,44 +101,42 @@ namespace CYQ.Data.Cache
             {
                 theCache = H.Cache;//如果配置文件错误会引发此异常。
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
+                if (AppConfig.Cache.IsAutoCache)
+                {
+                    ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));
+                }
             }
             catch (Exception err)
             {
                 Log.WriteLogToTxt(err);
-               // throw;
+                // throw;
             }
         }
         int taskCount = 0, taskInterval = 10;//10分钟清一次缓存。
         private static DateTime errTime = DateTime.MinValue;
         private void ClearState(object threadID)
         {
-            try
+            startTime = DateTime.Now;
+            while (true)
             {
-                startTime = DateTime.Now;
-                int gcTime = AppConfig.Cache.GCCollectTime / taskInterval;
-                gcTime = gcTime == 0 ? 1 : gcTime;
-
-                while (true)
+                try
                 {
                     workTime = startTime.AddMinutes((taskCount + 1) * taskInterval);
                     TimeSpan ts = workTime - DateTime.Now;
-
-                    try
+                    if (ts.TotalSeconds > 0)
                     {
-                        if (ts.TotalSeconds > 0)
-                        {
-                            Thread.Sleep(ts);//taskInterval * 60 * 1000);//10分钟休眠时间
-                        }
-                        #region 新的机制
-                        if (keyTime.ContainsKey(taskCount))
-                        {
-                            RemoveList(keyTime[taskCount].ToString().Split(','));
-                            keyTime.Remove(taskCount);
-                        }
-                        #endregion
+                        Thread.Sleep(ts);//taskInterval * 60 * 1000);//10分钟休眠时间
+                    }
+                    #region 新的机制
+                    if (keyTime.ContainsKey(taskCount))
+                    {
+                        RemoveList(keyTime[taskCount].ToString().Split(','));
+                        keyTime.Remove(taskCount);
+                    }
+                    #endregion
 
-                        #region 旧方式、注释掉
-                        /*
+                    #region 旧方式、注释掉
+                    /*
                         if (theCache.Count != theState.Count)//准备同步
                         {
                             workTime = DateTime.Now.AddMinutes(cacheClearWorkTime);
@@ -162,35 +160,39 @@ namespace CYQ.Data.Cache
                             clearCount = removeKeys.Count;
                             removeKeys.Clear();
                         } */
-                        #endregion
+                    #endregion
 
-                    }
-                    catch (Exception err)
+                }
+                catch (OutOfMemoryException)
+                { }
+                catch (Exception err)
+                {
+                    if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
                     {
-                        if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
-                        {
-                            errTime = DateTime.Now;
-                            if (!(err is OutOfMemoryException))
-                            {
-                                Log.WriteLogToTxt(err);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        taskCount++;
-                    }
-                    if (taskCount % gcTime == 0)
-                    {
-                        GC.Collect();
+                        errTime = DateTime.Now;
+                        Log.WriteLogToTxt("LocalCache.ClearState:" + Log.GetExceptionMessage(err));
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                Log.WriteLogToTxt(err);
-            }
+                finally
+                {
+                    taskCount++;
+                    if (taskCount % 10 == 9)
+                    {
+                        try
+                        {
+                            if (RemainMemoryPercentage < 25)
+                            {
+                                GC.Collect();
+                            }
+                        }
+                        catch
+                        {
 
+                        }
+                    }
+                }
+
+            }
         }
         private int errorCount = 0;//缓存捕异常次数
         /// <summary>

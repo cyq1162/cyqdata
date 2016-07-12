@@ -208,7 +208,10 @@ namespace CYQ.Data
         private void SetDbBase(DbBase dbBase)
         {
             dalHelper = dbBase;
-            dalHelper.OnExceptionEvent += new DbBase.OnException(helper_OnExceptionEvent);
+            if (dalHelper.IsOnExceptionEventNull)
+            {
+                dalHelper.OnExceptionEvent += new DbBase.OnException(helper_OnExceptionEvent);
+            }
             switch (dalHelper.dalType)
             {
                 case DalType.Txt:
@@ -631,6 +634,10 @@ namespace CYQ.Data
             hasDisposed = true;
             if (dalHelper != null)
             {
+                if (!dalHelper.IsOnExceptionEventNull)
+                {
+                    dalHelper.OnExceptionEvent -= new DbBase.OnException(helper_OnExceptionEvent);
+                }
                 _debugInfo = dalHelper.debugInfo.ToString();
                 dalHelper.Dispose();
                 dalHelper = null;

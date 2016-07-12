@@ -712,7 +712,6 @@ namespace CYQ.Data
             {
                 _watch = null;
             }
-
         }
 
         internal bool TestConn()
@@ -932,7 +931,7 @@ namespace CYQ.Data
                         _tran.Rollback();
                     }
                 }
-                catch (Exception err)
+                catch (Exception)
                 {
                     return false;
                 }
@@ -945,6 +944,13 @@ namespace CYQ.Data
         }
         internal delegate void OnException(string msg);
         internal event OnException OnExceptionEvent;
+        internal bool IsOnExceptionEventNull
+        {
+            get
+            {
+                return OnExceptionEvent == null;
+            }
+        }
         private void WriteError(string err)
         {
             err = dalType + " Call Function::" + err;

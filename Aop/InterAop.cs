@@ -11,7 +11,7 @@ namespace CYQ.Data.Aop
     internal class InterAop
     {
         private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
-        private AutoCache cacheAop = new AutoCache();
+       // private AutoCache cacheAop = new AutoCache();
         private static readonly object lockObj = new object();
         private bool isHasCache = false;
         private bool isUseAop = true;
@@ -69,7 +69,7 @@ namespace CYQ.Data.Aop
             }
             if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回
             {
-                isHasCache = cacheAop.GetCache(action, Para); //找看有没有Cache
+                isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
             }
             if (isHasCache)  //找到Cache
             {
@@ -93,7 +93,7 @@ namespace CYQ.Data.Aop
             }
             if (!isHasCache && !IsTxtDataBase)
             {
-                cacheAop.SetCache(action, Para); //找看有没有Cache
+                AutoCache.SetCache(action, Para); //找看有没有Cache
             }
         }
 

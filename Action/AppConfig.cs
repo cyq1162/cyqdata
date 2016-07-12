@@ -570,17 +570,17 @@ namespace CYQ.Data
             /// <summary>
             /// Cache.CacheManage 调用GC.Collect()方法的间隔时间[(默认180)分钟]
             /// </summary>
-            public static int GCCollectTime
-            {
-                get
-                {
-                    return GetAppInt("GCCollectTime", 180);
-                }
-                set
-                {
-                    SetApp("GCCollectTime", value.ToString());
-                }
-            }
+            //public static int GCCollectTime
+            //{
+            //    get
+            //    {
+            //        return GetAppInt("GCCollectTime", 180);
+            //    }
+            //    set
+            //    {
+            //        SetApp("GCCollectTime", value.ToString());
+            //    }
+            //}
 
             /// <summary>
             /// Cache.CacheManage 默认缓存项的时间[分钟(默认60)]

@@ -320,7 +320,10 @@ namespace CYQ.Data
             {
                 dalHelper = DalCreate.CreateDal(newRow.Conn);
                 //创建错误事件。
-                dalHelper.OnExceptionEvent += new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
+                if (dalHelper.IsOnExceptionEventNull)
+                {
+                    dalHelper.OnExceptionEvent += new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
+                }
             }
             else
             {
@@ -1400,12 +1403,13 @@ namespace CYQ.Data
             hasDisposed = true;
             if (dalHelper != null)
             {
-                dalHelper.Dispose();
-                if (dalHelper != null)
+                if (!dalHelper.IsOnExceptionEventNull)
                 {
-                    _debugInfo = dalHelper.debugInfo.ToString();
-                    dalHelper = null;
+                    dalHelper.OnExceptionEvent -= new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
                 }
+                _debugInfo = dalHelper.debugInfo.ToString();
+                dalHelper.Dispose();
+                dalHelper = null;
                 if (_sqlCreate != null)
                 {
                     _sqlCreate = null;
