@@ -67,7 +67,7 @@ namespace CYQ.Data
         }
         internal static void WriteLog(bool isWriteLog, string message)
         {
-            if (isWriteLog || AppConfig.Log.IsWriteLog) 
+            if (isWriteLog || AppConfig.Log.IsWriteLog)
             {
                 if (message.Contains(":OpenCon()"))//数据库链接异常不再写数据库（因为很多情况都指向同一个库）
                 {
@@ -216,7 +216,8 @@ namespace CYQ.Data
                 }
                 string pageUrl = Log.Url;
                 string filePath = folder + todayKey;
-                pageUrl += "\r\n------------------------\r\nRecord On : " + DateTime.Now.ToString() + " " + pageUrl;
+                pageUrl += "\r\n-----------V" + AppConfig.Version + "-------------\r\n";
+                pageUrl += "Record On : " + DateTime.Now.ToString() + " " + pageUrl;
                 message = pageUrl + "\r\n" + message;
                 IOHelper.Save(filePath, message, true, false);
 
