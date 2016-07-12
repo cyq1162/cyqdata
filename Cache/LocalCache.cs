@@ -109,6 +109,7 @@ namespace CYQ.Data.Cache
             }
         }
         int taskCount = 0, taskInterval = 10;//10分钟清一次缓存。
+        private static DateTime errTime = DateTime.MinValue;
         private void ClearState(object threadID)
         {
             try
@@ -166,7 +167,14 @@ namespace CYQ.Data.Cache
                     }
                     catch (Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
+                        {
+                            errTime = DateTime.Now;
+                            if (!(err is OutOfMemoryException))
+                            {
+                                Log.WriteLogToTxt(err);
+                            }
+                        }
                     }
                     finally
                     {
