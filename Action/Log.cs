@@ -216,8 +216,8 @@ namespace CYQ.Data
                 }
                 string pageUrl = Log.Url;
                 string filePath = folder + todayKey;
-                pageUrl += "\r\n-----------V" + AppConfig.Version + "-------------\r\n";
-                pageUrl += "Record On : " + DateTime.Now.ToString() + " " + pageUrl;
+                pageUrl += "\r\n------------------------\r\nV";
+                pageUrl += AppConfig.Version + " Record On : " + DateTime.Now.ToString() + " " + pageUrl;
                 message = pageUrl + "\r\n" + message;
                 IOHelper.Save(filePath, message, true, false);
 
