@@ -256,7 +256,15 @@ namespace CYQ.Data.UI
                 {
                     Type t = ct.GetType();
                     int sysValue = GetSysValue(t);//web,win,wpf
-                    PropertyInfo p = t.GetProperty(sysValue == 1 ? "ID" : "Name");
+                    PropertyInfo p;
+                    if (sysValue == 4)//第三方控件，不知道会搞ID还是Name
+                    {
+                        p = GetProperty(t, true, "ID", "Name");
+                    }
+                    else
+                    {
+                        p = t.GetProperty(sysValue == 1 ? "ID" : "Name");
+                    }
                     string propName = Convert.ToString(p.GetValue(ct, null));
                     if (propName.Length > 4 && propName[0] <= 'z')//小母字母开头。
                     {
@@ -396,7 +404,15 @@ namespace CYQ.Data.UI
                 {
                     Type t = ct.GetType();
                     int sysValue = GetSysValue(t);//web,win,wpf
-                    PropertyInfo p = t.GetProperty(sysValue == 1 ? "ID" : "Name");
+                    PropertyInfo p;
+                    if (sysValue == 4)//第三方控件，不知道会搞ID还是Name
+                    {
+                        p = GetProperty(t, true, "ID", "Name");
+                    }
+                    else
+                    {
+                        p = t.GetProperty(sysValue == 1 ? "ID" : "Name");
+                    }
                     propName = Convert.ToString(p.GetValue(ct, null));
                     if (propName.Length > 4 && propName[0] <= 'z')//小母字母开头。
                     {
