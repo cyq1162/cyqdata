@@ -176,13 +176,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
-                //{
-                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                //}
-                //case DalType.Oracle:
-                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", AutoID);
-                //    break;
+                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
+                    //{
+                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                    //}
+                    //case DalType.Oracle:
+                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", AutoID);
+                    //    break;
             }
             return sql;
         }
@@ -214,7 +214,7 @@ namespace CYQ.Data.SQL
                 {
                     continue;//跳过自增或主键列。
                 }
-                
+
                 if (cell.cellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
                 {
                     if (cell.Struct.SqlType == SqlDbType.Timestamp && (_action.DalType == DalType.MsSql || _action.DalType == DalType.Sybase))
@@ -578,7 +578,7 @@ namespace CYQ.Data.SQL
                 {
                     //只处理单个值的情况
                     int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                   // int uniqueGroupID = DataType.GetGroup(mdc.FirstUnique.SqlType);
+                                                                       // int uniqueGroupID = DataType.GetGroup(mdc.FirstUnique.SqlType);
                     switch (primaryGroupID)
                     {
                         case 4:
@@ -609,7 +609,7 @@ namespace CYQ.Data.SQL
                     }
 
                     string columnName = SqlFormat.Keyword(ms.ColumnName, dalType);
-                    where = GetWhereEqual(DataType.GetGroup(ms.SqlType), columnName, where,dalType);
+                    where = GetWhereEqual(DataType.GetGroup(ms.SqlType), columnName, where, dalType);
                 }
                 else
                 {
@@ -621,7 +621,7 @@ namespace CYQ.Data.SQL
 
             return where;
         }
-        private static string GetWhereEqual(int groupID, string columnName, string where,DalType dalType)
+        private static string GetWhereEqual(int groupID, string columnName, string where, DalType dalType)
         {
             if (groupID != 0)
             {
@@ -649,7 +649,7 @@ namespace CYQ.Data.SQL
             return where;
         }
 
-       
+
 
         internal static string RemoveOrderBy(string where)
         {
@@ -791,10 +791,10 @@ namespace CYQ.Data.SQL
         {
             if (sqlObj is String)
             {
-                string sql = Convert.ToString(sqlObj);
-                if (sql.Contains(" ") && sql.IndexOf('(') == -1)
+                string sql = Convert.ToString(sqlObj).ToLower().Trim();
+                if (sql.StartsWith("select ") || (sql.Contains(" ") && sql.IndexOf('(') == -1))
                 {
-                    sqlObj = "(" + sql + ") v";
+                    sqlObj = "(" + sqlObj + ") v";
                 }
             }
             return sqlObj;
