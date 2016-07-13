@@ -26,7 +26,7 @@ namespace CYQ.Data.SQL
             string key = "ColumnCache:" + typeInfo.FullName;
             if (columnCache.ContainsKey(key))
             {
-                return columnCache[key];
+                return columnCache[key].Clone();
             }
             else
             {
@@ -80,7 +80,7 @@ namespace CYQ.Data.SQL
 
                 if (!columnCache.ContainsKey(key))
                 {
-                    columnCache.Add(typeInfo.FullName, mdc);
+                    columnCache.Add(typeInfo.FullName, mdc.Clone());
                 }
 
                 return mdc;
@@ -92,10 +92,11 @@ namespace CYQ.Data.SQL
             tableName = Convert.ToString(SqlCreate.SqlToViewSql(tableName));
             DalType dalType = dbHelper.dalType;
             tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
-            string key = "ColumnCache:" + dalType + "." + dbHelper.DataBase + "." + tableName.GetHashCode();
-            if (columnCache.ContainsKey(key))
+
+            string key = GetSchemaKey(tableName, dbHelper.DataBase, dbHelper.dalType);
+            if (CacheManage.LocalInstance.Contains(key))//ª∫¥Ê¿ÔªÒ»°
             {
-                return columnCache[key];
+                return CacheManage.LocalInstance.Get<MDataColumn>(key).Clone();
             }
             switch (dalType)
             {
@@ -378,9 +379,9 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (!columnCache.ContainsKey(key))
+            if (!CacheManage.LocalInstance.Contains(key))
             {
-                columnCache.Add(key, mdcs);
+                CacheManage.LocalInstance.Add(key, mdcs.Clone());
             }
             return mdcs;
         }
