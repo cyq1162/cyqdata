@@ -308,8 +308,8 @@ namespace CYQ.Data.Cache
                     }
                     baseKeys.Add(baseKey);
                 }
-                tables.Clear();
-                tables = null;
+                //tables.Clear();//自己给自己造坑，花了2小时才找到这坑
+                //tables = null;
             }
             if (baseKeys.Count == 0)
             {
@@ -412,7 +412,7 @@ namespace CYQ.Data.Cache
         {
             while (true)
             {
-                Thread.Sleep(500);
+                Thread.Sleep(5);
                 if (removeList.Count > 0)
                 {
                     string baseKey = removeList.Dequeue();

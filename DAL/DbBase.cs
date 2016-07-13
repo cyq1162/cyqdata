@@ -360,7 +360,7 @@ namespace CYQ.Data
             {
                 try
                 {
-                    sdr = _com.ExecuteReader(isOpenTrans ? CommandBehavior.Default : CommandBehavior.CloseConnection);
+                    sdr = _com.ExecuteReader(isOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo);
                     if (sdr != null)
                     {
                         recordsAffected = sdr.RecordsAffected;
