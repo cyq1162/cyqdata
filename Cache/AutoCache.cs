@@ -27,11 +27,11 @@ namespace CYQ.Data.Cache
                 case AopEnum.Delete:
                     return false;
             }
-            string baseKey = GetBaseKey(aopInfo);
-            if (!IsCanOperateCache(baseKey))
+            if (!IsCanOperateCache(aopInfo))
             {
                 return false;
             }
+            string baseKey = GetBaseKey(aopInfo);
             //查看是否通知我移除
             string key = GetKey(action, aopInfo, baseKey);
             object obj = _MemCache.Get(key);
@@ -104,10 +104,10 @@ namespace CYQ.Data.Cache
                     return;
             }
 
-            if (!IsCanOperateCache(baseKey))
-            {
-                return;
-            }
+            //if (!IsCanOperateCache(baseKey))
+            //{
+            //    return;
+            //}
             if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.RemainMemoryPercentage < 15)//可用内存低于15%
             {
                 return;
@@ -229,10 +229,24 @@ namespace CYQ.Data.Cache
                 }
             }
         }
-        private static bool IsCanOperateCache(string baseKey)
+        private static bool IsCanOperateCache(AopInfo para)
         {
-            string delKey = "DeleteAutoCache:" + baseKey;
-            return !_MemCache.Contains(delKey);
+            List<string> tables = GetRelationTables(para); ;
+            if (tables != null && tables.Count > 0)
+            {
+                foreach (string tableName in tables)
+                {
+                    string baseKey = GetBaseKey(para, tableName);
+                    string delKey = "DeleteAutoCache:" + baseKey;
+                    if (_MemCache.Contains(delKey))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+           // string delKey = "DeleteAutoCache:" + baseKey;
+           // return !_MemCache.Contains(delKey);
             //if (baseKey.Contains(".ActionV") || baseKey.Contains(".ProcS"))
             //{
 
@@ -249,6 +263,26 @@ namespace CYQ.Data.Cache
         internal static string GetBaseKey(DalType dalType, string database, string tableName)
         {
             return "AutoCache:" + dalType + "." + database + "." + tableName;
+        }
+        private static List<string> GetRelationTables(AopInfo para)
+        {
+            List<string> tables = null;
+            if (para.MAction != null)
+            {
+                tables = para.MAction.Data.Columns.relationTables;
+            }
+            else if (para.MProc != null && !para.IsProc)
+            {
+                if (para.Table != null)
+                {
+                    tables = para.Table.Columns.relationTables;
+                }
+                else
+                {
+                    tables = SqlFormat.GetTableNamesFromSql(para.ProcName);
+                }
+            }
+            return tables;
         }
         private static string GetBaseKey(AopInfo para, string tableName)
         {
@@ -276,22 +310,7 @@ namespace CYQ.Data.Cache
         {
             flag = 0;//0 正常；1：未识别；2：暂不允许缓存 
             List<string> baseKeys = new List<string>();
-            List<string> tables = null;
-            if (para.MAction != null)
-            {
-                tables = para.MAction.Data.Columns.relationTables;
-            }
-            else if (para.MProc != null && !para.IsProc)
-            {
-                if (para.Table != null)
-                {
-                    tables = para.Table.Columns.relationTables;
-                }
-                else
-                {
-                    tables = SqlFormat.GetTableNamesFromSql(para.ProcName);
-                }
-            }
+            List<string> tables = GetRelationTables(para);
             if (tables != null && tables.Count > 0)
             {
                 foreach (string tableName in tables)
