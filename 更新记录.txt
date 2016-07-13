@@ -506,3 +506,6 @@
 293：优化MActionUI对支持第三方控件的支持（2016-07-12）
 294：修正缓存失效问题（自己造的坑）（2016-07-13)
 295：修正DBTool.AlterTable的缓存问题（2016-07-13)
+296：修正DBTool.AlterTable的缓存问题（2016-07-13)
+297：对CYQ.Data.Orm的实体操作开放Aop功能（支持自动缓存）（2016-07-13)
+297：DBTool增加DropTable方法；MAction\MProc增加DataBase属性（2016-07-14)

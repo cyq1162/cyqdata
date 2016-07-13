@@ -111,6 +111,16 @@ namespace CYQ.Data
             }
         }
         /// <summary>
+        /// 当前操作的数据库名称
+        /// </summary>
+        public string DataBase
+        {
+            get
+            {
+                return dalHelper.DataBase;
+            }
+        }
+        /// <summary>
         /// 当前操作的数据库的版本号
         /// </summary>
         public string DalVersion

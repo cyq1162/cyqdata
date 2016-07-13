@@ -165,7 +165,10 @@ namespace CYQ.Data.Orm
                 }
 
                 action = new MAction(Columns.ToRow(tableName), conn);
-                action.SetAopOff();
+                if (typeInfo.Name == "SysLogs")
+                {
+                    action.SetAopOff();
+                }
                 action.EndTransation();
             }
             catch (Exception err)

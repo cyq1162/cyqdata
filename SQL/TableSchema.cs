@@ -606,7 +606,7 @@ namespace CYQ.Data.SQL
                 }
                 key = SqlFormat.NotKeyword(key);
             }
-            return dalType + "_" + dbName + "_" + key;
+            return "ColumnsCache:" + dalType + "_" + dbName + "_" + key;
         }
         private static bool FillSchemaFromCache(ref MDataRow row, ref DbBase dbBase, string tableName, string sourceTableName)
         {

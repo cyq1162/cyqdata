@@ -73,6 +73,16 @@ namespace CYQ.Data
             }
         }
         /// <summary>
+        /// 当前操作的数据库名称
+        /// </summary>
+        public string DataBase
+        {
+            get
+            {
+                return dalHelper.DataBase;
+            }
+        }
+        /// <summary>
         /// 当前操作的数据库的版本号
         /// </summary>
         public string DalVersion
@@ -198,7 +208,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    _isProc = !(_procName.Contains(" ") && _procName.Length > 16);//包含空格，当成sql语句
+                    _isProc = _procName.IndexOf(' ') == -1;//不包含空格
                 }
             }
             #endregion
@@ -244,7 +254,7 @@ namespace CYQ.Data
             }
             else
             {
-                _isProc = !(_procName.Contains(" ") && _procName.Length > 16);//包含空格，当成sql语句
+                _isProc = _procName.IndexOf(' ') == -1;//不包含空格
             }
         }
         /// <summary>

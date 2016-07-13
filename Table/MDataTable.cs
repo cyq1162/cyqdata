@@ -1185,6 +1185,7 @@ namespace CYQ.Data.Table
 
         #endregion
     }
+
     public partial class MDataTable
     {
         #region ¾²Ì¬·½·¨ CreateFrom
