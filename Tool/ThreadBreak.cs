@@ -118,7 +118,7 @@ namespace CYQ.Data.Tool
                         {
                             foreach (string file in files)
                             {
-                                File.Delete(file);
+                                IOHelper.Delete(file);
                             }
                         }
                     }

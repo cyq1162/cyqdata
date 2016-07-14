@@ -372,7 +372,7 @@ namespace CYQ.Data.Xml
                 xmlCacheKey = GenerateKey(fileName);
                 if (!theCache.Contains(xmlCacheKey))
                 {
-                    SaveToCache(xmlCacheKey, NoClone);
+                    SaveToCache(xmlCacheKey, !NoClone);
                 }
                 return true;
             }

@@ -324,7 +324,10 @@ namespace CYQ.Data
 
         public void Dispose()
         {
-            action.Dispose();
+            if (action != null)
+            {
+                action.Dispose();
+            }
         }
 
         #endregion

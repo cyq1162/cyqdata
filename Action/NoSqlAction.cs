@@ -13,37 +13,32 @@ namespace CYQ.Data
     internal class NoSqlAction : IDisposable
     {
         /// <summary>
-        /// 重置静态变量（每次批量更新后调用）
+        /// 重置静态变量（方便回收内存，避免大量导数据后内存不回收）
         /// </summary>
         internal static void ResetStaticVar()
         {
-
             _tableList.Clear();
-            _tableList = null;//静态字典置为Null才能即时释放内存。
-            _tableList = new MDictionary<string, MDataTable>(3);//重新初始化。
-            _needToSaveState.Clear();
-            _lockNextIDObj.Clear();
-            _lockWriteTxtObj.Clear();
-            _maxID.Clear();
-            //_InsertRows.Clear();
-            //_InsertRows = null;//置Null
-            //_InsertRows = new List<MDataRow>();
-            _lastWriteTimeUtc = DateTime.Now;
+            _tableList = null;//静态字典置为Null才能释放内存。
+            _tableList = new MDictionary<string, MDataTable>(5, StringComparer.OrdinalIgnoreCase);//重新初始化。
+            //_needToSaveState.Clear();
+            //_lockNextIDObj.Clear();
+            //_maxID.Clear();
         }
-        private static MDictionary<string, MDataTable> _tableList = new MDictionary<string, MDataTable>(3);//内存数据库
-        private static readonly object _lockTableListObj = new object();
+        private static MDictionary<string, MDataTable> _tableList = new MDictionary<string, MDataTable>(5, StringComparer.OrdinalIgnoreCase);//内存数据库
+        // private static readonly object _lockTableListObj = new object();
         /// <summary>
-        ///  是否需要更新：0未更新；1仅插入[往后面插数据]；2更新删除或插入[重新保存]
+        ///  是否需要更新：0未更新；1仅插入[往后面插数据]；2更新删除或插入[重新保存],//需要更新[全局的可以有效处理并发]
         /// </summary>
-        private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);//需要更新[全局的可以有效处理并发]
-        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>(StringComparer.OrdinalIgnoreCase);//自增加ID锁
-        private static MDictionary<string, object> _lockWriteTxtObj = new MDictionary<string, object>(StringComparer.OrdinalIgnoreCase);//文件写入锁
-        private static MDictionary<string, int> _maxID = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);//当前表的最大ID
+        private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);
+        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//自增加ID锁
+        private static MDictionary<string, int> _maxID = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大ID
+        private static MDictionary<string, DateTime> _lastWriteTimeList = new MDictionary<string, DateTime>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大ID
+        // private static MDictionary<string, object> _lockOperatorObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//增删改时的互锁
         private List<MDataRow> _insertRows = new List<MDataRow>();//新插入的集合，仅是引用MDataTable的索引
         /// <summary>
         /// 最后的写入时间
         /// </summary>
-        private static DateTime _lastWriteTimeUtc = DateTime.UtcNow;
+        // private static DateTime _lastWriteTimeUtc = DateTime.UtcNow;
         private MDataTable _Table = null;
         private MDataTable Table
         {
@@ -89,21 +84,20 @@ namespace CYQ.Data
 
                     //                    }
                     //                }
-                    _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
+                    DateTime _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
+                    if (!_lastWriteTimeList.ContainsKey(_FileFullName))
+                    {
+                        _lastWriteTimeList.Add(_FileFullName, _lastWriteTimeUtc);
+                    }
                     if (_Table.Rows.Count > 0)
                     {
-                        ////排序检测。
-                        //if (_Table.Columns[0].SqlType == System.Data.SqlDbType.Int)
+                        //lock (_lockTableListObj)
                         //{
-                        //    _Table.Rows.Sort("order by " + _Table.Columns[0].ColumnName + " asc");
-                        //}
-                        lock (_lockTableListObj)
+                        if (!_tableList.ContainsKey(_FileFullName))
                         {
-                            if (!_tableList.ContainsKey(_FileFullName))
-                            {
-                                _tableList.Add(_FileFullName, _Table);
-                            }
+                            _tableList.Add(_FileFullName, _Table);
                         }
+                        // }
                     }
                     return _Table;
                 }
@@ -114,6 +108,10 @@ namespace CYQ.Data
         {
             get
             {
+                if (!_maxID.ContainsKey(_FileFullName))
+                {
+                    _maxID.Add(_FileFullName, 0);
+                }
                 return _maxID[_FileFullName];
             }
             set
@@ -125,16 +123,30 @@ namespace CYQ.Data
         {
             get
             {
+                if (!_lockNextIDObj.ContainsKey(_FileFullName))
+                {
+                    _lockNextIDObj.Add(_FileFullName, new object());
+                }
                 return _lockNextIDObj[_FileFullName];
             }
         }
-        private object lockWriteTxtobj
+        private int needToSaveState
         {
             get
             {
-                return _lockWriteTxtObj[_FileFullName];
+                if (!_needToSaveState.ContainsKey(_FileFullName))
+                {
+                    _needToSaveState.Add(_FileFullName, 0);
+                }
+                return _needToSaveState[_FileFullName];
+            }
+
+            set
+            {
+                _needToSaveState[_FileFullName] = value;
             }
         }
+
         /// <summary>
         /// 下一个自增加ID
         /// </summary>
@@ -154,6 +166,7 @@ namespace CYQ.Data
                         {
                             if (Table.Rows.Count > 0)
                             {
+                                #region 读取索引
                                 int lastIndex = _Table.Rows.Count - 1;
                                 do
                                 {
@@ -174,6 +187,7 @@ namespace CYQ.Data
                                     }
                                 }
                                 while (maxID == 0);
+                                #endregion
 
                             }
                             else
@@ -217,43 +231,28 @@ namespace CYQ.Data
         /// <param name="dalType">数据类型</param>
         public void Reset(ref MDataRow row, string fileName, string filePath, DalType dalType)
         {
-            _insertRows.Clear();//切换表的时候重置。
-            _Row = row;
             string exName = Path.GetExtension(fileName);
             if (string.IsNullOrEmpty(exName))
             {
                 switch (dalType)
                 {
                     case DalType.Txt:
-                        _FileName = fileName + ".txt";
+                        fileName = fileName + ".txt";
                         break;
                     case DalType.Xml:
-                        _FileName = fileName + ".xml";
+                        fileName = fileName + ".xml";
                         break;
                 }
             }
-            else
+            if (fileName != _FileName)
             {
-                _FileName = fileName;
+                _insertRows.Clear();//切换表的时候重置。
+                Dispose();//先保存
             }
+            _Row = row;
+            _FileName = fileName;
             _FileFullName = filePath + _FileName;
             _DalType = dalType;
-            if (!_needToSaveState.ContainsKey(_FileFullName))
-            {
-                _needToSaveState.Add(_FileFullName, 0);
-            }
-            if (!_lockNextIDObj.ContainsKey(_FileFullName))
-            {
-                _lockNextIDObj.Add(_FileFullName, new object());
-            }
-            if (!_lockWriteTxtObj.ContainsKey(_FileFullName))
-            {
-                _lockWriteTxtObj.Add(_FileFullName, new object());
-            }
-            if (!_maxID.ContainsKey(_FileFullName))
-            {
-                _maxID.Add(_FileFullName, 0);
-            }
         }
         public bool Delete(object where)
         {
@@ -265,6 +264,8 @@ namespace CYQ.Data
             count = -1;
             if (!string.IsNullOrEmpty(Convert.ToString(where)))
             {
+                //lock (lockOperatorObj) // 删除条件会影响到Insert。
+                //{
                 List<MDataRow> rowList = Table.FindAll(where);
                 if (rowList != null)
                 {
@@ -273,12 +274,29 @@ namespace CYQ.Data
                     {
                         for (int i = rowList.Count - 1; i >= 0; i--)
                         {
-                            Table.Rows.Remove(rowList[i]);
+                            try
+                            {
+                                MDataRow row = rowList[i];
+                                if (row != null)
+                                {
+                                    if (Table.Rows.Contains(row)) //线程多时，有时候会重复删
+                                    {
+                                        Table.Rows.Remove(row);
+                                    }
+                                    if (_insertRows.Count > 0 && _insertRows.Contains(row))
+                                    {
+                                        _insertRows.Remove(row);
+                                    }
+
+                                }
+                            }
+                            catch { }
                         }
-                        _needToSaveState[_FileFullName] = 2;
+                        needToSaveState = 2;
                         return true;
                     }
                 }
+                //}
             }
             return false;
         }
@@ -290,6 +308,7 @@ namespace CYQ.Data
                 //判断是否需要增加自增加ID
                 if (!cell.Struct.IsCanNull && (cell.Struct.IsAutoIncrement || cell.Struct.IsPrimaryKey))
                 {
+                    #region 给主键赋值
                     int groupID = DataType.GetGroup(cell.Struct.SqlType);
                     string existWhere = cell.ColumnName + (groupID == 1 ? "={0}" : "='{0}'");
                     if (cell.IsNull || cell.cellValue.State == 0 || cell.strValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
@@ -308,7 +327,7 @@ namespace CYQ.Data
                     }
                     if (groupID == 1 || groupID == 4)//再检测是否已存在
                     {
-                        if (!isOpenTrans && Exists(string.Format(existWhere, cell.Value)))
+                        if (!isOpenTrans && Exists(string.Format(existWhere, cell.Value)))//事务时，由于自动补ID，避开检测，提升性能
                         {
                             Error.Throw("first column value must be unique:(" + cell.ColumnName + ":" + cell.Value + ")");
                         }
@@ -317,14 +336,15 @@ namespace CYQ.Data
                             maxID = (int)cell.Value;
                         }
                     }
+                    #endregion
                 }
 
                 CheckFileChanged(true);
                 _Row.SetState(0);//状态重置，避免重复使用插入！
                 MDataRow newRow = Table.NewRow(true);
                 newRow.LoadFrom(_Row);
-                _insertRows.Add(newRow);//插入引用！
-                _needToSaveState[_FileFullName] = _needToSaveState[_FileFullName] > 1 ? 2 : 1;
+                _insertRows.Add(newRow);//插入引用，内存表有数据，还没写文章！
+                needToSaveState = needToSaveState > 1 ? 2 : 1;
                 return true;
             }
             return false;
@@ -350,7 +370,7 @@ namespace CYQ.Data
                         rowList[i].SetState(0);//状态重置
                     }
                     _Row.SetState(0);
-                    _needToSaveState[_FileFullName] = 2;
+                    needToSaveState = 2;
                     return true;
                 }
             }
@@ -422,7 +442,11 @@ namespace CYQ.Data
 
         public void Dispose()
         {
-            int state = _needToSaveState[_FileFullName];
+            if (string.IsNullOrEmpty(_FileFullName))
+            {
+                return;
+            }
+            int state = needToSaveState;
             if (state > 0)
             {
                 bool isFirstAddRow = (Table.Rows.Count - _insertRows.Count) == 0;//如果是首次新增加数据。
@@ -443,7 +467,7 @@ namespace CYQ.Data
                         Save();//失败，则重新尝试写入！
                     }
                 }
-                _needToSaveState[_FileFullName] = 0;//重置为0
+                needToSaveState = 0;//重置为0
                 CheckFileChanged(false);//通过检测重置最后修改时间。
             }
         }
@@ -453,22 +477,26 @@ namespace CYQ.Data
         /// <param name="isNeedToReloadTable"></param>
         private void CheckFileChanged(bool isNeedToReloadTable)
         {
-            if (isNeedToReloadTable && IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref _lastWriteTimeUtc))//已经被修改过
+            if (isNeedToReloadTable)
             {
-                if (_tableList.ContainsKey(_FileFullName))
+                DateTime _lastWriteTimeUtc = _lastWriteTimeList[_FileFullName];
+                if (IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref _lastWriteTimeUtc))
                 {
-                    try
+                    _lastWriteTimeList[_FileFullName] = _lastWriteTimeUtc;
+                    if (_tableList.ContainsKey(_FileFullName))
                     {
-                        _tableList[_FileFullName].Rows.Clear();
-                        _tableList.Remove(_FileFullName);
-                    }
-                    catch// (Exception err)
-                    {
+                        try
+                        {
+                            _tableList[_FileFullName].Rows.Clear();
+                            _tableList.Remove(_FileFullName);
+                        }
+                        catch// (Exception err)
+                        {
 
+                        }
                     }
-
+                    _Table = null;//需要重新加载数据。
                 }
-                _Table = null;//需要重新加载数据。
             }
 
         }
@@ -486,20 +514,18 @@ namespace CYQ.Data
                 bool isError = false;
                 do
                 {
-                    lock (lockWriteTxtobj)
+                    try
                     {
-                        try
-                        {
 
-                            IOHelper.Write(_FileFullName, text);
-                            tryAgainCount = 0;
-                        }
-                        catch
-                        {
-                            tryAgainCount--;
-                            isError = true;
-                        }
+                        IOHelper.Write(_FileFullName, text);
+                        tryAgainCount = 0;
                     }
+                    catch
+                    {
+                        tryAgainCount--;
+                        isError = true;
+                    }
+
                     if (isError)
                     {
                         System.Threading.Thread.Sleep(20 * (4 - tryAgainCount));

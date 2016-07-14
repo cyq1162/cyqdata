@@ -245,8 +245,8 @@ namespace CYQ.Data.Cache
                 }
             }
             return true;
-           // string delKey = "DeleteAutoCache:" + baseKey;
-           // return !_MemCache.Contains(delKey);
+            // string delKey = "DeleteAutoCache:" + baseKey;
+            // return !_MemCache.Contains(delKey);
             //if (baseKey.Contains(".ActionV") || baseKey.Contains(".ProcS"))
             //{
 
@@ -429,17 +429,24 @@ namespace CYQ.Data.Cache
 
         public static void ClearCache(object threadID)
         {
-            while (true)
+            try
             {
-                Thread.Sleep(5);
-                if (removeList.Count > 0)
+                while (true)
                 {
-                    string baseKey = removeList.Dequeue();
-                    if (!string.IsNullOrEmpty(baseKey))
+                    Thread.Sleep(5);
+                    if (removeList.Count > 0)
                     {
-                        RemoveCache(baseKey);
+                        string baseKey = removeList.Dequeue();
+                        if (!string.IsNullOrEmpty(baseKey))
+                        {
+                            RemoveCache(baseKey);
+                        }
                     }
                 }
+            }
+            catch
+            {
+                ;
             }
         }
         private static readonly object lockObj = new object();
@@ -471,6 +478,9 @@ namespace CYQ.Data.Cache
                         }
                     }
                 }
+            }
+            catch (ThreadAbortException e)
+            {
             }
             catch (OutOfMemoryException)
             { }

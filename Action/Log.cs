@@ -231,7 +231,6 @@ namespace CYQ.Data
         /// <summary>
         /// 将异常写入文件
         /// </summary>
-        /// <param name="attachInfo">附加信息</param>
         public static void WriteLogToTxt(Exception err)
         {
             if (err is ThreadAbortException)//线程中止异常不记录

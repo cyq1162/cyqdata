@@ -197,10 +197,10 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
-                    {
-                        NoSqlAction.ResetStaticVar();
-                    }
+                    //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
+                    //{
+                    //    NoSqlAction.ResetStaticVar();//重置一下缓存
+                    //}
                     return NomalInsert(keepID);
                 }
             }
@@ -329,16 +329,11 @@ namespace CYQ.Data.Table
             try
             {
                 string path = Path.GetTempPath() + "t.t";
-                if (File.Exists(path))
-                {
-                    File.Delete(path);
-                    return true;
-                }
-                else
+                if (!File.Exists(path))
                 {
                     File.Create(path).Close();//检测文件夹的读写权限
-                    File.Delete(path);
                 }
+                return IOHelper.Delete(path);
             }
             catch
             {

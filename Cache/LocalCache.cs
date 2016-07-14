@@ -163,6 +163,9 @@ namespace CYQ.Data.Cache
                     #endregion
 
                 }
+                catch (ThreadAbortException e)
+                {
+                }
                 catch (OutOfMemoryException)
                 { }
                 catch (Exception err)
@@ -182,6 +185,7 @@ namespace CYQ.Data.Cache
                         {
                             if (RemainMemoryPercentage < 25)
                             {
+                                NoSqlAction.ResetStaticVar();
                                 GC.Collect();
                             }
                         }

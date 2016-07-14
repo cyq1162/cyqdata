@@ -272,7 +272,10 @@ namespace CYQ.Data
                 _aop.Para.MProc = this;
                 _aop.Para.ProcName = _procName;
                 _aop.Para.IsProc = _isProc;
-                _aop.Para.DBParameters = dalHelper.Com.Parameters;
+                if (dalHelper.Com != null)
+                {
+                    _aop.Para.DBParameters = dalHelper.Com.Parameters;
+                }
                 _aop.Para.IsTransaction = dalHelper.isOpenTrans;
                 return _aop.Begin(action);
             }

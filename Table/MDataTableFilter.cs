@@ -115,8 +115,9 @@ namespace CYQ.Data.Table
                     TFilter[] filters = GetTFilter(whereObj, table.Columns);
                     if (filters.Length > 0)
                     {
-                        foreach (MDataRow row in table.Rows)
+                        for (int i = 0; i < table.Rows.Count; i++)
                         {
+                            MDataRow row = table.Rows[i];
                             if (CompareMore(row, filters))
                             {
                                 mdt2[0].Rows.Add(row, false);
@@ -143,9 +144,9 @@ namespace CYQ.Data.Table
                 TFilter[] filters = GetTFilter(whereObj, table.Columns);
                 if (filters.Length > 0)
                 {
-                    foreach (MDataRow row in table.Rows)
+                    for (int i = 0; i < table.Rows.Count; i++)
                     {
-                        if (CompareMore(row, filters))
+                        if (CompareMore(table.Rows[i], filters))
                         {
                             count++;
                         }
@@ -196,17 +197,33 @@ namespace CYQ.Data.Table
                 {
                     return table.Rows[0];
                 }
-                TFilter[] filters = GetTFilter(whereObj, table.Columns);
+                string whereStr = SqlFormat.GetIFieldSql(whereObj);
+                string orderby;
+                SplitWhereOrderby(ref whereStr, out orderby);
+                MDataRowCollection sortRows = null;
+                if (!string.IsNullOrEmpty(orderby) && table.Rows.Count > 1)//进行数组排序
+                {
+                    sortRows = new MDataRowCollection();
+                    sortRows.AddRange(table.Rows);
+                    sortRows.Sort(orderby);
+                }
+                TFilter[] filters = GetTFilter(whereStr, table.Columns);
+
                 if (filters.Length > 0)
                 {
-                    foreach (MDataRow row in table.Rows)
+                    if (sortRows == null)
                     {
-                        if (CompareMore(row, filters))
+                        sortRows = table.Rows;
+                    }
+                    for (int i = 0; i < sortRows.Count; i++)
+                    {
+                        if (CompareMore(sortRows[i], filters))
                         {
-                            return row;
+                            return sortRows[i];
                         }
                     }
                 }
+
             }
             return null;
         }
@@ -231,10 +248,20 @@ namespace CYQ.Data.Table
             if (findRows != null)
             {
                 FilterPager(findRows, pageIndex, pageSize);//进行分页筛选，再克隆最后的数据。
-                foreach (MDataRow mr in findRows)
+
+                for (int i = 0; i < findRows.Count; i++)
                 {
-                    sTable.NewRow(true).LoadFrom(mr);
+                    if (i < findRows.Count)//内存表时（表有可能在其它线程被清空）
+                    {
+                        MDataRow row = findRows[i];
+                        if (row == null)
+                        {
+                            break;
+                        }
+                        sTable.NewRow(true).LoadFrom(row);
+                    }
                 }
+
                 findRows = null;
 
             }
@@ -502,7 +529,7 @@ namespace CYQ.Data.Table
         /// </summary>
         private static bool CompareMore(MDataRow row, params TFilter[] filters)
         {
-
+            if (row == null) { return false; }
             bool result = false;
 
             MDataCell cell = null, otherCell = null;

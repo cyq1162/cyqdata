@@ -46,7 +46,7 @@ namespace CYQ.Data.Tool
             {
                 if (!ContainsKey(key))
                 {
-                   
+
                     if (times > 3)
                     {
                         Log.WriteLogToTxt(err);
@@ -87,6 +87,22 @@ namespace CYQ.Data.Tool
                     times++;
                     Remove(key, times);
                 }
+            }
+        }
+
+        public new V this[K key]
+        {
+            get
+            {
+                if (base.ContainsKey(key))
+                {
+                    return base[key];
+                }
+                return default(V);
+            }
+            set
+            {
+                base[key] = value;
             }
         }
     }

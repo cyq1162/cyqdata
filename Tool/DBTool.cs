@@ -385,18 +385,43 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static bool DropTable(string tableName, string conn)
         {
-            using (MProc proc = new MProc(null, conn))
+            bool result = false;
+            using (DbBase helper = DalCreate.CreateDal(conn))
             {
-                proc.ResetProc("drop table " + Keyword(tableName, proc.DalType));
-                int result = proc.ExeNonQuery();
-                if (result == -2)
+                DalType dalType = helper.dalType;
+                switch (dalType)
                 {
-                    return false;
+                    case DalType.Txt:
+                    case DalType.Xml:
+                        string folder = helper.Con.DataSource + Path.GetFileNameWithoutExtension(tableName);
+                        string path = folder + ".ts";
+                        try
+                        {
+                            if (File.Exists(path))
+                            {
+                                result = IOHelper.Delete(path);
+                            }
+                            path = folder + (dalType == DalType.Txt ? ".txt" : ".xml");
+                            if (File.Exists(path))
+                            {
+                                result = IOHelper.Delete(path);
+                            }
+                        }
+                        catch
+                        {
+                           
+                        }
+                        break;
+                    default:
+                        result = helper.ExeNonQuery("drop table " + Keyword(tableName, dalType), false) != -2;
+                        if (result)
+                        {
+                            RemoveCache(tableName, helper.DataBase, dalType);
+                        }
+                        break;
                 }
-                RemoveCache(tableName, proc.DataBase, proc.DalType);
             }
-
-            return true;
+            return result;
         }
 
         #endregion
