@@ -117,6 +117,10 @@ namespace CYQ.Data.Orm
                 if (string.IsNullOrEmpty(tableName))
                 {
                     tableName = typeInfo.Name;
+                    if (tableName.EndsWith(AppConfig.EntitySuffix))
+                    {
+                        tableName = tableName.Substring(0, tableName.Length - AppConfig.EntitySuffix.Length);
+                    }
                 }
 
                 string key = tableName + MD5.Get(conn);
@@ -199,7 +203,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Insert()
         {
-            return Insert(false, InsertOp.ID);
+            return Insert(InsertOp.ID);
         }
         /// <summary>
         ///  插入数据
@@ -207,8 +211,17 @@ namespace CYQ.Data.Orm
         /// <param name="option">插入选项</param>
         public bool Insert(InsertOp option)
         {
-            return Insert(false, option);
+            return Insert(false, option, false);
         }
+        /// <summary>
+        ///  插入数据
+        /// </summary>
+        /// <param name="insertID">插入主键</param>
+        public bool Insert(InsertOp option, bool insertID)
+        {
+            return Insert(false, option, insertID);
+        }
+        /*
         /// <summary>
         ///  插入数据
         /// </summary>
@@ -217,18 +230,24 @@ namespace CYQ.Data.Orm
         {
             return Insert(autoSetValue, InsertOp.ID);
         }
+        internal bool Insert(bool autoSetValue, InsertOp option)
+        {
+            return Insert(autoSetValue, InsertOp.ID, false);
+        }*/
         /// <summary>
         ///  插入数据
         /// </summary>
         /// <param name="autoSetValue">自动从控制获取值</param>
         /// <param name="option">插入选项</param>
-        internal bool Insert(bool autoSetValue, InsertOp option)
+        /// <param name="insertID">插入主键</param>
+        internal bool Insert(bool autoSetValue, InsertOp option, bool insertID)
         {
             if (autoSetValue)
             {
-                action.UI.GetAll(true);
+                action.UI.GetAll(!insertID);
             }
             GetValueFromEntity();
+            action.AllowInsertID = insertID;
             bool result = action.Insert(false, option);
             if (autoSetValue || option != InsertOp.None)
             {

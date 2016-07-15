@@ -599,7 +599,7 @@ namespace CYQ.Data
             CheckDisposed();
             if (autoSetValue)
             {
-                _UI.GetAll(true && !AllowInsertID);//允许插入ID时，也需要获取主键。
+                _UI.GetAll(!AllowInsertID);//允许插入ID时，也需要获取主键。
             }
             AopResult aopResult = AopResult.Default;
             if (_aop.IsCustomAop)

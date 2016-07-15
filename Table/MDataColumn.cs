@@ -56,6 +56,16 @@ namespace CYQ.Data.Table
                 return null;
             }
         }
+        /// <summary>
+        /// 架构所引用的表
+        /// </summary>
+        public MDataTable Table
+        {
+            get
+            {
+                return _Table;
+            }
+        }
         internal MDataTable _Table;
         public MDataColumn()
             : base()
@@ -116,22 +126,36 @@ namespace CYQ.Data.Table
             if (index > -1 && index != ordinal)
             {
                 MCellStruct mstruct = this[index];
-                base.RemoveAt(index);//移除
-                if (ordinal >= base.Count)
-                {
-                    ordinal = base.Count;
-                }
-                base.Insert(ordinal, mstruct);
                 if (_Table != null && _Table.Rows.Count > 0)
                 {
-                    MDataCell cell;
-                    foreach (MDataRow row in _Table.Rows)
+                    List<object> items = _Table.GetColumnItems<object>(index, BreakOp.None);
+                    _Table.Columns.RemoveAt(index);
+                    _Table.Columns.Insert(ordinal, mstruct);
+                    for (int i = 0; i < items.Count; i++)
                     {
-                        cell = row[index];
-                        row.RemoveAt(index);
-                        row.Insert(ordinal, cell);
+                        _Table.Rows[i].Set(ordinal, items[i]);
                     }
+                    items = null;
                 }
+                else
+                {
+                    base.RemoveAt(index);//移除
+                    if (ordinal >= base.Count)
+                    {
+                        ordinal = base.Count;
+                    }
+                    base.Insert(ordinal, mstruct);
+                }
+                //if (_Table != null && _Table.Rows.Count > 0)
+                //{
+                //    MDataCell cell;
+                //    foreach (MDataRow row in _Table.Rows)
+                //    {
+                //        cell = row[index];
+                //        row.RemoveAt(index);
+                //        row.Insert(ordinal, cell);
+                //    }
+                //}
             }
         }
 
@@ -284,7 +308,7 @@ namespace CYQ.Data.Table
             dt.Columns.Add("SqlType");
             dt.Columns.Add("IsPrimaryKey");
             dt.Columns.Add("IsUniqueKey");
-            dt.Columns.Add("IsPrimaryKey");
+            dt.Columns.Add("IsForeignKey");
             dt.Columns.Add("FKTableName");
             dt.Columns.Add("DefaultValue");
             dt.Columns.Add("Description");

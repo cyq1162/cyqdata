@@ -512,3 +512,9 @@
 298：修正文本数据库的批量更新方法（2016-07-14)
 299：修正XHtmlAction 的缓存进时没克隆存档（2016-07-14)
 300：优化文本数据库的多线程冲突问题（2016-07-14)
+301：为DBFast增加Exits、GetCount两个方法。（2016-07-15)
+302：优化ORM(DBFast、OrmBase、SimpleOrmBase三个类）（2016-07-15)
+303：修正MDataTable的SetOrdinal方法（2016-07-15)
+304：修正AcceptChanges的批量更新（2016-07-15)
+//------------到此，所有的Demmo都已写完，写Demo过程中发现的小Bug也处理完了。
+//项目Demo示例SVN地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/

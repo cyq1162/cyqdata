@@ -103,7 +103,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Insert()
         {
-            return sob.Insert();
+            return Insert(false, InsertOp.ID);
         }
         /// <summary>
         ///  插入数据
@@ -111,7 +111,7 @@ namespace CYQ.Data.Orm
         /// <param name="option">插入选项</param>
         public bool Insert(InsertOp option)
         {
-            return sob.Insert(option);
+            return Insert(false, option);
         }
         /// <summary>
         ///  插入数据
@@ -119,7 +119,7 @@ namespace CYQ.Data.Orm
         /// <param name="autoSetValue">自动从控制获取值</param>
         public bool Insert(bool autoSetValue)
         {
-            return sob.Insert(autoSetValue);
+            return Insert(autoSetValue, InsertOp.ID);
         }
         /// <summary>
         ///  插入数据
@@ -128,7 +128,7 @@ namespace CYQ.Data.Orm
         /// <param name="option">插入选项</param>
         public bool Insert(bool autoSetValue, InsertOp option)
         {
-            return sob.Insert(autoSetValue, option);
+            return sob.Insert(autoSetValue, option, AllowInsertID);
         }
         #endregion
 
@@ -412,7 +412,7 @@ namespace CYQ.Data.Orm
                 sob.SetValueToEntity(propValue);
             }
         }
-      
+
 
     }
 }

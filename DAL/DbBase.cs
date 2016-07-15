@@ -638,11 +638,29 @@ namespace CYQ.Data
                 _com.CommandText += " COLLATE NOCASE";//忽略大小写
             }
             _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
-            if (isProc && commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
+            if (isProc)
             {
-                AddReturnPara();
-                //检测是否存在分页存储过程，若不存在，则创建。
-                Tool.DBTool.CreateSelectBaseProc(dalType, conn);//内部分检测是否已创建过。
+                if (commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
+                {
+                    AddReturnPara();
+                    //检测是否存在分页存储过程，若不存在，则创建。
+                    Tool.DBTool.CreateSelectBaseProc(dalType, conn);//内部分检测是否已创建过。
+                }
+            }
+            else
+            {
+                //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
+                if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
+                {
+                    for (int i = 0; i < _com.Parameters.Count; i++)
+                    {
+                        if (commandText.IndexOf(_com.Parameters[i].ParameterName, StringComparison.OrdinalIgnoreCase) == -1)
+                        {
+                            _com.Parameters.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
             }
             //else
             //{

@@ -514,8 +514,10 @@ namespace CYQ.Data.Table
                 ex = err;
                 string msg = string.Format("ChangeType Error£ºColumnName¡¾{0}¡¿({1}) £¬ Value£º¡¾{2}¡¿\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, strValue);
                 strValue = null;
-                Log.WriteLog(false, msg);
-                //Log.WriteLogToTxt(err);
+                if (AppConfig.Log.IsWriteLog)
+                {
+                    Log.WriteLog(true, msg);
+                }
 
             }
             return value;

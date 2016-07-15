@@ -11,19 +11,6 @@ namespace CYQ.Data.Orm
     /// </summary>
     public static class DBFast
     {
-        //public static MDataRow FindRow<T>(object where)
-        //{
-        //    MDataRow row = new MDataRow();
-        //    using (MAction action = new MAction(GetTableName<T>()))
-        //    {
-        //        action.SetNoAop();
-        //        if (action.Fill(where))
-        //        {
-        //            row = action.Data;
-        //        }
-        //    }
-        //    return row;
-        //}
         /// <summary>
         /// 查找单条记录
         /// </summary>
@@ -120,16 +107,18 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public static bool Delete<T>(object where)
         {
-            bool result = false;
             using (MAction action = GetMAction<T>())
             {
-                result = action.Delete(where);
+                return action.Delete(where);
             }
-            return result;
         }
         public static bool Insert<T>(T t)
         {
             return Insert<T>(t, InsertOp.ID);
+        }
+        public static bool Insert<T>(T t, InsertOp op)
+        {
+            return Insert<T>(t, InsertOp.ID, false);
         }
         /// <summary>
         /// 添加一条记录
@@ -137,12 +126,13 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
         /// <returns></returns>
-        public static bool Insert<T>(T t, InsertOp op)
+        public static bool Insert<T>(T t, InsertOp op, bool insertID)
         {
             bool result = false;
             MDataRow row = null;
             using (MAction action = GetMAction<T>())
             {
+                action.AllowInsertID = insertID;
                 action.Data.LoadFrom(t);
                 result = action.Insert(op);
                 if (result && op != InsertOp.None)
@@ -169,19 +159,34 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public static bool Update<T>(T t, object where)
         {
-            bool result = false;
             using (MAction action = GetMAction<T>())
             {
                 action.Data.LoadFrom(t);
-                result = action.Update(where);
+                return action.Update(where);
             }
-            return result;
+        }
+        /// <summary>
+        /// 是否存在指定的条件
+        /// </summary>
+        public static bool Exists<T>(object where)
+        {
+            using (MAction action = GetMAction<T>())
+            {
+                return action.Exists(where);
+            }
+        }
+        public static int GetCount<T>(object where)
+        {
+            using (MAction action = GetMAction<T>())
+            {
+                return action.GetCount(where);
+            }
         }
         private static MAction GetMAction<T>()
         {
             string conn = string.Empty;
             MAction action = new MAction(GetTableName<T>(out conn), conn);
-            action.SetAopOff();
+            //action.SetAopOff();
             return action;
         }
         private static string GetTableName<T>(out string conn)

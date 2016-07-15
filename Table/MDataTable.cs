@@ -96,6 +96,7 @@ namespace CYQ.Data.Table
                         while (sdr.Read())
                         {
                             mRecord = this.NewRow();
+                            object[] values=new object[sdr.FieldCount];
                             for (int i = 0; i < Columns.Count; i++)
                             {
                                 #region ¶ÁÈ¡Êý¾Ý
@@ -117,7 +118,11 @@ namespace CYQ.Data.Table
                                     {
                                         errIndex.Add(i);
                                     }
-                                    value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                    try
+                                    {
+                                        value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                    }
+                                    catch { }
                                 }
 
 

@@ -630,7 +630,7 @@ namespace CYQ.Data.Table
                 {
                     pageSize = 1000;
                 }
-                count = mdt.Rows.Count / pageSize;
+                count = mdt.Rows.Count / pageSize + 1;
                 DbBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
