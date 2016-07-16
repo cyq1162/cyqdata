@@ -931,7 +931,8 @@ namespace CYQ.Data
                         }
                         if (sdReader != null)
                         {
-                            _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
+                           // _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
+                            _aop.Para.Table = sdReader;
                             if (!byPager)
                             {
                                 rowCount = _aop.Para.Table.Rows.Count;

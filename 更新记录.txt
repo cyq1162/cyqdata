@@ -518,3 +518,4 @@
 304：修正AcceptChanges的批量更新（2016-07-15)
 //------------到此，所有的Demmo都已写完，写Demo过程中发现的小Bug也处理完了。
 //项目Demo示例SVN地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
+305：处理视图名重复时的问题，同时简化MDataTable的代码，取消MDataTable的ReadFromDbDataReader（统一用CreateFrom(sdr)方法读取。（2016-07-16)

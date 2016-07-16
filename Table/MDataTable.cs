@@ -23,6 +23,7 @@ namespace CYQ.Data.Table
     public partial class MDataTable
     {
         #region 隐式转换
+        /*
         internal void ReadFromDbDataReader(DbDataReader sdr)
         {
             if (sdr != null)
@@ -30,7 +31,6 @@ namespace CYQ.Data.Table
                 if (Columns.Count > 0 && sdr.FieldCount > 0)
                 {
                     this.Rows.Clear();//如果直接从Row中加载架构，会多出一行，因此需要清除
-
                     #region 表架构处理（对于SetSelectColumns指定列查询时，需要去除一些列）
 
                     List<string> columns = new List<string>();//记录DataReader的列。
@@ -86,6 +86,7 @@ namespace CYQ.Data.Table
                         }
                     }
                     #endregion
+
 
                     #region 加载行数据
                     if (sdr.HasRows)
@@ -152,7 +153,7 @@ namespace CYQ.Data.Table
                 sdr = null;
             }
         }
-
+        */
         /// <summary>
         /// 从DataReader隐式转换成MDataTable
         /// </summary>
@@ -1229,21 +1230,21 @@ namespace CYQ.Data.Table
                 if (dt != null && dt.Rows.Count > 0)
                 {
                     mTable.Columns = TableSchema.GetColumns(dt);
-                    MCellStruct ms;
-                    string name;
-                    for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
-                    {
-                        name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
-                        if (string.IsNullOrEmpty(name))
-                        {
-                            name = "Empty_" + i;
-                        }
-                        ms = mTable.Columns[name];//sqlite的双引号问题
-                        if (ms != null)
-                        {
-                            ms.ReaderIndex = i;
-                        }
-                    }
+                    //MCellStruct ms;
+                    //string name;
+                    //for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
+                    //{
+                    //    name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
+                    //    if (string.IsNullOrEmpty(name))
+                    //    {
+                    //        name = "Empty_" + i;
+                    //    }
+                    //    ms = mTable.Columns[name];//sqlite的双引号问题
+                    //    if (ms != null)
+                    //    {
+                    //        ms.ReaderIndex = i;
+                    //    }
+                    //}
                 }
                 #endregion
                 if (sdr.HasRows)
@@ -1263,11 +1264,11 @@ namespace CYQ.Data.Table
                             {
                                 if (errIndex.Contains(i))
                                 {
-                                    value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                    value = sdr.GetString(ms.ReaderIndex);
                                 }
                                 else
                                 {
-                                    value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
+                                    value = sdr[ms.ReaderIndex];
                                 }
                             }
                             catch
@@ -1276,7 +1277,7 @@ namespace CYQ.Data.Table
                                 {
                                     errIndex.Add(i);
                                 }
-                                value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
+                                value = sdr.GetString(ms.ReaderIndex);
                             }
 
                             if (value == null || value == DBNull.Value)

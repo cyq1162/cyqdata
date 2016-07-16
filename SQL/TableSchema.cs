@@ -462,6 +462,7 @@ namespace CYQ.Data.SQL
                     mStruct.SqlTypeName = sqlTypeName;
                     mStruct.TableName = tableName;
                     mStruct.OldName = mStruct.ColumnName;
+                    mStruct.ReaderIndex = i;
                     mdcs.Add(mStruct);
 
                 }
