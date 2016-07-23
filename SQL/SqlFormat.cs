@@ -182,7 +182,7 @@ namespace CYQ.Data.SQL
             List<string> nameList = new List<string>();
 
             //获取原始表名
-            string[] items = sql.Split(' ');
+            string[] items = sql.Split(new char[] { ' ', ';', '(', ')', ',' });
             if (items.Length == 1) { return nameList; }//单表名
             if (items.Length > 3) // 总是包含空格的select * from xxx
             {

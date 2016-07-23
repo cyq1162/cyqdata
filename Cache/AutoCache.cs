@@ -132,7 +132,7 @@ namespace CYQ.Data.Cache
                         JsonHelper js = new JsonHelper(false, false);
                         foreach (MDataTable table in aopInfo.TableList)
                         {
-                            js.Add(table.TableName, table.ToJson(true, true, RowOp.IgnoreNull));
+                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull));
                         }
                         js.AddBr();
                         _MemCache.Set(key, js.ToString(), cacheTime);

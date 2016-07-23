@@ -523,3 +523,4 @@
 307：为MDataTable和MAction的Set方法增加重载Set(key,value,state)，在循环赋值时，产生批量更新时，可以对state赋值2（2016-07-21)
 308：增加贴心功能：自定义参数化语句@符号，在各数据库自动被替换成相应的?或:符号兼容多数据库。（2016-07-22)
 309：增强MDataTable绑定到Winform和WFP的功能（2016-07-23)
+310：修正MProc的ExeMDataTableList的自动缓存问题2016-07-23)
