@@ -652,9 +652,23 @@ namespace CYQ.Data
                 //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
                 if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
                 {
+                    bool needToReplace = (dalType == DalType.Oracle || dalType == DalType.MySql) && _com.CommandText.Contains("@");
+                    string paraName;
                     for (int i = 0; i < _com.Parameters.Count; i++)
                     {
-                        if (commandText.IndexOf(_com.Parameters[i].ParameterName, StringComparison.OrdinalIgnoreCase) == -1)
+                        paraName = _com.Parameters[i].ParameterName.TrimStart(Pre);//默认自带前缀的，取消再判断
+                        if (needToReplace && _com.CommandText.IndexOf("@" + paraName) > -1)
+                        {
+                            //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
+                            switch (dalType)
+                            {
+                                case DalType.Oracle:
+                                case DalType.MySql:
+                                    _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
+                                    break;
+                            }
+                        }
+                        if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
                         {
                             _com.Parameters.RemoveAt(i);
                             i--;

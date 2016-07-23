@@ -931,7 +931,7 @@ namespace CYQ.Data
                         }
                         if (sdReader != null)
                         {
-                           // _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
+                            // _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
                             _aop.Para.Table = sdReader;
                             if (!byPager)
                             {
@@ -961,6 +961,16 @@ namespace CYQ.Data
             }
             _aop.Para.Table.TableName = TableName;//Aop从Json缓存加载时会丢失表名。
             _aop.Para.Table.Conn = _Data.Conn;
+            //修正DataType和Size、Scale
+            for (int i = 0; i < _aop.Para.Table.Columns.Count; i++)
+            {
+                MCellStruct msTable = _aop.Para.Table.Columns[i];
+                MCellStruct ms = _Data.Columns[msTable.ColumnName];
+                if (ms != null)
+                {
+                    msTable.Load(ms);
+                }
+            }
             if (_sqlCreate != null)
             {
                 _sqlCreate.selectColumns = null;
@@ -1187,10 +1197,23 @@ namespace CYQ.Data
         /// </code></example>
         public MAction Set(object key, object value)
         {
+            return Set(key, value, -1);
+        }
+        /// <summary>
+        /// 设置值
+        /// </summary>
+        /// <param name="state">手工设置状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</param>
+        /// <returns></returns>
+        public MAction Set(object key, object value, int state)
+        {
             MDataCell cell = _Data[key];
             if (cell != null)
             {
                 cell.Value = value;
+                if (state > 0 && state < 3)
+                {
+                    cell.State = state;
+                }
             }
             else
             {

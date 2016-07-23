@@ -511,6 +511,10 @@ namespace CYQ.Data
                 }
                 set
                 {
+                    if (!value.Contains("cyqrownum,rowguid,"))
+                    {
+                        value = "cyqrownum,rowguid," + value;
+                    }
                     SetApp("HiddenFields", value);
                 }
             }

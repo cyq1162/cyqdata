@@ -36,6 +36,28 @@ namespace CYQ.Data
         {
             return GetConnBean(conn).ConnDalType;
         }
+        public static DalType GetDalTypeByReaderName(string typeName)
+        {
+            switch (typeName.Replace("DataReader", "").ToLower())
+            {
+                case "oracle":
+                    return DalType.Oracle;
+                case "sql":
+                    return DalType.MsSql;
+                case "sqlite":
+                    return DalType.SQLite;
+                case "oledb":
+                    return DalType.Access;
+                case "mysql":
+                    return DalType.MySql;
+                case "odbc":
+                case "ase":
+                    return DalType.Sybase;
+                default:
+                    return DalType.None;
+
+            }
+        }
         public static string GetProvider(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//È¥µô¿Õ¸ñ

@@ -108,7 +108,9 @@ namespace CYQ.Data.SQL
                 case DalType.Xml:
                     tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
                     string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
-                    return MDataColumn.CreateFrom(fileName);
+                    MDataColumn mdc = MDataColumn.CreateFrom(fileName);
+                    mdc.dalType = dalType;
+                    return mdc;
             }
 
             MDataColumn mdcs = new MDataColumn();
@@ -385,6 +387,20 @@ namespace CYQ.Data.SQL
             }
             return mdcs;
         }
+        /// <summary>
+        /// DbDataReader的GetSchema拿到的DataType、Size、Scale很不靠谱
+        /// </summary>
+        internal static void FixTableSchemaType(DbDataReader sdr, DataTable tableSchema)
+        {
+            if (sdr != null && tableSchema != null)
+            {
+                tableSchema.Columns.Add("DataTypeString");
+                for (int i = 0; i < sdr.FieldCount; i++)
+                {
+                    tableSchema.Rows[i]["DataTypeString"] = sdr.GetDataTypeName(i);
+                }
+            }
+        }
         internal static MDataColumn GetColumns(DataTable tableSchema)
         {
             MDataColumn mdcs = new MDataColumn();
@@ -396,10 +412,14 @@ namespace CYQ.Data.SQL
                 int maxSize = -1;
                 short maxSizeScale = 0;
                 SqlDbType sqlDbType;
-                string dataTypeName = "DataTypeName";
+                string dataTypeName = "DataTypeString";
                 if (!tableSchema.Columns.Contains(dataTypeName))
                 {
                     dataTypeName = "DataType";
+                    if (!tableSchema.Columns.Contains(dataTypeName))
+                    {
+                        dataTypeName = "DataTypeName";
+                    }
                 }
                 bool isHasAutoIncrement = tableSchema.Columns.Contains("IsAutoIncrement");
                 bool isHasHidden = tableSchema.Columns.Contains("IsHidden");
@@ -479,9 +499,12 @@ namespace CYQ.Data.SQL
             if (sdr != null)
             {
                 keyDt = sdr.GetSchemaTable();
+                FixTableSchemaType(sdr, keyDt);
                 sdr.Close();
             }
-            return GetColumns(keyDt);
+            MDataColumn mdc = GetColumns(keyDt);
+            mdc.dalType = helper.dalType;
+            return mdc;
 
         }
         /// <summary>
@@ -553,7 +576,10 @@ namespace CYQ.Data.SQL
                         tableName = Convert.ToString(sdr["TableName"]);
                         if (!tables.ContainsKey(tableName))
                         {
-                            tables.Add(tableName, Convert.ToString(sdr["Description"]));
+                            if (!tableName.StartsWith("BIN$"))//Oracle的已删除的表。
+                            {
+                                tables.Add(tableName, Convert.ToString(sdr["Description"]));
+                            }
                         }
                         else
                         {

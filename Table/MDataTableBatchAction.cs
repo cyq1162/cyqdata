@@ -61,7 +61,10 @@ namespace CYQ.Data.Table
             _Conn = !string.IsNullOrEmpty(conn) ? conn : mTable.Conn;
             if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
             {
-                DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn);
+                if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn))
+                {
+                    Error.Throw("Create Table Error:" + mdt.TableName);
+                }
             }
             MDataColumn column = DBTool.GetColumns(mdt.TableName, _Conn);
             FixTable(column);//
@@ -742,9 +745,9 @@ namespace CYQ.Data.Table
                             }
                         }
                     }
-                    
+
                     #endregion
-                    
+
                     #region 旧逻辑，已不用 分拆处理 本地比较分拆两个表格【更新和插入】-》分开独立处理。
                     /*
                     string columnName = mdt.Columns.FirstPrimary.ColumnName;
@@ -798,10 +801,10 @@ namespace CYQ.Data.Table
                         else
                         {
                             action.Data.SetState(2);
-                            if (action.Data.GetState(true) == 2)
-                            {
+                            //if (action.Data.GetState(true) == 2)
+                            //{
                                 result = action.Update(where);
-                            }
+                            //}
                         }
                         if (!result)
                         {

@@ -139,7 +139,10 @@ namespace CYQ.Data.Orm
                         Columns = TableSchema.GetColumns(typeInfo);
                         if (!DBTool.ExistsTable(tableName, conn))
                         {
-                            DBTool.CreateTable(tableName, Columns, conn);
+                            if (!DBTool.CreateTable(tableName, Columns, conn))
+                            {
+                                Error.Throw("Create Table Error:" + tableName);
+                            }
                         }
                     }
                     else if (isTxtDal)//文本数据库

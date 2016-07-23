@@ -1229,7 +1229,9 @@ namespace CYQ.Data.Table
                 DataTable dt = sdr.GetSchemaTable();
                 if (dt != null && dt.Rows.Count > 0)
                 {
+                    TableSchema.FixTableSchemaType(sdr, dt);
                     mTable.Columns = TableSchema.GetColumns(dt);
+                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                     //MCellStruct ms;
                     //string name;
                     //for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。

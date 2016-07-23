@@ -109,7 +109,6 @@ namespace CYQ.Data.Cache
             catch (Exception err)
             {
                 Log.WriteLogToTxt(err);
-                // throw;
             }
         }
         int taskCount = 0, taskInterval = 10;//10分钟清一次缓存。

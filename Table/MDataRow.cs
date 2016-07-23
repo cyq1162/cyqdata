@@ -355,18 +355,29 @@ namespace CYQ.Data.Table
             }
             return state;
         }
-
+        /// <summary>
+        /// 为行设置值
+        /// </summary>
+        public MDataRow Set(object key, object value)
+        {
+            return Set(key, value, -1);
+        }
         /// <summary>
         /// 为行设置值
         /// </summary>
         /// <param name="key">字段名</param>
         /// <param name="value">值</param>
-        public MDataRow Set(object key, object value)
+        /// <param name="state">手工设置状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</param>
+        public MDataRow Set(object key, object value, int state)
         {
             MDataCell cell = this[key];
             if (cell != null)
             {
                 cell.Value = value;
+                if (state > 0 && state < 3)
+                {
+                    cell.State = state;
+                }
             }
             return this;
         }
@@ -1207,6 +1218,7 @@ namespace CYQ.Data.Table
         }
 
     }
+
     public partial class MDataRow : System.ComponentModel.ICustomTypeDescriptor
     {
         #region ICustomTypeDescriptor 成员
@@ -1287,4 +1299,5 @@ namespace CYQ.Data.Table
         }
         #endregion
     }
+
 }

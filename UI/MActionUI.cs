@@ -347,15 +347,25 @@ namespace CYQ.Data.UI
                                 t.GetProperty("Src").SetValue(ct, strValue, null);
                                 break;
                             case "DateTimePicker"://win
-                                DateTime dt;
-                                if (DateTime.TryParse(Convert.ToString(value), out dt))
+                                DateTime dt = DateTime.MinValue;
+                                if (strValue == "" || DateTime.TryParse(strValue, out dt))
                                 {
-                                    t.GetProperty("Value").SetValue(ct, dt, null);
+                                    PropertyInfo pv = t.GetProperty("Value");
+                                    if (strValue == "")
+                                    {
+                                        PropertyInfo pi = t.GetProperty("MinDate");
+                                        if (pi != null)
+                                        {
+                                            pv.SetValue(ct, pi.GetValue(ct, null), null);
+                                            break;
+                                        }
+                                    }
+                                    pv.SetValue(ct, dt, null);
                                 }
                                 break;
                             case "NumericUpDown"://win
                                 decimal result = 0;
-                                if (decimal.TryParse(Convert.ToString(value), out result))
+                                if (decimal.TryParse(strValue, out result))
                                 {
                                     t.GetProperty("Value").SetValue(ct, result, null);
                                 }

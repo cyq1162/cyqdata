@@ -32,11 +32,17 @@ namespace CYQ.Data.UI
                     p.SetValue(ct, source, null);//winform
                 }
             }
-            else //wpf
+            else //wpf,sliverlight
             {
                 p = t.GetProperty("ItemsSource");
                 if (p != null)
                 {
+                    if (source is MDataTable)
+                    {
+                        MDataTable dt = source as MDataTable;
+                        //source = new MDataView(ref dt);
+                        source = dt.ToDataTable().DefaultView;
+                    }
                     p.SetValue(ct, source, null);//winform
                 }
             }
