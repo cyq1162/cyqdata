@@ -112,7 +112,7 @@ namespace CYQ.Data.Tool
                 helper.Dispose();
                 return null;
             }
-            Dictionary<string, string> tables = TableSchema.GetTables(ref helper);
+            Dictionary<string, string> tables = TableSchema.GetTables(ref helper);//内部有缓存
             helper.Dispose();
             return tables;
         }
@@ -409,7 +409,7 @@ namespace CYQ.Data.Tool
                         }
                         catch
                         {
-                           
+
                         }
                         break;
                     default:
@@ -620,9 +620,10 @@ namespace CYQ.Data.Tool
         internal static string GetMapTableName(string conn, string tableName)
         {
             Dictionary<string, string> mapTable = null;
-            if (Cache.CacheManage.LocalInstance.Contains(conn))
+            string key = "MapTalbe:" + conn.GetHashCode();
+            if (Cache.CacheManage.LocalInstance.Contains(key))
             {
-                mapTable = Cache.CacheManage.LocalInstance.Get<Dictionary<string, string>>(conn);
+                mapTable = Cache.CacheManage.LocalInstance.Get<Dictionary<string, string>>(key);
             }
             else
             {
@@ -633,19 +634,20 @@ namespace CYQ.Data.Tool
                     string mapName = string.Empty;
                     foreach (string item in list.Keys)
                     {
-                        mapName = item.Replace("_", "");
-                        if (item != mapName && !mapTable.ContainsKey(mapName))
+                        mapName = item.Replace("_", "").Replace("-", "").Replace(" ", "");//有奇葩用-符号和空格的。
+                        if (item != mapName && !mapTable.ContainsKey(mapName))//只存档带-," ",_等符号的表名
                         {
                             mapTable.Add(mapName.ToLower(), item);
                         }
                     }
-                    Cache.CacheManage.LocalInstance.Add(conn, mapTable, null, 1440);
+                    Cache.CacheManage.LocalInstance.Add(key, mapTable, null, 1440);
 
                 }
             }
-            if (mapTable != null && mapTable.Count > 0 && mapTable.ContainsKey(tableName.ToLower()))
+            key = tableName.Replace("_", "").Replace("-", "").Replace(" ", "").ToLower();
+            if (mapTable != null && mapTable.Count > 0 && mapTable.ContainsKey(key))
             {
-                return mapTable[tableName.ToLower()];
+                return mapTable[key];
             }
             return tableName;
         }

@@ -40,7 +40,7 @@ namespace CYQ.Data.UI
                     if (source is MDataTable)
                     {
                         MDataTable dt = source as MDataTable;
-                        //source = new MDataView(ref dt);
+                        // source = new MDataView(ref dt);
                         source = dt.ToDataTable().DefaultView;
                     }
                     p.SetValue(ct, source, null);//winform

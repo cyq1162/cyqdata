@@ -206,6 +206,7 @@ namespace CYQ.Data.Orm
             {
                 tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
             }
+            tName = CYQ.Data.Tool.DBTool.GetMapTableName(conn, tName);
             return tName;
         }
     }

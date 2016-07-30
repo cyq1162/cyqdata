@@ -36,7 +36,7 @@ namespace CYQ.Data.Table
     /// 单元结构的值
     /// </summary>
     [Serializable]
-    public class MCellValue
+    internal class MCellValue
     {
         internal bool IsNull = true;
         /// <summary>

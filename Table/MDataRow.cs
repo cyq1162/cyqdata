@@ -568,8 +568,8 @@ namespace CYQ.Data.Table
 
         string IDataRecord.GetDataTypeName(int i)
         {
-            return "";
-            //return this[i]._CellValue.ValueType.Name;
+            //return "";
+            return this[i].Struct.SqlTypeName;
         }
 
         DateTime IDataRecord.GetDateTime(int i)
@@ -619,12 +619,12 @@ namespace CYQ.Data.Table
 
         string IDataRecord.GetName(int i)
         {
-            return (string)this[i].Value;
+            return this[i].ColumnName;
         }
 
         int IDataRecord.GetOrdinal(string name)
         {
-            return (int)this[name].Value;
+            return this.Columns.GetIndex(name);
         }
 
         string IDataRecord.GetString(int i)
@@ -639,12 +639,19 @@ namespace CYQ.Data.Table
 
         int IDataRecord.GetValues(object[] values)
         {
-            return 0;
+            if (values != null && this.Count == values.Length)
+            {
+                for (int i = 0; i < this.Count; i++)
+                {
+                    values[i] = this[i].Value;
+                }
+            }
+            return this.Count;
         }
 
         bool IDataRecord.IsDBNull(int i)
         {
-            return this[i].Value == DBNull.Value;
+            return this[i].IsNull;
         }
 
         object IDataRecord.this[string name]
@@ -652,7 +659,7 @@ namespace CYQ.Data.Table
 
             get
             {
-                return this[name].Value;
+                return this[name];
             }
         }
 
@@ -660,7 +667,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return this[i].Value;
+                return this[i];
             }
         }
 

@@ -423,7 +423,6 @@ namespace CYQ.Data.Table
     }
 
     //internal partial class MDataView : IEditableObject, IEnumerable
-
     //{
 
 

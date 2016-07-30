@@ -35,4 +35,12 @@ namespace CYQ.Data.Table
 
         #endregion
     }
+    //internal partial class MDataView : IEnumerable
+    //{
+
+    //    public IEnumerator GetEnumerator()
+    //    {
+    //        return new System.Data.Common.DbEnumerator(table);
+    //    }
+    //}
 }
