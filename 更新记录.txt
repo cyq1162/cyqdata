@@ -526,3 +526,6 @@
 310：修正MProc的ExeMDataTableList的自动缓存问题2016-07-23)
 311：DBTool的GetMapTable增加对表名-中划线符号和空格的兼容处理(2016-07-30)
 312：CYQ.Data.ProjectTool 升级版本到V2.0（支持英文环境）(2016-07-30)
+313：大力调整升级XHtmlAction(细节改动多)(2016-07-31,2016-08-01)
+314：SetToAll和MDataTabler的Bind功能支持XHtmlAction对象(2016-07-31)
+315：Dtd文件变成资源文件合在V5里，用到时动态自动解压提升使用体验（为减少文件大小，删注释扣到我差点眼瞎）(2016-07-31)

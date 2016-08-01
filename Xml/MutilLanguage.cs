@@ -59,20 +59,20 @@ namespace CYQ.Data.Xml
         /// 实例化
         /// </summary>
         /// <param name="filePath">xml文件路径</param>
-        /// <param name="forHtml">是否Html文件</param>
-        /// <param name="getValueByCookie">是获从Cookie初始化默认语言</param>
-        public MutilLanguage(string filePath, bool forHtml, bool getValueByCookie)
+        /// <param name="isForHtml">是否Html文件</param>
+        /// <param name="isInitValueFromCookie">是获从Cookie初始化默认语言</param>
+        public MutilLanguage(string filePath, bool isForHtml, bool isInitValueFromCookie)
         {
-            Init(filePath, forHtml, getValueByCookie);
+            Init(filePath, isForHtml, isInitValueFromCookie);
         }
         /// <summary>
         /// 实例化
         /// </summary>
         /// <param name="filePath">xml文件路径</param>
-        /// <param name="forHtml">是否Html文件</param>
-        public MutilLanguage(string filePath, bool forHtml)
+        /// <param name="isForHtml">是否Html文件</param>
+        public MutilLanguage(string filePath, bool isForHtml)
         {
-            Init(filePath, forHtml, true);
+            Init(filePath, isForHtml, true);
         }
         /// <summary>
         /// 实例化
@@ -82,17 +82,17 @@ namespace CYQ.Data.Xml
         {
             Init(filePath, true, true);
         }
-        private void Init(string filePath, bool forHtml, bool getValueByCookie)
+        private void Init(string filePath, bool isForHtml, bool isInitValueFromCookie)
         {
-            helper = new XHtmlAction(forHtml);
-            helper.NoClone = true;//只读，节省Clone，节省CPU
+            helper = new XHtmlAction(isForHtml);
+            helper.IsNoClone = true;//只读，节省Clone，节省CPU
             if (!helper.Load(filePath, XmlCacheLevel.Day))
             {
                 Error.Throw("Load xml failed : " + filePath);
             }
-            if (getValueByCookie)
+            if (isInitValueFromCookie)
             {
-                GetFromCookie();
+                SetLanKeyByCookie();
             }
         }
         /// <summary>
@@ -145,7 +145,7 @@ namespace CYQ.Data.Xml
             }
             return Convert.ToString(lanID);
         }
-        private void GetFromCookie()
+        private void SetLanKeyByCookie()
         {
             if (HttpContext.Current != null)
             {

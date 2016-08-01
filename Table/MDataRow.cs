@@ -163,7 +163,16 @@ namespace CYQ.Data.Table
         {
             get
             {
-                int index = Columns.GetIndex(key);//重新检测列是否一致。
+                int index = -1;
+                if (key.Length <= Count.ToString().Length)
+                {
+                    //判断是否为数字。
+                    int.TryParse(key, out index);
+                }
+                if (index == -1)
+                {
+                    index = Columns.GetIndex(key);//重新检测列是否一致。
+                }
                 if (index > -1)
                 {
                     return base[index];

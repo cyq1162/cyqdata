@@ -119,6 +119,11 @@
     <Compile Include="Orm\SimpleOrmBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SQL\SqlCreateForSchema.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\MDataView.cs" />
@@ -224,6 +229,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram1.cd" />
+    <None Include="Resources\xhtml-lat1.ent" />
+    <None Include="Resources\xhtml-special.ent" />
+    <None Include="Resources\xhtml-symbol.ent" />
+    <None Include="Resources\xhtml1-transitional.ent" />
     <None Include="更新记录.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -237,6 +246,13 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

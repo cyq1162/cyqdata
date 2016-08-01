@@ -4,46 +4,56 @@ using System.Text;
 using System.Web.UI;
 using Win = System.Windows.Forms;
 using CYQ.Data.Table;
+using CYQ.Data.Xml;
 using System.Reflection;
 
 namespace CYQ.Data.UI
 {
     internal class MBindUI
     {
-        public static void Bind(object ct, object source)
+        public static void Bind(object ct, object source,string nodeID)
         {
-            Type t = ct.GetType();
-            PropertyInfo p = t.GetProperty("DataSource");
-            if (p != null)
+            if (ct is XHtmlAction)
             {
-                MethodInfo meth = t.GetMethod("DataBind");
-                if (meth != null)//web
-                {
-                    p.SetValue(ct, source, null);
-                    meth.Invoke(ct, null);
-                }
-                else
-                {
-                    if (source is MDataTable)
-                    {
-                        MDataTable dt = source as MDataTable;
-                        source = new MDataView(ref dt);
-                    }
-                    p.SetValue(ct, source, null);//winform
-                }
+                XHtmlAction doc = ct as XHtmlAction;
+                doc.LoadData(source as MDataTable);
+                doc.SetForeach(nodeID, SetType.InnerXml);
             }
-            else //wpf,sliverlight
+            else
             {
-                p = t.GetProperty("ItemsSource");
+                Type t = ct.GetType();
+                PropertyInfo p = t.GetProperty("DataSource");
                 if (p != null)
                 {
-                    if (source is MDataTable)
+                    MethodInfo meth = t.GetMethod("DataBind");
+                    if (meth != null)//web
                     {
-                        MDataTable dt = source as MDataTable;
-                        // source = new MDataView(ref dt);
-                        source = dt.ToDataTable().DefaultView;
+                        p.SetValue(ct, source, null);
+                        meth.Invoke(ct, null);
                     }
-                    p.SetValue(ct, source, null);//winform
+                    else
+                    {
+                        if (source is MDataTable)
+                        {
+                            MDataTable dt = source as MDataTable;
+                            source = new MDataView(ref dt);
+                        }
+                        p.SetValue(ct, source, null);//winform
+                    }
+                }
+                else //wpf,sliverlight
+                {
+                    p = t.GetProperty("ItemsSource");
+                    if (p != null)
+                    {
+                        if (source is MDataTable)
+                        {
+                            MDataTable dt = source as MDataTable;
+                            // source = new MDataView(ref dt);
+                            source = dt.ToDataTable().DefaultView;
+                        }
+                        p.SetValue(ct, source, null);//winform
+                    }
                 }
             }
             //if (ct is GridView)

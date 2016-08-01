@@ -11,6 +11,8 @@ using System.ComponentModel;
 using CYQ.Data.Extension;
 using System.Reflection;
 using CYQ.Data.Tool;
+using CYQ.Data.Xml;
+using System.Xml;
 namespace CYQ.Data.UI
 {
     /// <summary>
@@ -751,6 +753,11 @@ namespace CYQ.Data.UI
                                     Set(ct, null, -1, cell.Value);
                                 }
                             }
+                            else if (parentControl is XHtmlAction) // Html
+                            {
+                                XHtmlAction doc = parentControl as XHtmlAction;
+                                doc.Set(fix + columnName, cell.strValue);
+                            }
                             else // wpf
                             {
                                 MethodInfo meth = parentControl.GetType().GetMethod("FindName");
@@ -775,7 +782,7 @@ namespace CYQ.Data.UI
 
                 //else
                 //{
-                #region 直接由子控件遍历的
+                #region 直接由子控件遍历的 已注释掉
                 /*
 
                     string columnName = string.Empty;

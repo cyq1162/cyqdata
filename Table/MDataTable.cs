@@ -570,13 +570,23 @@ namespace CYQ.Data.Table
             return IOHelper.Write(fileName, ToJson(addHead, addSchema));
         }
 
+        
         /// <summary>
         /// 将数据表绑定到列表控件
         /// </summary>
         /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
         public void Bind(object control)
         {
-            MBindUI.Bind(control, this);
+            Bind(control, null);
+        }
+        /// <summary>
+        /// 将数据表绑定到列表控件
+        /// </summary>
+        /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
+        /// <param name="paraID">当Control为XHtmlAction对象时，需要指定绑定的节点ID</param>
+        public void Bind(object control,string nodeID)
+        {
+            MBindUI.Bind(control, this, nodeID);
         }
         /// <summary>
         /// 将新表的行放到原表的下面。

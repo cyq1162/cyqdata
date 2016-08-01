@@ -171,7 +171,7 @@ namespace CYQ.Data
                     string dtdUri = GetApp("DtdUri", "/Setting/DTD/xhtml1-transitional.dtd");
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
-                        dtdUri = AppDomain.CurrentDomain.BaseDirectory + dtdUri.TrimStart('/');
+                        dtdUri = AppDomain.CurrentDomain.BaseDirectory + dtdUri.TrimStart('/').Replace("/", "\\");
                     }
                     return dtdUri;
                 }

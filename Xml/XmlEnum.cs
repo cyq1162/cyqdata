@@ -110,7 +110,7 @@ namespace CYQ.Data.Xml
         /// </summary>
         Lower = 5,
         /// <summary>
-        /// 默认30分钟:或web.config系统配置项CacheTime取时间,
+        /// 默认取自配置项CacheTime时间,
         /// </summary>
         Default = 0,
 

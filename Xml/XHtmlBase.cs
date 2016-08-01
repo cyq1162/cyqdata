@@ -77,77 +77,61 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// xml缓存的key
         /// </summary>
-        public string xmlCacheKey = string.Empty;
-        private bool _NoClone;
+        public string XmlCacheKey = string.Empty;
+        private bool _IsNoClone;
         /// <summary>
-        /// 是否只读，只读时缓存[存取]不再Clone
+        /// 存取档不克隆（此时XHtml应是只读模式)
         /// </summary>
-        public bool NoClone
+        public bool IsNoClone
         {
             get
             {
-                return _NoClone;
+                return _IsNoClone;
             }
             set
             {
-                _NoClone = value;
+                _IsNoClone = value;
             }
         }
-        private bool _DocIsCache;
+        private bool _IsLoadFromCache;
         /// <summary>
         /// 文档是否取自缓存
         /// </summary>
-        public bool DocIsCache
+        public bool IsLoadFromCache
         {
             get
             {
-                return _DocIsCache;
+                return _IsLoadFromCache;
             }
             set
             {
-                _DocIsCache = value;
+                _IsLoadFromCache = value;
             }
         }
         /// <summary>
         /// Cache发生变化[用户更改缓存并设置更改标识]
         /// </summary>
-        public bool CacheIsChanged
+        public bool IsCacheChanged
         {
             get
             {
-                return theCache.GetHasChanged(xmlCacheKey);
+                return theCache.GetHasChanged(XmlCacheKey);
             }
             set
             {
-                theCache.SetChange(xmlCacheKey, value);
+                theCache.SetChange(XmlCacheKey, value);
             }
         }
         /// <summary>
         /// 目标XHtml文件是否被修改
         /// </summary>
-        public bool XHtmlIsChanged
+        public bool IsXHtmlChanged
         {
             get
             {
-                return theCache.GetFileDependencyHasChanged(xmlCacheKey);
+                return theCache.GetFileDependencyHasChanged(XmlCacheKey);
             }
         }
-        //private CacheItemPriority _CacheLevel = CacheItemPriority.Default;
-        ///// <summary>
-        ///// XHtml缓存级别[默认Default,非Default的将不受定时缓存清理的影响]，设置值时需要在Load方法调用之前使用才有效
-        ///// </summary>
-        //public CacheItemPriority CacheLevel
-        //{
-        //    get
-        //    {
-        //        return _CacheLevel;
-        //    }
-
-        //    set
-        //    {
-        //        _CacheLevel = value;
-        //    }
-        //}
         private double _CacheMinutes = 5;
         /// <summary>
         /// 缓存分钟数
@@ -174,9 +158,9 @@ namespace CYQ.Data.Xml
                         xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
                     }
                     string html = ClearCDATA(xml);
-                    if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("{$"))
+                    if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${"))
                     {
-                        MatchCollection matchs = Regex.Matches(html, @"\{\$([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                        MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                         if (matchs != null && matchs.Count > 0)
                         {
                             MDataCell matchCell = null;
@@ -288,10 +272,10 @@ namespace CYQ.Data.Xml
         {
 
             bool loadState = false;
-            xmlCacheKey = GenerateKey(fileName);//从路径中获得文件名做为key
+            XmlCacheKey = GenerateKey(fileName);//从路径中获得文件名做为key
             if (level != XmlCacheLevel.NoCache)
             {
-                loadState = LoadFromCache(xmlCacheKey);//从Cache加载Xml
+                loadState = LoadFromCache(XmlCacheKey);//从Cache加载Xml
             }
             if (!loadState)//Cache加载Xml失败
             {
@@ -310,7 +294,7 @@ namespace CYQ.Data.Xml
         {
             if (theCache.Contains(key))//缓存中存在对应值是key的对象
             {
-                if (_NoClone)
+                if (_IsNoClone)
                 {
                     _XmlDocument = theCache.Get(key) as XmlDocument;
                 }
@@ -318,7 +302,7 @@ namespace CYQ.Data.Xml
                 {
                     _XmlDocument = GetCloneFrom(theCache.Get(key) as XmlDocument);
                 }
-                _DocIsCache = true;
+                _IsLoadFromCache = true;
                 return true;
             }
             else
@@ -369,10 +353,10 @@ namespace CYQ.Data.Xml
                 {
                     RemoveCommentNode();
                 }
-                xmlCacheKey = GenerateKey(fileName);
-                if (!theCache.Contains(xmlCacheKey))
+                XmlCacheKey = GenerateKey(fileName);
+                if (!theCache.Contains(XmlCacheKey))
                 {
-                    SaveToCache(xmlCacheKey, !NoClone);
+                    SaveToCache(XmlCacheKey, !IsNoClone);
                 }
                 return true;
             }

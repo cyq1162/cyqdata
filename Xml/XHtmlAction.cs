@@ -4,6 +4,7 @@ using CYQ.Data.Table;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using CYQ.Data.Tool;
+using System.Text;
 
 namespace CYQ.Data.Xml
 {
@@ -24,11 +25,11 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="forHtml">true时，将自动载入html的名称空间(http://www.w3.org/1999/xhtml)</param>
-        public XHtmlAction(bool forHtml)
+        /// <param name="isForHtml">true时，将自动载入html的名称空间(http://www.w3.org/1999/xhtml)</param>
+        public XHtmlAction(bool isForHtml)
             : base()
         {
-            if (forHtml)
+            if (isForHtml)
             {
                 base.LoadNameSpace(htmlNameSpace);
             }
@@ -36,16 +37,16 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="forHtml">true时，将自动载入html的名称空间(http://www.w3.org/1999/xhtml)</param>
-        /// <param name="noClone">true时文档应为只读，所获取是同一份文档引用；false时文档可写，每次获取会克隆一份文档返回。</param>
-        public XHtmlAction(bool forHtml, bool noClone)
+        /// <param name="isForHtml">true时，将自动载入html的名称空间(http://www.w3.org/1999/xhtml)</param>
+        /// <param name="isNoClone">true时文档应为只读，所获取是同一份文档引用；false时文档可写，每次获取会克隆一份文档返回。</param>
+        public XHtmlAction(bool isForHtml, bool isNoClone)
             : base()
         {
-            if (forHtml)
+            if (isForHtml)
             {
                 base.LoadNameSpace(htmlNameSpace);
             }
-            NoClone = noClone;
+            IsNoClone = isNoClone;
         }
         /// <summary>
         /// 构造函数
@@ -55,10 +56,33 @@ namespace CYQ.Data.Xml
             : base()
         {
             base.LoadNameSpace(nameSpaceUrl);
-        } 
+        }
         #endregion
 
         #region 查询
+        /// <summary>
+        /// GetByID or GetByName
+        /// </summary>
+        /// <param name="idOrName">id or name</param>
+        /// <returns></returns>
+        public XmlNode Get(string idOrName)
+        {
+            XmlNode node = GetByID(idOrName);
+            if (node == null)
+            {
+                node = GetByName(idOrName);
+            }
+            return node;
+        }
+        public XmlNode Get(string idOrName, XmlNode parentNode)
+        {
+            XmlNode node = GetByID(idOrName, parentNode);
+            if (node == null)
+            {
+                node = GetByName(idOrName, parentNode);
+            }
+            return node;
+        }
         public XmlNode GetByID(string id)
         {
             return Fill(GetXPath("*", "id", id), null);
@@ -80,8 +104,6 @@ namespace CYQ.Data.Xml
         {
             return Fill(GetXPath(tag, attr, value), parentNode);
         }
-
-
 
         public XmlNodeList GetList(string tag, string attr, string value)
         {
@@ -192,9 +214,9 @@ namespace CYQ.Data.Xml
                 node.ParentNode.RemoveChild(node);
             }
         }
-        public void Remove(string id)
+        public void Remove(string idOrName)
         {
-            XmlNode node = GetByID(id);
+            XmlNode node = Get(idOrName);
             if (node != null)
             {
                 node.ParentNode.RemoveChild(node);
@@ -204,18 +226,18 @@ namespace CYQ.Data.Xml
         {
             RemoveChild(node, 0);
         }
-        public void RemoveAllChild(string id)
+        public void RemoveAllChild(string idOrName)
         {
-            RemoveChild(id, 0);
+            RemoveChild(idOrName, 0);
         }
         /// <summary>
         /// 移除子节点
         /// </summary>
         /// <param name="id">节点的ID</param>
         /// <param name="start">从第几个子节点开始删除[索引从0开始]</param>
-        public void RemoveChild(string id, int start)
+        public void RemoveChild(string idOrName, int start)
         {
-            XmlNode node = GetByID(id);
+            XmlNode node = Get(idOrName);
             if (node != null)
             {
                 RemoveChild(node, start);
@@ -331,9 +353,9 @@ namespace CYQ.Data.Xml
                 }
             }
         }
-        public void ReplaceNode(XmlNode newNode, string oldNodeID)
+        public void ReplaceNode(XmlNode newNode, string oldNodeIDorName)
         {
-            ReplaceNode(newNode, GetByID(oldNodeID));
+            ReplaceNode(newNode, Get(oldNodeIDorName));
         }
         /// <summary>
         /// 节点替换[支持两个的文档间替换]
@@ -388,29 +410,29 @@ namespace CYQ.Data.Xml
         #endregion
 
         #region 节点判断
-        public bool Contains(string id)
+        public bool Contains(string idOrName)
         {
-            return GetByID(id) != null;
+            return Get(idOrName) != null;
         }
-        public bool Contains(string id, XmlNode parentNode)
+        public bool Contains(string idOrName, XmlNode parentNode)
         {
-            return GetByID(id, parentNode) != null;
+            return Get(idOrName, parentNode) != null;
         }
         #endregion
 
         #region 属性判断/取值
 
-        public bool HasAttr(string nodeID, string attrName)
+        public bool HasAttr(string idOrName, string attrName)
         {
-            return GetAttrValue(nodeID, attrName) != string.Empty;
+            return GetAttrValue(idOrName, attrName) != string.Empty;
         }
         public bool HasAttr(XmlNode node, string attrName)
         {
             return GetAttrValue(node, attrName) != string.Empty;
         }
-        public string GetAttrValue(string nodeID, string attrName, params string[] defaultValue)
+        public string GetAttrValue(string idOrName, string attrName, params string[] defaultValue)
         {
-            XmlNode node = GetByID(nodeID);
+            XmlNode node = Get(idOrName);
             return GetAttrValue(node, attrName, defaultValue);
         }
         public string GetAttrValue(XmlNode node, string attrName, params string[] defaultValue)
@@ -445,9 +467,9 @@ namespace CYQ.Data.Xml
             }
             return string.Empty;
         }
-        public void RemoveAttr(string nodeID, params string[] attrNames)
+        public void RemoveAttr(string idOrName, params string[] attrNames)
         {
-            XmlNode node = GetByID(nodeID);
+            XmlNode node = Get(idOrName);
             RemoveAttr(node, attrNames);
         }
         public void RemoveAttr(XmlNode node, params string[] attrNames)
@@ -469,25 +491,25 @@ namespace CYQ.Data.Xml
 
         #region 操作数据
 
-        private bool _IsUserLang = true;
+        private bool _IsCurrentLang = true;
         /// <summary>
-        /// 当前请求是否用户的语言
+        /// 当前请求是否用户当前设置的语言
         /// </summary>
-        public bool IsUserLang
+        public bool IsCurrentLang
         {
             get
             {
-                return _IsUserLang;
+                return _IsCurrentLang;
             }
             set
             {
-                _IsUserLang = value;
+                _IsCurrentLang = value;
             }
         }
         /// <summary>
         /// 是否开始自定义语言分隔(分隔符号为：[#langsplit])
         /// </summary>
-        public bool IsOpenUserLang = true;
+        public bool IsUseLangSplit = true;
 
         private string SetValue(string sourceValue, string newValue, bool addCData)
         {
@@ -496,12 +518,12 @@ namespace CYQ.Data.Xml
                 return sourceValue;
             }
             newValue = newValue.Replace(ValueReplace.Source, sourceValue);
-            if (IsOpenUserLang)
+            if (IsUseLangSplit)
             {
                 int split = newValue.IndexOf(ValueReplace.LangSplit);
                 if (split > -1)
                 {
-                    newValue = _IsUserLang ? newValue.Substring(0, split) : newValue.Substring(split + ValueReplace.LangSplit.Length);
+                    newValue = _IsCurrentLang ? newValue.Substring(0, split) : newValue.Substring(split + ValueReplace.LangSplit.Length);
                 }
             }
             if (addCData)
@@ -646,15 +668,38 @@ namespace CYQ.Data.Xml
                 }
             }
         }
-        public void Set(string id, SetType setType, params string[] values)
+        public void Set(string idOrName, SetType setType, params string[] values)
         {
-            XmlNode node = GetByID(id);
+            XmlNode node = Get(idOrName);
             Set(node, setType, values);
         }
-        public void Set(string id, string value)
+        public void Set(string idOrName, string value)
         {
-            XmlNode node = GetByID(id);
-            Set(node, SetType.InnerXml, value);
+            XmlNode node = Get(idOrName);
+            if (node != null)
+            {
+                SetType setType = SetType.InnerXml;
+                switch (node.Name)
+                {
+                    case "input":
+                        switch (GetAttrValue(node, "type"))
+                        {
+                            case "checkbox":
+                                setType = SetType.Checked; break;
+                            case "image":
+                                setType = SetType.Src; break;
+                            default:
+                                setType = SetType.Value;
+                                break;
+                        }
+                        break;
+                    case "select":
+                        setType = SetType.Select; break;
+                    case "a":
+                        setType = SetType.Href; break;
+                }
+                Set(node, setType, value);
+            }
         }
 
         #endregion
@@ -681,12 +726,12 @@ namespace CYQ.Data.Xml
                 _Row = _Table.Rows[0];
             }
         }
-        public delegate string SetForeachEventHandler(string text, object[] values, int row);
+        public delegate string SetForeachEventHandler(string text, object[] values, int rowIndex);
         public event SetForeachEventHandler OnForeach;
-        public void SetForeach(string id, SetType setType, params object[] formatValues)
+        public void SetForeach(string idOrName, SetType setType, params object[] formatValues)
         {
             string text = string.Empty;
-            XmlNode node = GetByID(id);
+            XmlNode node = Get(idOrName);
             if (node == null)
             {
                 return;
@@ -718,17 +763,58 @@ namespace CYQ.Data.Xml
             }
             SetForeach(node, text, formatValues);
         }
-        public void SetForeach(string id, string text, params object[] formatValues)
+        public void SetForeach(string idOrName, string text, params object[] formatValues)
         {
-            XmlNode node = GetByID(id);
+            XmlNode node = Get(idOrName);
             SetForeach(node, text, formatValues);
         }
         public void SetForeach(XmlNode node, string text, params object[] formatValues)
         {
             if (node != null && _Table != null && _Table.Rows.Count > 0)
             {
-                string innerXml = "";
-                object[] values = new object[formatValues.Length];
+                int fvLen = formatValues.Length;
+                int colLen = _Table.Columns.Count;
+                StringBuilder innerXml = new StringBuilder();
+                if (string.IsNullOrEmpty(text))
+                {
+                    #region 补列头
+                    for (int i = 0; i < colLen; i++)
+                    {
+                        if (i == 0)
+                        {
+                            innerXml.Append(_Table.Columns[i].ColumnName);
+                        }
+                        else
+                        {
+                            innerXml.Append(" - " + _Table.Columns[i].ColumnName);
+                        }
+                    }
+                    innerXml.Append("<hr />");
+                    #endregion
+                    #region 空文本，默认补个简单的Table给它。
+                    StringBuilder sb = new StringBuilder();
+                    int min = fvLen == 0 ? colLen : Math.Min(fvLen, colLen);
+                    for (int i = 0; i < min; i++)
+                    {
+                        if (i == 0)
+                        {
+                            sb.Append("{0}");
+                        }
+                        else
+                        {
+                            sb.Append(" - {" + i + "}");
+                        }
+                    }
+                    sb.Append("<hr />");
+                    text = sb.ToString();
+                    #endregion
+                }
+                if (fvLen == 0)
+                {
+                    formatValues = new object[colLen];
+                }
+                object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
+
                 //foreach (MDataRow row in _Table.Rows)
                 string newText = text;
                 MDataCell cell;
@@ -736,34 +822,37 @@ namespace CYQ.Data.Xml
                 {
                     for (int i = 0; i < values.Length; i++)
                     {
+                        #region 从指定的列把值放到values数组
                         if (formatValues[i] == null)
                         {
-                            continue;
+                            formatValues[i] = i;
                         }
                         cell = _Table.Rows[k][formatValues[i].ToString()];
-                        if (cell == null && string.Compare(formatValues[i].ToString(), "row", true) == 0)
+                        if (cell == null && string.Compare(formatValues[i].ToString(), "row", true) == 0) // 多年以后，自己也没看懂比较row是为了什么
                         {
-                            values[i] = k + 1;
+                            values[i] = k + 1;//也没看懂，为啥值是自增加1，我靠，难道是行号？或者楼层数？隐匿功能？
                         }
                         else if (cell != null)
                         {
                             values[i] = cell.Value;
                         }
+                        #endregion
                     }
                     if (OnForeach != null)
                     {
-                        newText = OnForeach(text, values, k);
+                        newText = OnForeach(text, values, k);//遍历每一行，产生新text。
                     }
                     try
                     {
                         string tempText = newText;
                         for (int j = 0; j < values.Length; j++)
                         {
-                            tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));
+                            tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));//格式化{0}、{1}的占位符
                         }
-                        if (tempText.Contains("{$"))
+                        if (tempText.Contains("${"))
                         {
-                            MatchCollection matchs = Regex.Matches(tempText, @"\{\$([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                            #region 处理标签占位符
+                            MatchCollection matchs = Regex.Matches(tempText, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                             if (matchs != null && matchs.Count > 0)
                             {
                                 MDataCell matchCell = null;
@@ -787,9 +876,11 @@ namespace CYQ.Data.Xml
                                 keys = null;
                             }
                             matchs = null;
+                            #endregion
                         }
-                        //处理{$}语法
-                        innerXml += tempText;//string.Format(newText, values);
+                        //处理${}语法
+                        innerXml.Append(tempText);
+                        // innerXml += tempText;//string.Format(newText, values);
                     }
                     catch (Exception err)
                     {
@@ -798,13 +889,13 @@ namespace CYQ.Data.Xml
                 }
                 try
                 {
-                    node.InnerXml = innerXml;
+                    node.InnerXml = innerXml.ToString();
                 }
                 catch
                 {
                     try
                     {
-                        node.InnerXml = SetCDATA(innerXml);
+                        node.InnerXml = SetCDATA(innerXml.ToString());
                     }
                     catch (Exception err)
                     {
@@ -854,43 +945,43 @@ namespace CYQ.Data.Xml
         /// 为节点设置值，通常在LoadData后使用。
         /// </summary>
         /// <param name="id">节点的ID</param>
-        public void SetFor(string id)
+        public void SetFor(string idOrName)
         {
-            SetFor(id, SetType.InnerXml);
+            SetFor(idOrName, SetType.InnerXml);
         }
         /// <summary>
         /// 为节点设置值，通常在LoadData后使用。
         /// </summary>
         /// <param name="setType">节点的类型</param>
-        public void SetFor(string id, SetType setType)
+        public void SetFor(string idOrName, SetType setType)
         {
-            SetFor(id, setType, GetRowValue(id));
+            SetFor(idOrName, setType, GetRowValue(idOrName));
         }
         /// <summary>
         /// 为节点设置值，通常在LoadData后使用。
         /// </summary>
         /// <param name="values">setType为Custom时，可自定义值，如“"href","http://www.cyqdata.com","target","_blank"”</param>
-        public void SetFor(string id, SetType setType, params string[] values)
+        public void SetFor(string idOrName, SetType setType, params string[] values)
         {
             int i = setType == SetType.Custom ? 1 : 0;
             for (; i < values.Length; i++)
             {
                 if (values[i].Contains(ValueReplace.New))
                 {
-                    values[i] = values[i].Replace(ValueReplace.New, GetRowValue(id));
+                    values[i] = values[i].Replace(ValueReplace.New, GetRowValue(idOrName));
                 }
             }
-            Set(GetByID(id), setType, values);
+            Set(Get(idOrName), setType, values);
         }
-        private string GetRowValue(string id)
+        private string GetRowValue(string idOrName)
         {
             string rowValue = "";
             if (_Row != null)
             {
-                MDataCell cell = _Row[id.Substring(3)];
+                MDataCell cell = _Row[idOrName.Substring(3)];
                 if (cell == null)
                 {
-                    cell = _Row[id];
+                    cell = _Row[idOrName];
                 }
                 if (cell != null)
                 {
@@ -900,7 +991,7 @@ namespace CYQ.Data.Xml
             return rowValue;
         }
         #endregion
-       
+
         #endregion
 
         #region 转Json
