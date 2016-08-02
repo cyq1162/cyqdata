@@ -782,6 +782,7 @@ namespace CYQ.Data.Xml
                         xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
                     }
                     string html = ClearCDATA(xml);
+                    html = html.Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
                     if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${")) // 替换自定义标签。
                     {
                         #region 替换自定义标签
