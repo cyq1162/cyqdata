@@ -179,7 +179,14 @@ namespace CYQ.Data.Orm
 
         #region 查询
 
-
+        /// <summary>
+        /// 查询1条数据（自动取值）
+        /// </summary>
+        /// <returns></returns>
+        public bool Fill()
+        {
+            return sob.Fill();
+        }
         /// <summary>
         /// 查询1条数据
         /// </summary>

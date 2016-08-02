@@ -1087,7 +1087,7 @@ namespace CYQ.Data.Table
                                     }
                                     break;
                             }
-                            Set(index, propValue);
+                            Set(index, propValue, 1);
                         }
                     }
                 }

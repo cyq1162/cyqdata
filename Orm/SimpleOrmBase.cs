@@ -318,7 +318,13 @@ namespace CYQ.Data.Orm
 
         #region 查询
 
-
+         /// <summary>
+        /// 查询1条数据
+        /// </summary>
+        public bool Fill()
+        {
+            return Fill(null);
+        }
         /// <summary>
         /// 查询1条数据
         /// </summary>

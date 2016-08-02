@@ -146,56 +146,11 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 返回最终格式化后的XHtml内容。
         /// </summary>
-        public string OutXml
+        public virtual string OutXml
         {
             get
             {
-                if (_XmlDocument != null)
-                {
-                    string xml = _XmlDocument.InnerXml.Replace(".dtd\"[]>", ".dtd\">");
-                    if (xml.IndexOf(" xmlns=") > -1)
-                    {
-                        xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
-                    }
-                    string html = ClearCDATA(xml);
-                    if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${"))
-                    {
-                        MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                        if (matchs != null && matchs.Count > 0)
-                        {
-                            MDataCell matchCell = null;
-                            string[] items = null;
-                            string columnName = null, value = null; ;
-                            List<string> keys = new List<string>(matchs.Count);
-                            foreach (Match match in matchs)
-                            {
-                                value = match.Groups[0].Value;
-                                if (!keys.Contains(value))
-                                {
-                                    keys.Add(value);
-                                    items = match.Groups[1].Value.Trim().Split('#', '-');
-                                    string pre = items.Length > 1 ? items[0] : "";
-                                    columnName = items.Length > 1 ? items[1] : items[0];
-                                    if (dicForAutoSetValue.ContainsKey(pre))
-                                    {
-                                        matchCell = dicForAutoSetValue[pre][columnName];
-                                        if (matchCell != null)
-                                        {
-                                            html = html.Replace(value, matchCell.ToString());
-                                        }
-                                    }
-                                }
-                            }
-                            keys.Clear();
-                            keys = null;
-                        }
-                        dicForAutoSetValue.Clear();
-                        dicForAutoSetValue = null;
-                        matchs = null;
-                    }
-                    return html;
-                }
-                return string.Empty;
+                return _XmlDocument.OuterXml;
             }
         }
         ///// <summary>
@@ -363,6 +318,7 @@ namespace CYQ.Data.Xml
             catch (Exception err)
             {
                 Log.WriteLog(err.Message + "filename : " + fileName);
+                Error.Throw(err.Message + "filename : " + fileName);
             }
             return false;
         }
@@ -516,7 +472,10 @@ namespace CYQ.Data.Xml
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    xPath += "[@" + attr + "='" + value + "']";
+                    //忽略大小写搜索
+                    //xPath += "[@" + attr + "='" + value + "']";
+                    xPath += "[translate(@" + attr + ",'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')='" + value.ToLower() + "']";
+                    //xPath += "[@" + attr + "=translate('" + value + "','ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')]";
                 }
                 else
                 {

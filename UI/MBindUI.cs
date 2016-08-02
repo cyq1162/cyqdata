@@ -6,89 +6,95 @@ using Win = System.Windows.Forms;
 using CYQ.Data.Table;
 using CYQ.Data.Xml;
 using System.Reflection;
+using System.Xml;
 
 namespace CYQ.Data.UI
 {
     internal class MBindUI
     {
-        public static void Bind(object ct, object source,string nodeID)
+        public static void Bind(object ct, object source, string nodeID)
         {
             if (ct is XHtmlAction)
             {
+                #region XHtmlAction 对象处理
                 XHtmlAction doc = ct as XHtmlAction;
-                doc.LoadData(source as MDataTable);
-                doc.SetForeach(nodeID, SetType.InnerXml);
+                MDataTable dt = source as MDataTable;
+                doc.LoadData(dt);
+                XmlNode node = null;
+                if (string.IsNullOrEmpty(nodeID))
+                {
+                    doc.SetForeach();
+                }
+                else
+                {
+                    node = doc.Get(nodeID);
+                    if (node != null)
+                    {
+                        doc.SetForeach(node, node.InnerXml);
+                    }
+                } 
+                #endregion
             }
             else
             {
-                Type t = ct.GetType();
-                PropertyInfo p = t.GetProperty("DataSource");
-                if (p != null)
+                #region 检测下拉列表控件
+                if (ct is ListControl)
                 {
-                    MethodInfo meth = t.GetMethod("DataBind");
-                    if (meth != null)//web
-                    {
-                        p.SetValue(ct, source, null);
-                        meth.Invoke(ct, null);
-                    }
-                    else
-                    {
-                        if (source is MDataTable)
-                        {
-                            MDataTable dt = source as MDataTable;
-                            source = new MDataView(ref dt);
-                        }
-                        p.SetValue(ct, source, null);//winform
-                    }
+                    BindList(ct as ListControl, source as MDataTable);
                 }
-                else //wpf,sliverlight
+                else if (ct is Win.ListControl)
                 {
-                    p = t.GetProperty("ItemsSource");
+                    BindList(ct as Win.ListControl, source as MDataTable);
+                }
+                else
+                {
+
+                    Type t = ct.GetType();
+                    PropertyInfo p = t.GetProperty("DataSource");
                     if (p != null)
                     {
-                        if (source is MDataTable)
+                        #region DataGridView处理
+                        MethodInfo meth = t.GetMethod("DataBind");
+                        if (meth != null)//web
                         {
-                            MDataTable dt = source as MDataTable;
-                            // source = new MDataView(ref dt);
-                            source = dt.ToDataTable().DefaultView;
+                            p.SetValue(ct, source, null);
+                            meth.Invoke(ct, null);
                         }
-                        p.SetValue(ct, source, null);//winform
+                        else
+                        {
+                            if (source is MDataTable)
+                            {
+                                MDataTable dt = source as MDataTable;
+                                source = new MDataView(ref dt);
+                            }
+                            p.SetValue(ct, source, null);//winform
+                        } 
+                        #endregion
+                    }
+                    else //wpf,sliverlight
+                    {
+                        p = t.GetProperty("ItemsSource");
+                        if (p != null)
+                        {
+                            MDataTable dt = null;
+                            if (source is MDataTable)
+                            {
+                                dt = source as MDataTable;
+                                source = dt.ToDataTable().DefaultView;
+                            }
+                            p.SetValue(ct, source, null);//winform
+                            p = t.GetProperty("SelectedValuePath");//判断是不是下拉列表
+                            if (p != null)
+                            {
+                                p.SetValue(ct, dt.Columns[0].ColumnName, null);
+                                p = t.GetProperty("DisplayMemberPath");
+                                p.SetValue(ct, dt.Columns[dt.Columns.Count > 1 ? 1 : 0].ColumnName, null);
+                            }
+                        }
                     }
                 }
+                #endregion
             }
-            //if (ct is GridView)
-            //{
-            //    ((GridView)ct).DataSource = source;
-            //    ((GridView)ct).DataBind();
-            //}
-            //else if (ct is Repeater)
-            //{
-            //    ((Repeater)ct).DataSource = source;
-            //    ((Repeater)ct).DataBind();
-            //}
-            //else if (ct is DataList)
-            //{
-            //    ((DataList)ct).DataSource = source;
-            //    ((DataList)ct).DataBind();
-            //}
-            //else if (ct is DataGrid)
-            //{
-            //    ((DataGrid)ct).DataSource = source;
-            //    ((DataGrid)ct).DataBind();
-            //}
-            //else if (ct is Win.DataGrid)
-            //{
-            //    ((DataGrid)ct).DataSource = source;
-            //}
-            //else if (ct is Win.DataGridView)
-            //{
-            //    ((System.Windows.Forms.DataGridView)ct).DataSource = source;
-            //}
-            //else if (ct is BaseDataList)//基类处理
-            //{
-            //    ((BaseDataList)ct).DataSource = source;
-            //    ((BaseDataList)ct).DataBind();
-            //}
         }
         public static void BindList(object ct, MDataTable source)
         {
@@ -102,17 +108,20 @@ namespace CYQ.Data.UI
             }
             else //wpf
             {
-                Type t = ct.GetType();
-                PropertyInfo p = t.GetProperty("ItemsSource");
-                if (p != null)
+                if (source.Columns.Count > 0)
                 {
-                    p.SetValue(ct, source, null);
-                    p = t.GetProperty("SelectedValuePath");
+                    Type t = ct.GetType();
+                    PropertyInfo p = t.GetProperty("ItemsSource");
                     if (p != null)
                     {
-                        p.SetValue(ct, source.Columns[0].ColumnName, null);
-                        p = t.GetProperty("DisplayMemberPath");
-                        p.SetValue(ct, source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName, null);
+                        p.SetValue(ct, source, null);
+                        p = t.GetProperty("SelectedValuePath");
+                        if (p != null)
+                        {
+                            p.SetValue(ct, source.Columns[0].ColumnName, null);
+                            p = t.GetProperty("DisplayMemberPath");
+                            p.SetValue(ct, source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName, null);
+                        }
                     }
                 }
             }
@@ -121,9 +130,12 @@ namespace CYQ.Data.UI
         {
             try
             {
-                listControl.DataSource = new MDataView(ref source);
-                listControl.ValueMember = source.Columns[0].ColumnName;
-                listControl.DisplayMember = source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName;
+                if (source.Columns.Count > 0)
+                {
+                    listControl.DataSource = new MDataView(ref source);
+                    listControl.ValueMember = source.Columns[0].ColumnName;
+                    listControl.DisplayMember = source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName;
+                }
             }
             catch (Exception err)
             {
@@ -132,10 +144,13 @@ namespace CYQ.Data.UI
         }
         private static void BindList(ListControl listControl, MDataTable source)
         {
-            listControl.DataSource = source;
-            listControl.DataValueField = source.Columns[0].ColumnName;
-            listControl.DataTextField = source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName;
-            listControl.DataBind();
+            if (source.Columns.Count > 0)
+            {
+                listControl.DataSource = source;
+                listControl.DataValueField = source.Columns[0].ColumnName;
+                listControl.DataTextField = source.Columns[source.Columns.Count > 1 ? 1 : 0].ColumnName;
+                listControl.DataBind();
+            }
         }
         public static string GetID(object ct)
         {

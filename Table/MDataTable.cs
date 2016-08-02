@@ -570,7 +570,7 @@ namespace CYQ.Data.Table
             return IOHelper.Write(fileName, ToJson(addHead, addSchema));
         }
 
-        
+
         /// <summary>
         /// 将数据表绑定到列表控件
         /// </summary>
@@ -584,7 +584,7 @@ namespace CYQ.Data.Table
         /// </summary>
         /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
         /// <param name="paraID">当Control为XHtmlAction对象时，需要指定绑定的节点ID</param>
-        public void Bind(object control,string nodeID)
+        public void Bind(object control, string nodeID)
         {
             MBindUI.Bind(control, this, nodeID);
         }
@@ -1300,11 +1300,14 @@ namespace CYQ.Data.Table
                             {
                                 mRecord[i].cellValue.Value = string.Empty;
                                 mRecord[i].cellValue.IsNull = false;
+                                mRecord[i].cellValue.State = 1;
                             }
                             else
                             {
-                                mRecord[i].Value = value; //sdr.GetValue(i);
+                                mRecord[i].Value = value; //sdr.GetValue(i); 用此赋值，内部会进行类型转换。
+                                mRecord[i].State = 1;//初始始状态为1
                             }
+
                         }
                         #endregion
                     }
@@ -1368,11 +1371,11 @@ namespace CYQ.Data.Table
                         MDataRow row = dt.NewRow();
                         if (isObj)
                         {
-                            row.LoadFrom(o);
+                            row.LoadFrom(o);//初始值状态为1
                         }
                         else
                         {
-                            row.Set(0, o);
+                            row.Set(0, o, 1);
                         }
                         dt.Rows.Add(row);
                     }
@@ -1500,11 +1503,11 @@ namespace CYQ.Data.Table
                         {
                             if (!cell.InnerXml.StartsWith("<![CDATA["))
                             {
-                                dr.Set(cell.Name, cell.InnerXml.Trim());
+                                dr.Set(cell.Name, cell.InnerXml.Trim(),1);
                             }
                             else
                             {
-                                dr.Set(cell.Name, cell.InnerText.Trim());
+                                dr.Set(cell.Name, cell.InnerText.Trim(), 1);
                             }
                         }
                         dt.Rows.Add(dr);
@@ -1513,7 +1516,7 @@ namespace CYQ.Data.Table
                     {
                         foreach (XmlAttribute cell in row.Attributes)
                         {
-                            dr.Set(cell.Name, cell.Value.Trim());
+                            dr.Set(cell.Name, cell.Value.Trim(), 1);
                         }
                         dt.Rows.Add(dr);
                     }

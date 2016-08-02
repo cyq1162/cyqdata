@@ -23,7 +23,7 @@ namespace CYQ.Data.Table
             }
             set
             {
-                if (value != null)
+                if (!string.IsNullOrEmpty(value))
                 {
                     joinOnIndex = Columns.GetIndex(value);
                     if (joinOnIndex == -1)

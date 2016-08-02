@@ -689,109 +689,108 @@ namespace CYQ.Data.Tool
             }
             try
             {
-                
-              
-                    #region 读取Json
+                #region 读取Json
 
 
-                    string json = string.Empty;
-                    #region 获取Json字符串
-                    if (!jsonOrFileName.StartsWith("{") && !jsonOrFileName.StartsWith("["))//读取文件。
+                string json = string.Empty;
+                #region 获取Json字符串
+                if (!jsonOrFileName.StartsWith("{") && !jsonOrFileName.StartsWith("["))//读取文件。
+                {
+                    if (System.IO.File.Exists(jsonOrFileName))
                     {
-                        if (System.IO.File.Exists(jsonOrFileName))
+                        table.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
+                        if (table.Columns.Count == 0)
                         {
-                            table.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
-                            if (table.Columns.Count == 0)
-                            {
-                                table.Columns = MDataColumn.CreateFrom(jsonOrFileName, false);
-                            }
-                            json = IOHelper.ReadAllText(jsonOrFileName).Trim(',', ' ', '\r', '\n');
+                            table.Columns = MDataColumn.CreateFrom(jsonOrFileName, false);
                         }
+                        json = IOHelper.ReadAllText(jsonOrFileName).Trim(',', ' ', '\r', '\n');
                     }
-                    else
+                }
+                else
+                {
+                    json = jsonOrFileName;
+                }
+                if (json.StartsWith("{"))
+                {
+                    json = '[' + json + ']';
+                }
+                #endregion
+                List<Dictionary<string, string>> result = SplitArray(json);
+                if (result != null && result.Count > 0)
+                {
+                    if (result.Count == 1 && result[0].ContainsKey("total") && result[0].ContainsKey("rows"))
                     {
-                        json = jsonOrFileName;
+                        int count = 0;
+                        if (int.TryParse(result[0]["total"], out count))
+                        {
+                            table.RecordsAffected = count;//还原记录总数。
+                        }
+                        result = SplitArray(result[0]["rows"]);
                     }
-                    if (json.StartsWith("{"))
-                    {
-                        json = '[' + json + ']';
-                    }
-                    #endregion
-                    List<Dictionary<string, string>> result = SplitArray(json);
                     if (result != null && result.Count > 0)
                     {
-                        if (result.Count == 1 && result[0].ContainsKey("total") && result[0].ContainsKey("rows"))
+                        Dictionary<string, string> keyValueDic = null;
+                        for (int i = 0; i < result.Count; i++)
                         {
-                            int count = 0;
-                            if (int.TryParse(result[0]["total"], out count))
+                            keyValueDic = result[i];
+                            if (i == 0)
                             {
-                                table.RecordsAffected = count;//还原记录总数。
-                            }
-                            result = SplitArray(result[0]["rows"]);
-                        }
-                        if (result != null && result.Count > 0)
-                        {
-                            Dictionary<string, string> keyValueDic = null;
-                            for (int i = 0; i < result.Count; i++)
-                            {
-                                keyValueDic = result[i];
-                                if (i == 0)
-                                {
-                                    #region 首行列头检测
-                                    bool addColumn = table.Columns.Count == 0;
-                                    bool isContinue = false;
-                                    int k = 0;
-                                    foreach (KeyValuePair<string, string> item in keyValueDic)
-                                    {
-                                        if (k == 0 && item.Value.StartsWith("System."))
-                                        {
-                                            isContinue = true;
-                                        }
-                                        if (!addColumn)
-                                        {
-                                            break;
-                                        }
-                                        if (!table.Columns.Contains(item.Key))
-                                        {
-                                            SqlDbType type = SqlDbType.NVarChar;
-                                            if (isContinue && item.Value.StartsWith("System."))//首行是表结构
-                                            {
-                                                type = DataType.GetSqlType(item.Value.Replace("System.", string.Empty));
-                                            }
-                                            table.Columns.Add(item.Key, type, (k == 0 && type == SqlDbType.Int));
-                                            if (k > keyValueDic.Count - 3 && type == SqlDbType.DateTime)
-                                            {
-                                                table.Columns[k].DefaultValue = SqlValue.GetDate;
-                                            }
-                                        }
-                                        k++;
-                                    }
-                                    if (isContinue)
-                                    {
-                                        continue;
-                                    }
-                                    #endregion
-                                }
-
-                                MDataRow row = table.NewRow(true);
-                                MDataCell cell = null;
+                                #region 首行列头检测
+                                bool addColumn = table.Columns.Count == 0;
+                                bool isContinue = false;
+                                int k = 0;
                                 foreach (KeyValuePair<string, string> item in keyValueDic)
                                 {
+                                    if (k == 0 && item.Value.StartsWith("System."))
+                                    {
+                                        isContinue = true;
+                                    }
+                                    if (!addColumn)
+                                    {
+                                        break;
+                                    }
+                                    if (!table.Columns.Contains(item.Key))
+                                    {
+                                        SqlDbType type = SqlDbType.NVarChar;
+                                        if (isContinue && item.Value.StartsWith("System."))//首行是表结构
+                                        {
+                                            type = DataType.GetSqlType(item.Value.Replace("System.", string.Empty));
+                                        }
+                                        table.Columns.Add(item.Key, type, (k == 0 && type == SqlDbType.Int));
+                                        if (k > keyValueDic.Count - 3 && type == SqlDbType.DateTime)
+                                        {
+                                            table.Columns[k].DefaultValue = SqlValue.GetDate;
+                                        }
+                                    }
+                                    k++;
+                                }
+                                if (isContinue)
+                                {
+                                    continue;
+                                }
+                                #endregion
+                            }
+
+                            MDataRow row = table.NewRow(true);
+                            MDataCell cell = null;
+                            foreach (KeyValuePair<string, string> item in keyValueDic)
+                            {
+                                cell = row[item.Key];
+                                if (cell == null && mdc == null)
+                                {
+                                    table.Columns.Add(item.Key, SqlDbType.NVarChar);
                                     cell = row[item.Key];
-                                    if (cell == null && mdc == null)
-                                    {
-                                        table.Columns.Add(item.Key, SqlDbType.NVarChar);
-                                        cell = row[item.Key];
-                                    }
-                                    if (cell != null)
-                                    {
-                                        cell.Value = item.Value;
-                                    }
+                                }
+                                if (cell != null)
+                                {
+                                    cell.Value = item.Value;
+                                    cell.State = 1;
                                 }
                             }
                         }
                     }
-                    #endregion
+                }
+                #endregion
             }
             catch (Exception err)
             {

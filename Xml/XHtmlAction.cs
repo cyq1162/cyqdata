@@ -673,6 +673,11 @@ namespace CYQ.Data.Xml
             XmlNode node = Get(idOrName);
             Set(node, setType, values);
         }
+        /// <summary>
+        /// 对节点赋值（此方法会忽略hidden隐藏域，隐藏节点赋值请用其它重载方法）
+        /// </summary>
+        /// <param name="idOrName"></param>
+        /// <param name="value"></param>
         public void Set(string idOrName, string value)
         {
             XmlNode node = Get(idOrName);
@@ -684,24 +689,130 @@ namespace CYQ.Data.Xml
                     case "input":
                         switch (GetAttrValue(node, "type"))
                         {
+                            case "hidden":
+                                return;//此方法不对隐藏域处理。
                             case "checkbox":
                                 setType = SetType.Checked; break;
                             case "image":
                                 setType = SetType.Src; break;
+                            case "radio"://情况复杂一点
+                                XmlNodeList nodeList = GetList("input", "type", "radio");
+                                for (int i = 0; i < nodeList.Count; i++)
+                                {
+                                    RemoveAttr(nodeList[i], "checked");
+                                    if (GetAttrValue(nodeList[i], "value") == value)
+                                    {
+                                        node = nodeList[i];
+                                    }
+                                }
+                                setType = SetType.Checked; break;
                             default:
                                 setType = SetType.Value;
                                 break;
+
                         }
                         break;
                     case "select":
                         setType = SetType.Select; break;
                     case "a":
                         setType = SetType.Href; break;
+                    case "img":
+                        setType = SetType.Src; break;
                 }
-                Set(node, setType, value);
+                try
+                {
+                    Set(node, setType, value);
+                }
+                catch (Exception err)
+                {
+
+                    throw;
+                }
+
+                
             }
         }
 
+        #endregion
+
+        #region 重写最终输出OutXml
+        public override string OutXml
+        {
+            get
+            {
+                if (_XmlDocument != null)
+                {
+                    #region 处理clearflag标签
+                    string key = "clearflag";
+                    XmlNodeList xnl = GetList("*", key);
+                    if (xnl != null)
+                    {
+                        XmlNode xNode = null;
+                        for (int i = xnl.Count - 1; i >= 0; i--)
+                        {
+                            xNode = xnl[i];
+                            switch (GetAttrValue(xnl[i], key))
+                            {
+                                case "0":
+                                    RemoveAttr(xNode, key);
+                                    xNode.InnerXml = "";
+                                    break;
+                                case "1":
+                                    Remove(xNode);
+                                    break;
+                            }
+
+                        }
+                    }
+                    #endregion
+                    string xml = _XmlDocument.InnerXml.Replace(".dtd\"[]>", ".dtd\">");
+                    if (xml.IndexOf(" xmlns=") > -1)
+                    {
+                        xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                    }
+                    string html = ClearCDATA(xml);
+                    if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${")) // 替换自定义标签。
+                    {
+                        #region 替换自定义标签
+                        MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                        if (matchs != null && matchs.Count > 0)
+                        {
+                            MDataCell matchCell = null;
+                            string[] items = null;
+                            string columnName = null, value = null; ;
+                            List<string> keys = new List<string>(matchs.Count);
+                            foreach (Match match in matchs)
+                            {
+                                value = match.Groups[0].Value;
+                                if (!keys.Contains(value))
+                                {
+                                    keys.Add(value);
+                                    items = match.Groups[1].Value.Trim().Split('#', '-');
+                                    string pre = items.Length > 1 ? items[0] : "";
+                                    columnName = items.Length > 1 ? items[1] : items[0];
+                                    if (dicForAutoSetValue.ContainsKey(pre))
+                                    {
+                                        matchCell = dicForAutoSetValue[pre][columnName];
+                                        if (matchCell != null)
+                                        {
+                                            html = html.Replace(value, matchCell.ToString());
+                                        }
+                                    }
+                                }
+                            }
+                            keys.Clear();
+                            keys = null;
+                        }
+                        dicForAutoSetValue.Clear();
+                        dicForAutoSetValue = null;
+                        matchs = null;
+                        #endregion
+                    }
+                    return html;
+                }
+                return string.Empty;
+            }
+        }
         #endregion
     }
 
@@ -715,6 +826,17 @@ namespace CYQ.Data.Xml
 
 
         #region 加载表格循环方式
+        public void LoadData(object data)
+        {
+            if (data.GetType().IsGenericType)
+            {
+                LoadData(MDataTable.CreateFrom(data));
+            }
+            else
+            {
+                LoadData(MDataRow.CreateFrom(data));
+            }
+        }
         /// <summary>
         /// 装载数据行 （一般后续配合SetForeach方法使用）
         /// </summary>
@@ -727,7 +849,25 @@ namespace CYQ.Data.Xml
             }
         }
         public delegate string SetForeachEventHandler(string text, object[] values, int rowIndex);
+        /// <summary>
+        /// 对于SetForeach函数调用的格式化事件
+        /// </summary>
         public event SetForeachEventHandler OnForeach;
+        public void SetForeach()
+        {
+            if (_Table != null)
+            {
+                XmlNode node = Get(_Table.TableName + "View");
+                if (node == null)
+                {
+                    node = Get("defaultView");
+                }
+                if (node != null)
+                {
+                    SetForeach(node, node.InnerXml);
+                }
+            }
+        }
         public void SetForeach(string idOrName, SetType setType, params object[] formatValues)
         {
             string text = string.Empty;
@@ -770,44 +910,57 @@ namespace CYQ.Data.Xml
         }
         public void SetForeach(XmlNode node, string text, params object[] formatValues)
         {
-            if (node != null && _Table != null && _Table.Rows.Count > 0)
+            try
             {
+                #region 基本判断
+                if (node == null || _Table == null || _Table.Rows.Count == 0) { return; }
+                RemoveAttr(node, "clearflag");
+                #endregion
+
                 int fvLen = formatValues.Length;
                 int colLen = _Table.Columns.Count;
                 StringBuilder innerXml = new StringBuilder();
                 if (string.IsNullOrEmpty(text))
                 {
-                    #region 补列头
-                    for (int i = 0; i < colLen; i++)
+                    if (node.Name == "select")
                     {
-                        if (i == 0)
-                        {
-                            innerXml.Append(_Table.Columns[i].ColumnName);
-                        }
-                        else
-                        {
-                            innerXml.Append(" - " + _Table.Columns[i].ColumnName);
-                        }
+                        text = "<option value=\"{0}\">{1}</option>";
                     }
-                    innerXml.Append("<hr />");
-                    #endregion
-                    #region 空文本，默认补个简单的Table给它。
-                    StringBuilder sb = new StringBuilder();
-                    int min = fvLen == 0 ? colLen : Math.Min(fvLen, colLen);
-                    for (int i = 0; i < min; i++)
+                    else
                     {
-                        if (i == 0)
+                        #region 补列头
+                        for (int i = 0; i < colLen; i++)
                         {
-                            sb.Append("{0}");
+                            if (i == 0)
+                            {
+                                innerXml.Append(_Table.Columns[i].ColumnName);
+                            }
+                            else
+                            {
+                                innerXml.Append(" - " + _Table.Columns[i].ColumnName);
+                            }
                         }
-                        else
+                        innerXml.Append("<hr />");
+                        #endregion
+
+                        #region 空文本，默认补个简单的Table给它。
+                        StringBuilder sb = new StringBuilder();
+                        int min = fvLen == 0 ? colLen : Math.Min(fvLen, colLen);
+                        for (int i = 0; i < min; i++)
                         {
-                            sb.Append(" - {" + i + "}");
+                            if (i == 0)
+                            {
+                                sb.Append("{0}");
+                            }
+                            else
+                            {
+                                sb.Append(" - {" + i + "}");
+                            }
                         }
+                        sb.Append("<hr />");
+                        text = sb.ToString();
+                        #endregion
                     }
-                    sb.Append("<hr />");
-                    text = sb.ToString();
-                    #endregion
                 }
                 if (fvLen == 0)
                 {
@@ -902,10 +1055,14 @@ namespace CYQ.Data.Xml
                         Log.WriteLogToTxt(err);
                     }
                 }
+
             }
-            if (OnForeach != null)
+            finally
             {
-                OnForeach = null;
+                if (OnForeach != null)
+                {
+                    OnForeach = null;
+                }
             }
         }
         #endregion
