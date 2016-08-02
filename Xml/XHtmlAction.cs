@@ -366,23 +366,34 @@ namespace CYQ.Data.Xml
         {
             if (newNode != null && oldNode != null)
             {
-                oldNode.RemoveAll();
-                //if (!string.IsNullOrEmpty(newNode.InnerXml) && !string.IsNullOrEmpty(newNode.NamespaceURI))
-                //{
-                //    oldNode.InnerXml = newNode.InnerXml.Replace("xmlns=\"" + newNode.NamespaceURI+"\"", string.Empty);
-                //}
-                //else
-                //{
-                oldNode.InnerXml = newNode.InnerXml;
-                //}
-                XmlAttributeCollection xAttributes = newNode.Attributes;
-                if (xAttributes != null && xAttributes.Count > 0)
+                if (newNode.Name == oldNode.Name) // 节点名相同。
                 {
-                    for (int i = 0; i < xAttributes.Count; i++)
+                    oldNode.RemoveAll();//清空旧节点
+                    oldNode.InnerXml = newNode.InnerXml;
+                    XmlAttributeCollection xAttributes = newNode.Attributes;//设置属性
+                    if (xAttributes != null && xAttributes.Count > 0)
                     {
-                        ((XmlElement)oldNode).SetAttribute(xAttributes[i].Name, xAttributes[i].Value);
+                        for (int i = 0; i < xAttributes.Count; i++)
+                        {
+                            ((XmlElement)oldNode).SetAttribute(xAttributes[i].Name, xAttributes[i].Value);
+                        }
                     }
                 }
+                else
+                {
+                    XmlNode xNode = CreateNode(newNode.Name, newNode.InnerXml);//先创建一个节点。
+                    XmlAttributeCollection xAttributes = newNode.Attributes;
+                    if (xAttributes != null && xAttributes.Count > 0)
+                    {
+                        for (int i = 0; i < xAttributes.Count; i++)
+                        {
+                            ((XmlElement)xNode).SetAttribute(xAttributes[i].Name, xAttributes[i].Value);
+                        }
+                    }
+                    oldNode.ParentNode.InsertAfter(xNode, oldNode);//挂在旧节点后面。
+                    Remove(oldNode);
+                }
+
             }
         }
         /// <summary>
