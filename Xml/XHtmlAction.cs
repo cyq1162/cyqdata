@@ -729,7 +729,7 @@ namespace CYQ.Data.Xml
                     throw;
                 }
 
-                
+
             }
         }
 
@@ -777,22 +777,19 @@ namespace CYQ.Data.Xml
                         MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                         if (matchs != null && matchs.Count > 0)
                         {
-                            MDataCell matchCell = null;
-                            string[] items = null;
-                            string columnName = null, value = null; ;
                             List<string> keys = new List<string>(matchs.Count);
                             foreach (Match match in matchs)
                             {
-                                value = match.Groups[0].Value;
+                                string value = match.Groups[0].Value;
                                 if (!keys.Contains(value))
                                 {
                                     keys.Add(value);
-                                    items = match.Groups[1].Value.Trim().Split('#', '-');
+                                    string[] items = match.Groups[1].Value.Trim().Split('#', '-');
                                     string pre = items.Length > 1 ? items[0] : "";
-                                    columnName = items.Length > 1 ? items[1] : items[0];
+                                    string columnName = items.Length > 1 ? items[1] : items[0];
                                     if (dicForAutoSetValue.ContainsKey(pre))
                                     {
-                                        matchCell = dicForAutoSetValue[pre][columnName];
+                                        MDataCell matchCell = dicForAutoSetValue[pre][columnName];
                                         if (matchCell != null)
                                         {
                                             html = html.Replace(value, matchCell.ToString());
