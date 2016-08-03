@@ -71,7 +71,27 @@ namespace CYQ.Data.Xml
             if (node == null)
             {
                 node = GetByName(idOrName);
+                if (node == null)
+                {
+                    switch (idOrName.ToLower())
+                    {
+                        case "head":
+                        case "body":
+                        case "title":
+                        case "form":
+                        case "style":
+                        case "meta":
+                        case "link":
+                            XmlNodeList xList = GetList(idOrName);
+                            if (xList != null)
+                            {
+                                node = xList[0];
+                            }
+                            break;
+                    }
+                }
             }
+            
             return node;
         }
         public XmlNode Get(string idOrName, XmlNode parentNode)
@@ -370,24 +390,24 @@ namespace CYQ.Data.Xml
                 {
                     oldNode.RemoveAll();//清空旧节点
                     oldNode.InnerXml = newNode.InnerXml;
-                    XmlAttributeCollection xAttributes = newNode.Attributes;//设置属性
-                    if (xAttributes != null && xAttributes.Count > 0)
+                    XmlAttributeCollection attrs = newNode.Attributes;//设置属性
+                    if (attrs != null && attrs.Count > 0)
                     {
-                        for (int i = 0; i < xAttributes.Count; i++)
+                        for (int i = 0; i < attrs.Count; i++)
                         {
-                            ((XmlElement)oldNode).SetAttribute(xAttributes[i].Name, xAttributes[i].Value);
+                            ((XmlElement)oldNode).SetAttribute(attrs[i].Name, attrs[i].Value);
                         }
                     }
                 }
                 else
                 {
                     XmlNode xNode = CreateNode(newNode.Name, newNode.InnerXml);//先创建一个节点。
-                    XmlAttributeCollection xAttributes = newNode.Attributes;
-                    if (xAttributes != null && xAttributes.Count > 0)
+                    XmlAttributeCollection attrs = newNode.Attributes;
+                    if (attrs != null && attrs.Count > 0)
                     {
-                        for (int i = 0; i < xAttributes.Count; i++)
+                        for (int i = 0; i < attrs.Count; i++)
                         {
-                            ((XmlElement)xNode).SetAttribute(xAttributes[i].Name, xAttributes[i].Value);
+                            ((XmlElement)xNode).SetAttribute(attrs[i].Name, attrs[i].Value);
                         }
                     }
                     oldNode.ParentNode.InsertAfter(xNode, oldNode);//挂在旧节点后面。
@@ -782,6 +802,10 @@ namespace CYQ.Data.Xml
                         xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
                     }
                     string html = ClearCDATA(xml);
+                    if (!string.IsNullOrEmpty(docTypeHtml))
+                    {
+                        html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
+                    }
                     html = html.Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
                     if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${")) // 替换自定义标签。
                     {

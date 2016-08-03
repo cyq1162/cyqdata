@@ -182,6 +182,10 @@ namespace CYQ.Data.Xml
 
         #region 加载xml
         /// <summary>
+        /// docTypeHtml是一样的。
+        /// </summary>
+        protected static string docTypeHtml = string.Empty;
+        /// <summary>
         /// 从xml字符串加载
         /// </summary>
         /// <param name="xml">xml字符串</param>
@@ -191,7 +195,15 @@ namespace CYQ.Data.Xml
             {
                 if (xnm != null)
                 {
-                    xml = xml.Replace("http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd", AppConfig.XHtml.DtdUri);
+                    if (xml.StartsWith("<!DOCTYPE html"))
+                    {
+                        if (string.IsNullOrEmpty(docTypeHtml))
+                        {
+                            docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
+                        }
+                        xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
+                    }
+                    // xml = xml.Replace("http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd", AppConfig.XHtml.DtdUri);
                 }
                 xml = Filter(xml);
                 _XmlDocument.LoadXml(xml);
@@ -272,7 +284,7 @@ namespace CYQ.Data.Xml
         {
         }
         /// <summary>
-        /// 从文件加载XML
+        /// 从文件加载XML （最终调用的方法）
         /// </summary>
         private bool LoadFromFile(string fileName, bool clearCommentNode)
         {
@@ -286,24 +298,24 @@ namespace CYQ.Data.Xml
                 string html = string.Empty;
                 if (xnm != null)
                 {
-                    if (AppConfig.XHtml.UseFileLoadXml)
-                    {
-                        html = IOHelper.ReadAllText(fileName, _Encoding);
-                    }
-                    else
-                    {
-                        ResolverDtd.Resolver(ref _XmlDocument);
-                    }
+                    //if (AppConfig.XHtml.UseFileLoadXml)
+                    //{
+                    html = IOHelper.ReadAllText(fileName, _Encoding);
+                    //}
+                    //else
+                    //{
+                    ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
+                    //}
                 }
 
-                if (html != string.Empty)
-                {
-                    LoadXml(html);//从字符串加载xml
-                }
-                else
-                {
-                    _XmlDocument.Load(fileName);//从文件加载xml
-                }
+                //if (html != string.Empty)
+                //{
+                LoadXml(html);//从字符串加载xml
+                //}
+                //else
+                //{
+                //    _XmlDocument.Load(fileName);//从文件加载xml
+                //}
                 if (clearCommentNode)
                 {
                     RemoveCommentNode();
@@ -362,7 +374,7 @@ namespace CYQ.Data.Xml
         /// </summary>
         public bool Save()
         {
-           return Save(_FileName);
+            return Save(_FileName);
         }
         /// <param name="fileName">指定保存路径</param>
         public bool Save(string fileName)
@@ -412,10 +424,10 @@ namespace CYQ.Data.Xml
         private XmlDocument GetCloneFrom(XmlDocument xDoc)
         {
             XmlDocument newDoc = new XmlDocument();
-            if (xnm != null && !AppConfig.XHtml.UseFileLoadXml)
-            {
-                ResolverDtd.Resolver(ref newDoc);
-            }
+            //if (xnm != null)// && !AppConfig.XHtml.UseFileLoadXml
+            //{
+            //    ResolverDtd.Resolver(ref newDoc); //不需要指定了，因为第一次已经生成了DTD文件到本地，另外路径已被替换指向本地。
+            //}
             try
             {
                 newDoc.LoadXml(xDoc.InnerXml);
@@ -530,7 +542,7 @@ namespace CYQ.Data.Xml
             return text.Replace("MMS::", string.Empty).Replace("::MMS", string.Empty);
         }
         /// <summary>
-        /// 过滤XML(十六进制值 0x1D)无效的字符
+        /// 过滤XML(十六进制值 0x1D)无效的字符（同时替换&gt;符号）
         /// </summary>
         protected string Filter(string text)
         {
@@ -538,17 +550,28 @@ namespace CYQ.Data.Xml
             {
                 return text;
             }
-            StringBuilder info = new StringBuilder(text.Length);
-            foreach (char cc in text)
+            StringBuilder info = new StringBuilder(text.Length + 20);
+            for (int i = 0; i < text.Length; i++)
             {
-                int ss = (int)cc;
-                if (((ss >= 0) && (ss <= 8)) || ((ss >= 11) && (ss <= 12)) || ((ss >= 14) && (ss <= 32)))
+                char c = text[i];
+                //int ss = (int)cc;
+                if (((c >= 0) && (c <= 8)) || ((c >= 11) && (c <= 12)) || ((c >= 14) && (c <= 32)))
                 {
-                    info.AppendFormat(" ", ss);//&#x{0:X};
+                    info.AppendFormat(" ", c);//&#x{0:X};
                 }
                 else
                 {
-                    info.Append(cc);
+                    if (i > 50 && i != text.Length - 1)
+                    {
+                        char nc = text[i + 1];
+                        if (c == '<' && nc != '/' && (nc < 65 || (nc > 90 && nc < 97) || nc > 122)) // 非英文字母。
+                        {
+                            info.Append("&gt;");
+                            continue;
+                        }
+                    }
+                    info.Append(c);
+
                 }
             }
             return info.ToString();

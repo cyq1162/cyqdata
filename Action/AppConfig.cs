@@ -220,25 +220,25 @@ namespace CYQ.Data
                     SetApp("Domain", value);
                 }
             }
-            private static int _UserFileLoadXml = -1;
-            /// <summary>
-            /// Xml.XHtmlHelper 操作Html时，配置此项使用File加载Xml[便可在IIS7以上非信任主机机制下使用]
-            /// </summary>
-            public static bool UseFileLoadXml
-            {
-                get
-                {
-                    if (_UserFileLoadXml == -1)
-                    {
-                        _UserFileLoadXml = GetApp("UseFileLoadXml") == "true" ? 1 : 0;
-                    }
-                    return _UserFileLoadXml == 1;
-                }
-                set
-                {
-                    _UserFileLoadXml = value ? 1 : 0;
-                }
-            }
+            //private static int _UserFileLoadXml = -1;
+            ///// <summary>
+            ///// Xml.XHtmlHelper 操作Html时，配置此项使用File加载Xml[便可在IIS7以上非信任主机机制下使用]
+            ///// </summary>
+            //public static bool UseFileLoadXml
+            //{
+            //    get
+            //    {
+            //        if (_UserFileLoadXml == -1)
+            //        {
+            //            _UserFileLoadXml = GetApp("UseFileLoadXml") == "true" ? 1 : 0;
+            //        }
+            //        return _UserFileLoadXml == 1;
+            //    }
+            //    set
+            //    {
+            //        _UserFileLoadXml = value ? 1 : 0;
+            //    }
+            //}
 
             /// <summary>
             /// Xml.MutilLanguage 类的默认语言Key，默认值：Chinese

@@ -533,3 +533,5 @@
 317：处理XHtmlAction对radio标签的处理。(2016-08-02)
 318：增加html的clearflag标签【值为0(清除InnerXml)或1(节点移除)】（用于节点未处理时，处理掉标签）(2016-08-02)
 319：XHtmlAction处理html的img,select,input checkbox等节点的处理。(2016-08-02)
+320：XHtmlActon重写Load方法（优化加载，自动识别，并处理该转义的符号）(2016-08-03)
+321：减少一个Xml相关的配置项（UseFileLoadXml）(2016-08-03)
