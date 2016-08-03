@@ -82,6 +82,7 @@ namespace CYQ.Data.Xml
                         case "style":
                         case "meta":
                         case "link":
+                        case "script":
                             XmlNodeList xList = GetList(idOrName);
                             if (xList != null)
                             {
@@ -685,6 +686,10 @@ namespace CYQ.Data.Xml
                         }
                         break;
                     case SetType.Checked:
+                        if (node.Name == "input" && node.Attributes["type"].Value == "radio")
+                        {
+                            values[0] = "1";
+                        }
                         switch (values[0].ToLower())
                         {
                             case "1":

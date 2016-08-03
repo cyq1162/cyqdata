@@ -564,9 +564,9 @@ namespace CYQ.Data.Xml
                     if (i > 50 && i != text.Length - 1)
                     {
                         char nc = text[i + 1];
-                        if (c == '<' && nc != '/' && (nc < 65 || (nc > 90 && nc < 97) || nc > 122)) // 非英文字母。
+                        if (c == '<' && nc != '/' && nc != '!' && !IsEnChar(nc)) // 非英文字母。
                         {
-                            info.Append("&gt;");
+                            info.Append("&lt;");
                             continue;
                         }
                     }
@@ -575,8 +575,24 @@ namespace CYQ.Data.Xml
                 }
             }
             return info.ToString();
-            // return System.Text.RegularExpressions.Regex.Replace(html, @"[\x00-\x08]|[\x0B-\x0C]|[\x0E-\x1F]", "");  
         }
+        private bool IsEnChar(char c)//英文字母
+        {
+            return (c > 64 && c < 91) || (c > 96 && c < 123);
+        }
+        ///// <summary>
+        ///// 二次正则替换。
+        ///// </summary>
+        //private string RegexReplace(string text)
+        //{
+        //    Regex regex = new Regex(@"</?[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        //    MatchCollection collection = regex.Matches(text);
+        //    foreach (Match mat in collection)
+        //    {
+        //        string value = mat.Value;
+        //    }
+        //    return text;
+        //}
         #endregion
 
         #region IDisposable 成员
