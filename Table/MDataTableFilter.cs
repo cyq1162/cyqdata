@@ -160,9 +160,11 @@ namespace CYQ.Data.Table
         {
             if (table != null && table.Rows.Count > 0)
             {
+                MDataRowCollection findRows = new MDataRowCollection();
                 if (Convert.ToString(whereObj).Trim() == "")
                 {
-                    return table.Rows;
+                    findRows.AddRange(table.Rows);
+                    return findRows;
                 }
                 string whereStr = SqlFormat.GetIFieldSql(whereObj);
                 string orderby;
@@ -177,15 +179,17 @@ namespace CYQ.Data.Table
                      }
                      );
                 }
+                findRows.AddRange(rows);//添加找到的行。
                 filters = null;
                 if (!string.IsNullOrEmpty(orderby) && rows.Count > 1)//进行数组排序
                 {
-                    MDataRowCollection sortRows = new MDataRowCollection();
-                    sortRows.AddRange(rows);
-                    sortRows.Sort(orderby);
-                    return sortRows;
+                    findRows.Sort(orderby);
+                    //MDataRowCollection sortRows = new MDataRowCollection();
+                    //sortRows.AddRange(rows);
+                    //sortRows.Sort(orderby);
+                    //return sortRows;
                 }
-                return rows;
+                return findRows;
             }
             return null;
         }

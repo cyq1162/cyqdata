@@ -44,63 +44,69 @@ namespace CYQ.Data
         {
             get
             {
-                if (_Table != null)
+                if (_Table != null && _Table.Rows.Count > 0)
                 {
                     return _Table;
                 }
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
                     _Table = _tableList[_FileFullName];
-                    return _Table;
+                    if (_Table.Rows.Count == 0)
+                    {
+                        _tableList.Remove(_FileFullName);
+                    }
+                    else
+                    {
+                        return _Table;
+                    }
                 }
-                else
+
+                switch (_DalType)
                 {
-                    switch (_DalType)
-                    {
-                        case DalType.Txt:
-                            _Table = MDataTable.CreateFrom(_FileFullName, _Row.Columns);
-                            break;
-                        case DalType.Xml:
-                            _Table = MDataTable.CreateFromXml(_FileFullName, _Row.Columns);
-                            break;
-                    }
-                    if (_Table == null || _Table.Columns.Count == 0)
-                    {
-                        Error.Throw("MDataTable can't load data from file : " + _FileFullName);
-                    }
-                    //行修正，有可能json的某些列数据为Null
-                    //                foreach (MCellStruct rowST in _Row.Columns)
-                    //                {
-                    //                    foreach (MCellStruct tableST in _Table.Columns)
-                    //{
-
-                    //}
-                    //                    if (!_Table.Columns.Contains(cst.ColumnName))
-                    //                    {
-                    //                        _Table.Columns.Add(cst);
-                    //                    }
-                    //                    else if(cst.SqlType!=_Table.col
-                    //                    {
-
-                    //                    }
-                    //                }
-                    DateTime _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
-                    if (!_lastWriteTimeList.ContainsKey(_FileFullName))
-                    {
-                        _lastWriteTimeList.Add(_FileFullName, _lastWriteTimeUtc);
-                    }
-                    if (_Table.Rows.Count > 0)
-                    {
-                        //lock (_lockTableListObj)
-                        //{
-                        if (!_tableList.ContainsKey(_FileFullName))
-                        {
-                            _tableList.Add(_FileFullName, _Table);
-                        }
-                        // }
-                    }
-                    return _Table;
+                    case DalType.Txt:
+                        _Table = MDataTable.CreateFrom(_FileFullName, _Row.Columns);
+                        break;
+                    case DalType.Xml:
+                        _Table = MDataTable.CreateFromXml(_FileFullName, _Row.Columns);
+                        break;
                 }
+                if (_Table == null || _Table.Columns.Count == 0)
+                {
+                    Error.Throw("MDataTable can't load data from file : " + _FileFullName);
+                }
+                //行修正，有可能json的某些列数据为Null
+                //                foreach (MCellStruct rowST in _Row.Columns)
+                //                {
+                //                    foreach (MCellStruct tableST in _Table.Columns)
+                //{
+
+                //}
+                //                    if (!_Table.Columns.Contains(cst.ColumnName))
+                //                    {
+                //                        _Table.Columns.Add(cst);
+                //                    }
+                //                    else if(cst.SqlType!=_Table.col
+                //                    {
+
+                //                    }
+                //                }
+                DateTime _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
+                if (!_lastWriteTimeList.ContainsKey(_FileFullName))
+                {
+                    _lastWriteTimeList.Add(_FileFullName, _lastWriteTimeUtc);
+                }
+                if (_Table.Rows.Count > 0)
+                {
+                    //lock (_lockTableListObj)
+                    //{
+                    if (!_tableList.ContainsKey(_FileFullName))
+                    {
+                        _tableList.Add(_FileFullName, _Table);
+                    }
+                    // }
+                }
+                return _Table;
+
             }
         }
 
