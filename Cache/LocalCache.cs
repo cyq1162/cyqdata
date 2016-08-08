@@ -7,6 +7,7 @@ using System.Threading;
 
 using CYQ.Data.Tool;
 using CYQ.Data.Table;
+using CYQ.Data.SQL;
 
 namespace CYQ.Data.Cache
 {
@@ -498,6 +499,8 @@ namespace CYQ.Data.Cache
                 {
                     try
                     {
+                        TableSchema.tableCache.Clear();
+                        TableSchema.columnCache.Clear();
                         theState.Clear();
                         theState = null;
                         theState = new MDictionary<string, CacheDependencyInfo>(500, StringComparer.OrdinalIgnoreCase);

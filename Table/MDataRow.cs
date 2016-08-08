@@ -528,6 +528,7 @@ namespace CYQ.Data.Table
                 mdc.cellValue.IsNull = base[i].cellValue.IsNull;
                 row.Add(mdc);
             }
+            row.RowError = RowError;
             row.TableName = TableName;
             row.Conn = Conn;
             return row;

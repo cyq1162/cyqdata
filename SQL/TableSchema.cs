@@ -19,8 +19,8 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class TableSchema
     {
-        private static Dictionary<string, Dictionary<string, string>> tableCache = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
-        private static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
+        internal static Dictionary<string, Dictionary<string, string>> tableCache = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        internal static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
         public static MDataColumn GetColumns(Type typeInfo)
         {
             string key = "ColumnCache:" + typeInfo.FullName;
@@ -507,94 +507,108 @@ namespace CYQ.Data.SQL
             return mdc;
 
         }
+        private static readonly object lockGetTables = new object();
         /// <summary>
         /// 获取表（带缓存）
         /// </summary>
         public static Dictionary<string, string> GetTables(ref DbBase helper)
         {
-            string key = "TableCache:" + helper.dalType + "." + helper.DataBase;
+            string key = "TableCache:" + helper.dalType + "." + helper.DataBase + helper.conn.GetHashCode();
+            if (!tableCache.ContainsKey(key))
+            {
+                lock (lockGetTables)
+                {
+                    if (!tableCache.ContainsKey(key))
+                    {
+                        helper.IsAllowRecordSql = false;
+                        string sql = string.Empty;
+                        Dictionary<string, string> tables = null;
+                        switch (helper.dalType)
+                        {
+                            case DalType.MsSql:
+                                sql = GetMSSQLTables(helper.Version.StartsWith("08"));
+                                break;
+                            case DalType.Oracle:
+                                sql = GetOracleTables();
+                                break;
+                            case DalType.MySql:
+                                sql = GetMySqlTables(helper.DataBase);
+                                break;
+                            case DalType.Txt:
+                            case DalType.Xml:
+                            case DalType.Access:
+                            case DalType.SQLite:
+                            case DalType.Sybase:
+                                #region 用ADO.NET属性拿数据
+                                string restrict = "TABLE";
+                                if (helper.dalType == DalType.Sybase)
+                                {
+                                    restrict = "BASE " + restrict;
+                                }
+                                tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                                helper.Con.Open();
+                                DataTable dt = helper.Con.GetSchema("Tables", new string[] { null, null, null, restrict });
+                                helper.Con.Close();
+                                if (dt != null && dt.Rows.Count > 0)
+                                {
+                                    string tableName = string.Empty;
+                                    foreach (DataRow row in dt.Rows)
+                                    {
+                                        tableName = Convert.ToString(row["TABLE_NAME"]);
+                                        if (!tables.ContainsKey(tableName))
+                                        {
+                                            tables.Add(tableName, string.Empty);
+                                        }
+                                        else
+                                        {
+                                            Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
+                                        }
+                                    }
+                                    dt = null;
+                                }
+                                #endregion
+                                break;
+                        }
+                        if (tables == null)
+                        {
+                            #region 读表到字典中
+                            tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                            DbDataReader sdr = helper.ExeDataReader(sql, false);
+                            if (sdr != null)
+                            {
+                                string tableName = string.Empty;
+                                while (sdr.Read())
+                                {
+                                    tableName = Convert.ToString(sdr["TableName"]);
+                                    if (!tables.ContainsKey(tableName))
+                                    {
+                                        if (!tableName.StartsWith("BIN$"))//Oracle的已删除的表。
+                                        {
+                                            tables.Add(tableName, Convert.ToString(sdr["Description"]));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
+                                    }
+                                }
+                                sdr.Close();
+                                sdr = null;
+                            }
+                            #endregion
+                        }
+                        if (!tableCache.ContainsKey(key))
+                        {
+                            tableCache.Add(key, tables);
+                        }
+                    }
+                }
+            }
             if (tableCache.ContainsKey(key))
             {
                 return tableCache[key];
             }
-            helper.IsAllowRecordSql = false;
-            string sql = string.Empty;
-            Dictionary<string, string> tables = null;
-            switch (helper.dalType)
-            {
-                case DalType.MsSql:
-                    sql = GetMSSQLTables(helper.Version.StartsWith("08"));
-                    break;
-                case DalType.Oracle:
-                    sql = GetOracleTables();
-                    break;
-                case DalType.MySql:
-                    sql = GetMySqlTables(helper.DataBase);
-                    break;
-                case DalType.Txt:
-                case DalType.Xml:
-                case DalType.Access:
-                case DalType.SQLite:
-                case DalType.Sybase:
-                    string restrict = "TABLE";
-                    if (helper.dalType == DalType.Sybase)
-                    {
-                        restrict = "BASE " + restrict;
-                    }
-                    tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                    helper.Con.Open();
-                    DataTable dt = helper.Con.GetSchema("Tables", new string[] { null, null, null, restrict });
-                    helper.Con.Close();
-                    if (dt != null && dt.Rows.Count > 0)
-                    {
-                        string tableName = string.Empty;
-                        foreach (DataRow row in dt.Rows)
-                        {
-                            tableName = Convert.ToString(row["TABLE_NAME"]);
-                            if (!tables.ContainsKey(tableName))
-                            {
-                                tables.Add(tableName, string.Empty);
-                            }
-                            else
-                            {
-                                Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
-                            }
-                        }
-                        dt = null;
-                    }
-                    return tables;
-            }
-            if (tables == null)
-            {
-                tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                DbDataReader sdr = helper.ExeDataReader(sql, false);
-                if (sdr != null)
-                {
-                    string tableName = string.Empty;
-                    while (sdr.Read())
-                    {
-                        tableName = Convert.ToString(sdr["TableName"]);
-                        if (!tables.ContainsKey(tableName))
-                        {
-                            if (!tableName.StartsWith("BIN$"))//Oracle的已删除的表。
-                            {
-                                tables.Add(tableName, Convert.ToString(sdr["Description"]));
-                            }
-                        }
-                        else
-                        {
-                            Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
-                        }
-                    }
-                    sdr.Close();
-                    sdr = null;
-                }
-            }
-            if (!tableCache.ContainsKey(key))
-            {
-                tableCache.Add(key, tables);
-            }
-            return tables;
+            return null;
         }
 
 
@@ -725,7 +739,7 @@ namespace CYQ.Data.SQL
         {
             if (type == "U" && tableCache.Count > 0)
             {
-                string key = "TableCache:" + helper.dalType + "." + helper.DataBase;
+                string key = "TableCache:" + helper.dalType + "." + helper.DataBase + helper.conn.GetHashCode();
                 if (tableCache.ContainsKey(key))
                 {
                     return tableCache[key].ContainsKey(name);
