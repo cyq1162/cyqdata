@@ -317,9 +317,9 @@ namespace CYQ.Data.Table
                 else
                 {
                     strValue = value.ToString();
+                    int groupID = DataType.GetGroup(_CellStruct.SqlType);
                     if (_CellStruct.SqlType != SqlDbType.Variant)
                     {
-                        int groupID = DataType.GetGroup(_CellStruct.SqlType);
                         if (strValue == "" && groupID > 0)
                         {
                             cellValue.Value = null;
@@ -333,7 +333,7 @@ namespace CYQ.Data.Table
                         }
                     }
 
-                    if (!cellValue.IsNull && (cellValue.Value.Equals(value) || cellValue.Value.ToString() == strValue))//对象的比较值，用==号则比例引用地址。
+                    if (!cellValue.IsNull && (cellValue.Value.Equals(value) ||  (groupID!=999 && cellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
                     {
                         cellValue.State = 1;
                     }

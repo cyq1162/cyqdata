@@ -907,5 +907,15 @@ namespace CYQ.Data
                 return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             }
         }
+        /// <summary>
+        /// 框架的运行路径（Bin目录）
+        /// </summary>
+        public static string RunPath
+        {
+            get
+            {
+                return AppConst.RunFolderPath;
+            }
+        }
     }
 }
