@@ -718,6 +718,7 @@ namespace CYQ.Data.Table
             {
                 row.LoadFrom(anyObj);
             }
+            row.SetState(1);//外部创建的状态默认置为1.
             return row;
         }
 
@@ -1088,7 +1089,7 @@ namespace CYQ.Data.Table
                                     }
                                     break;
                             }
-                            Set(index, propValue, 1);
+                            Set(index, propValue);//它的状态应该值设置，改为1是不对的。
                         }
                     }
                 }
