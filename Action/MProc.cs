@@ -310,6 +310,7 @@ namespace CYQ.Data
                             break;
                     }
                     _aop.Para.Table.Conn = _conn;
+                    _aop.Para.IsSuccess = _aop.Para.Table.Rows.Count > 0;
                 }
                 if (aopResult != AopResult.Default)
                 {
@@ -363,6 +364,7 @@ namespace CYQ.Data
                             break;
                     }
                     _aop.Para.TableList = dtList;
+                    _aop.Para.IsSuccess = dtList.Count > 0;
                 }
                 if (aopResult != AopResult.Default)
                 {
@@ -398,6 +400,7 @@ namespace CYQ.Data
                             _aop.Para.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
                             break;
                     }
+                    _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
                 }
                 if (aopResult != AopResult.Default)
                 {
@@ -425,6 +428,7 @@ namespace CYQ.Data
                         _aop.Para.ExeResult = dalHelper.ExeScalar(_procName, _isProc);
                         break;
                 }
+                _aop.Para.IsSuccess = _aop.Para.ExeResult != null;
             }
             if (aopResult == AopResult.Continue || aopResult == AopResult.Break)
             {

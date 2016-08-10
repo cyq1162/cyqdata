@@ -947,6 +947,7 @@ namespace CYQ.Data
                         {
                             _aop.Para.Table.Rows.Clear();//预防之前的插入操作产生了一个数据行。
                         }
+                        _aop.Para.IsSuccess = _aop.Para.Table.Rows.Count > 0;
                         ClearParameters();//------------------------参数清除
                         break;
                 }
@@ -1118,6 +1119,7 @@ namespace CYQ.Data
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
+                        _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
                         break;
                     default:
                         ClearParameters();//清除系统参数
