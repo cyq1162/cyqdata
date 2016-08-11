@@ -90,6 +90,10 @@ namespace CYQ.Data.Cache
 
         internal static void SetCache(AopEnum action, AopInfo aopInfo)//End
         {
+            if (!IsCanOperateCache(aopInfo))
+            {
+                return;
+            }
             string baseKey = GetBaseKey(aopInfo);
             switch (action)
             {
@@ -104,10 +108,7 @@ namespace CYQ.Data.Cache
                     return;
             }
 
-            //if (!IsCanOperateCache(baseKey))
-            //{
-            //    return;
-            //}
+           
             if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.RemainMemoryPercentage < 15)//可用内存低于15%
             {
                 return;
@@ -229,13 +230,39 @@ namespace CYQ.Data.Cache
                 }
             }
         }
+        private static List<string> _NoCacheTables = null;
+        internal static List<string> NoCacheTables
+        {
+            get
+            {
+                if (_NoCacheTables == null)
+                {
+                    _NoCacheTables = new List<string>();
+                    string tables = AppConfig.Cache.NoCacheTables;
+                    if (!string.IsNullOrEmpty(tables))
+                    {
+                        _NoCacheTables.AddRange(tables.Split(','));
+                    }
+                }
+                return _NoCacheTables;
+            }
+            set
+            {
+                _NoCacheTables = value;
+            }
+        }
         private static bool IsCanOperateCache(AopInfo para)
         {
-            List<string> tables = GetRelationTables(para); ;
+            List<string> tables = GetRelationTables(para);
             if (tables != null && tables.Count > 0)
             {
+
                 foreach (string tableName in tables)
                 {
+                    if (NoCacheTables.Contains(tableName))
+                    {
+                        return false;
+                    }
                     string baseKey = GetBaseKey(para, tableName);
                     string delKey = "DeleteAutoCache:" + baseKey;
                     if (_MemCache.Contains(delKey))

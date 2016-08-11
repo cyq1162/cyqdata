@@ -621,6 +621,21 @@ namespace CYQ.Data
                     _IsAutoCache = value ? 1 : 0;
                 }
             }
+            /// <summary>
+            /// AutoCache开启时，可以设置不缓存的Table，多个用逗号分隔
+            /// </summary>
+            public static string NoCacheTables
+            {
+                get
+                {
+                    return GetApp("NoCacheTables","");
+                }
+                set
+                {
+                    SetApp("NoCacheTables", value);
+                    CYQ.Data.Cache.AutoCache.NoCacheTables = null;
+                }
+            }
 
 
             /*
@@ -669,6 +684,7 @@ namespace CYQ.Data
             }
             */
         }
+
         #endregion
 
         #region 日志相关配置

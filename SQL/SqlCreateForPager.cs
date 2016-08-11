@@ -35,7 +35,7 @@ namespace CYQ.Data.SQL
             int rowStart = (pageIndex - 1) * pageSize + 1;
             int rowEnd = rowStart + pageSize - 1;
             string orderBy = string.Empty;
-            if (pageIndex == 1)//第一页
+            if (pageIndex == 1 && dalType != DalType.Oracle)//第一页（oracle时 rownum 在排序条件为非数字时，和row_number()的不一样，会导致结果差异，所以分页统一用row_number()。）
             {
                 switch (dalType)
                 {
@@ -43,8 +43,8 @@ namespace CYQ.Data.SQL
                     case DalType.MsSql:
                     case DalType.Sybase:
                         return string.Format(top1Pager, "top " + pageSize + " " + columns, tableName, where);
-                    case DalType.Oracle:
-                        return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
+                    //case DalType.Oracle:
+                    //    return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
                     case DalType.SQLite:
                     case DalType.MySql:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize);
