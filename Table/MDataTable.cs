@@ -939,7 +939,7 @@ namespace CYQ.Data.Table
         }
     }
 
-    public partial class MDataTable : IDataReader, IEnumerable
+    public partial class MDataTable : IDataReader, IEnumerable//, IEnumerator
     {
         private int _Ptr = -1;//行索引
         #region IDataRecord 成员
@@ -1083,7 +1083,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return Error.Throw(AppConst.Global_NotImplemented);
+                return _Rows[_Ptr][name];
             }
         }
 
@@ -1196,8 +1196,39 @@ namespace CYQ.Data.Table
 
         IEnumerator IEnumerable.GetEnumerator()
         {
+            //for (int i = 0; i < Rows.Count; i++)
+            //{
+            //    yield return Rows[i];
+            //}
             return new System.Data.Common.DbEnumerator(this);
         }
+
+        #endregion
+
+        #region IEnumerator 成员
+
+        //object IEnumerator.Current
+        //{
+        //    get
+        //    {
+        //        if (_Ptr > -1 && _Ptr < _Rows.Count)
+        //        {
+        //            return _Rows[_Ptr];
+        //        }
+        //        return null;
+        //    }
+        //}
+
+        //bool IEnumerator.MoveNext()
+        //{
+        //    _Ptr++;
+        //    return _Ptr < _Rows.Count - 1;
+        //}
+
+        //void IEnumerator.Reset()
+        //{
+        //    _Ptr = -1;//行索引
+        //}
 
         #endregion
     }
@@ -1503,7 +1534,7 @@ namespace CYQ.Data.Table
                         {
                             if (!cell.InnerXml.StartsWith("<![CDATA["))
                             {
-                                dr.Set(cell.Name, cell.InnerXml.Trim(),1);
+                                dr.Set(cell.Name, cell.InnerXml.Trim(), 1);
                             }
                             else
                             {

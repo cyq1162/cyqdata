@@ -16,7 +16,7 @@ namespace CYQ.Data
             AddParameters("ReturnValue", null, DbType.Int32, 32, ParameterDirection.ReturnValue);
         }
 
-        internal override void AddCustomePara(string paraName, ParaType paraType, object value)
+        internal override void AddCustomePara(string paraName, ParaType paraType, object value,string typeName)
         {
             if (Com.Parameters.Contains(paraName))
             {
@@ -26,10 +26,16 @@ namespace CYQ.Data
             {
                 case ParaType.OutPut:
                 case ParaType.ReturnValue:
+                case ParaType.Structured:
                     SqlParameter para = new SqlParameter();
                     para.ParameterName = paraName;
-
-                    if (paraType == ParaType.OutPut)
+                    if (paraType == ParaType.Structured)
+                    {
+                        para.SqlDbType = SqlDbType.Structured;
+                        para.TypeName = typeName;
+                        para.Value = value;
+                    }
+                    else if (paraType == ParaType.OutPut)
                     {
                         para.SqlDbType = SqlDbType.NVarChar;
                         para.Size = 2000;

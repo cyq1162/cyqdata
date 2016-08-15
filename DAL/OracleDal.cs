@@ -28,11 +28,11 @@ namespace CYQ.Data
             }
             if (!Com.Parameters.Contains("ResultCursor"))
             {
-                AddCustomePara("ResultCursor", ParaType.Cursor, DBNull.Value);
+                AddCustomePara("ResultCursor", ParaType.Cursor, DBNull.Value, null);
             }
 
         }
-        internal override void AddCustomePara(string paraName, ParaType paraType, object value)
+        internal override void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
         {
             if (IsUseOdpNet)
             {

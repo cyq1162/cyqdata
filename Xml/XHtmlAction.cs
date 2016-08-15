@@ -92,7 +92,7 @@ namespace CYQ.Data.Xml
                     }
                 }
             }
-            
+
             return node;
         }
         public XmlNode Get(string idOrName, XmlNode parentNode)
@@ -811,7 +811,7 @@ namespace CYQ.Data.Xml
                     {
                         html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
                     }
-                    html = html.Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
+                    html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
                     if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${")) // 替换自定义标签。
                     {
                         #region 替换自定义标签
@@ -886,7 +886,7 @@ namespace CYQ.Data.Xml
                 _Row = _Table.Rows[0];
             }
         }
-        public delegate string SetForeachEventHandler(string text, object[] values, int rowIndex);
+        public delegate string SetForeachEventHandler(string text, Dictionary<string,string> values, int rowIndex);
         /// <summary>
         /// 对于SetForeach函数调用的格式化事件
         /// </summary>
@@ -1004,14 +1004,15 @@ namespace CYQ.Data.Xml
                 {
                     formatValues = new object[colLen];
                 }
-                object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
+                Dictionary<string, string> values = new Dictionary<string, string>(formatValues.Length, StringComparer.OrdinalIgnoreCase);
+               // object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
 
                 //foreach (MDataRow row in _Table.Rows)
                 string newText = text;
                 MDataCell cell;
                 for (int k = 0; k < _Table.Rows.Count; k++)
                 {
-                    for (int i = 0; i < values.Length; i++)
+                    for (int i = 0; i < formatValues.Length; i++)
                     {
                         #region 从指定的列把值放到values数组
                         if (formatValues[i] == null)
@@ -1021,11 +1022,13 @@ namespace CYQ.Data.Xml
                         cell = _Table.Rows[k][formatValues[i].ToString()];
                         if (cell == null && string.Compare(formatValues[i].ToString(), "row", true) == 0) // 多年以后，自己也没看懂比较row是为了什么
                         {
-                            values[i] = k + 1;//也没看懂，为啥值是自增加1，我靠，难道是行号？或者楼层数？隐匿功能？
+                            values.Add(formatValues[i].ToString(), (k + 1).ToString());
+                            //values[i] = k + 1;//也没看懂，为啥值是自增加1，我靠，难道是行号？或者楼层数？隐匿功能？
                         }
                         else if (cell != null)
                         {
-                            values[i] = cell.Value;
+                            values.Add(cell.ColumnName, cell.strValue);
+                            //values[i] = cell.Value;
                         }
                         #endregion
                     }
@@ -1036,10 +1039,16 @@ namespace CYQ.Data.Xml
                     try
                     {
                         string tempText = newText;
-                        for (int j = 0; j < values.Length; j++)
+                        int j = 0;
+                        foreach (KeyValuePair<string, string> kv in values)
                         {
-                            tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));//格式化{0}、{1}的占位符
+                            tempText = tempText.Replace("{" + j + "}", kv.Value);//格式化{0}、{1}的占位符
+                            j++;
                         }
+                        //for (int j = 0; j < values.Length; j++)
+                        //{
+                        //    tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));//格式化{0}、{1}的占位符
+                        //}
                         if (tempText.Contains("${"))
                         {
                             #region 处理标签占位符
@@ -1056,10 +1065,17 @@ namespace CYQ.Data.Xml
                                     if (!keys.Contains(value))
                                     {
                                         keys.Add(value);
-                                        matchCell = _Table.Rows[k][columnName];
-                                        if (matchCell != null)
+                                        if (value.Contains(columnName))//值可能被格式化过，所以优先取值。
                                         {
-                                            tempText = tempText.Replace(value, matchCell.ToString());
+                                            tempText = tempText.Replace(value, values[columnName]);
+                                        }
+                                        else
+                                        {
+                                            matchCell = _Table.Rows[k][columnName];
+                                            if (matchCell != null)
+                                            {
+                                                tempText = tempText.Replace(value, matchCell.ToString());
+                                            }
                                         }
                                     }
                                 }
@@ -1076,6 +1092,10 @@ namespace CYQ.Data.Xml
                     catch (Exception err)
                     {
                         Log.WriteLogToTxt(err);
+                    }
+                    finally
+                    {
+                        values.Clear();
                     }
                 }
                 try

@@ -63,7 +63,11 @@ namespace CYQ.Data
         /// <summary>
         ///  Oracle NCLOB类型
         /// </summary>
-        NCLOB
+        NCLOB,
+        /// <summary>
+        ///  MSSQL 用户定义表类型
+        /// </summary>
+        Structured
     }
 
     /// <summary>

@@ -545,3 +545,6 @@
 329：修正自动缓存(2016-08-10)
 330：Oracle修正第1页分页问题【当排序条件为字符串时】(2016-08-11)
 331：AppConfig新增加NoCacheTables属性，允许指定某些表不允许缓存（自动缓存开启时）(2016-08-11)
+332：XHtmlAction 增加对Xml文档中&符号的处理(2016-08-15)
+333：XHtmlAction 对SetForeachEventHandler事件做优化调整(2016-08-15)
+334：MProc的SetCustom方法增加对MSSQL用户自定义表类型的支持(2016-08-15)

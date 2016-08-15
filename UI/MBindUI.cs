@@ -14,6 +14,10 @@ namespace CYQ.Data.UI
     {
         public static void Bind(object ct, object source, string nodeID)
         {
+            if (ct == null)
+            {
+                return;
+            }
             if (ct is XHtmlAction)
             {
                 #region XHtmlAction 对象处理

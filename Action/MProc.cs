@@ -490,7 +490,7 @@ namespace CYQ.Data
         /// </summary>
         public MProc SetCustom(object paraName, ParaType paraType)
         {
-            dalHelper.AddCustomePara(Convert.ToString(paraName), paraType, null); return this;
+            return SetCustom(paraName, paraType, null, null);
         }
         /// <summary>
         /// 设置特殊自定义参数
@@ -500,7 +500,15 @@ namespace CYQ.Data
         /// <param name="value">参数值</param>
         public MProc SetCustom(object paraName, ParaType paraType, object value)
         {
-            dalHelper.AddCustomePara(Convert.ToString(paraName), paraType, value); return this;
+            return SetCustom(paraName, paraType, value, null);
+        }
+        /// <summary>
+        /// 设置特殊自定义参数
+        /// </summary>
+        /// <param name="typeName">MSSQL的用户定义表类型的名称</param>
+        public MProc SetCustom(object paraName, ParaType paraType, object value, string typeName)
+        {
+            dalHelper.AddCustomePara(Convert.ToString(paraName), paraType, value, typeName); return this;
         }
         /// <summary>
         ///设置存储过程参数

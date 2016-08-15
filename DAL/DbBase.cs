@@ -565,7 +565,7 @@ namespace CYQ.Data
                 parameterName = parameterName.Replace(":", "").Replace("@", "");
                 if (dbType == DbType.String && size > 4000)
                 {
-                    AddCustomePara(parameterName, size == int.MaxValue ? ParaType.CLOB : ParaType.NCLOB, value);
+                    AddCustomePara(parameterName, size == int.MaxValue ? ParaType.CLOB : ParaType.NCLOB, value, null);
                     return true;
                 }
             }
@@ -616,9 +616,12 @@ namespace CYQ.Data
             Com.Parameters.Add(para);
             return true;
         }
-        internal virtual void AddCustomePara(string paraName, ParaType paraType, object value)
+        internal virtual void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
         {
         }
+        //internal virtual void AddCustomePara(string paraName, ParaType paraType, object value)
+        //{
+        //}
         //public abstract DbParameter GetNewParameter();
 
         public void ClearParameters()

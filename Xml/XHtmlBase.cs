@@ -554,10 +554,18 @@ namespace CYQ.Data.Xml
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                //int ss = (int)cc;
                 if (((c >= 0) && (c <= 8)) || ((c >= 11) && (c <= 12)) || ((c >= 14) && (c <= 32)))
                 {
                     info.AppendFormat(" ", c);//&#x{0:X};
+                }
+                else if (c == '&')
+                {
+                    info.Append("&amp;");
+                    //                    &(逻辑与)  &amp;        
+                    //<(小于)    &lt;        
+                    //>(大于)    &gt;        
+                    //"(双引号)  &quot;      
+                    //'(单引号)  &apos; 
                 }
                 else
                 {
