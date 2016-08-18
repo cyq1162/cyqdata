@@ -4,6 +4,7 @@ using System.Text;
 using System.Reflection;
 using System.Data;
 using CYQ.Data.Table;
+using CYQ.Data.SQL;
 
 
 namespace CYQ.Data.Tool
@@ -195,11 +196,11 @@ namespace CYQ.Data.Tool
                 int index = tName.LastIndexOf(')');
                 if (index > 0) // 视图
                 {
-                    string viewSQL=tName;
+                    string viewSQL = tName;
                     string a = tName.Substring(0, index + 1);//a部分
-                    tName=tName.Substring(index + 1).Trim();//b部分。ddd.v_xxx
+                    tName = tName.Substring(index + 1).Trim();//b部分。ddd.v_xxx
                     //修改原对像
-                    
+
                     if (tName.Contains("."))
                     {
                         tableNamesEnum = a + " " + tName.Substring(tName.LastIndexOf('.') + 1);
@@ -226,15 +227,31 @@ namespace CYQ.Data.Tool
             {
                 return null;
             }
+            string strValue = Convert.ToString(value);
             if (t.IsGenericType && t.Name.StartsWith("Nullable"))
             {
                 t = Nullable.GetUnderlyingType(t);
+                if (strValue == "")
+                {
+                    return null;
+                }
             }
             if (t.Name == "String")
             {
-                return Convert.ToString(value);
+                return strValue;
             }
-            return Convert.ChangeType(value, t);
+            if (strValue == "")
+            {
+                return Activator.CreateInstance(t);
+            }
+            else if (t.IsValueType)
+            {
+                return Convert.ChangeType(strValue, t);
+            }
+            else
+            {
+                return Convert.ChangeType(value, t);
+            }
         }
     }
 }
