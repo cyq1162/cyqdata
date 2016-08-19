@@ -47,6 +47,7 @@ namespace CYQ.Data.Tool
         /// 日期的格式化（默认：yyyy-MM-dd HH:mm:ss）
         /// </summary>
         public string DateTimeFormatter = "yyyy-MM-dd HH:mm:ss";
+        private string brFlag = "[#<br>]";
         RowOp _RowOp = RowOp.IgnoreNull;
         /// <summary>
         ///  Json输出行数据的过滤选项
@@ -134,7 +135,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         public void AddBr()
         {
-            jsonItems.Add("[#<br>]");
+            jsonItems.Add(brFlag);
             rowCount++;
         }
         string footText = string.Empty;
@@ -222,7 +223,12 @@ namespace CYQ.Data.Tool
         /// </summary>
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            int capacity = 100;
+            if (jsonItems.Count > 0)
+            {
+                capacity = jsonItems.Count * jsonItems[0].Length;
+            }
+            StringBuilder sb = new StringBuilder(capacity);
 
             if (_AddHead)
             {
@@ -233,7 +239,6 @@ namespace CYQ.Data.Tool
                 sb.Append("\"success\":" + Success.ToString().ToLower() + ",");
                 sb.Append("\"rows\":");
             }
-            int index = 0;
             if (jsonItems.Count <= 0)
             {
                 if (_AddHead)
@@ -252,17 +257,20 @@ namespace CYQ.Data.Tool
                     sb.Append("[");
                 }
                 sb.Append("{");
+                int index = 0;
                 foreach (string val in jsonItems)
                 {
                     index++;
 
-                    if (val != "[#<br>]")
+                    if (val != brFlag)
                     {
-                        sb.Append(val + ",");
+                        sb.Append(val);
+                        sb.Append(",");
                     }
                     else
                     {
-                        sb = sb.Replace(",", "", sb.Length - 1, 1);
+                        sb.Remove(sb.Length - 1, 1);//性能优化（内部时，必须多了一个“，”号）。
+                        //sb = sb.Replace(",", "", sb.Length - 1, 1);
                         sb.Append("},");
                         if (index < jsonItems.Count)
                         {
@@ -270,7 +278,11 @@ namespace CYQ.Data.Tool
                         }
                     }
                 }
-                sb = sb.Replace(",", "", sb.Length - 1, 1);//去除最后一个,号。
+                if (sb[sb.Length - 1] == ',')
+                {
+                    sb.Remove(sb.Length - 1, 1);
+                }
+                //sb = sb.Replace(",", "", sb.Length - 1, 1);//去除最后一个,号。
                 //sb.Append("}");
                 if (_AddHead || rowCount > 1)
                 {

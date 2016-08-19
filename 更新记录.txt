@@ -548,3 +548,7 @@
 332：XHtmlAction 增加对Xml文档中&符号的处理(2016-08-15)
 333：XHtmlAction 对SetForeachEventHandler事件做优化调整(2016-08-15)
 334：MProc的SetCustom方法增加对MSSQL用户自定义表类型的支持(2016-08-15)
+335：StaticTool：提升了ChangeType方法的转换性能(2016-08-18)
+336：MDataTable的ToList<T>方法增加一个判断条件，预防继承OrmBase的远程实体使用Emit(2016-08-18)
+337：JsonHelper：优化提升了大数量下的ToString()的性能(2016-08-19)
+338：AutoCache：当数据>10万条时不自动缓存(2016-08-19)

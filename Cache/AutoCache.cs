@@ -173,6 +173,10 @@ namespace CYQ.Data.Cache
         }
         static bool IsCanCache(MDataTable dt)
         {
+            if (dt == null || dt.Rows.Count > 100000)
+            {
+                return false;// 大于10万条的不缓存。
+            }
             foreach (MCellStruct item in dt.Columns)
             {
                 if (DataType.GetGroup(item.SqlType) == 999)//只存档基础类型
