@@ -167,7 +167,10 @@ namespace CYQ.Data.Table
                 if (key.Length <= Count.ToString().Length)
                 {
                     //ÅÐ¶ÏÊÇ·ñÎªÊý×Ö¡£
-                    int.TryParse(key, out index);
+                    if (!int.TryParse(key, out index))
+                    {
+                        index = -1;
+                    }
                 }
                 if (index == -1)
                 {
