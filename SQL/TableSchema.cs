@@ -381,7 +381,7 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (!CacheManage.LocalInstance.Contains(key))
+            if (!CacheManage.LocalInstance.Contains(key) && mdcs.Count > 0)//拿不到表结构时不缓存。
             {
                 CacheManage.LocalInstance.Add(key, mdcs.Clone());
             }
@@ -597,7 +597,7 @@ namespace CYQ.Data.SQL
                             }
                             #endregion
                         }
-                        if (!tableCache.ContainsKey(key))
+                        if (!tableCache.ContainsKey(key) && tables.Count > 0)//读不到表不缓存。
                         {
                             tableCache.Add(key, tables);
                         }

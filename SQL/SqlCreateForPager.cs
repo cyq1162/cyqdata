@@ -141,6 +141,11 @@ namespace CYQ.Data.SQL
                     return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max), topN + " " + columns, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
                 case DalType.SQLite:
                 case DalType.MySql:
+                    if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
+                    {
+                        where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);
+                        return string.Format(top1Pager, columns, tableName, where);
+                    }
                     return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize + " offset " + max);
             }
             return (string)Error.Throw("Pager::No Be Support:" + dalType.ToString());
