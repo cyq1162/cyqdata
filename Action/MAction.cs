@@ -920,7 +920,8 @@ namespace CYQ.Data
                             #region SQL语句分页执行
                             if (byPager)
                             {
-                                rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
+                                rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                                //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
                             }
                             if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
                             {

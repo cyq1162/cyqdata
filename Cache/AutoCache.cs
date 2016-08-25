@@ -103,12 +103,20 @@ namespace CYQ.Data.Cache
                 case AopEnum.Delete:
                     if (aopInfo.IsSuccess || aopInfo.RowCount > 0)
                     {
+                        if (action == AopEnum.Update || action == AopEnum.ExeNonQuery)
+                        {
+                            //检测是否指定忽略的列名（多数据库的指定？{XXX.XXX}）
+                            if (!IsCanRemoveCache(action, aopInfo))
+                            {
+                                return;
+                            }
+                        }
                         ReadyForRemove(baseKey);
                     }
                     return;
             }
 
-           
+
             if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.RemainMemoryPercentage < 15)//可用内存低于15%
             {
                 return;
@@ -187,6 +195,151 @@ namespace CYQ.Data.Cache
             return true;
         }
 
+        #region 对列进行处理。
+        private static Dictionary<string, string> _IngoreCacheColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        static readonly object obj = new object();
+        internal static Dictionary<string, string> IngoreCacheColumns
+        {
+            get
+            {
+                if (_IngoreCacheColumns.Count == 0)
+                {
+                    string ignoreColumns = AppConfig.Cache.IngoreCacheColumns;
+                    if (!string.IsNullOrEmpty(ignoreColumns))
+                    {
+                        lock (obj)
+                        {
+                            if (_IngoreCacheColumns.Count == 0)
+                            {
+                                _IngoreCacheColumns = JsonHelper.Split(ignoreColumns);
+                            }
+                        }
+                        if (_IngoreCacheColumns == null)
+                        {
+                            Error.Throw("IngoreCacheColumns config must be a json!");
+                        }
+                    }
+                }
+                return _IngoreCacheColumns;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    _IngoreCacheColumns.Clear();
+                }
+                else
+                {
+                    _IngoreCacheColumns = value;
+                }
+            }
+        }
+        static bool IsCanRemoveCache(AopEnum action, AopInfo aopInfo)
+        {
+            if (IngoreCacheColumns.Count > 0)
+            {
+                string databaseName = string.Empty;
+                if (action == AopEnum.ExeNonQuery)
+                {
+                    if (aopInfo.IsProc || !aopInfo.ProcName.ToLower().StartsWith("update "))
+                    {
+                        return true;
+                    }
+                    databaseName = aopInfo.MProc.DataBase;
+                }
+                else
+                {
+                    databaseName = aopInfo.MAction.DataBase;
+                }
+                string tableName = aopInfo.TableName;
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    List<string> tableNames = SqlFormat.GetTableNamesFromSql(aopInfo.ProcName);
+                    if (tableNames == null || tableNames.Count != 1)//多个表的批量语句也不处理。
+                    {
+                        return true;
+                    }
+                    tableName = tableNames[0];
+                }
+                //获取被更新的字段名，
+                string[] columns = null;
+                if (IngoreCacheColumns.ContainsKey(tableName))
+                {
+                    columns = IngoreCacheColumns[tableName].ToLower().Split(',');
+                }
+                else if (IngoreCacheColumns.ContainsKey(databaseName + "." + tableName))
+                {
+                    columns = IngoreCacheColumns[databaseName + "." + tableName].ToLower().Split(',');
+                }
+                if (columns != null)//拿到要忽略的列。
+                {
+                    List<string> updateColumns = GetChangedColumns(action, aopInfo);//拿到已更新的列
+                    if (columns.Length >= updateColumns.Count)
+                    {
+                        List<string> ignoreColumns = new List<string>(columns.Length);
+                        ignoreColumns.AddRange(columns);
+
+                        foreach (string item in updateColumns)
+                        {
+                            if (!ignoreColumns.Contains(item))
+                            {
+                                return true;//只要有一个不存在。
+                            }
+                        }
+                        return false;//全都不存在
+                    }
+
+                }
+            }
+            return true;
+        }
+        private static List<string> GetChangedColumns(AopEnum action, AopInfo aopInfo)
+        {
+            List<string> columns = new List<string>();
+            string expression = string.Empty;
+            if (action == AopEnum.Update)
+            {
+                foreach (MDataCell item in aopInfo.Row)
+                {
+                    if (item.State == 2 && !item.Struct.IsPrimaryKey)
+                    {
+                        columns.Add(item.ColumnName.ToLower());
+                    }
+                }
+                expression = aopInfo.UpdateExpression;
+            }
+            else if (action == AopEnum.ExeNonQuery && !aopInfo.IsProc)
+            {
+                string sql = aopInfo.ProcName.ToLower();
+                int setStart = sql.IndexOf(" set ");
+                int whereEnd = sql.IndexOf(" where ");
+                if (whereEnd < setStart)
+                {
+                    expression = sql.Substring(setStart + 5);
+                }
+                else
+                {
+                    expression = sql.Substring(setStart + 5, whereEnd - setStart + 5);
+                }
+            }
+            if (!string.IsNullOrEmpty(expression))
+            {
+                string[] items = expression.ToLower().Split(',');
+                foreach (string item in items)
+                {
+                    if (item.IndexOf('=') > -1)
+                    {
+                        string column = item.Split('=')[0];
+                        if (!columns.Contains(column))
+                        {
+                            columns.Add(column);
+                        }
+                    }
+                }
+            }
+            return columns;
+        }
+        #endregion
         #endregion
 
         #region 缓存Key的管理
@@ -423,6 +576,8 @@ namespace CYQ.Data.Cache
                     break;
                 case AopEnum.Fill:
                 case AopEnum.GetCount:
+                    sb.Append(aopInfo.Where);
+                    break;
                 case AopEnum.Select:
                     sb.Append(aopInfo.PageIndex);
                     sb.Append(aopInfo.PageSize);

@@ -637,7 +637,22 @@ namespace CYQ.Data
                 }
             }
 
-
+            /// <summary>
+            /// AutoCache开启时，可以设置不受更新影响的列名，用Json格式。
+            /// {talbeName1:'column1,column2',talbeName2:'column1,column2'}
+            /// </summary>
+            public static string IngoreCacheColumns
+            {
+                get
+                {
+                    return GetApp("IngoreCacheColumns", "");
+                }
+                set
+                {
+                    SetApp("IngoreCacheColumns", value);
+                    CYQ.Data.Cache.AutoCache.IngoreCacheColumns = null;
+                }
+            }
             /*
             /// <summary>
             ///  Cache.CacheManage 内置线程-缓存的同步时间[(默认5)分钟同步一次]

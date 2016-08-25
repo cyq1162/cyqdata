@@ -17,37 +17,38 @@ namespace CYQ.Data.Tool
         internal static bool IsJson(string json, out int errIndex)
         {
             errIndex = 0;
-            if (!string.IsNullOrEmpty(json) && json.Length > 1 &&
-                ((json[0] == '{' && json[json.Length - 1] == '}') || (json[0] == '[' && json[json.Length - 1] == ']')))
+
+            if (string.IsNullOrEmpty(json) || json.Length < 2 ||
+                ((json[0] != '{' && json[json.Length - 1] != '}') && (json[0] != '[' && json[json.Length - 1] != ']')))
             {
-                CharState cs = new CharState();
-                char c;
-                for (int i = 0; i < json.Length; i++)
+                return false;
+            }
+            CharState cs = new CharState();
+            char c;
+            for (int i = 0; i < json.Length; i++)
+            {
+                c = json[i];
+                if (SetCharState(c, ref cs) && cs.childrenStart)//设置关键符号状态。
                 {
-                    c = json[i];
-                    if (SetCharState(c, ref cs) && cs.childrenStart)//设置关键符号状态。
+                    string item = json.Substring(i);
+                    int err;
+                    int length = GetValueLength(item, true, out err);
+                    cs.childrenStart = false;
+                    if (err > 0)
                     {
-                        string item = json.Substring(i);
-                        int err;
-                        int length = GetValueLength(item, true, out err);
-                        cs.childrenStart = false;
-                        if (err > 0)
-                        {
-                            errIndex = i + err;
-                            return false;
-                        }
-                        i = i + length - 1;
-                    }
-                    if (cs.isError)
-                    {
-                        errIndex = i;
+                        errIndex = i + err;
                         return false;
                     }
+                    i = i + length - 1;
                 }
-
-                return !cs.arrayStart && !cs.jsonStart;
+                if (cs.isError)
+                {
+                    errIndex = i;
+                    return false;
+                }
             }
-            return false;
+
+            return !cs.arrayStart && !cs.jsonStart; //只要不是正常关闭，则失败
         }
         internal static List<Dictionary<string, string>> Split(string json)
         {
@@ -201,18 +202,19 @@ namespace CYQ.Data.Tool
             internal bool arrayStart = false;//以"[" 符号开始了
             internal bool childrenStart = false;//子级嵌套开始了。
             /// <summary>
-            /// 【0 取名称中】；【1 取值中】
+            /// 【-1 未初始化】【0 取名称中】；【1 取值中】
             /// </summary>
             internal int state = -1;
 
             /// <summary>
-            /// 【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
+            /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
             /// </summary>
             internal int keyStart = -1;
             /// <summary>
-            /// 【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
+            /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
             /// </summary>
             internal int valueStart = -1;
+
             internal bool isError = false;//是否语法错误。
 
             internal void CheckIsError(char c)//只当成一级处理（因为GetLength会递归到每一个子项处理）
@@ -223,15 +225,17 @@ namespace CYQ.Data.Tool
                         isError = jsonStart && state == 0;//重复开始错误 同时不是值处理。
                         break;
                     case '}':
-                        isError = !jsonStart || (keyStart > -1 && state == 0);//重复结束错误 或者 提前结束。
+                        isError = !jsonStart || (keyStart > 0 && state == 0);//重复结束错误 或者 提前结束。
                         break;
                     case '[':
                         isError = arrayStart && state == 0;//重复开始错误
                         break;
                     case ']':
-                        isError = !arrayStart;//重复开始错误
+                        isError = !arrayStart || (state == 1 && valueStart == 0);//重复开始错误[{},]1,0  正常：[111,222] 1,1 [111,"22"] 1,-2 
                         break;
                     case '"':
+                        isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
+                        break;
                     case '\'':
                         isError = !jsonStart;//未开始Json
                         break;
@@ -239,10 +243,12 @@ namespace CYQ.Data.Tool
                         isError = !jsonStart || (jsonStart && keyStart < 2 && valueStart < 2 && state == 1);//未开始Json 同时 只能处理在取值之前。
                         break;
                     case ',':
-                        isError = (!jsonStart && !arrayStart) || (jsonStart && keyStart < 2 && valueStart < 2 && state == 0);//未开始Json 同时 只能处理在取值之后。
+                        isError = (!jsonStart && !arrayStart)
+                            || (!jsonStart && arrayStart && state == -1) //[,111]
+                            || (jsonStart && keyStart < 2 && valueStart < 2 && state == 0);//未开始Json 同时 只能处理在取值之后。
                         break;
                     default: //值开头。。
-                        isError = !jsonStart || (keyStart == 0 && valueStart == 0 && state == 0);//
+                        isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && state == 0);//
                         break;
                 }
                 //if (isError)
@@ -285,7 +291,8 @@ namespace CYQ.Data.Tool
                         if (cs.jsonStart)
                         {
                             cs.jsonStart = false;//正常结束。
-                            cs.valueStart = 0;
+                            cs.valueStart = -1;
+                            cs.state = 0;
                             cs.setDicValue = true;
                         }
                         return true;
@@ -312,7 +319,7 @@ namespace CYQ.Data.Tool
                     break;
                 case ']':
                     #region 中括号结束
-                    if (!cs.jsonStart && cs.keyStart <= 0 && cs.valueStart <= 0)
+                    if (!cs.jsonStart && (cs.keyStart <= 0 && cs.valueStart <= 0) || (cs.keyStart == -1 && cs.valueStart == 1))
                     {
                         cs.CheckIsError(c);
                         if (cs.arrayStart)// && !cs.childrenStart
@@ -327,11 +334,15 @@ namespace CYQ.Data.Tool
                 case '\'':
                     cs.CheckIsError(c);
                     #region 引号
-                    if (cs.jsonStart)
+                    if (cs.jsonStart || cs.arrayStart)
                     {
+                        if (!cs.jsonStart && cs.arrayStart)
+                        {
+                            cs.state = 1;//如果是数组，只有取值，没有Key，所以直接跳过0
+                        }
                         if (cs.state == 0)//key阶段
                         {
-                            cs.keyStart = (cs.keyStart <= 0 ? (c == '"' ? 3 : 2) : 0);
+                            cs.keyStart = (cs.keyStart <= 0 ? (c == '"' ? 3 : 2) : -2);
                             return true;
                         }
                         else if (cs.state == 1)//值阶段
@@ -345,7 +356,7 @@ namespace CYQ.Data.Tool
                             {
                                 if (!cs.escapeChar)
                                 {
-                                    cs.valueStart = 0;
+                                    cs.valueStart = -2;
                                     return true;
                                 }
                                 else
@@ -367,12 +378,11 @@ namespace CYQ.Data.Tool
                         cs.state = 1;
                         return true;
                     }
-                    // cs.isError = !cs.jsonStart || (cs.keyStart < 2 && cs.valueStart < 2 && cs.state == 1);
                     #endregion
                     break;
                 case ',':
                     cs.CheckIsError(c);
-                    #region 逗号
+                    #region 逗号 {"a": [11,"22", ], "Type": 2}
                     if (cs.jsonStart && cs.keyStart < 2 && cs.valueStart < 2 && cs.state == 1)
                     {
                         cs.state = 0;
@@ -380,9 +390,13 @@ namespace CYQ.Data.Tool
                         cs.setDicValue = true;
                         return true;
                     }
-                    else if (cs.arrayStart && !cs.jsonStart)
+                    else if (cs.arrayStart && !cs.jsonStart) //[a,b]  [",",33] [{},{}]
                     {
-                        return true;
+                        if ((cs.state == -1 && cs.valueStart == -1) || (cs.valueStart < 2 && cs.state == 1))
+                        {
+                            cs.valueStart = 0;
+                            return true;
+                        }
                     }
                     #endregion
                     break;
@@ -419,6 +433,14 @@ namespace CYQ.Data.Tool
                             cs.keyStart = 1;//无引号的
                         }
                         else if (cs.valueStart <= 0 && cs.state == 1)
+                        {
+                            cs.valueStart = 1;//无引号的
+                        }
+                    }
+                    else if (cs.arrayStart)
+                    {
+                        cs.state = 1;
+                        if (cs.valueStart < 1)
                         {
                             cs.valueStart = 1;//无引号的
                         }

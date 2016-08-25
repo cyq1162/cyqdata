@@ -164,7 +164,7 @@ namespace CYQ.Data.Table
             get
             {
                 int index = -1;
-                if (key.Length <= Count.ToString().Length)
+                if (key.Length <= Count.ToString().Length) //2<=20
                 {
                     //ÅÐ¶ÏÊÇ·ñÎªÊý×Ö¡£
                     if (!int.TryParse(key, out index))

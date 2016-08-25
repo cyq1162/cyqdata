@@ -333,7 +333,7 @@ namespace CYQ.Data.Table
                         }
                     }
 
-                    if (!cellValue.IsNull && (cellValue.Value.Equals(value) ||  (groupID!=999 && cellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
+                    if (!cellValue.IsNull && (cellValue.Value.Equals(value) || (groupID != 999 && cellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
                     {
                         cellValue.State = 1;
                     }
@@ -471,6 +471,7 @@ namespace CYQ.Data.Table
                                 case "false":
                                 case "0":
                                 case "":
+                                case "否":
                                 default:
                                     value = false;
                                     break;
@@ -490,7 +491,8 @@ namespace CYQ.Data.Table
                         err:
                             if (convertionType.Name.EndsWith("[]"))
                             {
-                                value = System.Text.Encoding.Default.GetBytes(strValue);
+                                value = Convert.FromBase64String(strValue);
+                                strValue = "System.Byte[]";
                             }
                             else
                             {

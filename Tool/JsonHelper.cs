@@ -568,29 +568,37 @@ namespace CYQ.Data.Tool
                         }
                         else if (groupID == 999)
                         {
-                            Type t = cell.Value.GetType();
-                            if (!t.FullName.StartsWith("System."))//普通对象。
+                            Type t = cell.Struct.ValueType;
+                            if (t.Name == "Byte[]")
                             {
-                                MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
-                                oRow.LoadFrom(cell.Value);
-                                value = oRow.ToJson(_RowOp, IsConvertNameToLower);
-                                noQuot = true;
+                                value = Convert.ToBase64String(cell.Value as byte[]);
                             }
-                            else if (cell.Value is IEnumerable)
+                            else
                             {
-                                int len = StaticTool.GetArgumentLength(ref t);
-                                if (len == 1)
+                                if (!t.FullName.StartsWith("System."))//普通对象。
                                 {
-                                    MDataTable dt = MDataTable.CreateFrom(cell.Value);
-                                    value = dt.ToJson(false, false, _RowOp, IsConvertNameToLower);
+                                    MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
+                                    oRow.LoadFrom(cell.Value);
+                                    value = oRow.ToJson(_RowOp, IsConvertNameToLower);
                                     noQuot = true;
                                 }
-                                else if (len == 2)
+                                else if (cell.Value is IEnumerable)
                                 {
-                                    value = MDataRow.CreateFrom(cell.Value).ToJson(_RowOp, IsConvertNameToLower);
-                                    noQuot = true;
+                                    int len = StaticTool.GetArgumentLength(ref t);
+                                    if (len == 1)
+                                    {
+                                        MDataTable dt = MDataTable.CreateFrom(cell.Value);
+                                        value = dt.ToJson(false, false, _RowOp, IsConvertNameToLower);
+                                        noQuot = true;
+                                    }
+                                    else if (len == 2)
+                                    {
+                                        value = MDataRow.CreateFrom(cell.Value).ToJson(_RowOp, IsConvertNameToLower);
+                                        noQuot = true;
+                                    }
                                 }
                             }
+
                         }
                     }
                     Add(name, value, noQuot);
