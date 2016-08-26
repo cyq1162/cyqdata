@@ -648,7 +648,7 @@ namespace CYQ.Data.Table
                         switch (DataType.GetGroup(sqlType))
                         {
                             case 1://int
-                                return op == Op.Big ? ((int)valueA > Convert.ToInt32(valueB)) : ((int)valueA >= Convert.ToInt32(valueB));
+                                return op == Op.Big ? (Convert.ToDecimal(valueA) > Convert.ToDecimal(valueB)) : (Convert.ToDecimal(valueA) >= Convert.ToDecimal(valueB));
                             case 2://datetime
                                 return op == Op.Big ? (DateTime)valueA > Convert.ToDateTime(valueB) : (DateTime)valueA >= Convert.ToDateTime(valueB);
                             default:
@@ -665,7 +665,7 @@ namespace CYQ.Data.Table
                         switch (DataType.GetGroup(sqlType))
                         {
                             case 1://int
-                                return op == Op.Small ? ((int)valueA < Convert.ToInt32(valueB)) : ((int)valueA <= Convert.ToInt32(valueB));
+                                return op == Op.Small ? ((Double)valueA < Convert.ToDouble(valueB)) : ((Double)valueA <= Convert.ToDouble(valueB));
                             case 2://datetime
                                 return op == Op.Small ? (DateTime)valueA < Convert.ToDateTime(valueB) : (DateTime)valueA <= Convert.ToDateTime(valueB);
                             default:

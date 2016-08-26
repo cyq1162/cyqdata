@@ -267,7 +267,7 @@ namespace CYQ.Data
         }
         private AopResult SetAopResult(AopEnum action)
         {
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MProc = this;
                 _aop.Para.ProcName = _procName;
@@ -553,43 +553,29 @@ namespace CYQ.Data
 
         #region Aop 相关操作
         /// <summary>
-        /// 临时备份Aop，用于切换后的还原。
+        /// 设置Aop状态
         /// </summary>
-        // Aop.IAop _aopBak = null;
-
-        /// <summary>
-        /// 取消AOP
-        /// </summary>
-        public MProc SetAopOff()
+        /// <param name="op">Aop状态选项</param>
+        /// <returns></returns>
+        public MProc SetAopState(AopOp op)
         {
-            _aop.IsCustomAop = false;
-            //if (_aopInfo.IsCustomAop)
-            //{
-            //    _aopBak = _aop;//设置好备份。
-            //    _aop = Aop.InterAop.Instance;
-            //    _aopInfo.IsCustomAop = false;
-            //} 
+            _aop.aopOp = op;
             return this;
         }
-        /// <summary>
-        /// 恢复默认配置的Aop。
-        /// </summary>
-        public MProc SetAopOn()
-        {
-            _aop.IsCustomAop = true;
-            //if (!_aopInfo.IsCustomAop)
-            //{
-            //    SetAop(_aopBak);
-            //}
-            return this;
-        }
-        /// <summary>
-        /// 设置Aop对象。
-        /// </summary>
-        //private MProc SetAop(Aop.IAop aop)
+        ///// <summary>
+        ///// 取消AOP
+        ///// </summary>
+        //public MProc SetAopOff()
         //{
-        //    _aop = aop;
-        //    _aopInfo.IsCustomAop = true;
+        //    _aop.IsCustomAop = false;
+        //    return this;
+        //}
+        ///// <summary>
+        ///// 恢复默认配置的Aop。
+        ///// </summary>
+        //public MProc SetAopOn()
+        //{
+        //    _aop.IsCustomAop = true;
         //    return this;
         //}
         /// <summary>
@@ -598,7 +584,8 @@ namespace CYQ.Data
         /// <param name="para"></param>
         public MProc SetAopPara(object para)
         {
-            _aop.Para.AopPara = para; return this;
+            _aop.Para.AopPara = para; 
+            return this;
         }
 
         void helper_OnExceptionEvent(string errorMsg)

@@ -602,7 +602,7 @@ namespace CYQ.Data
                 _UI.GetAll(!AllowInsertID);//允许插入ID时，也需要获取主键。
             }
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.TableName = _sourceTableName;
@@ -634,7 +634,7 @@ namespace CYQ.Data
                 _Data = _aop.Para.Row;
                 InitGlobalObject(false);
             }
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.End(Aop.AopEnum.Insert);
             }
@@ -710,7 +710,7 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.TableName = _sourceTableName;
@@ -737,7 +737,7 @@ namespace CYQ.Data
                         break;
                 }
             }
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.End(Aop.AopEnum.Update);
             }
@@ -769,7 +769,7 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.TableName = _sourceTableName;
@@ -805,7 +805,7 @@ namespace CYQ.Data
                         break;
                 }
             }
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.End(Aop.AopEnum.Delete);
             }
@@ -861,7 +861,7 @@ namespace CYQ.Data
             CheckDisposed();
             rowCount = 0;
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.PageIndex = pageIndex;
@@ -957,7 +957,7 @@ namespace CYQ.Data
             {
                 rowCount = _aop.Para.Table.RecordsAffected;//返回记录总数
             }
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.End(Aop.AopEnum.Select);
             }
@@ -1010,7 +1010,7 @@ namespace CYQ.Data
                 where = _sqlCreate.GetPrimaryWhere();
             }
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.TableName = _sourceTableName;
@@ -1050,7 +1050,7 @@ namespace CYQ.Data
                 _Data.LoadFrom(_aop.Para.Row, RowOp.None, true);
             }
 
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.Para.Row = _Data;
                 _aop.End(Aop.AopEnum.Fill);
@@ -1103,7 +1103,7 @@ namespace CYQ.Data
         {
             CheckDisposed();
             AopResult aopResult = AopResult.Default;
-            if (_aop.IsCustomAop)
+            if (_aop.IsLoadAop)
             {
                 _aop.Para.MAction = this;
                 _aop.Para.TableName = _sourceTableName;
@@ -1141,7 +1141,7 @@ namespace CYQ.Data
                         break;
                 }
             }
-            if (_aop.IsCustomAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
                 _aop.End(Aop.AopEnum.GetCount);
             }
@@ -1249,7 +1249,7 @@ namespace CYQ.Data
                 para.Value = value;
                 para.ParaDbType = dbType;
                 customParaNames.Add(para);
-                if (_aop.IsCustomAop)
+                if (_aop.IsLoadAop)
                 {
                     _aop.Para.CustomDbPara = customParaNames;
                 }
@@ -1485,48 +1485,16 @@ namespace CYQ.Data
     {
         #region Aop操作
         private InterAop _aop = new InterAop();
-        //private IAop _aop = Aop.InterAop.Instance;//切入点
-        //private AopInfo _aopInfo = new AopInfo();
         /// <summary>
-        /// 临时备份Aop，用于切换后的还原。
+        /// 设置Aop状态
         /// </summary>
-        // Aop.IAop _aopBak = null;
-        /// <summary>
-        /// 取消Aop，在Aop独立模块使用MAction时必须调用
-        /// </summary>
-        public MAction SetAopOff()
+        /// <param name="op">Aop状态选项</param>
+        /// <returns></returns>
+        public MProc SetAopState(AopOp op)
         {
-            _aop.IsCustomAop = false;
-            //if (_aop.IsCustomAop)
-            //{
-            //    _aopBak = _aop;//设置好备份。
-            //    _aop = Aop.InterAop.Instance;
-            //    _aop.IsCustomAop = false;
-            //}
+            _aop.aopOp = op;
             return this;
         }
-        /// <summary>
-        /// 恢复默认配置的Aop。
-        /// </summary>
-        public MAction SetAopOn()
-        {
-            _aop.IsCustomAop = true;
-            //if (!_aop.IsCustomAop)
-            //{
-            //    SetAop(_aopBak);
-            //}
-            return this;
-        }
-        /// <summary>
-        /// 主动设置注入新的Aop，一般情况下不需要用到。
-        /// </summary>
-        /// <param name="aop"></param>
-        //private MAction SetAop(Aop.IAop aop)
-        //{
-        //    _aop = aop;
-        //    _aop.IsCustomAop = true;
-        //    return this;
-        //}
         /// <summary>
         /// 需要传递额外的参数供Aop使用时可设置。
         /// </summary>

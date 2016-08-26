@@ -21,6 +21,15 @@ namespace CYQ.Data.SQL
     {
         internal static Dictionary<string, Dictionary<string, string>> tableCache = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
         internal static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
+        internal static string GetTableCacheKey(DbBase dbBase)
+        {
+            return GetTableCacheKey(dbBase.dalType, dbBase.DataBase, dbBase.conn);
+        }
+        internal static string GetTableCacheKey(DalType dalType, string dataBase, string conn)
+        {
+            return "TableCache:" + dalType + "." + dataBase + conn.GetHashCode();
+        }
+
         public static MDataColumn GetColumns(Type typeInfo)
         {
             string key = "ColumnCache:" + typeInfo.FullName;
@@ -513,7 +522,7 @@ namespace CYQ.Data.SQL
         /// </summary>
         public static Dictionary<string, string> GetTables(ref DbBase helper)
         {
-            string key = "TableCache:" + helper.dalType + "." + helper.DataBase + helper.conn.GetHashCode();
+            string key = GetTableCacheKey(helper);
             if (!tableCache.ContainsKey(key))
             {
                 lock (lockGetTables)
@@ -739,7 +748,7 @@ namespace CYQ.Data.SQL
         {
             if (type == "U" && tableCache.Count > 0)
             {
-                string key = "TableCache:" + helper.dalType + "." + helper.DataBase + helper.conn.GetHashCode();
+                string key = GetTableCacheKey(helper);
                 if (tableCache.ContainsKey(key))
                 {
                     return tableCache[key].ContainsKey(name);

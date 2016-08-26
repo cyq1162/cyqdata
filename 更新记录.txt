@@ -558,3 +558,6 @@
 342：AppConfig.Cache.IgnoreCacheColumns，可以指定表的某些列的更新操作时不更新缓存(2016-08-24)
 343：JsonHelper增加对数组的检测支持(2016-08-25)
 344：JsonHelper支持对二进制和Base64的转换(2016-08-26)
+345：DBTool.CreateTable或DBTool.DropTable后的缓存处理(2016-08-27)。
+346：MAction、MProc取消SetAopOn和SetAopOff方法，统一为：SetAopState方法（简化方法，同时能处理更多的状态）(2016-08-27)
+347：MDataTable的Select方法增强（对浮点数的比较）(2016-08-27)

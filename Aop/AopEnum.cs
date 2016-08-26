@@ -72,4 +72,27 @@ namespace CYQ.Data.Aop
         /// </summary>
         Return,
     }
+
+    /// <summary>
+    /// Aop开关选项
+    /// </summary>
+    public enum AopOp
+    {
+        /// <summary>
+        /// 正常打开
+        /// </summary>
+        OpenAll,
+        /// <summary>
+        /// 仅打开内部Aop（即自动缓存，关闭外部Aop）
+        /// </summary>
+        OnlyInner,
+        /// <summary>
+        /// 仅打开外部Aop（关闭自动缓存）
+        /// </summary>
+        OnlyOuter,
+        /// <summary>
+        /// 内外都关（自动缓存和外部Aop）
+        /// </summary>
+        CloseAll
+    }
 }

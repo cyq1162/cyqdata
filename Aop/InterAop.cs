@@ -14,16 +14,12 @@ namespace CYQ.Data.Aop
         // private AutoCache cacheAop = new AutoCache();
         private static readonly object lockObj = new object();
         private bool isHasCache = false;
-        private bool isUseAop = true;
-        internal bool IsCustomAop
+        public AopOp aopOp = AopOp.OpenAll;
+        internal bool IsLoadAop
         {
             get
             {
-                return isUseAop && (AppConfig.Cache.IsAutoCache || outerAop != null);
-            }
-            set
-            {
-                isUseAop = value;
+                return aopOp != AopOp.CloseAll && (AppConfig.Cache.IsAutoCache || outerAop != null);
             }
         }
         internal bool IsTxtDataBase
@@ -59,7 +55,7 @@ namespace CYQ.Data.Aop
         public AopResult Begin(AopEnum action)
         {
             AopResult ar = AopResult.Continue;
-            if (outerAop != null)
+            if (outerAop != null && (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyOuter))
             {
                 ar = outerAop.Begin(action, Para);
                 if (ar == AopResult.Return)
@@ -67,33 +63,36 @@ namespace CYQ.Data.Aop
                     return ar;
                 }
             }
-            if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回
+            if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
-            }
-            if (isHasCache)  //找到Cache
-            {
-                if (outerAop == null || ar == AopResult.Default)//不执行End
+                if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回
                 {
-                    return AopResult.Return;
+                    isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
                 }
-                return AopResult.Break;//外部Aop说：还需要执行End
+                if (isHasCache)  //找到Cache
+                {
+                    if (outerAop == null || ar == AopResult.Default)//不执行End
+                    {
+                        return AopResult.Return;
+                    }
+                    return AopResult.Break;//外部Aop说：还需要执行End
+                }
             }
-            else // 没有Cache，默认返回
-            {
-                return ar;
-            }
+            return ar;// 没有Cache，默认返回
         }
 
         public void End(AopEnum action)
         {
-            if (outerAop != null)
+            if (outerAop != null && (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyOuter))
             {
                 outerAop.End(action, Para);
             }
-            if (!isHasCache && !IsTxtDataBase && Para.IsSuccess)
+            if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                AutoCache.SetCache(action, Para); //找看有没有Cache
+                if (!isHasCache && !IsTxtDataBase && Para.IsSuccess)
+                {
+                    AutoCache.SetCache(action, Para); //找看有没有Cache
+                }
             }
         }
 
@@ -105,28 +104,19 @@ namespace CYQ.Data.Aop
             }
         }
 
-
-        //public IAop Clone()
-        //{
-        //    return new InterAop();
-        //}
-        //public void OnLoad()
-        //{
-
-        //}
         #endregion
         static bool _CallOnLoad = false;
         private IAop GetFromConfig()
         {
 
             IAop aop = null;
-
             string aopApp = AppConfig.Aop;
             if (!string.IsNullOrEmpty(aopApp))
             {
-                if (_Cache.Contains("Aop_Instance"))
+                string key = "OuterAop_Instance";
+                if (_Cache.Contains(key))
                 {
-                    aop = _Cache.Get("Aop_Instance") as IAop;
+                    aop = _Cache.Get(key) as IAop;
                 }
                 else
                 {
@@ -143,7 +133,7 @@ namespace CYQ.Data.Aop
                                 object instance = ass.CreateInstance(aopItem[0]);
                                 if (instance != null)
                                 {
-                                    _Cache.Add("Aop_Instance", instance, AppConst.RunFolderPath + aopItem[1].Replace(".dll", "") + ".dll", 1440);
+                                    _Cache.Add(key, instance, AppConst.RunFolderPath + aopItem[1].Replace(".dll", "") + ".dll", 1440);
                                     aop = instance as IAop;
                                     if (!_CallOnLoad)
                                     {

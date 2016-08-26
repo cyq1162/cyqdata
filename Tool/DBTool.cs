@@ -188,7 +188,9 @@ namespace CYQ.Data.Tool
                 return false;
             }
             bool result = false;
-            switch (GetDalType(conn))
+            DalType dalType = GetDalType(conn);
+            string dataBase = string.Empty;
+            switch (dalType)
             {
                 case DalType.Txt:
                 case DalType.Xml:
@@ -203,15 +205,17 @@ namespace CYQ.Data.Tool
                         tableName = Path.GetFileNameWithoutExtension(tableName);
                         string fileName = NoSqlConnection.GetFilePath(conn) + tableName + ".ts";
                         result = columns.WriteSchema(fileName);
+                        dataBase = new NoSqlConnection(conn).Database;
                     }
                     break;
                 default:
                     using (MProc proc = new MProc(null, conn))
                     {
+                        dataBase = proc.DataBase;
                         try
                         {
                             proc.dalHelper.IsAllowRecordSql = false;
-                            proc.SetAopOff();
+                            proc.SetAopState(Aop.AopOp.CloseAll);
                             proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DalType, proc.DalVersion));//.Replace("\n", string.Empty)
                             result = proc.ExeNonQuery() > -2;
 
@@ -249,6 +253,19 @@ namespace CYQ.Data.Tool
                     break;
 
 
+            }
+            if (result)
+            {
+                //处理表缓存
+                string key = TableSchema.GetTableCacheKey(dalType, dataBase, conn);
+                if (TableSchema.tableCache.ContainsKey(key))
+                {
+                    Dictionary<string, string> tableDic = TableSchema.tableCache[key];
+                    if (!tableDic.ContainsKey(tableName))
+                    {
+                        tableDic.Add(tableName, "");
+                    }
+                }
             }
             return result;
         }
@@ -346,7 +363,7 @@ namespace CYQ.Data.Tool
                 {
                     dalType = proc.DalType;
                     database = proc.dalHelper.DataBase;
-                    proc.SetAopOff();
+                    proc.SetAopState(Aop.AopOp.CloseAll);
                     if (proc.DalType == DalType.MsSql)
                     {
                         proc.BeginTransation();//仅对mssql有效。
@@ -386,8 +403,10 @@ namespace CYQ.Data.Tool
         public static bool DropTable(string tableName, string conn)
         {
             bool result = false;
+            string key = string.Empty;
             using (DbBase helper = DalCreate.CreateDal(conn))
             {
+                key = TableSchema.GetTableCacheKey(helper);
                 DalType dalType = helper.dalType;
                 switch (dalType)
                 {
@@ -416,9 +435,22 @@ namespace CYQ.Data.Tool
                         result = helper.ExeNonQuery("drop table " + Keyword(tableName, dalType), false) != -2;
                         if (result)
                         {
+                            //处理表相关的元数据和数据缓存。
                             RemoveCache(tableName, helper.DataBase, dalType);
                         }
                         break;
+                }
+            }
+            if (result)
+            {
+                //处理数据库表字典缓存
+                if (TableSchema.tableCache.ContainsKey(key))
+                {
+                    Dictionary<string, string> tableDic = TableSchema.tableCache[key];
+                    if (tableDic.ContainsKey(tableName))
+                    {
+                        tableDic.Remove(tableName);
+                    }
                 }
             }
             return result;

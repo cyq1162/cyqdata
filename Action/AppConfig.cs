@@ -469,12 +469,13 @@ namespace CYQ.Data
             }
             /// <summary>
             /// 删除字段名称（若表存在此设置的字段名称时，MActon的删除操作将变更变为更新操作）
+            /// 默认：IsDeleted
             /// </summary>
             public static string DeleteField
             {
                 get
                 {
-                    return GetApp("DeleteField", string.Empty);
+                    return GetApp("DeleteField", "IsDeleted");
                 }
                 set
                 {
@@ -502,16 +503,16 @@ namespace CYQ.Data
             {
                 get
                 {
-                    string result = GetApp("HiddenFields", string.Empty);
-                    if (result == string.Empty)
-                    {
-                        result = "cyqrownum,rowguid," + DeleteField;
-                    }
+                    string result = GetApp("HiddenFields", "cyqrownum,rowguid");
+                    //if (result == string.Empty)
+                    //{
+                    //    result = "cyqrownum,rowguid," + DeleteField;
+                    //}
                     return result;
                 }
                 set
                 {
-                    if (!value.Contains("cyqrownum,rowguid,"))
+                    if (!value.Contains("cyqrownum,rowguid"))
                     {
                         value = "cyqrownum,rowguid," + value;
                     }
@@ -628,7 +629,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("NoCacheTables","");
+                    return GetApp("NoCacheTables", "");
                 }
                 set
                 {

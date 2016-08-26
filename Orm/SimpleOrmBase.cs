@@ -141,7 +141,7 @@ namespace CYQ.Data.Orm
                         {
                             if (!DBTool.CreateTable(tableName, Columns, conn))
                             {
-                                Error.Throw("Create Table Error:" + tableName);
+                                Error.Throw("SimpleOrmBase £ºCreate Table Error:" + tableName);
                             }
                         }
                     }
@@ -174,7 +174,7 @@ namespace CYQ.Data.Orm
                 action = new MAction(Columns.ToRow(tableName), conn);
                 if (typeInfo.Name == "SysLogs")
                 {
-                    action.SetAopOff();
+                    action.SetAopState(Aop.AopOp.CloseAll);
                 }
                 action.EndTransation();
             }

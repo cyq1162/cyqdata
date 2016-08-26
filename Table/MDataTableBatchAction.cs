@@ -492,7 +492,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 DbBase sourceHelper = action.dalHelper;
-                action.SetAopOff();
+                action.SetAopState(Aop.AopOp.CloseAll);
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;
@@ -566,7 +566,7 @@ namespace CYQ.Data.Table
             bool result = true;
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
-                action.SetAopOff();
+                action.SetAopState(Aop.AopOp.CloseAll);
                 DbBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
@@ -629,6 +629,7 @@ namespace CYQ.Data.Table
             MDataTable dt = null;
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
+                action.SetAopState(Aop.AopOp.CloseAll);
                 if (action.DalVersion.StartsWith("08"))
                 {
                     pageSize = 1000;
@@ -686,7 +687,7 @@ namespace CYQ.Data.Table
 
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
-                action.SetAopOff();
+                action.SetAopState(Aop.AopOp.CloseAll);
                 DbBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
