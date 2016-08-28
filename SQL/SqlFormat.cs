@@ -245,7 +245,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
         {
-            string defaultValue = Convert.ToString(value).TrimEnd('\n');//oracle会自带\n结尾
+            string defaultValue = Convert.ToString(value).Trim().TrimEnd('\n');//oracle会自带\n结尾
             if (dalType != DalType.Access)
             {
                 defaultValue = defaultValue.Replace("GenGUID()", string.Empty);
@@ -359,7 +359,7 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                     if (flag == 0)
                     {
-                        defaultValue = defaultValue.Replace("b'0", "0").Replace("b'1", "1").Trim('\'');
+                        defaultValue = defaultValue.Replace("b'0", "0").Replace("b'1", "1").Trim(' ', '\'');
                     }
                     else
                     {

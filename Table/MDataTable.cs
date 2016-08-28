@@ -583,7 +583,7 @@ namespace CYQ.Data.Table
         /// 将数据表绑定到列表控件
         /// </summary>
         /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
-        /// <param name="paraID">当Control为XHtmlAction对象时，需要指定绑定的节点ID</param>
+        /// <param name="nodeID">当Control为XHtmlAction对象时，需要指定绑定的节点ID</param>
         public void Bind(object control, string nodeID)
         {
             MBindUI.Bind(control, this, nodeID);
@@ -598,7 +598,8 @@ namespace CYQ.Data.Table
             {
                 for (int i = 0; i < newTable.Rows.Count; i++)
                 {
-                    _Rows.Add(newTable.Rows[i]);
+                   // _Rows.Add(newTable.Rows[i]);
+                    NewRow(true).LoadFrom(newTable.Rows[i]);
                 }
             }
         }

@@ -19,7 +19,13 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class TableSchema
     {
+        /// <summary>
+        /// 全局表名缓存（只缓存表名和表名的描述）
+        /// </summary>
         internal static Dictionary<string, Dictionary<string, string>> tableCache = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
+        /// 全局缓存实体类的表结构（仅会对Type读取的结构）
+        /// </summary>
         internal static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
         internal static string GetTableCacheKey(DbBase dbBase)
         {
@@ -158,7 +164,7 @@ namespace CYQ.Data.SQL
                                 if (!helper.Version.StartsWith("08"))
                                 {
                                     //先获取同义词，检测是否跨库
-                                    string realTableName = Convert.ToString(helper.ExeScalar(string.Format(SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                    string realTableName = Convert.ToString(helper.ExeScalar(string.Format(MSSQL_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
                                     if (!string.IsNullOrEmpty(realTableName))
                                     {
                                         string[] items = realTableName.Split('.');
@@ -178,6 +184,14 @@ namespace CYQ.Data.SQL
                             }
                             else if (dalType == DalType.Oracle)
                             {
+                                tableName = tableName.ToUpper();//Oracle转大写。
+                                //先获取同义词，不检测是否跨库
+                                string realTableName = Convert.ToString(helper.ExeScalar(string.Format(Oracle_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                if (!string.IsNullOrEmpty(realTableName))
+                                {
+                                    tableName = realTableName;
+                                }
+                                
                                 sql = GetOracleColumns();
                             }
                             else if (dalType == DalType.Sybase)
@@ -830,7 +844,8 @@ namespace CYQ.Data.SQL
         internal const string GetOracleMaxID = "select max({0}) from {1}";
 
         #region 获取数据库表的列字段
-        private const string SynonymsName = "SELECT TOP 1 base_object_name from sys.synonyms WHERE NAME = '{0}'";
+        private const string MSSQL_SynonymsName = "SELECT TOP 1 base_object_name from sys.synonyms WHERE NAME = '{0}'";
+        private const string Oracle_SynonymsName = "SELECT TABLE_NAME FROM USER_SYNONYMS WHERE SYNONYM_NAME='{0}' and rownum=1";
         internal static string GetMSSQLColumns(bool for2000, string dbName)
         {
             // 2005以上增加同义词支持。 case s2.name WHEN 'timestamp' THEN 'variant' ELSE s2.name END as [SqlType],
@@ -852,6 +867,7 @@ namespace CYQ.Data.SQL
         }
         internal static string GetOracleColumns()
         {
+            //同义词已被提取到外面执行，外部对表名已转大写，对语句进行了优化。
             return @"select A.COLUMN_NAME as ColumnName,case DATA_TYPE when 'DATE' then 23 when 'CLOB' then 2147483647 when 'NCLOB' then 1073741823 else case when CHAR_COL_DECL_LENGTH is not null then CHAR_COL_DECL_LENGTH
                     else   case when DATA_PRECISION is not null then DATA_PRECISION else DATA_LENGTH end   end end as MaxSize,DATA_SCALE as Scale,
                     case NULLABLE when 'Y' then 1 else 0 end as IsNullable,
@@ -865,18 +881,21 @@ namespace CYQ.Data.SQL
                     case when v.CONSTRAINT_TYPE='P' then 1 else 0 end as IsPrimaryKey,
                       case when v.CONSTRAINT_TYPE='U' then 1 else 0 end as IsUniqueKey,
                         case when v.CONSTRAINT_TYPE='R' then 1 else 0 end as IsForeignKey,
-                         v.FKTableName,
+                         case when length(r_constraint_name)>1
+                         then (select table_name from user_constraints s where s.constraint_name=v.r_constraint_name)
+                            else null
+                              end as FKTableName ,
                     data_default as DefaultValue,
                     COMMENTS AS Description
                     from USER_TAB_COLS A left join user_col_comments B on A.Table_Name = B.Table_Name and A.Column_Name = B.Column_Name 
                     left join
-                    (select uc1.table_name,ucc.column_name, uc1.constraint_type,uc2.table_name as FKTableName from user_constraints uc1
-                    left join  user_constraints uc2 on uc1.r_constraint_name=uc2.constraint_name
-                    left join user_cons_columns ucc on ucc.constraint_name=uc1.constraint_name
+                    (select uc1.table_name,ucc.column_name, uc1.constraint_type,uc1.r_constraint_name from user_constraints uc1
+                    left join (SELECT column_name,constraint_name FROM user_cons_columns WHERE TABLE_NAME=:TableName) ucc on ucc.constraint_name=uc1.constraint_name
                     where uc1.constraint_type in('P','U','R') ) v
                     on A.TABLE_NAME=v.table_name and A.COLUMN_NAME=v.column_name
-
-                    where A.TABLE_NAME= nvl((SELECT TABLE_NAME FROM USER_SYNONYMS WHERE SYNONYM_NAME=UPPER(:TableName) and rownum=1),UPPER(:TableName)) order by COLUMN_ID";
+                    where A.TABLE_NAME=:TableName order by COLUMN_ID";
+            //            left join  user_constraints uc2 on uc1.r_constraint_name=uc2.constraint_name
+                   // where A.TABLE_NAME= nvl((SELECT TABLE_NAME FROM USER_SYNONYMS WHERE SYNONYM_NAME=UPPER(:TableName) and rownum=1),UPPER(:TableName)) order by COLUMN_ID";
         }
         internal static string GetMySqlColumns(string dbName)
         {

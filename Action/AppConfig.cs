@@ -9,7 +9,7 @@ namespace CYQ.Data
     /// 常用配置文件项[Web(App).Config]的[appSettings|connectionStrings]项和属性名一致。
     /// 除了可以从配置文件配置，也可以直接赋值。
     /// </summary>
-    public static class AppConfig
+    public static partial class AppConfig
     {
         #region 基方法
         private static MDictionary<string, string> configs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);

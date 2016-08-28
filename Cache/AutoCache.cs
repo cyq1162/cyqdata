@@ -128,7 +128,7 @@ namespace CYQ.Data.Cache
             {
                 return;//
             }
-            double cacheTime = Math.Abs(12 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存中午或到夜里1点
+            double cacheTime = AppConfig.Cache.DefaultCacheTime;// Math.Abs(12 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存中午或到夜里1点
             if (flag == 1 || aopInfo.PageIndex > 2) // 后面的页数，缓存时间可以短一些
             {
                 cacheTime = 2;//未知道操作何表时，只缓存2分钟（比如存储过程等语句）

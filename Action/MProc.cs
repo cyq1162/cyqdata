@@ -321,7 +321,7 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 执行的语句有多个结果集返回（库此方法不支持文本数据和AOP）
+        /// 执行的语句有多个结果集返回
         /// </summary>
         /// <returns></returns>
         public List<MDataTable> ExeMDataTableList()
@@ -341,15 +341,32 @@ namespace CYQ.Data
                     {
                         case DalType.Txt:
                         case DalType.Xml:
-                            foreach (string sql in _procName.Split(';'))
+                        case DalType.Oracle:
+                            if (_isProc && dalHelper.dalType == DalType.Oracle)
                             {
-                                _noSqlCommand.CommandText = sql;
-                                dtList.Add(_noSqlCommand.ExeMDataTable());
+                                goto isProc;
+                            }
+                            foreach (string sql in _procName.TrimEnd(';').Split(';'))
+                            {
+                                MDataTable dt = null;
+                                if (dalHelper.dalType == DalType.Oracle)
+                                {
+                                    dt = dalHelper.ExeDataReader(sql, false);
+                                }
+                                else
+                                {
+                                    _noSqlCommand.CommandText = sql;
+                                    dt = _noSqlCommand.ExeMDataTable();
+                                }
+                                if (dt != null)
+                                {
+                                    dtList.Add(dt);
+                                }
                             }
                             break;
                         default:
+                        isProc:
                             DbDataReader reader = dalHelper.ExeDataReader(_procName, _isProc);
-
                             if (reader != null)
                             {
                                 do
@@ -584,7 +601,7 @@ namespace CYQ.Data
         /// <param name="para"></param>
         public MProc SetAopPara(object para)
         {
-            _aop.Para.AopPara = para; 
+            _aop.Para.AopPara = para;
             return this;
         }
 

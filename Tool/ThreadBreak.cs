@@ -134,8 +134,11 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 添加全局线程[通常该线程是个死循环，定时处理事情]
         /// </summary>
-        /// <param name="start"></param>
         public static void AddGlobalThread(ParameterizedThreadStart start)
+        {
+            AddGlobalThread(start, null);
+        }
+        public static void AddGlobalThread(ParameterizedThreadStart start, object para)
         {
             if (globalThread.Count == 0)//第一次加载，清除所有可能存在的线程Break。
             {
@@ -153,7 +156,7 @@ namespace CYQ.Data.Tool
                             globalThread.Add(start);
                             Thread thread = new Thread(start);
                             thread.IsBackground = true;
-                            thread.Start(thread.ManagedThreadId);
+                            thread.Start(para ?? thread.ManagedThreadId);
                         }
                     }
                     catch (Exception err)

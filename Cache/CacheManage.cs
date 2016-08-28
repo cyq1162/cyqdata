@@ -171,6 +171,56 @@ namespace CYQ.Data.Cache
             return string.Empty;
         }
     }
+    public abstract partial class CacheManage
+    {
+        /// <summary>
+        /// 通过该方法可以预先加载整个数据库的表结构缓存
+        /// </summary>
+        public static void PreLoadDBSchemaToCache()
+        {
+            PreLoadDBSchemaToCache(AppConfig.DB.DefaultConn, true);
+        }
+        private static readonly object obj = new object();
+        /// <summary>
+        /// 通过该方法可以预先加载整个数据库的表结构缓存
+        /// </summary>
+        /// <param name="conn">指定数据链接</param>
+        /// <param name="isUseThread">是否开启线程</param>
+        public static void PreLoadDBSchemaToCache(string conn, bool isUseThread)
+        {
+            if (TableSchema.tableCache == null || TableSchema.tableCache.Count == 0)
+            {
+                lock (obj)
+                {
+                    if (TableSchema.tableCache == null || TableSchema.tableCache.Count == 0)
+                    {
+                        if (isUseThread)
+                        {
+                            ThreadBreak.AddGlobalThread(new System.Threading.ParameterizedThreadStart(LoadDBSchemaCache), conn);
+                        }
+                        else
+                        {
+                            LoadDBSchemaCache(conn);
+                        }
+                    }
+                }
+            }
+        }
+        private static void LoadDBSchemaCache(object connObj)
+        {
+            string conn = Convert.ToString(connObj);
+            Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
+            if (dic != null && dic.Count > 0)
+            {
+                DbBase helper = DalCreate.CreateDal(conn);
+                foreach (string key in dic.Keys)
+                {
+                    TableSchema.GetColumns(key, ref helper);
+                }
+                helper.Dispose();
+            }
+        }
+    }
     /// <summary>
     /// 支持的Cache类型
     /// </summary>
