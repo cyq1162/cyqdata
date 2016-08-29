@@ -237,10 +237,10 @@ namespace CYQ.Data.Tool
                         isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
                         break;
                     case '\'':
-                        isError = !jsonStart;//未开始Json
+                        isError = !jsonStart && !arrayStart;//未开始Json
                         break;
                     case ':':
-                        isError = !jsonStart || (jsonStart && keyStart < 2 && valueStart < 2 && state == 1);//未开始Json 同时 只能处理在取值之前。
+                        isError = (!jsonStart && !arrayStart) || (jsonStart && keyStart < 2 && valueStart < 2 && state == 1);//未开始Json 同时 只能处理在取值之前。
                         break;
                     case ',':
                         isError = (!jsonStart && !arrayStart)
