@@ -3,7 +3,7 @@
 Demo：<br />
 http Url：http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/ <br />
 svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
-<br />
+<br /><br />
 注意事项：
 <hr />
 1：MySQL 5.7.9版本需要把用命令行设置：
