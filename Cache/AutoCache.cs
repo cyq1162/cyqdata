@@ -158,7 +158,7 @@ namespace CYQ.Data.Cache
                     _MemCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
                 case AopEnum.Fill:
-                    _MemCache.Set(key, aopInfo.Row, cacheTime);
+                    _MemCache.Set(key, aopInfo.Row.Clone(), cacheTime);
                     break;
                 case AopEnum.GetCount:
                     _MemCache.Set(key, aopInfo.RowCount, cacheTime);
