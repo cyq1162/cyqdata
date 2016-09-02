@@ -45,7 +45,7 @@ namespace CYQ.Data
         /// </summary>
         internal ConnObject connObject;
 
-        internal IsolationLevel tranLevel = IsolationLevel.Unspecified;
+        internal IsolationLevel tranLevel = IsolationLevel.ReadCommitted;
         protected DbProviderFactory _fac = null;
         protected DbConnection _con = null;
         protected DbCommand _com;
@@ -79,14 +79,26 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_Version))
                 {
-                    if (OpenCon(null))
+                    switch (dalType)
                     {
-                        _Version = _con.ServerVersion;
-                        if (!isOpenTrans)//避免把事务给关闭了。
-                        {
-                            CloseCon();
-                        }
+                        case DalType.Txt:
+                            _Version = "txt2.0";
+                            break;
+                        case DalType.Xml:
+                            _Version = "xml2.0";
+                            break;
+                        default:
+                            if (OpenCon(null))
+                            {
+                                _Version = _con.ServerVersion;
+                                if (!isOpenTrans)//避免把事务给关闭了。
+                                {
+                                    CloseCon();
+                                }
+                            }
+                            break;
                     }
+
 
                 }
                 return _Version;

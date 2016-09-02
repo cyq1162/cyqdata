@@ -256,6 +256,14 @@ namespace CYQ.Data
             {
                 _isProc = _procName.IndexOf(' ') == -1;//不包含空格
             }
+            switch (dalHelper.dalType)
+            {
+                case DalType.Txt:
+                case DalType.Xml:
+                    _noSqlCommand = null;
+                    _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
+                    break;
+            }
         }
         /// <summary>
         ///  表切存储过程,在操作完A存储过程后，如果需要操作B存储过程,不需要重新new一个MProc,可直接换用本函数切换

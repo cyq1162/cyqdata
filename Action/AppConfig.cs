@@ -327,7 +327,7 @@ namespace CYQ.Data
             /// <summary>
             /// 默认数据库名称（只读）
             /// </summary>
-            internal static string DefaultDataBase
+            public static string DefaultDataBase
             {
                 get
                 {
@@ -343,7 +343,7 @@ namespace CYQ.Data
             /// <summary>
             /// 默认数据库类型（只读）
             /// </summary>
-            internal static DalType DefaultDalType
+            public static DalType DefaultDalType
             {
                 get
                 {

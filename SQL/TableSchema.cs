@@ -121,11 +121,15 @@ namespace CYQ.Data.SQL
                     break;
                 case DalType.Txt:
                 case DalType.Xml:
-                    tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
-                    string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
-                    MDataColumn mdc = MDataColumn.CreateFrom(fileName);
-                    mdc.dalType = dalType;
-                    return mdc;
+                    if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
+                    {
+                        tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
+                        string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
+                        MDataColumn mdc = MDataColumn.CreateFrom(fileName);
+                        mdc.dalType = dalType;
+                        return mdc;
+                    }
+                    return GetTxtDBViewColumns(tableName);
             }
 
             MDataColumn mdcs = new MDataColumn();
@@ -191,7 +195,7 @@ namespace CYQ.Data.SQL
                                 {
                                     tableName = realTableName;
                                 }
-                                
+
                                 sql = GetOracleColumns();
                             }
                             else if (dalType == DalType.Sybase)
@@ -529,6 +533,14 @@ namespace CYQ.Data.SQL
             mdc.dalType = helper.dalType;
             return mdc;
 
+        }
+        private static MDataColumn GetTxtDBViewColumns(string sqlText)
+        {
+            //sqlText=sqlText.ToLower();
+            //List<string> tables = SqlFormat.GetTableNamesFromSql(sqlText);
+            ////string key="select "
+            //string selectItems=sqlText.Substring("select 
+            return null;//暂未实现
         }
         private static readonly object lockGetTables = new object();
         /// <summary>
@@ -895,7 +907,7 @@ namespace CYQ.Data.SQL
                     on A.TABLE_NAME=v.table_name and A.COLUMN_NAME=v.column_name
                     where A.TABLE_NAME=:TableName order by COLUMN_ID";
             //            left join  user_constraints uc2 on uc1.r_constraint_name=uc2.constraint_name
-                   // where A.TABLE_NAME= nvl((SELECT TABLE_NAME FROM USER_SYNONYMS WHERE SYNONYM_NAME=UPPER(:TableName) and rownum=1),UPPER(:TableName)) order by COLUMN_ID";
+            // where A.TABLE_NAME= nvl((SELECT TABLE_NAME FROM USER_SYNONYMS WHERE SYNONYM_NAME=UPPER(:TableName) and rownum=1),UPPER(:TableName)) order by COLUMN_ID";
         }
         internal static string GetMySqlColumns(string dbName)
         {

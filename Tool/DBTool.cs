@@ -220,7 +220,7 @@ namespace CYQ.Data.Tool
                             result = proc.ExeNonQuery() > -2;
 
                             //获取扩展说明
-                            string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DalType).Replace("\r\n", string.Empty).Trim(' ', ';');
+                            string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DalType).Replace("\r\n", " ").Trim(' ', ';');
                             if (!string.IsNullOrEmpty(descriptionSql))
                             {
                                 if (proc.DalType == DalType.Oracle)

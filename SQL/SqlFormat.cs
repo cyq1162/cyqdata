@@ -141,10 +141,15 @@ namespace CYQ.Data.SQL
             {
                 int end = tableName.LastIndexOf(')');
                 string sql = tableName.Substring(1, end - 1);//.Replace("\r\n", "\n").Replace('\n', ' '); ±£Áô×¢ÊÍµÄ»»ÐÐ¡£
-                if (sql.IndexOf(" where ", StringComparison.OrdinalIgnoreCase) > -1)
+                string[] keys = new string[] { " where ", "\nwhere ", "\nwhere\r", "\nwhere\n" };
+                foreach (string key in keys)
                 {
-                    return Regex.Replace(sql, " where ", " where 1=2 and ", RegexOptions.IgnoreCase);
+                    if (sql.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        return Regex.Replace(sql, key, " where 1=2 and ", RegexOptions.IgnoreCase);
+                    }
                 }
+
                 return sql + " where 1=2";
             }
             return string.Format("select * from {0} where 1=2", tableName);
@@ -175,7 +180,6 @@ namespace CYQ.Data.SQL
             }
             return where;
         }
-
 
         internal static List<string> GetTableNamesFromSql(string sql)
         {

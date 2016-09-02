@@ -8,6 +8,7 @@ using CYQ.Data.Tool;
 using CYQ.Data.Cache;
 using CYQ.Data.SQL;
 using System.Data;
+using CYQ.Data.Aop;
 
 
 namespace CYQ.Data.Orm
@@ -83,7 +84,14 @@ namespace CYQ.Data.Orm
         {
 
         }
-
+        /// <summary>
+        /// 设置Aop状态
+        /// </summary>
+        /// <param name="op"></param>
+        public void SetAopState(AopOp op)
+        {
+            action.SetAopState(op);
+        }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
         /// </summary>
@@ -108,6 +116,11 @@ namespace CYQ.Data.Orm
         /// <param name="tableName">表名,如:Users</param>
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
+        {
+            SetInit(entityInstance, tableName, conn, AopOp.OpenAll);
+        }
+
+        protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
             conn = string.IsNullOrEmpty(conn) ? AppConfig.DB.DefaultConn : conn;
             entity = entityInstance;
@@ -176,6 +189,10 @@ namespace CYQ.Data.Orm
                 {
                     action.SetAopState(Aop.AopOp.CloseAll);
                 }
+                else
+                {
+                    action.SetAopState(op);
+                }
                 action.EndTransation();
             }
             catch (Exception err)
@@ -186,6 +203,10 @@ namespace CYQ.Data.Orm
                 }
                 throw;
             }
+        }
+        internal void SetInit2(Object entityInstance, string tableName, string conn, AopOp op)
+        {
+            SetInit(entityInstance, tableName, conn, op);
         }
         internal void SetInit2(Object entityInstance, string tableName, string conn)
         {
@@ -318,7 +339,7 @@ namespace CYQ.Data.Orm
 
         #region 查询
 
-         /// <summary>
+        /// <summary>
         /// 查询1条数据
         /// </summary>
         public bool Fill()

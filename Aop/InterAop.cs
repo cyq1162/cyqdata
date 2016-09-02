@@ -105,7 +105,7 @@ namespace CYQ.Data.Aop
         }
 
         #endregion
-        static bool _CallOnLoad = false;
+        static bool _IsLoadCompleted = false;
         private IAop GetFromConfig()
         {
 
@@ -125,35 +125,36 @@ namespace CYQ.Data.Aop
                     string[] aopItem = aopApp.Split(',');
                     if (aopItem.Length == 2)//完整类名,程序集(dll)名称
                     {
-                        try
+                        if (!_IsLoadCompleted)
                         {
-                            System.Reflection.Assembly ass = System.Reflection.Assembly.Load(aopItem[1]);
-                            if (ass != null)
+                            try
                             {
-                                object instance = ass.CreateInstance(aopItem[0]);
-                                if (instance != null)
+                                lock (lockObj)
                                 {
-                                    _Cache.Add(key, instance, AppConst.RunFolderPath + aopItem[1].Replace(".dll", "") + ".dll", 1440);
-                                    aop = instance as IAop;
-                                    if (!_CallOnLoad)
+                                    if (_IsLoadCompleted)
                                     {
-                                        lock (lockObj)
+                                        return GetFromConfig();//重新去缓存里拿。
+                                    }
+                                    _IsLoadCompleted = true;
+                                    System.Reflection.Assembly ass = System.Reflection.Assembly.Load(aopItem[1]);
+                                    if (ass != null)
+                                    {
+                                        object instance = ass.CreateInstance(aopItem[0]);
+                                        if (instance != null)
                                         {
-                                            if (!_CallOnLoad)
-                                            {
-                                                _CallOnLoad = true;
-                                                aop.OnLoad();
-                                            }
+                                            _Cache.Add(key, instance, AppConst.RunFolderPath + aopItem[1].Replace(".dll", "") + ".dll", 1440);
+                                            aop = instance as IAop;
+                                            aop.OnLoad();
                                         }
                                     }
-                                    return aop;
                                 }
+
                             }
-                        }
-                        catch (Exception err)
-                        {
-                            string errMsg = err.Message + "--Web.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format:namespace.Classname,Assembly name) ";
-                            Error.Throw(errMsg);
+                            catch (Exception err)
+                            {
+                                string errMsg = err.Message + "--Web.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format:namespace.Classname,Assembly name) ";
+                                Error.Throw(errMsg);
+                            }
                         }
                     }
                     #endregion

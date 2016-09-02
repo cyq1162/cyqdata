@@ -213,9 +213,12 @@ namespace CYQ.Data.Cache
             if (dic != null && dic.Count > 0)
             {
                 DbBase helper = DalCreate.CreateDal(conn);
-                foreach (string key in dic.Keys)
+                if (helper.dalType != DalType.Txt && helper.dalType != DalType.Xml)
                 {
-                    TableSchema.GetColumns(key, ref helper);
+                    foreach (string key in dic.Keys)
+                    {
+                        TableSchema.GetColumns(key, ref helper);
+                    }
                 }
                 helper.Dispose();
             }

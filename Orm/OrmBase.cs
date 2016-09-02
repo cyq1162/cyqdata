@@ -9,6 +9,7 @@ using CYQ.Data.Cache;
 using CYQ.Data.SQL;
 using System.Data;
 using CYQ.Data.UI;
+using CYQ.Data.Aop;
 
 
 namespace CYQ.Data.Orm
@@ -54,6 +55,14 @@ namespace CYQ.Data.Orm
             sob.IsUseAop = true;
         }
         /// <summary>
+        /// 设置Aop状态
+        /// </summary>
+        /// <param name="op"></param>
+        public void SetAopState(AopOp op)
+        {
+            sob.SetAopState(op);
+        }
+        /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
         /// </summary>
         /// <param name="entityInstance">实体对象,一般写:this</param>
@@ -80,7 +89,10 @@ namespace CYQ.Data.Orm
         {
             sob.SetInit2(entityInstance, tableName, conn);
         }
-
+        protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
+        {
+            sob.SetInit2(entityInstance, tableName, conn, op);
+        }
         /// <summary>
         /// 设置值,例如:[action.Set(TableName.ID,10);]
         /// </summary>

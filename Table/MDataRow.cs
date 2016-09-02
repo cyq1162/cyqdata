@@ -886,7 +886,7 @@ namespace CYQ.Data.Table
         /// </summary>
         /// <param name="row">要加载数据的行</param>
         /// <param name="rowOp">行选项[从其它行加载的条件]</param>
-        /// <param name="isAllowAppendColumn">如果row带有新列，是否加列[默认值为：true]</param>
+        /// <param name="isAllowAppendColumn">如果row带有新列，是否加列</param>
         /// <param name="isWithValueState">是否同时加载值的状态[默认值为：true]</param>
         public void LoadFrom(MDataRow row, RowOp rowOp, bool isAllowAppendColumn, bool isWithValueState)
         {

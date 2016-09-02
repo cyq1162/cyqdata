@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
+using System.Data.Common;
 
 namespace CYQ.Data
 {
-    internal class NoSqlCommand : IDisposable
+    internal class NoSqlCommand : IDisposable // DbCommand
     {
         string tableName = string.Empty;
         string whereSql = string.Empty;
@@ -29,6 +30,10 @@ namespace CYQ.Data
         {
             try
             {
+                if (string.IsNullOrEmpty(sqlText))
+                {
+                    return;
+                }
                 sourceSql = sqlText;
                 FormatSqlText(sqlText);
             }
@@ -56,11 +61,23 @@ namespace CYQ.Data
             MDataTable dt = action.Select(1, topN, whereSql, out count);
             if (fieldItems.Count > 0)
             {
+                //处理 a as B 的列。
+                Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string field in fieldItems)
+                {
+                    string[] items = field.Trim().Split(' ');
+                    dic.Add(items[0], items.Length > 1 ? items[items.Length - 1] : "");
+                }
                 for (int i = dt.Columns.Count - 1; i >= 0; i--)
                 {
-                    if (!fieldItems.Contains(dt.Columns[i].ColumnName.ToLower()))
+                    string columnName = dt.Columns[i].ColumnName;
+                    if (!dic.ContainsKey(columnName))
                     {
                         dt.Columns.RemoveAt(i);
+                    }
+                    else if (dic[columnName] != "")//处理 a as B 的列。
+                    {
+                        dt.Columns[i].ColumnName = dic[columnName];
                     }
                 }
             }
@@ -125,6 +142,7 @@ namespace CYQ.Data
                 return ExeNonQuery();
             }
         }
+
         void FormatSqlText(string sqlText)
         {
             string[] items = sqlText.Split(' ');
@@ -159,7 +177,7 @@ namespace CYQ.Data
                     case "where":
                         whereSql = sqlText.Substring(sqlText.IndexOf(item) + item.Length + 1);
                         //该结束语句了。
-                        return;
+                        goto end;
                     case "top":
                         if (IsSelect && !IsFrom)
                         {
@@ -221,6 +239,7 @@ namespace CYQ.Data
                         if (IsTopN && topN == -1)
                         {
                             int.TryParse(item, out topN);//查询TopN
+                            IsTopN = false;//关闭topN
                         }
                         else if ((IsFrom || IsUpdate || IsInsertInto) && string.IsNullOrEmpty(tableName))
                         {
@@ -228,30 +247,18 @@ namespace CYQ.Data
                         }
                         else if (IsSelect && !IsFrom)//提取查询的中间条件。
                         {
-                            #region Select语法解析
-                            string[] temps = item.ToLower().Trim(',').Split(',');
-                            foreach (string temp in temps)
+                            #region Select 字段搜集
+                            switch (item)
                             {
-                                switch (temp)
-                                {
-                                    case "*":
-                                    case "count(*)":
-                                    case "top":
-                                    case "distinct":
-                                        break;
-                                    default:
-                                        if (IsTopN && topN.ToString() == temp)
-                                        {
-                                            break;
-                                        }
-
-                                        if (!fieldItems.Contains(temp))
-                                        {
-                                            fieldItems.Add(temp);
-                                        }
-                                        break;
-                                }
+                                case "*":
+                                case "count(*)":
+                                case "distinct":
+                                    break;
+                                default:
+                                    fieldText.Append(item + " ");
+                                    break;
                             }
+
                             #endregion
                         }
                         else if (IsInsertInto && !string.IsNullOrEmpty(tableName) && fieldItems.Count == 0)
@@ -305,7 +312,17 @@ namespace CYQ.Data
                         break;
                 }
             }
+        end:
+            #region Select 字段解析
+            if (fieldText.Length > 0)
+            {
+                string[] fields = fieldText.ToString().Split(',');
+                fieldItems.AddRange(fields);
+                fieldText = null;
+            }
+            #endregion
         }
+        StringBuilder fieldText = new StringBuilder();
         int topN = -1;
         bool IsInsert = false;
         bool IsInsertInto = false;
@@ -331,5 +348,112 @@ namespace CYQ.Data
         }
 
         #endregion
+
+        //public override void Cancel()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public override int CommandTimeout
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        //public override System.Data.CommandType CommandType
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        //protected override DbParameter CreateDbParameter()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //protected override DbConnection DbConnection
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        //protected override DbParameterCollection DbParameterCollection
+        //{
+        //    get { throw new NotImplementedException(); }
+        //}
+
+        //protected override DbTransaction DbTransaction
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        //public override bool DesignTimeVisible
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+
+        //protected override DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public override int ExecuteNonQuery()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public override object ExecuteScalar()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public override void Prepare()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public override System.Data.UpdateRowSource UpdatedRowSource
+        //{
+        //    get
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //    set
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
     }
 }

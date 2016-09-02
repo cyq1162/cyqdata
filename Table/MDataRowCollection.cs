@@ -134,11 +134,11 @@ namespace CYQ.Data.Table
                     //直接性能差一点return cellIsAsc ? Comparer<string>.Default.Compare((string)objAValue, (string)objBValue) : Comparer<string>.Default.Compare((string)objBValue, (string)objAValue);
                     if (cellIsAsc)
                     {
-                        return Convert.ToString(objAValue).CompareTo(objBValue);
+                        return Convert.ToString(objAValue).CompareTo(objBValue.ToString());
                     }
                     else
                     {
-                        return Convert.ToString(objBValue).CompareTo(objAValue);
+                        return Convert.ToString(objBValue).CompareTo(objAValue.ToString());
                     }
             }
 

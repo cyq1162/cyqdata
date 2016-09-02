@@ -543,11 +543,16 @@ namespace CYQ.Data.Table
             {
                 foreach (MCellStruct item in mdt.Columns)
                 {
-                    if ((item.IsForeignKey && string.IsNullOrEmpty(item.FKTableName)) || item.MaxSize > 8000 || DataType.GetGroup(item.SqlType) == 999)
+                    if ((item.IsForeignKey && string.IsNullOrEmpty(item.FKTableName))
+                        || item.MaxSize > 8000 || DataType.GetGroup(item.SqlType) == 999)
                     {
                         hasFK = true;
                         break;
                     }
+                }
+                if (!hasFK && !string.IsNullOrEmpty(AppConfig.DB.DeleteField))
+                {
+                    hasFK = mdt.Columns.Contains(AppConfig.DB.DeleteField);
                 }
             }
             if (hasFK)
@@ -657,7 +662,7 @@ namespace CYQ.Data.Table
                         string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
                         MDataTable dtData = action.Select(whereIn);//获取远程数据。
                         dtData.Load(dt);//重新加载赋值。
-                        result = action.Delete(whereIn);
+                        result = action.Delete(whereIn);//如果存在IsDeleted，会被转Update（导致后续无法Insert）
                         if (result)
                         {
                             dtData.DynamicData = action;
@@ -804,7 +809,7 @@ namespace CYQ.Data.Table
                             action.Data.SetState(2);
                             //if (action.Data.GetState(true) == 2)
                             //{
-                                result = action.Update(where);
+                            result = action.Update(where);
                             //}
                         }
                         if (!result)

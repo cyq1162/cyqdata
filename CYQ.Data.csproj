@@ -100,10 +100,12 @@
     <Compile Include="Cache\LocalCache.cs" />
     <Compile Include="DAL\Conn\ConnObject.cs" />
     <Compile Include="DAL\DalEnum.cs" />
-    <Compile Include="DAL\Factory\NoSqlFactory.cs">
+    <Compile Include="DAL\NoSql\NoSqlConnection.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DAL\Factory\NoSqlCommand.cs" />
+    <Compile Include="DAL\NoSql\NoSqlFactory.cs" />
+    <Compile Include="DAL\NoSql\NoSqlCommand.cs">
+    </Compile>
     <Compile Include="DAL\NoSqlDal.cs" />
     <Compile Include="Action\ActionEnum.cs" />
     <Compile Include="DAL\SybaseDal.cs" />

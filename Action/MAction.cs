@@ -1035,6 +1035,7 @@ namespace CYQ.Data
                         // dalHelper.ResetConn();//重置Slave
                         if (mTable != null && mTable.Rows.Count > 0)
                         {
+                            _Data.Clear();//清掉旧值。
                             _Data.LoadFrom(mTable.Rows[0], RowOp.None, true);//setselectcolumn("aa as bb")时
                             _aop.Para.IsSuccess = true;
                         }
@@ -1047,6 +1048,7 @@ namespace CYQ.Data
             }
             else if (_aop.Para.IsSuccess)
             {
+                _Data.Clear();//清掉旧值。
                 _Data.LoadFrom(_aop.Para.Row, RowOp.None, true);
             }
 
@@ -1431,11 +1433,14 @@ namespace CYQ.Data
         #endregion
 
         #region IDisposable 成员
-
+        public void Dispose()
+        {
+        Dispose(false);
+        }
         /// <summary>
         /// 释放资源
         /// </summary>
-        public void Dispose()
+        internal void Dispose(bool isonError)
         {
             hasDisposed = true;
             if (dalHelper != null)
@@ -1446,26 +1451,33 @@ namespace CYQ.Data
                 }
                 _debugInfo = dalHelper.debugInfo.ToString();
                 dalHelper.Dispose();
-                dalHelper = null;
-                if (_sqlCreate != null)
+                if (!isonError)
                 {
-                    _sqlCreate = null;
+                    dalHelper = null;
+
+                    if (_sqlCreate != null)
+                    {
+                        _sqlCreate = null;
+                    }
                 }
             }
-            if (_noSqlAction != null)
+            if (!isonError)
             {
-                _noSqlAction.Dispose();
-            }
-            if (_aop != null)
-            {
-                _aop = null;
+                if (_noSqlAction != null)
+                {
+                    _noSqlAction.Dispose();
+                }
+                if (_aop != null)
+                {
+                    _aop = null;
+                }
             }
         }
         internal void OnError()
         {
             if (dalHelper != null && dalHelper.isOpenTrans)
             {
-                Dispose();
+                Dispose(true);
             }
         }
         bool hasDisposed = false;

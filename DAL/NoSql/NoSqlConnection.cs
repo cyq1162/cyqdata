@@ -1,31 +1,18 @@
+Ôªøusing CYQ.Data.Table;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Data.Common;
 using System.Data;
+using System.Data.Common;
 using System.IO;
-using CYQ.Data.Table;
+using System.Text;
+
 namespace CYQ.Data
 {
-    internal sealed class NoSqlFactory : DbProviderFactory
-    {
-        // Fields
-        public static readonly NoSqlFactory Instance = new NoSqlFactory();
-
-        // Methods
-        private NoSqlFactory()
-        {
-        }
-        public override DbConnection CreateConnection()
-        {
-            return new NoSqlConnection(base.ToString());
-        }
-    }
     internal sealed class NoSqlConnection : DbConnection
     {
         public NoSqlConnection(string conn)
         {
-
+            _Conn = conn;
         }
         protected override DbCommand CreateDbCommand()
         {
@@ -42,7 +29,7 @@ namespace CYQ.Data
         }
         public override void Close()
         {
-            //÷ÿ–¬–¥ªÿ ˝æ›°£
+            //ÈáçÊñ∞ÂÜôÂõûÊï∞ÊçÆ„ÄÇ
 
         }
         private string _Conn;
@@ -128,7 +115,7 @@ namespace CYQ.Data
                         string tName = string.Empty;
                         foreach (string tsName in tsList)
                         {
-                            tName = Path.GetFileNameWithoutExtension(tsName);//ªÒµ√±Ì√˚°£
+                            tName = Path.GetFileNameWithoutExtension(tsName);//Ëé∑ÂæóË°®Âêç„ÄÇ
                             string[] tableList = Directory.GetFiles(DataSource, tName + ".*", SearchOption.TopDirectoryOnly);
                             foreach (string tableName in tableList)
                             {
@@ -206,5 +193,4 @@ namespace CYQ.Data
             return filePath;
         }
     }
-
 }
