@@ -574,3 +574,6 @@
 358：MAction处理多次Fill时未清理旧值的问题（2016-09-02)
 359：ORM（OrmBase和SimpleOrmBase）增加SetAopState方法（2016-09-02)
 360：AutoCache：处理MAction的Fill方法的时的缓存引用（改成克隆，避免多次Fill指向同一缓存）（2016-09-02)
+361：MDataTable增加Description属性。（2016-09-03)
+362：DBTool的GetColumns增加对表映射的支持（2016-09-05)
+363：修正文本数据库的ResetTable方法（原表没有清空）（2016-09-06)

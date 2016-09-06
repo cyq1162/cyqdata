@@ -537,6 +537,10 @@ namespace CYQ.Data.Tool
                 Error.Throw(errInfo);
                 return null;
             }
+            if (!tableName.Contains(" "))
+            {
+                tableName = GetMapTableName(conn, tableName);
+            }
             MDataColumn mdc = TableSchema.GetColumns(tableName, ref helper);
             helper.Dispose();
             return mdc;

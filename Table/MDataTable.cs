@@ -23,137 +23,7 @@ namespace CYQ.Data.Table
     public partial class MDataTable
     {
         #region 隐式转换
-        /*
-        internal void ReadFromDbDataReader(DbDataReader sdr)
-        {
-            if (sdr != null)
-            {
-                if (Columns.Count > 0 && sdr.FieldCount > 0)
-                {
-                    this.Rows.Clear();//如果直接从Row中加载架构，会多出一行，因此需要清除
-                    #region 表架构处理（对于SetSelectColumns指定列查询时，需要去除一些列）
 
-                    List<string> columns = new List<string>();//记录DataReader的列。
-                    string name = string.Empty;
-
-                    string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
-                    bool isHiddenField = false;
-                    for (int i = 0; i < sdr.FieldCount; i++)
-                    {
-                        name = sdr.GetName(i);
-                        if (string.IsNullOrEmpty(name))
-                        {
-                            name = "Empty_" + i;
-                        }
-                        name = name.Trim('"');//sqlite的双引号问题。
-                        isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
-                        MCellStruct ms = Columns[name];
-                        //isContain = Columns.Contains(name);
-                        if (isHiddenField)
-                        {
-                            if (ms != null)
-                            {
-                                Columns.Remove(name);
-                            }
-                            else
-                            {
-                                continue;
-                            }
-                        }
-                        else
-                        {
-                            if (ms != null)
-                            {
-                                ms.ReaderIndex = i;//设置和SDR对应的索引
-                                Columns.SetOrdinal(name, i);
-                            }
-                            else
-                            {
-                                MCellStruct ms2 = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
-                                ms2.ReaderIndex = i;
-                                MDataCell mdc = new MDataCell(ref ms2);
-                                Columns.Add(ms2);
-                            }
-                        }
-                        columns.Add(name.ToLower());
-                    }
-                    for (int i = 0; i < Columns.Count; i++)//移除列。
-                    {
-                        if (!columns.Contains(Columns[i].ColumnName.ToLower()))
-                        {
-                            Columns.RemoveAt(i);
-                            i--;
-                        }
-                    }
-                    #endregion
-
-
-                    #region 加载行数据
-                    if (sdr.HasRows)
-                    {
-                        MDataRow mRecord = null;
-                        object value = null;
-                        List<int> errIndex = new List<int>();
-                        while (sdr.Read())
-                        {
-                            mRecord = this.NewRow();
-                            object[] values=new object[sdr.FieldCount];
-                            for (int i = 0; i < Columns.Count; i++)
-                            {
-                                #region 读取数据
-                                MCellStruct ms = Columns[i];
-                                try
-                                {
-                                    if (!errIndex.Contains(i))
-                                    {
-                                        value = ms.ReaderIndex > -1 ? sdr[ms.ReaderIndex] : sdr[ms.ColumnName];
-                                    }
-                                    else
-                                    {
-                                        value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
-                                    }
-                                }
-                                catch
-                                {
-                                    if (!errIndex.Contains(i))
-                                    {
-                                        errIndex.Add(i);
-                                    }
-                                    try
-                                    {
-                                        value = sdr.GetString(ms.ReaderIndex > -1 ? ms.ReaderIndex : i);
-                                    }
-                                    catch { }
-                                }
-
-
-                                if (value == null || value == DBNull.Value)
-                                {
-                                    mRecord[i].cellValue.Value = DBNull.Value;
-                                }
-                                else if (Convert.ToString(value) == string.Empty)
-                                {
-                                    mRecord[i].cellValue.Value = string.Empty;
-                                    mRecord[i].cellValue.IsNull = false;
-                                }
-                                else
-                                {
-                                    mRecord[i].Value = value;
-                                }
-                                #endregion
-                            }
-                            Rows.Add(mRecord);
-                        }
-                        errIndex = null;
-                    }
-                    #endregion
-                }
-                sdr.Close();
-                sdr.Dispose();
-                sdr = null;
-            }
-        }
-        */
         /// <summary>
         /// 从DataReader隐式转换成MDataTable
         /// </summary>
@@ -290,7 +160,25 @@ namespace CYQ.Data.Table
                 _TableName = value;
             }
         }
-
+        private string _Description = string.Empty;
+        /// <summary>
+        /// 表名描述
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_Description))
+                {
+                    return _TableName;
+                }
+                return _Description;
+            }
+            set
+            {
+                _Description = value;
+            }
+        }
         private MDataColumn _Columns;
         /// <summary>
         /// 表格的架构列
@@ -598,7 +486,7 @@ namespace CYQ.Data.Table
             {
                 for (int i = 0; i < newTable.Rows.Count; i++)
                 {
-                   // _Rows.Add(newTable.Rows[i]);
+                    // _Rows.Add(newTable.Rows[i]);
                     NewRow(true).LoadFrom(newTable.Rows[i]);
                 }
             }

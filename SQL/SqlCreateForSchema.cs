@@ -56,6 +56,10 @@ namespace CYQ.Data.SQL
                             }
                         }
                     }
+                    if (dalType == DalType.MsSql)//增加表的描述
+                    {
+                        sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}';\r\n", columns.Description, tableName);
+                    }
                     result = sb.ToString().TrimEnd(';');
                     break;
             }

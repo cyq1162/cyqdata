@@ -66,6 +66,26 @@ namespace CYQ.Data.Table
                 return _Table;
             }
         }
+        private string _Description = string.Empty;
+        /// <summary>
+        /// ±Ì√˚√Ë ˆ
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_Description) && _Table != null)
+                {
+                    return _Table.Description;
+                }
+                return _Description;
+            }
+            set
+            {
+                _Description = value;
+            }
+        }
+
         internal MDataTable _Table;
         public MDataColumn()
             : base()

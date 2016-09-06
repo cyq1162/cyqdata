@@ -178,6 +178,8 @@ namespace CYQ.Data.Table
                         if (!isFind)
                         {
                             noFind.Add(v1);
+                            joinRow = joinTable.NewRow(true);//找不到时，只加载A表。
+                            joinRow.LoadFrom(row);//后载加A表（同名则复盖）
                         }
                     }
                 }
