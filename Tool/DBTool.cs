@@ -671,7 +671,8 @@ namespace CYQ.Data.Tool
                     foreach (string item in list.Keys)
                     {
                         mapName = item.Replace("_", "").Replace("-", "").Replace(" ", "");//有奇葩用-符号和空格的。
-                        if (item != mapName && !mapTable.ContainsKey(mapName))//只存档带-," ",_等符号的表名
+                        //去掉原有的限制条件：(item != mapName 只存档带-," ",_等符号的表名 )，支持外部映射
+                        if (!mapTable.ContainsKey(mapName))//
                         {
                             mapTable.Add(mapName.ToLower(), item);
                         }

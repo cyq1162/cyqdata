@@ -584,7 +584,7 @@ namespace CYQ.Data.Cache
                     sb.Append(aopInfo.Where);
                     break;
             }
-            return MD5.Get(sb.ToString());
+            return StaticTool.GetHashKey(sb.ToString());
         }
         #endregion
 

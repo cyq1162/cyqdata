@@ -253,5 +253,35 @@ namespace CYQ.Data.Tool
                 return Convert.ChangeType(value, t);
             }
         }
+
+        #region ½«×Ö·û´®±äHashKey
+        static Dictionary<string, string> hashKeyCache = new Dictionary<string, string>(32);
+        internal static string GetHashKey(string sourceString)
+        {
+            try
+            {
+                if (hashKeyCache.ContainsKey(sourceString))
+                {
+                    return hashKeyCache[sourceString];
+                }
+                else
+                {
+                    if (hashKeyCache.Count > 512)
+                    {
+                        hashKeyCache.Clear();
+                        hashKeyCache = new Dictionary<string, string>(64);
+                    }
+                    string value = "K" + Math.Abs(sourceString.GetHashCode()) + sourceString.Length;
+                    hashKeyCache.Add(sourceString, value);
+                    return value;
+                }
+            }
+            catch
+            {
+                return sourceString;
+            }
+        }
+        #endregion
+       
     }
 }

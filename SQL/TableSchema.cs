@@ -672,7 +672,7 @@ namespace CYQ.Data.SQL
             int end = key.LastIndexOf(')');
             if (start > -1 && end > -1)//×Ô¶¨Òåtable
             {
-                key = "View" + Tool.MD5.Get(key);
+                key = "View" + StaticTool.GetHashKey(key);
             }
             else
             {

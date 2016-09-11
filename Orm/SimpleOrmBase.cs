@@ -136,7 +136,7 @@ namespace CYQ.Data.Orm
                     }
                 }
 
-                string key = tableName + MD5.Get(conn);
+                string key = tableName + StaticTool.GetHashKey(conn);
                 if (!CacheManage.LocalInstance.Contains(key))
                 {
                     DalType dal = DBTool.GetDalType(conn);
