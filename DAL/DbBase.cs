@@ -471,7 +471,8 @@ namespace CYQ.Data
         {
             object returnValue = null;
             ConnBean coSlave = null;
-            if (!isOpenTrans && _IsAllowRecordSql)
+            //mssql 有 insert into ...select 操作。
+            if (!isOpenTrans && _IsAllowRecordSql && !cmdText.ToLower().TrimStart().StartsWith("insert "))
             {
                 coSlave = connObject.GetSlave();
             }
