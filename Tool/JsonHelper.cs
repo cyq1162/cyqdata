@@ -670,7 +670,19 @@ namespace CYQ.Data.Tool
                     {
                         foreach (object o in obj as IEnumerable)
                         {
-                            Fill(MDataRow.CreateFrom(o));
+                            if (o is MDataTable)
+                            {
+                                Fill(o as MDataTable);
+                            }
+                            else if (o is DataTable)
+                            {
+                                MDataTable dt = o as DataTable;
+                                Fill(dt);
+                            }
+                            else
+                            {
+                                Fill(MDataRow.CreateFrom(o));
+                            }
                         }
                     }
                     else if (len == 2)

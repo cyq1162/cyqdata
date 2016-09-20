@@ -259,6 +259,7 @@ namespace CYQ.Data
             _FileName = fileName;
             _FileFullName = filePath + _FileName;
             _DalType = dalType;
+            _Table = null;
         }
         public bool Delete(object where)
         {
@@ -326,6 +327,9 @@ namespace CYQ.Data
                                 break;
                             case 4:
                                 cell.Value = Guid.NewGuid();
+                                break;
+                            case 0:
+                                cell.Value = Guid.NewGuid().ToString();
                                 break;
                             default:
                                 return (bool)Error.Throw("first column value can't be null");
@@ -439,6 +443,10 @@ namespace CYQ.Data
                 {
                     Error.Throw("Column [" + _Row[i].ColumnName + "] 's value can't be null or empty ! (tip:column property:iscannull=false)");
                 }
+            }
+            if (!isCanDo && start == 1) // 允许插入空的主键(非自增）。
+            {
+                return !_Row[0].IsNullOrEmpty && _Row[0].Struct.IsPrimaryKey && !_Row[0].Struct.IsAutoIncrement;
             }
             return isCanDo;
         }

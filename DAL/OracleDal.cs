@@ -170,7 +170,11 @@ namespace CYQ.Data
                 return base.GetFactory(providerName);
             }
         }
+        /// <summary>
+        /// 值-1未初始化；0使用OracleClient；1使用DataAccess；2使用ManagedDataAccess
+        /// </summary>
         internal static int isUseOdpNet = -1;
+        private static readonly object lockObj = new object();
         /// <summary>
         /// 是否使用Oracle的ODP.NET组件。
         /// </summary>
@@ -180,35 +184,35 @@ namespace CYQ.Data
             {
                 if (isUseOdpNet == -1)
                 {
-                    string path = string.Empty;
-                    try
+                    lock (lockObj)
                     {
-                        Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
-                        path = System.IO.Path.GetDirectoryName(ass.CodeBase).Replace(AppConst.FilePre, string.Empty);
-                        ass = null;
-                    }
-                    catch
-                    {
-
-                    }
-                    if (System.IO.File.Exists(path + "\\Oracle.DataAccess.dll")) ////Oracle 11
-                    {
-                        ManagedName = "";
-                        isUseOdpNet = 1;
-                    }
-                    else if (System.IO.File.Exists(path + "\\Oracle." + ManagedName + "DataAccess.dll"))//Oracle 12
-                    {
-                        if (AppConfig.GetConn(base.conn).IndexOf("host", StringComparison.OrdinalIgnoreCase) == -1)
+                        if (isUseOdpNet == -1)
                         {
-                            Error.Throw("you need to use the connectionString like this : Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = orcl)));User ID=sa;password=123456");
+                            if (AppConfig.GetConn(base.conn).IndexOf("host", StringComparison.OrdinalIgnoreCase) == -1)
+                            {
+                                isUseOdpNet = 0;
+                            }
+                            else
+                            {
+                                Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
+                                string path = System.IO.Path.GetDirectoryName(ass.CodeBase).Replace(AppConst.FilePre, string.Empty);
+                                ass = null;
+                                if (System.IO.File.Exists(path + "\\Oracle.DataAccess.dll")) ////Oracle 11
+                                {
+                                    ManagedName = "";
+                                    isUseOdpNet = 1;
+                                }
+                                else if (System.IO.File.Exists(path + "\\Oracle." + ManagedName + "DataAccess.dll"))//Oracle 12
+                                {
+                                    isUseOdpNet = 2;
+                                }
+                                else
+                                {
+                                    isUseOdpNet = 0;
+                                }
+                            }
                         }
-                        isUseOdpNet = 2;
                     }
-                    else
-                    {
-                        isUseOdpNet = 0;
-                    }
-
                 }
                 return isUseOdpNet > 0;
             }

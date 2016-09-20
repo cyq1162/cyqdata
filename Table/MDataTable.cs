@@ -1136,47 +1136,52 @@ namespace CYQ.Data.Table
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {
-
-                //从DataReader读取表结构，不管有没有数据。
-                //  string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
-                //MCellStruct mStruct;
                 #region 读表结构
-                //for (int i = 0; i < sdr.FieldCount; i++)
-                //{
-                //    string name = sdr.GetName(i);
-                //    if (string.IsNullOrEmpty(name))
-                //    {
-                //        name = "Empty_" + i;
-                //    }
-                //    bool isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
-                //    if (!isHiddenField)
-                //    {
-                //        mStruct = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
-                //        mStruct.ReaderIndex = i;
-                //        mTable.Columns.Add(mStruct);
-                //    }
-                //}
-                DataTable dt = sdr.GetSchemaTable();
-                if (dt != null && dt.Rows.Count > 0)
+                if (OracleDal.isUseOdpNet == 0) //OracleClient 不支持子查询的GetSchemaTable，但ODP.NET是支持的。
                 {
-                    TableSchema.FixTableSchemaType(sdr, dt);
-                    mTable.Columns = TableSchema.GetColumns(dt);
-                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
-                    //MCellStruct ms;
-                    //string name;
-                    //for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
-                    //{
-                    //    name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
-                    //    if (string.IsNullOrEmpty(name))
-                    //    {
-                    //        name = "Empty_" + i;
-                    //    }
-                    //    ms = mTable.Columns[name];//sqlite的双引号问题
-                    //    if (ms != null)
-                    //    {
-                    //        ms.ReaderIndex = i;
-                    //    }
-                    //}
+                    //从DataReader读取表结构，不管有没有数据。
+                    string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
+                    MCellStruct mStruct;
+                    for (int i = 0; i < sdr.FieldCount; i++)
+                    {
+                        string name = sdr.GetName(i);
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            name = "Empty_" + i;
+                        }
+                        bool isHiddenField = hiddenFields.IndexOf("," + name + ",", StringComparison.OrdinalIgnoreCase) > -1;
+                        if (!isHiddenField)
+                        {
+                            mStruct = new MCellStruct(name, DataType.GetSqlType(sdr.GetFieldType(i)));
+                            mStruct.ReaderIndex = i;
+                            mTable.Columns.Add(mStruct);
+                        }
+                    }
+                }
+                else
+                {
+                    DataTable dt = sdr.GetSchemaTable();
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        TableSchema.FixTableSchemaType(sdr, dt);
+                        mTable.Columns = TableSchema.GetColumns(dt);
+                        mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
+                        //MCellStruct ms;
+                        //string name;
+                        //for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
+                        //{
+                        //    name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
+                        //    if (string.IsNullOrEmpty(name))
+                        //    {
+                        //        name = "Empty_" + i;
+                        //    }
+                        //    ms = mTable.Columns[name];//sqlite的双引号问题
+                        //    if (ms != null)
+                        //    {
+                        //        ms.ReaderIndex = i;
+                        //    }
+                        //}
+                    }
                 }
                 #endregion
                 if (sdr.HasRows)

@@ -176,13 +176,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
                     }
                     break;
-                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
-                    //{
-                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                    //}
-                    //case DalType.Oracle:
-                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", AutoID);
-                    //    break;
+                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
+                //{
+                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                //}
+                //case DalType.Oracle:
+                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", AutoID);
+                //    break;
             }
             return sql;
         }
@@ -578,7 +578,7 @@ namespace CYQ.Data.SQL
                 {
                     //只处理单个值的情况
                     int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                                                                       // int uniqueGroupID = DataType.GetGroup(mdc.FirstUnique.SqlType);
+                    // int uniqueGroupID = DataType.GetGroup(mdc.FirstUnique.SqlType);
                     switch (primaryGroupID)
                     {
                         case 4:
@@ -623,6 +623,10 @@ namespace CYQ.Data.SQL
         }
         private static string GetWhereEqual(int groupID, string columnName, string where, DalType dalType)
         {
+            if (string.IsNullOrEmpty(where))
+            {
+                return string.Empty;
+            }
             if (groupID != 0)
             {
                 where = where.Trim('\'');
@@ -635,6 +639,7 @@ namespace CYQ.Data.SQL
             {
                 if (groupID == 4)
                 {
+
                     switch (dalType)
                     {
                         case DalType.Access:// Access的GUID类型的更新，必须带｛｝包含。
@@ -699,23 +704,41 @@ namespace CYQ.Data.SQL
                         where += cell.ColumnName + "=" + (cell.Value.ToString().ToLower() == "true" ? SqlValue.True : SqlValue.False);
                         break;
                     default:
+
                         if (groupID == 4)
                         {
+                            string guid = cell.strValue;
+                            if (string.IsNullOrEmpty(guid) || guid.Length != 36)
+                            {
+                                return "1=2--(" + guid + " is not guid)";
+                            }
                             if (dalType == DalType.Access)
                             {
-                                where += cell.ColumnName + "='{" + cell.Value + "}'";
+                                where += cell.ColumnName + "='{" + guid + "}'";
                             }
                             else if (dalType == DalType.SQLite)
                             {
-                                where += cell.ColumnName + "=x'" + StaticTool.ToGuidByteString(cell.strValue) + "'";
+                                where += cell.ColumnName + "=x'" + StaticTool.ToGuidByteString(guid) + "'";
                             }
                             else
                             {
-                                where += cell.ColumnName + "='" + cell.Value + "'";
+                                where += cell.ColumnName + "='" + guid + "'";
+                            }
+                        }
+                        else if (groupID == 2 && dalType == DalType.Oracle) // Oracle的日期时间要转类型
+                        {
+                            if (cell.Struct.SqlType == SqlDbType.Timestamp)
+                            {
+                                where += cell.ColumnName + "=to_timestamp('" + cell.strValue + "','yyyy-MM-dd HH24:MI:ss.ff')";
+                            }
+                            else
+                            {
+                                where += cell.ColumnName + "=to_date('" + cell.strValue + "','yyyy-mm-dd hh24:mi:ss')";
                             }
                         }
                         else
                         {
+
                             where += cell.ColumnName + "='" + cell.Value + "'";
                         }
                         break;
@@ -759,6 +782,17 @@ namespace CYQ.Data.SQL
                         if (groupID == 4 && dalType == DalType.SQLite)
                         {
                             sb.Append("x'" + StaticTool.ToGuidByteString(item) + "',");
+                        }
+                        else if (groupID == 2 && dalType == DalType.Oracle)
+                        {
+                            if (ms.SqlType == SqlDbType.Timestamp)
+                            {
+                                sb.Append("to_timestamp('" + item + "','yyyy-MM-dd HH24:MI:ss.ff'),");
+                            }
+                            else
+                            {
+                                sb.Append("to_date('" + item + "','yyyy-mm-dd hh24:mi:ss'),");
+                            }
                         }
                         else
                         {

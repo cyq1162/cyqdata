@@ -44,7 +44,7 @@ namespace CYQ.Data.Orm
         {
             set
             {
-                action.dalHelper.isAllowInterWriteLog = value;
+                Action.dalHelper.isAllowInterWriteLog = value;
             }
         }
         /// <summary>
@@ -69,12 +69,16 @@ namespace CYQ.Data.Orm
 
         Object entity;//实体对象
         Type typeInfo;//实体对象类型
-        MAction action;
+        private MAction _Action;
         internal MAction Action
         {
             get
             {
-                return action;
+                if (_Action == null)
+                {
+                    SetDelayInit(_entityInstance, _tableName, _conn, _op);//延迟加载
+                }
+                return _Action;
             }
         }
         /// <summary>
@@ -90,7 +94,7 @@ namespace CYQ.Data.Orm
         /// <param name="op"></param>
         public void SetAopState(AopOp op)
         {
-            action.SetAopState(op);
+            Action.SetAopState(op);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -119,8 +123,21 @@ namespace CYQ.Data.Orm
         {
             SetInit(entityInstance, tableName, conn, AopOp.OpenAll);
         }
-
+        private object _entityInstance;
+        private string _tableName;
+        private string _conn;
+        private AopOp _op;
         protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
+        {
+            _entityInstance = entityInstance;
+            _tableName = tableName;
+            _conn = conn;
+            _op = op;
+        }
+        /// <summary>
+        /// 将原有的初始化改造成延时加载。
+        /// </summary>
+        private void SetDelayInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
             conn = string.IsNullOrEmpty(conn) ? AppConfig.DB.DefaultConn : conn;
             entity = entityInstance;
@@ -184,16 +201,16 @@ namespace CYQ.Data.Orm
                     Columns = CacheManage.LocalInstance.Get(key) as MDataColumn;
                 }
 
-                action = new MAction(Columns.ToRow(tableName), conn);
+                _Action = new MAction(Columns.ToRow(tableName), conn);
                 if (typeInfo.Name == "SysLogs")
                 {
-                    action.SetAopState(Aop.AopOp.CloseAll);
+                    _Action.SetAopState(Aop.AopOp.CloseAll);
                 }
                 else
                 {
-                    action.SetAopState(op);
+                    _Action.SetAopState(op);
                 }
-                action.EndTransation();
+                _Action.EndTransation();
             }
             catch (Exception err)
             {
@@ -214,9 +231,9 @@ namespace CYQ.Data.Orm
         }
         internal void Set(object key, object value)
         {
-            if (action != null)
+            if (Action != null)
             {
-                action.Set(key, value);
+                Action.Set(key, value);
             }
         }
         #region 基础增删改查 成员
@@ -268,11 +285,11 @@ namespace CYQ.Data.Orm
         {
             if (autoSetValue)
             {
-                action.UI.GetAll(!insertID);
+                Action.UI.GetAll(!insertID);
             }
             GetValueFromEntity();
-            action.AllowInsertID = insertID;
-            bool result = action.Insert(false, option);
+            Action.AllowInsertID = insertID;
+            bool result = Action.Insert(false, option);
             if (autoSetValue || option != InsertOp.None)
             {
                 SetValueToEntity();
@@ -306,10 +323,10 @@ namespace CYQ.Data.Orm
         {
             if (autoSetValue)
             {
-                action.UI.GetAll(false);
+                Action.UI.GetAll(false);
             }
             GetValueFromEntity();
-            bool result = action.Update(where);
+            bool result = Action.Update(where);
             if (autoSetValue)
             {
                 SetValueToEntity();
@@ -333,7 +350,7 @@ namespace CYQ.Data.Orm
         public bool Delete(object where)
         {
             GetValueFromEntity();
-            return action.Delete(where);
+            return Action.Delete(where);
         }
         #endregion
 
@@ -351,7 +368,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Fill(object where)
         {
-            bool result = action.Fill(where);
+            bool result = Action.Fill(where);
             if (result)
             {
                 SetValueToEntity();
@@ -407,25 +424,25 @@ namespace CYQ.Data.Orm
         /// <param name="count">返回的记录总数</param>
         public List<T> Select<T>(int pageIndex, int pageSize, string where, out int count)
         {
-            return action.Select(pageIndex, pageSize, where, out count).ToList<T>();
+            return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
         }
         internal MDataTable Select(int pageIndex, int pageSize, string where, out int count)
         {
-            return action.Select(pageIndex, pageSize, where, out count);
+            return Action.Select(pageIndex, pageSize, where, out count);
         }
         /// <summary>
         /// 获取记录总数
         /// </summary>
         public int GetCount(object where)
         {
-            return action.GetCount(where);
+            return Action.GetCount(where);
         }
         /// <summary>
         /// 查询是否存在指定的条件的数据
         /// </summary>
         public bool Exists(object where)
         {
-            return action.Exists(where);
+            return Action.Exists(where);
         }
 
         #endregion
@@ -442,7 +459,7 @@ namespace CYQ.Data.Orm
                 PropertyInfo pi = typeInfo.GetProperty(propName);
                 if (pi != null)
                 {
-                    MDataCell cell = action.Data[propName];
+                    MDataCell cell = Action.Data[propName];
                     if (cell != null && !cell.IsNull)
                     {
                         try
@@ -459,14 +476,14 @@ namespace CYQ.Data.Orm
             }
             else
             {
-                action.Data.SetToEntity(entity);
+                Action.Data.SetToEntity(entity);
             }
         }
         private void GetValueFromEntity()
         {
             if (!IsUseAop)
             {
-                action.Data.LoadFrom(entity, BreakOp.Null);
+                Action.Data.LoadFrom(entity, BreakOp.Null);
             }
         }
         #region IDisposable 成员
@@ -475,9 +492,9 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void Dispose()
         {
-            if (action != null)
+            if (Action != null)
             {
-                action.Dispose();
+                Action.Dispose();
             }
         }
 
