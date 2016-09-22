@@ -244,8 +244,12 @@ namespace CYQ.Data.Tool
             {
                 return Activator.CreateInstance(t);
             }
-            else if (t.IsValueType && t.Name != "Guid")
+            else if (t.IsValueType)
             {
+                if (t.Name == "Guid")
+                {
+                    return new Guid(strValue);
+                }
                 return Convert.ChangeType(strValue, t);
             }
             else
