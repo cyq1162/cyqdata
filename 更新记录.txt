@@ -586,3 +586,6 @@
 370：MAction在Insert时，对Oracle，Mysql等放置（获取最大值）事务（2016-09-20)
 371：MAction在Insert时的InsertOp默认选项变更为：ID，原来为（Fill)（2016-09-20)
 372：JsonHelper.ToJson增加对List<MDataTable>和List<DataTable>的支持（2016-09-20)
+373：DBBase处理Oracle下返回的DataBase名称问题。（2016-09-21)
+374：Oracle的加载方式进行小细节优化（2016-09-22)
+375：StaticTool处理ChangeType中对于Guid的转换（2016-09-22)

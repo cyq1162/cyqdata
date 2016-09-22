@@ -244,7 +244,7 @@ namespace CYQ.Data.Tool
             {
                 return Activator.CreateInstance(t);
             }
-            else if (t.IsValueType)
+            else if (t.IsValueType && t.Name != "Guid")
             {
                 return Convert.ChangeType(strValue, t);
             }
@@ -282,6 +282,6 @@ namespace CYQ.Data.Tool
             }
         }
         #endregion
-       
+
     }
 }

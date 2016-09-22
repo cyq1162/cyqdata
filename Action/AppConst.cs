@@ -87,7 +87,8 @@ namespace CYQ.Data
                     Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
                     _DLLFullName = ass.FullName;
                     _RunfolderPath = ass.CodeBase;
-                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath).Replace(AppConst.FilePre, string.Empty)+"\\";
+                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath).Replace(AppConst.FilePre, string.Empty) + "\\";
+                    ass = null;
                 }
                 return _RunfolderPath;
             }

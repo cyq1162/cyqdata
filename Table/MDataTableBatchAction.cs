@@ -190,7 +190,7 @@ namespace CYQ.Data.Table
                 {
                     return MsSqlBulkCopyInsert(keepID);
                 }
-                else if (dalTypeTo == DalType.Oracle && keepID && OracleDal.isUseOdpNet == 1 && _dalHelper == null)
+                else if (dalTypeTo == DalType.Oracle && keepID && OracleDal.clientType == 1 && _dalHelper == null)
                 {
                     return OracleBulkCopyInsert();
                 }

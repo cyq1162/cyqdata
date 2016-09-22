@@ -173,7 +173,7 @@ namespace CYQ.Data
         /// <summary>
         /// 值-1未初始化；0使用OracleClient；1使用DataAccess；2使用ManagedDataAccess
         /// </summary>
-        internal static int isUseOdpNet = -1;
+        internal static int clientType = -1;
         private static readonly object lockObj = new object();
         /// <summary>
         /// 是否使用Oracle的ODP.NET组件。
@@ -182,39 +182,38 @@ namespace CYQ.Data
         {
             get
             {
-                if (isUseOdpNet == -1)
+                if (clientType == -1)
                 {
                     lock (lockObj)
                     {
-                        if (isUseOdpNet == -1)
+                        if (clientType == -1)
                         {
                             if (AppConfig.GetConn(base.conn).IndexOf("host", StringComparison.OrdinalIgnoreCase) == -1)
                             {
-                                isUseOdpNet = 0;
+                                clientType = 0;
                             }
                             else
                             {
-                                Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
-                                string path = System.IO.Path.GetDirectoryName(ass.CodeBase).Replace(AppConst.FilePre, string.Empty);
-                                ass = null;
-                                if (System.IO.File.Exists(path + "\\Oracle.DataAccess.dll")) ////Oracle 11
+                                string path = AppConst.RunFolderPath;
+                                if (System.IO.File.Exists(path + "Oracle." + ManagedName + "DataAccess.dll"))//Oracle 12
+                                {
+                                    clientType = 2;
+                                }
+                                else if (System.IO.File.Exists(path + "Oracle.DataAccess.dll")) ////Oracle 11
                                 {
                                     ManagedName = "";
-                                    isUseOdpNet = 1;
-                                }
-                                else if (System.IO.File.Exists(path + "\\Oracle." + ManagedName + "DataAccess.dll"))//Oracle 12
-                                {
-                                    isUseOdpNet = 2;
+                                    clientType = 1;
                                 }
                                 else
                                 {
-                                    isUseOdpNet = 0;
+                                    clientType = 0;
+                                    Log.WriteLog("Can't find Oracle.ManagedDataAccess.dll or Oracle.DataAccess.dll on the path:" + path);
                                 }
                             }
                         }
                     }
                 }
-                return isUseOdpNet > 0;
+                return clientType > 0;
             }
         }
         protected override bool IsExistsDbName(string dbName)

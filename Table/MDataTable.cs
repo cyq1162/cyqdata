@@ -1137,7 +1137,7 @@ namespace CYQ.Data.Table
             if (sdr != null && sdr.FieldCount > 0)
             {
                 #region 读表结构
-                if (OracleDal.isUseOdpNet == 0) //OracleClient 不支持子查询的GetSchemaTable，但ODP.NET是支持的。
+                if (OracleDal.clientType == 0) //OracleClient 不支持子查询的GetSchemaTable，但ODP.NET是支持的。
                 {
                     //从DataReader读取表结构，不管有没有数据。
                     string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";

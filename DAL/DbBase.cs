@@ -63,6 +63,12 @@ namespace CYQ.Data
                 {
                     return _con.Database;
                 }
+                else if (dalType == DalType.Oracle)
+                {
+                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = Aries)))
+                    int i = _con.DataSource.LastIndexOf('=') + 1;
+                    return _con.DataSource.Substring(i).Trim(' ', ')');
+                }
                 else
                 {
                     return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
@@ -1010,7 +1016,7 @@ namespace CYQ.Data
             RollBack();
             if (isAllowInterWriteLog)
             {
-                Log.WriteLog(isWriteLog, err + debugInfo);
+                Log.WriteLog(isWriteLog, err + AppConst.BR + debugInfo);
             }
             if (OnExceptionEvent != null)
             {
