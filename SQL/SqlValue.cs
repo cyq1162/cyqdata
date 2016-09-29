@@ -97,5 +97,19 @@ namespace CYQ.Data.SQL
         /// </example>
         /// </summary>
         public const string CaseWhen = "[#CASE#WHEN]";//多条件分支
+        /// <summary>
+        /// 数据库链接符号 + Oracle下为：||
+        /// </summary>
+        public const string Contact = "[#+]";//多条件分支
+
+        /// <summary>
+        /// 数据库Left函数
+        /// </summary>
+        public const string Left = "[#LEFT]";//多条件分支
+
+        /// <summary>
+        /// 数据库Right函数
+        /// </summary>
+        public const string Right = "[#RIGHT]";//多条件分支
     }
 }

@@ -1247,6 +1247,13 @@ namespace CYQ.Data
             _sqlCreate.updateExpression = updateExpression;
             return this;
         }
+        /// <summary>
+        /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]
+        /// </summary>
+        public MAction SetPara(object paraName, object value)
+        {
+            return SetPara(paraName, value, DbType.String);
+        }
         List<AopCustomDbPara> customParaNames = new List<AopCustomDbPara>();
         /// <summary>
         /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]

@@ -245,7 +245,7 @@ namespace CYQ.Data.Table
     /// </summary>
     public partial class MDataRowCollection : IBindingList
     {
-        
+
 
         void IBindingList.AddIndex(PropertyDescriptor property)
         {
@@ -254,7 +254,18 @@ namespace CYQ.Data.Table
 
         object IBindingList.AddNew()
         {
-            return this.Table.NewRow(true);
+            if (Count > 0)
+            {
+                MDataRow row = this[Count - 1];
+                foreach (MDataCell cell in row)
+                {
+                    if (!cell.IsNull) // 避免重复新增加空行。
+                    {
+                        return this.Table.NewRow(true);
+                    }
+                }
+            }
+            return null;
         }
 
         bool IBindingList.AllowEdit
@@ -303,7 +314,7 @@ namespace CYQ.Data.Table
 
         void IBindingList.RemoveIndex(PropertyDescriptor property)
         {
-           
+
         }
 
         void IBindingList.RemoveSort()
@@ -380,7 +391,7 @@ namespace CYQ.Data.Table
         void System.Collections.IList.RemoveAt(int index)
         {
             this.RemoveAt(index);
-            this.onListChanged(this,ResetEventArgs);
+            this.onListChanged(this, ResetEventArgs);
 
         }
 

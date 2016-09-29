@@ -26,6 +26,9 @@ namespace CYQ.Data.SQL
                 text = FormatLen(text, dalType);
                 text = FormatGUID(text, dalType);
                 text = FormatIsNull(text, dalType);
+                text = FormatContact(text, dalType);
+                text = FormatLeft(text, dalType);
+                text = FormatRight(text, dalType);
                 text = FormatDate(text, dalType, SqlValue.Year, "Year");
                 text = FormatDate(text, dalType, SqlValue.Month, "Month");
                 text = FormatDate(text, dalType, SqlValue.Day, "Day");
@@ -33,7 +36,70 @@ namespace CYQ.Data.SQL
             return text;
         }
         #region 过滤与多数据库标签解析
-
+        internal static string FormatLeft(string text, DalType dalType)
+        {
+            switch (dalType)
+            {
+                //substr(MAX(SheetId),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetId)length(MAX(SheetId))-4,4) 
+                case DalType.Oracle:
+                    int index = text.IndexOf(SqlValue.Left);//left(a,4) =>to_char(substr(a,1,4))
+                    if (index > -1)
+                    {
+                        do
+                        {
+                            index = text.IndexOf('(', index);
+                            int end = text.IndexOf(',', index);
+                            int end2 = text.IndexOf(')', end + 1);
+                            text = text.Insert(end2, ")");
+                            text = text.Insert(end + 1, "1,");
+                            index = text.IndexOf(SqlValue.Left, end);//寻找还有没有第二次出现的函数字段
+                        }
+                        while (index > -1);
+                        return text.Replace(SqlValue.Left, "to_char(substr");
+                    }
+                    return text;
+                default:
+                    return text.Replace(SqlValue.Left, "Left");
+            }
+        }
+        internal static string FormatRight(string text, DalType dalType)
+        {
+            switch (dalType)
+            {
+                case DalType.Oracle:
+                    int index = text.IndexOf(SqlValue.Right);//right(a,4) => to_char(substr(a,length(a)-4,4))
+                    if (index > -1)
+                    {
+                        do
+                        {
+                            ////substr(MAX(SheetId),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetId)length(MAX(SheetId))-4,4) 
+                            index = text.IndexOf('(', index);
+                            int end = text.IndexOf(',', index);
+                            string key = text.Substring(index + 1, end - index - 1);//找到 a
+                            int end2 = text.IndexOf(')', end + 1);
+                            string key2 = text.Substring(end + 1, end2 - end - 1);//找到b
+                            text = text.Insert(end2, ")");
+                            text = text.Insert(end + 1, "length(" + key + ")+1-" + key2 + ",");//
+                            index = text.IndexOf(SqlValue.Right, end);//寻找还有没有第二次出现的函数字段
+                        }
+                        while (index > -1);
+                        return text.Replace(SqlValue.Right, "to_char(substr");
+                    }
+                    return text;
+                default:
+                    return text.Replace(SqlValue.Right, "Right");
+            }
+        }
+        internal static string FormatContact(string text, DalType dalType)
+        {
+            switch (dalType)
+            {
+                case DalType.Oracle:
+                    return text.Replace(SqlValue.Contact, "||");
+                default:
+                    return text.Replace(SqlValue.Contact, "+");
+            }
+        }
         internal static string FormatIsNull(string text, DalType dalType)
         {
             switch (dalType)

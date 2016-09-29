@@ -589,3 +589,7 @@
 373：DBBase处理Oracle下返回的DataBase名称问题。（2016-09-21)
 374：Oracle的加载方式进行小细节优化（2016-09-22)
 375：StaticTool处理ChangeType中对于Guid的转换（2016-09-22)
+376：SqlCompatible增加对（+ ||）、Left和Right函数的处理（2016-09-24)
+377：Oracle的ODP.NET参数添BindByName置为true（2016-09-24)
+378：MDataRowCollection AddNew方法，处理Winform（DataGrid绑定时）在空白行和数据行来回点击时不断添加空白数据的问题。（2016-09-29)
+379：MAction SetPara增加重载方法（2016-09-29)

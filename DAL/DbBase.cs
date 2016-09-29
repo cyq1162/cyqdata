@@ -654,6 +654,15 @@ namespace CYQ.Data
 
         private void SetCommandText(string commandText, bool isProc)
         {
+            if (OracleDal.clientType > 0)
+            {
+                Type t = _com.GetType();
+                System.Reflection.PropertyInfo pi = t.GetProperty("BindByName");
+                if (pi != null)
+                {
+                    pi.SetValue(_com, true, null);
+                }
+            }
             _com.CommandText = isProc ? commandText : SqlFormat.Compatible(commandText, dalType, false);
             if (!isProc && dalType == DalType.SQLite && _com.CommandText.Contains("charindex"))
             {
