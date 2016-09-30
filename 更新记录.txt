@@ -593,3 +593,6 @@
 377：Oracle的ODP.NET参数添BindByName置为true（2016-09-24)
 378：MDataRowCollection AddNew方法，处理Winform（DataGrid绑定时）在空白行和数据行来回点击时不断添加空白数据的问题。（2016-09-29)
 379：MAction SetPara增加重载方法（2016-09-29)
+380：MAction Update的where条件Error时，RecordsAffected值从原来的0变更为-2；（2016-09-30)
+381：MDataTable 修正批量更新的返回值问题（2016-09-30)
+382：MAction 内部增加IsIgnoreDeleteField 内部属性（2016-09-30)

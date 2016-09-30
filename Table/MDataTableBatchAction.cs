@@ -343,7 +343,6 @@ namespace CYQ.Data.Table
 
                 return false;
             }
-            return true;
         }
         internal bool MySqlBulkCopyInsert(bool keepID)
         {
@@ -632,6 +631,7 @@ namespace CYQ.Data.Table
         {
             int count = 0, pageSize = 5000;
             MDataTable dt = null;
+            bool result = false;
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
@@ -650,7 +650,6 @@ namespace CYQ.Data.Table
                     action.BeginTransation();
                 }
 
-                bool result = false;
                 MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
                 string columnName = keyColumn.ColumnName;
                 for (int i = 0; i < count; i++)
@@ -662,7 +661,9 @@ namespace CYQ.Data.Table
                         string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
                         MDataTable dtData = action.Select(whereIn);//获取远程数据。
                         dtData.Load(dt);//重新加载赋值。
-                        result = action.Delete(whereIn);//如果存在IsDeleted，会被转Update（导致后续无法Insert）
+                        action.IsIgnoreDeleteField = true;//处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
+                        result = action.Delete(whereIn);
+                        action.IsIgnoreDeleteField = false;
                         if (result)
                         {
                             dtData.DynamicData = action;
@@ -677,14 +678,14 @@ namespace CYQ.Data.Table
                 }
                 if (_dalHelper == null)
                 {
-                    action.BeginTransation();
+                    action.EndTransation();
                 }
                 else
                 {
                     action.dalHelper = sourceHelper;//还原。
                 }
             }
-            return true;
+            return result;
         }
         internal bool Auto()
         {

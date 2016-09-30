@@ -25,13 +25,8 @@ namespace CYQ.Data
         #region 全局变量
 
         internal DbBase dalHelper;//数据操作
-
         private SqlCreate _sqlCreate;
-
-
-
         private InsertOp _option = InsertOp.ID;
-
         private NoSqlAction _noSqlAction = null;
         private MDataRow _Data;//表示一行
         /// <summary>
@@ -248,6 +243,10 @@ namespace CYQ.Data
             }
             _AllowInsertID = false;
         }
+        /// <summary>
+        /// 当DeleteField被设置后（删除转更新操作），如果仍想删除操作（可将些属性置为true）
+        /// </summary>
+        internal bool IsIgnoreDeleteField = false;
         #endregion
 
         #region 构造函数
@@ -512,6 +511,7 @@ namespace CYQ.Data
                             }
                             break;
                         default:
+                            #region MyRegion
                             bool isTrans = dalHelper.isOpenTrans;
                             int groupID = DataType.GetGroup(_Data.PrimaryCell.Struct.SqlType);
                             bool isNum = groupID == 1 && _Data.PrimaryCell.Struct.Scale <= 0;
@@ -539,6 +539,7 @@ namespace CYQ.Data
                             {
                                 dalHelper.EndTransaction();
                             }
+                            #endregion
                             break;
                     }
                     if ((ID != null && Convert.ToString(ID) != "-2") || (dalHelper.recordsAffected > -2 && _option == InsertOp.None))
@@ -555,7 +556,7 @@ namespace CYQ.Data
                     returnResult = dalHelper.ExeNonQuery(sqlCommandText, false) > 0;
                 }
             }
-            else if (!_isInsertCommand && _Data.GetState() == 1) // 更新操作。
+            else if (!_isInsertCommand && _Data.GetState() == 1 && dalHelper.recordsAffected != -2) // 更新操作。
             {
                 //输出警告信息
                 return true;
@@ -794,7 +795,7 @@ namespace CYQ.Data
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
                 string deleteField = AppConfig.DB.DeleteField;
-                bool isToUpdate = !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
+                bool isToUpdate =!IsIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
                 switch (dalHelper.dalType)
                 {
                     case DalType.Txt:

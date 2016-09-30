@@ -119,12 +119,13 @@ namespace CYQ.Data.SQL
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
                     _action.dalHelper.debugInfo.Append(AppConst.HR + "error : " + cell.ColumnName + " can't be null" + AppConst.BR);
+                    _action.dalHelper.recordsAffected = -2;
                     isCanDo = false;
                     break;
                 }
                 if (cell.cellValue.State > 0)
                 {
-                    _TempSql.Append("[" + cell.ColumnName + "],");
+                    _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DalType) + ",");
                     _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
@@ -139,15 +140,11 @@ namespace CYQ.Data.SQL
             switch (_action.dalHelper.dalType)
             {
                 case DalType.Oracle:
-                    _TempSql = _TempSql.Replace("[", "").Replace("]", "");
                     if (!_action.AllowInsertID && DataType.GetGroup(primaryCell.Struct.SqlType) == 1)
                     {
                         _TempSql.Append(primaryCell.ColumnName + ",");
                         _TempSql2.Append(AutoID + ".nextval,");
                     }
-                    break;
-                case DalType.MySql:
-                    _TempSql = _TempSql.Replace("[", "`").Replace("]", "`");
                     break;
             }
 
@@ -371,7 +368,7 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        _action.dalHelper.debugInfo.Append(AppConst.HR + "error : " + TableName + " no contains column " + columnName + AppConst.BR);
+                        _action.dalHelper.debugInfo.Append(AppConst.HR + "warn : " + TableName + " no contains column " + columnName + AppConst.BR);
                     }
                 }
             }
@@ -518,6 +515,7 @@ namespace CYQ.Data.SQL
                 if (cell.IsNullOrEmpty)
                 {
                     isCanDo = false;
+                    _action.dalHelper.recordsAffected = -2;
                     _action.dalHelper.debugInfo.Append(AppConst.HR + "error : " + cell.ColumnName + " can't be null" + AppConst.BR);
                     return "1=2 and " + cell.ColumnName + " is null";
                 }
