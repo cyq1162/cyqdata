@@ -648,9 +648,9 @@ namespace CYQ.Data.Table
                         switch (DataType.GetGroup(sqlType))
                         {
                             case 1://int
-                                return op == Op.Big ? (Convert.ToDecimal(valueA) > Convert.ToDecimal(valueB)) : (Convert.ToDecimal(valueA) >= Convert.ToDecimal(valueB));
+                                return op == Op.Big ? Convert.ToDecimal(valueA) > Convert.ToDecimal(valueB) : Convert.ToDecimal(valueA) >= Convert.ToDecimal(valueB);
                             case 2://datetime
-                                return op == Op.Big ? (DateTime)valueA > Convert.ToDateTime(valueB) : (DateTime)valueA >= Convert.ToDateTime(valueB);
+                                return op == Op.Big ? Convert.ToDateTime(valueA) > Convert.ToDateTime(valueB) : Convert.ToDateTime(valueA) >= Convert.ToDateTime(valueB);
                             default:
                                 int value = Convert.ToString(valueA).CompareTo(valueB);
                                 return op == Op.Big ? value == 1 : value > -1;
@@ -665,9 +665,9 @@ namespace CYQ.Data.Table
                         switch (DataType.GetGroup(sqlType))
                         {
                             case 1://int
-                                return op == Op.Small ? ((Double)valueA < Convert.ToDouble(valueB)) : ((Double)valueA <= Convert.ToDouble(valueB));
+                                return op == Op.Small ? Convert.ToDecimal(valueA) < Convert.ToDecimal(valueB) : Convert.ToDecimal(valueA) <= Convert.ToDecimal(valueB);
                             case 2://datetime
-                                return op == Op.Small ? (DateTime)valueA < Convert.ToDateTime(valueB) : (DateTime)valueA <= Convert.ToDateTime(valueB);
+                                return op == Op.Small ? Convert.ToDateTime(valueA) < Convert.ToDateTime(valueB) : Convert.ToDateTime(valueA) <= Convert.ToDateTime(valueB);
                             default:
                                 int value = Convert.ToString(valueA).CompareTo(valueB);
                                 return op == Op.Small ? value == -1 : value <= 0;

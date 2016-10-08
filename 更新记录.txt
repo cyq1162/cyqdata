@@ -598,3 +598,4 @@
 382：MAction 内部增加IsIgnoreDeleteField 内部属性（2016-09-30)
 383：XHtmlBase 修正对Xml的加载（2016-10-08)
 384：SqlValue 调整两个名称（GUID和ISNULL）的命名（2016-10-08)
+385：MDataTable 修正Select条件为<=的数字判断问题（2016-10-08)
