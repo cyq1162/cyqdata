@@ -104,7 +104,7 @@ namespace CYQ.Data.SQL
             int groupID = DataType.GetGroup(primaryCell.Struct.SqlType);
             string defaultValue = Convert.ToString(primaryCell.Struct.DefaultValue);
             if (primaryCell.IsNullOrEmpty && (groupID == 4 || (groupID == 0 && (primaryCell.Struct.MaxSize <= 0 || primaryCell.Struct.MaxSize >= 36) &&
-                (defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.GUID))))//guid类型
+                (defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid))))//guid类型
             {
                 primaryCell.Value = Guid.NewGuid();
             }

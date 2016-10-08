@@ -105,7 +105,7 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    int index = text.IndexOf(SqlValue.ISNULL);//isnull  (isnull(aaa),'3,3')   iff(isnull   (aaa),333,aaa)
+                    int index = text.IndexOf(SqlValue.IsNull);//isnull  (isnull(aaa),'3,3')   iff(isnull   (aaa),333,aaa)
                     if (index > -1)
                     {
                         
@@ -117,20 +117,20 @@ namespace CYQ.Data.SQL
                             text = text.Insert(end, ")");//
                             end = text.IndexOf(')', end + 3);
                             text = text.Insert(end, "," + key);
-                            index = text.IndexOf(SqlValue.ISNULL, end);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(SqlValue.IsNull, end);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        return text.Replace(SqlValue.ISNULL, "iff(isnull");
+                        return text.Replace(SqlValue.IsNull, "iff(isnull");
                     }
                     break;
                 case DalType.SQLite:
                 case DalType.MySql:
-                    return text.Replace(SqlValue.ISNULL, "IfNull");
+                    return text.Replace(SqlValue.IsNull, "IfNull");
                 case DalType.MsSql:
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.ISNULL, "IsNull");
+                    return text.Replace(SqlValue.IsNull, "IsNull");
                 case DalType.Oracle:
-                    return text.Replace(SqlValue.ISNULL, "NVL");
+                    return text.Replace(SqlValue.IsNull, "NVL");
             }
             return text;
         }
@@ -139,16 +139,16 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    return text.Replace(SqlValue.GUID, "GenGUID()");
+                    return text.Replace(SqlValue.Guid, "GenGUID()");
                 case DalType.MySql:
-                    return text.Replace(SqlValue.GUID, "UUID()");
+                    return text.Replace(SqlValue.Guid, "UUID()");
                 case DalType.MsSql:
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.GUID, "newid()");
+                    return text.Replace(SqlValue.Guid, "newid()");
                 case DalType.Oracle:
-                    return text.Replace(SqlValue.GUID, "SYS_GUID()");
+                    return text.Replace(SqlValue.Guid, "SYS_GUID()");
                 case DalType.SQLite:
-                    return text.Replace(SqlValue.GUID, "");
+                    return text.Replace(SqlValue.Guid, "");
             }
             return text;
         }

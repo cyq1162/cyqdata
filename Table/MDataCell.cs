@@ -478,7 +478,7 @@ namespace CYQ.Data.Table
                             }
                             break;
                         case 4:
-                            if (strValue == SqlValue.GUID || strValue.StartsWith("newid"))
+                            if (strValue == SqlValue.Guid || strValue.StartsWith("newid"))
                             {
                                 value = Guid.NewGuid();
                             }

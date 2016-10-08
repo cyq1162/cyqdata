@@ -7,11 +7,11 @@ namespace CYQ.Data.SQL
     public class SqlValue
     {
         /// <summary>
-        /// 对于Bit类型[是/否] 类型的排序：[#DESC]
+        /// 对于Bit类型[是/否] 类型的排序：[#DESC] (Access特殊)
         /// </summary>
         public const string Desc = "[#DESC]";
         /// <summary>
-        /// 对于Bit类型[是/否] 类型的排序：[#ASC]
+        /// 对于Bit类型[是/否] 类型的排序：[#ASC] (Access特殊)
         /// </summary>
         public const string Asc = "[#ASC]";
         /// <summary>
@@ -31,12 +31,12 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 数据库函数 GUID 获取：[#GETDATE]
         /// </summary>
-        public const string GUID = "[#GUID]";
+        public const string Guid = "[#GUID]";
 
         /// <summary>
         /// 数据库函数 ISNULL 判断：[#ISNULL](Exr1,Exr2)
         /// </summary>
-        public const string ISNULL = "[#ISNULL]";
+        public const string IsNull = "[#ISNULL]";
 
         /// <summary>
         /// 数据库函数 GetDate 获取当前时间：[#GETDATE]

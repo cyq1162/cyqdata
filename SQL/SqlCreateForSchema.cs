@@ -163,7 +163,7 @@ namespace CYQ.Data.SQL
                         }
                         break;
                     case DalType.Oracle:
-                        if (Convert.ToString(column.DefaultValue) == SqlValue.GUID)//主键又是GUID
+                        if (Convert.ToString(column.DefaultValue) == SqlValue.Guid)//主键又是GUID
                         {
                             key += " Default (SYS_GUID())";
                         }

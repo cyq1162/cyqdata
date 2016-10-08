@@ -298,24 +298,18 @@ namespace CYQ.Data.Xml
                 string html = string.Empty;
                 if (xnm != null)
                 {
-                    //if (AppConfig.XHtml.UseFileLoadXml)
-                    //{
                     html = IOHelper.ReadAllText(fileName, _Encoding);
-                    //}
-                    //else
-                    //{
                     ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
-                    //}
                 }
 
-                //if (html != string.Empty)
-                //{
-                LoadXml(html);//从字符串加载xml
-                //}
-                //else
-                //{
-                //    _XmlDocument.Load(fileName);//从文件加载xml
-                //}
+                if (html != string.Empty) 
+                {
+                    LoadXml(html);//从字符串加载html
+                }
+                else
+                {
+                    _XmlDocument.Load(fileName);//从文件加载xml
+                }
                 if (clearCommentNode)
                 {
                     RemoveCommentNode();

@@ -267,7 +267,7 @@ namespace CYQ.Data.SQL
                 }
                 else if (groupID == 4)
                 {
-                    return SqlValue.GUID;
+                    return SqlValue.Guid;
                 }
                 switch (dalType)
                 {
@@ -289,12 +289,12 @@ namespace CYQ.Data.SQL
                     case "sys_guid":
                     case "genguid":
                     case "uuid":
-                        return SqlValue.GUID;
+                        return SqlValue.Guid;
                 }
             }
             else
             {
-                if (defaultValue == SqlValue.GUID)
+                if (defaultValue == SqlValue.Guid)
                 {
                     switch (dalType)
                     {

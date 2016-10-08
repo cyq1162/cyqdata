@@ -866,7 +866,7 @@ namespace CYQ.Data.Table
                 else if (ms.IsPrimaryKey && (groupID == 4 || (groupID == 0 && ms.MaxSize >= 36)))
                 {
                     string defaultValue = Convert.ToString(ms.DefaultValue);
-                    bool isGuid = defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.GUID;
+                    bool isGuid = defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid;
                     if (isGuid && !fillGUID)
                     {
                         fillGUID = true;

@@ -596,3 +596,5 @@
 380：MAction Update的where条件Error时，RecordsAffected值从原来的0变更为-2；（2016-09-30)
 381：MDataTable 修正批量更新的返回值问题（2016-09-30)
 382：MAction 内部增加IsIgnoreDeleteField 内部属性（2016-09-30)
+383：XHtmlBase 修正对Xml的加载（2016-10-08)
+384：SqlValue 调整两个名称（GUID和ISNULL）的命名（2016-10-08)
