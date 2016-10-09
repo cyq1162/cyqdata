@@ -424,8 +424,8 @@ namespace CYQ.Data.Table
         {
             return ToJson(true, false);
         }
-        /// <param name="addHead">输出头部信息[带count、Success、ErrorMsg]</param>
-        /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构</param>
+        /// <param name="addHead">输出头部信息[带count、Success、ErrorMsg](默认true)</param>
+        /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构(默认false)</param>
         public string ToJson(bool addHead, bool addSchema)
         {
             return ToJson(addHead, addSchema, RowOp.IgnoreNull);
@@ -443,7 +443,7 @@ namespace CYQ.Data.Table
       
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower)
         {
-            return ToJson(addHead, addSchema, rowOp, false, EscapeOp.Default);
+            return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, EscapeOp.Default);
         }
         /// <param name="op">符号转义选项</param>
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp op)
