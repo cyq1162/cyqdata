@@ -424,26 +424,32 @@ namespace CYQ.Data.Table
         {
             return ToJson(true, false);
         }
+        /// <param name="addHead">输出头部信息[带count、Success、ErrorMsg]</param>
+        /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构</param>
         public string ToJson(bool addHead, bool addSchema)
         {
             return ToJson(addHead, addSchema, RowOp.IgnoreNull);
         }
+        /// <param name="isConvertNameToLower">是否将名称转为小写</param>
         public string ToJson(bool addHead, bool addSchema, bool isConvertNameToLower)
         {
             return ToJson(addHead, addSchema, RowOp.IgnoreNull, isConvertNameToLower);
         }
+        /// <param name="rowOp">过滤选项</param>
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp)
         {
             return ToJson(addHead, addSchema, rowOp, false);
         }
-        /// <param name="addHead">输出头部信息[带count、Success、ErrorMsg]</param>
-        /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构</param>
-        /// <param name="rowOp">过滤选项</param>
-        /// <param name="isConvertNameToLower">是否将名称转为小写</param>
-        /// <returns></returns>
+      
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower)
         {
+            return ToJson(addHead, addSchema, rowOp, false, EscapeOp.Default);
+        }
+        /// <param name="op">符号转义选项</param>
+        public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp op)
+        {
             JsonHelper helper = new JsonHelper(addHead, addSchema);
+            helper.Escape = op;
             helper.IsConvertNameToLower = isConvertNameToLower;
             helper.RowOp = rowOp;
             helper.Fill(this);

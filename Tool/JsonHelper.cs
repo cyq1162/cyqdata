@@ -13,10 +13,23 @@ using System.Reflection;
 namespace CYQ.Data.Tool
 {
     /// <summary>
+    /// JsonHelper 的符号转义选项
+    /// </summary>
+    public enum EscapeOp
+    {
+        /// <summary>
+        /// Web 默认转义，Win不转义
+        /// </summary>
+        Default,
+        No,
+        Yes
+    }
+    /// <summary>
     /// json 帮助类
     /// </summary>
     public partial class JsonHelper
     {
+        
         #region 实例属性
 
         public JsonHelper()
@@ -35,10 +48,10 @@ namespace CYQ.Data.Tool
             _AddSchema = addSchema;
         }
         #region 属性
-        ///// <summary>
-        ///// 是否转义转义符号（默认true）
-        ///// </summary>
-        //public bool IsEscapeChar = true;
+        /// <summary>
+        /// 转义符号
+        /// </summary>
+        public EscapeOp Escape = EscapeOp.Default;
         /// <summary>
         /// 是否将名称转为小写
         /// </summary>
@@ -294,7 +307,7 @@ namespace CYQ.Data.Tool
                 sb.Append(footText + "}");
             }
             string json = sb.ToString();
-            if (System.Web.HttpContext.Current != null) // Web应用
+            if ((Escape == EscapeOp.Default && System.Web.HttpContext.Current != null) || Escape == EscapeOp.Yes) // Web应用
             {
                 json = json.Replace("\n", "<br/>").Replace("\t", " ").Replace("\r", " ");
             }

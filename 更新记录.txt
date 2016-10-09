@@ -599,3 +599,4 @@
 383：XHtmlBase 修正对Xml的加载（2016-10-08)
 384：SqlValue 调整两个名称（GUID和ISNULL）的命名（2016-10-08)
 385：MDataTable 修正Select条件为<=的数字判断问题（2016-10-08)
+386：AutoCache（JsonHelper增加Escape属性、MDataTable增加ToJson重载）不处理\n的转义替换（2016-10-09)

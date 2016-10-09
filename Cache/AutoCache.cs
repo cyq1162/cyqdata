@@ -141,7 +141,7 @@ namespace CYQ.Data.Cache
                         JsonHelper js = new JsonHelper(false, false);
                         foreach (MDataTable table in aopInfo.TableList)
                         {
-                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull));
+                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull,false, EscapeOp.No));
                         }
                         js.AddBr();
                         _MemCache.Set(key, js.ToString(), cacheTime);
@@ -151,7 +151,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.ExeMDataTable:
                     if (IsCanCache(aopInfo.Table))
                     {
-                        _MemCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull), cacheTime);
+                        _MemCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.No), cacheTime);
                     }
                     break;
                 case AopEnum.ExeScalar:
