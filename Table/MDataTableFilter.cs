@@ -251,6 +251,7 @@ namespace CYQ.Data.Table
             List<MDataRow> findRows = FindAll(table, whereObj);
             if (findRows != null)
             {
+                sTable.RecordsAffected = findRows.Count;//设置记录总数
                 FilterPager(findRows, pageIndex, pageSize);//进行分页筛选，再克隆最后的数据。
 
                 for (int i = 0; i < findRows.Count; i++)

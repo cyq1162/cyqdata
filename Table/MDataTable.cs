@@ -428,12 +428,12 @@ namespace CYQ.Data.Table
         /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构(默认false)</param>
         public string ToJson(bool addHead, bool addSchema)
         {
-            return ToJson(addHead, addSchema, RowOp.IgnoreNull);
+            return ToJson(addHead, addSchema, RowOp.None);
         }
         /// <param name="isConvertNameToLower">是否将名称转为小写</param>
         public string ToJson(bool addHead, bool addSchema, bool isConvertNameToLower)
         {
-            return ToJson(addHead, addSchema, RowOp.IgnoreNull, isConvertNameToLower);
+            return ToJson(addHead, addSchema, RowOp.None, isConvertNameToLower);
         }
         /// <param name="rowOp">过滤选项</param>
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp)

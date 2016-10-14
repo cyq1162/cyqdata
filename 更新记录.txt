@@ -600,3 +600,6 @@
 384：SqlValue 调整两个名称（GUID和ISNULL）的命名（2016-10-08)
 385：MDataTable 修正Select条件为<=的数字判断问题（2016-10-08)
 386：AutoCache（JsonHelper增加Escape属性、MDataTable增加ToJson重载）不处理\n的转义替换（2016-10-09)
+387：MDataTable ToJson 对于null的数据，默认输出 xx:null 值（2016-10-09)
+388：Oracle(DBTool.GetTables) 增加对视图的过滤（2016-10-10)
+389：JsonHelper 修正实体嵌套的问题、同时增加对数组的支持（2016-10-14)

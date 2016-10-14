@@ -952,7 +952,7 @@ order by s1.colid";
         }
         internal static string GetOracleTables()
         {
-            return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments";
+            return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='TABLE'";
         }
         internal static string GetMySqlTables(string dbName)
         {

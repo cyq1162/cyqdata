@@ -29,7 +29,7 @@ namespace CYQ.Data.Tool
     /// </summary>
     public partial class JsonHelper
     {
-        
+
         #region 实例属性
 
         public JsonHelper()
@@ -151,7 +151,7 @@ namespace CYQ.Data.Tool
             jsonItems.Add(brFlag);
             rowCount++;
         }
-        string footText = string.Empty;
+        StringBuilder footText = new StringBuilder();
         /// <summary>
         /// 添加底部数据（只有AddHead为true情况才能添加数据）
         /// </summary>
@@ -166,7 +166,7 @@ namespace CYQ.Data.Tool
         {
             if (_AddHead)
             {
-                footText += "," + Format(name, value, noQuotes);
+                footText.Append("," + Format(name, value, noQuotes));
             }
         }
 
@@ -269,7 +269,14 @@ namespace CYQ.Data.Tool
                 {
                     sb.Append("[");
                 }
-                sb.Append("{");
+                char left = '{', right = '}';
+                if (!jsonItems[0].Contains(":") && !jsonItems[rowCount - 1].Contains(":"))
+                {
+                    //说明为数组
+                    left = '[';
+                    right = ']';
+                }
+                sb.Append(left);
                 int index = 0;
                 foreach (string val in jsonItems)
                 {
@@ -284,10 +291,10 @@ namespace CYQ.Data.Tool
                     {
                         sb.Remove(sb.Length - 1, 1);//性能优化（内部时，必须多了一个“，”号）。
                         //sb = sb.Replace(",", "", sb.Length - 1, 1);
-                        sb.Append("},");
+                        sb.Append(right + ",");
                         if (index < jsonItems.Count)
                         {
-                            sb.Append("{");
+                            sb.Append(left);
                         }
                     }
                 }
@@ -304,7 +311,7 @@ namespace CYQ.Data.Tool
             }
             if (_AddHead)
             {
-                sb.Append(footText + "}");
+                sb.Append(footText.ToString() + "}");
             }
             string json = sb.ToString();
             if ((Escape == EscapeOp.Default && System.Web.HttpContext.Current != null) || Escape == EscapeOp.Yes) // Web应用
@@ -588,14 +595,8 @@ namespace CYQ.Data.Tool
                             }
                             else
                             {
-                                if (!t.FullName.StartsWith("System."))//普通对象。
-                                {
-                                    MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
-                                    oRow.LoadFrom(cell.Value);
-                                    value = oRow.ToJson(_RowOp, IsConvertNameToLower);
-                                    noQuot = true;
-                                }
-                                else if (cell.Value is IEnumerable)
+
+                                if (cell.Value is IEnumerable)
                                 {
                                     int len = StaticTool.GetArgumentLength(ref t);
                                     if (len == 1)
@@ -610,6 +611,21 @@ namespace CYQ.Data.Tool
                                         noQuot = true;
                                     }
                                 }
+                                else
+                                {
+                                    if (t.FullName == "System.Object")
+                                    {
+                                        t = cell.Value.GetType();
+                                    }
+                                    if (!t.FullName.StartsWith("System."))//普通对象。
+                                    {
+                                        MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
+                                        oRow.LoadFrom(cell.Value);
+                                        value = oRow.ToJson(_RowOp, IsConvertNameToLower);
+                                        noQuot = true;
+                                    }
+                                }
+
                             }
 
                         }
@@ -691,6 +707,22 @@ namespace CYQ.Data.Tool
                             {
                                 MDataTable dt = o as DataTable;
                                 Fill(dt);
+                            }
+                            else if (o is String || o is DateTime || o is Enum || o is Guid)
+                            {
+                                string str = o.ToString();
+                                if ((str[0] == '{' || str[0] == '[') && JsonSplit.IsJson(str))
+                                {
+                                    Fill(MDataRow.CreateFrom(o));
+                                }
+                                else
+                                {
+                                    jsonItems.Add("\"" + str + "\"");
+                                }
+                            }
+                            else if (o is ValueType)
+                            {
+                                jsonItems.Add(o.ToString());
                             }
                             else
                             {
