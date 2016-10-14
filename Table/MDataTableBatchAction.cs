@@ -660,7 +660,7 @@ namespace CYQ.Data.Table
                         #region 核心逻辑
                         string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
                         MDataTable dtData = action.Select(whereIn);//获取远程数据。
-                        dtData.Load(dt);//重新加载赋值。
+                        dtData.Load(dt, keyColumn);//重新加载赋值。
                         action.IsIgnoreDeleteField = true;//处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
                         result = action.Delete(whereIn);
                         action.IsIgnoreDeleteField = false;

@@ -440,7 +440,7 @@ namespace CYQ.Data.Table
         {
             return ToJson(addHead, addSchema, rowOp, false);
         }
-      
+
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower)
         {
             return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, EscapeOp.Default);
@@ -1666,14 +1666,14 @@ namespace CYQ.Data.Table
         }
         #endregion
 
-
-        internal void Load(MDataTable dt)
+        //给MDataTableBatchAction的批量更新使用。
+        internal void Load(MDataTable dt, MCellStruct primary)
         {
             if (dt == null || dt.Rows.Count == 0)
             {
                 return;
             }
-            string pkName = Columns.FirstPrimary.ColumnName;
+            string pkName = primary != null ? primary.ColumnName : Columns.FirstPrimary.ColumnName;
             int i1 = Columns.GetIndex(pkName);
             MDataRow rowA, rowB;
 
@@ -1683,7 +1683,7 @@ namespace CYQ.Data.Table
                 rowB = dt.FindRow(pkName + "='" + rowA[i1].strValue + "'");
                 if (rowB != null)
                 {
-                    rowA.LoadFrom(rowB);
+                    rowA.LoadFrom(rowB,RowOp.IgnoreNull, false);
                 }
             }
         }

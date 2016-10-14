@@ -603,3 +603,4 @@
 387：MDataTable ToJson 对于null的数据，默认输出 xx:null 值（2016-10-09)
 388：Oracle(DBTool.GetTables) 增加对视图的过滤（2016-10-10)
 389：JsonHelper 修正实体嵌套的问题、同时增加对数组的支持（2016-10-14)
+390：MDataTable AcceptChange 修正无主键时的的批量更新（2016-10-14)
