@@ -10,8 +10,8 @@ svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
 执行SET GLOBAL sql_mode = ''; 把sql_mode 改成非only_full_group_by模式。验证是否生效 SELECT @@GLOBAL.sql_mode 或 SELECT @@sql_mode
 
 <hr />
-Donation：<br />
+Donation(支持捐助作者)：<br />
 支付宝：<br />
-<img src="http://images.cnblogs.com/cnblogs_com/cyq1162/828949/o_2.jpg" /><br />
+<img src="http://images.cnblogs.com/cnblogs_com/cyq1162/828949/o_2.jpg" width="200" height="200" /><br />
 微信：<br />
-<img src="http://images.cnblogs.com/cnblogs_com/cyq1162/828949/o_1.jpg">
+<img src="http://images.cnblogs.com/cnblogs_com/cyq1162/828949/o_1.jpg" width="200" height="200"  />
