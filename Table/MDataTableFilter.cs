@@ -132,6 +132,31 @@ namespace CYQ.Data.Table
             }
             return mdt2;
         }
+        public static int GetIndex(MDataTable table, object whereObj)
+        {
+            int index = -1;
+            if (table.Rows.Count > 0)
+            {
+                if (Convert.ToString(whereObj).Trim() == "")
+                {
+                    return 0;
+                }
+                TFilter[] filters = GetTFilter(whereObj, table.Columns);
+                if (filters.Length > 0)
+                {
+                    for (int i = 0; i < table.Rows.Count; i++)
+                    {
+                        if (CompareMore(table.Rows[i], filters))
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+                }
+                filters = null;
+            }
+            return index;
+        }
         public static int GetCount(MDataTable table, object whereObj)
         {
             int count = 0;

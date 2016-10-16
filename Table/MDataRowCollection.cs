@@ -239,6 +239,17 @@ namespace CYQ.Data.Table
 
         #endregion
 
+        //public void Remove(MDataRow row)
+        //{
+        //    if (this.Count == 1 && row == this[0])
+        //    {
+        //        this.Clear();
+        //    }
+        //    else
+        //    {
+        //        base.Remove(row);
+        //    }
+        //}
     }
     /// <summary>
     /// 实现Winform DataGridView 的添加编辑和删除操作功能。

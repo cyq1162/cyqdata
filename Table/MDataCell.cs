@@ -241,6 +241,7 @@ namespace CYQ.Data.Table
             ms.Description = Description;
             ms.MDataColumn = MDataColumn;
             ms.AlterOp = AlterOp;
+            ms.TableName = TableName;
             return ms;
         }
         #endregion

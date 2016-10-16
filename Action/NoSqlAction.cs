@@ -50,15 +50,15 @@ namespace CYQ.Data
                 }
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
-                    _Table = _tableList[_FileFullName];
-                    if (_Table.Rows.Count == 0)
-                    {
-                        _tableList.Remove(_FileFullName);
-                    }
-                    else
-                    {
-                        return _Table;
-                    }
+                    return _tableList[_FileFullName];
+                    //if (_Table.Rows.Count == 0)
+                    //{
+                    //    _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题。
+                    //}
+                    //else
+                    //{
+                    //    return _Table;
+                    //}
                 }
 
                 switch (_DalType)
@@ -392,7 +392,6 @@ namespace CYQ.Data
             MDataRow row = Table.FindRow(where);
             if (row != null)
             {
-
                 _Row.LoadFrom(row);
                 _Row.SetState(0);//查询时，后续会定位状态为1
                 return true;

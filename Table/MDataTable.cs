@@ -278,6 +278,13 @@ namespace CYQ.Data.Table
             return MDataTableFilter.FindAll(this, where);
         }
         /// <summary>
+        /// 统计满足条件的行所在的索引
+        /// </summary>
+        public int GetIndex(object where)
+        {
+            return MDataTableFilter.GetIndex(this, where);
+        }
+        /// <summary>
         /// 统计满足条件的行数
         /// </summary>
         public int GetCount(object where)

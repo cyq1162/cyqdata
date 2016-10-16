@@ -318,7 +318,7 @@ namespace CYQ.Data
             {
                 string[] fields = fieldText.ToString().Split(',');
                 fieldItems.AddRange(fields);
-                fieldText = null;
+                fieldText.Length = 0;
             }
             #endregion
         }

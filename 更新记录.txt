@@ -604,3 +604,5 @@
 388：Oracle(DBTool.GetTables) 增加对视图的过滤（2016-10-10)
 389：JsonHelper 修正实体嵌套的问题、同时增加对数组的支持（2016-10-14)
 390：MDataTable AcceptChange 修正无主键时的的批量更新（2016-10-14)
+391：MDataTable 增加 GetIndex 方法（统计满足条件的行所在的索引）（2016-10-16)
+392：NoSqlAction 文本数据库修正无法删除最后1条数据的问题（2016-10-16)
