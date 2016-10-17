@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
 using CYQ.Data.Table;
+using CYQ.Data.Tool;
 namespace CYQ.Data.Xml
 {
     //public class RssDemo
@@ -171,7 +172,7 @@ namespace CYQ.Data.Xml
             item.Description = description;
             channel.Items.Add(item);
         }
-        public delegate string SetForeachEventHandler(string text, object[] values, int row);
+        public delegate string SetForeachEventHandler(string text, MDictionary<string, string> values, int rowIndex);
         /// <summary>
         ///LoadData（MDataTable）进行映射后，在格式化每一行数据时触发事件
         /// </summary>
@@ -212,14 +213,18 @@ namespace CYQ.Data.Xml
                         item = mapList[k];
                         if (item.TableColumnNames.Length > 0)
                         {
+                            MDictionary<string, string> dic = new MDictionary<string, string>(item.TableColumnNames.Length, StringComparer.OrdinalIgnoreCase);
                             object[] values = new object[item.TableColumnNames.Length];
-                            for (int i = 0; i < values.Length; i++)
+                            for (int i = 0; i < item.TableColumnNames.Length; i++)
                             {
-                                values[i] = row[item.TableColumnNames[i].ToString()].Value;
+                                string columnName = item.TableColumnNames[i].ToString();
+                                values[i] = row[columnName].Value;
+                                dic.Set(columnName, Convert.ToString(values[i]));
+
                             }
                             if (OnForeach != null)
                             {
-                                item.FormatText = OnForeach(item.FormatText, values, k);
+                                item.FormatText = OnForeach(item.FormatText, dic, k);
                             }
                             if (string.IsNullOrEmpty(item.FormatText))
                             {

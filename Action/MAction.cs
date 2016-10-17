@@ -1010,7 +1010,7 @@ namespace CYQ.Data
         /// {
         ///     if(action.Fill("name='路过秋天'")) //或者action.Fill(888) 或者 action.Fill(id=888)
         ///     {
-        ///         action.SetTo(labUserName);
+        ///         action.UI.SetTo(labUserName);
         ///     }
         /// }
         /// </code></example>

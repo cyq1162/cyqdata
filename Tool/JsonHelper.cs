@@ -198,39 +198,46 @@ namespace CYQ.Data.Tool
             }
             if (!children)
             {
-                // int index = value.IndexOf('"');
+                SetEscape(ref value);
+            }
+            return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
+        }
+        private void SetEscape(ref string value)
+        {
+            if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)
+            {
                 int len = value.Length;
+                StringBuilder sb = new StringBuilder(len + 10);
                 for (int i = 0; i < len; i++)
                 {
-                    switch (value[i])
+                    char c = value[i];
+                    switch (c)
                     {
                         case '"':
                             if (i == 0 || value[i - 1] != '\\')
                             {
-                                value = value.Insert(i, "\\");
-                                len++;//新插入了一个字符。
-                                i++;//索引往前一个。
+                                sb.Append("\\");
+                                //value.Insert(i, "\\");
+                                //len++;//新插入了一个字符。
+                                //i++;//索引往前一个。
                             }
                             break;
                         case '\\':
                             if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
                             {
-                                value = value.Insert(i, "\\");
-                                len++;//新插入了一个字符。
-                                i++;//索引往前一个。
+                                sb.Append("\\");
+                                //value.Insert(i, "\\");
+                                //len++;//新插入了一个字符。
+                                //i++;//索引往前一个。
                             }
                             break;
                     }
+                    sb.Append(c);
                 }
-
-                //if (children)
-                //{
-                //    value = value.Replace("\\\"", "\"");
-                //}
+                value = null;
+                value = sb.ToString();
             }
-            return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
         }
-
         /// <summary>
         /// 输出Json字符串
         /// </summary>
@@ -589,20 +596,27 @@ namespace CYQ.Data.Tool
                         else if (groupID == 999)
                         {
                             Type t = cell.Struct.ValueType;
+                            if (t.FullName == "System.Object")
+                            {
+                                t = cell.Value.GetType();
+                            }
                             if (t.Name == "Byte[]")
                             {
                                 value = Convert.ToBase64String(cell.Value as byte[]);
                             }
                             else
                             {
-
                                 if (cell.Value is IEnumerable)
                                 {
                                     int len = StaticTool.GetArgumentLength(ref t);
                                     if (len == 1)
                                     {
-                                        MDataTable dt = MDataTable.CreateFrom(cell.Value);
-                                        value = dt.ToJson(false, false, _RowOp, IsConvertNameToLower);
+                                        JsonHelper js = new JsonHelper(false, false);
+                                        js._RowOp = _RowOp;
+                                        js.DateTimeFormatter = DateTimeFormatter;
+                                        js.IsConvertNameToLower = IsConvertNameToLower;
+                                        js.Fill(cell.Value);
+                                        value = js.ToString();
                                         noQuot = true;
                                     }
                                     else if (len == 2)
@@ -613,10 +627,7 @@ namespace CYQ.Data.Tool
                                 }
                                 else
                                 {
-                                    if (t.FullName == "System.Object")
-                                    {
-                                        t = cell.Value.GetType();
-                                    }
+
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
                                         MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
@@ -717,6 +728,7 @@ namespace CYQ.Data.Tool
                                 }
                                 else
                                 {
+                                    if (o is String) { SetEscape(ref str); }
                                     jsonItems.Add("\"" + str + "\"");
                                 }
                             }

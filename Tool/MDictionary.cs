@@ -89,7 +89,11 @@ namespace CYQ.Data.Tool
                 }
             }
         }
-
+        /// <summary>
+        /// 索引取值
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public new V this[K key]
         {
             get
@@ -103,6 +107,73 @@ namespace CYQ.Data.Tool
             set
             {
                 base[key] = value;
+            }
+        }
+        /// <summary>
+        /// 通过index索引取值
+        /// </summary>
+        /// <returns></returns>
+        public V this[int index]
+        {
+            get
+            {
+                if (index >= 0 && index < this.Count)
+                {
+                    int i = 0;
+                    foreach (V value in this.Values)
+                    {
+                        if (i == index)
+                        {
+                            return value;
+                        }
+                        i++;
+                    }
+                }
+                return default(V);
+            }
+            set
+            {
+                if (index >= 0 && index < this.Count)
+                {
+                    int i = 0;
+                    foreach (K key in this.Keys)
+                    {
+                        if (i == index)
+                        {
+                            this[key] = value;
+                            break;
+                        }
+                        i++;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 当Key为int时，通过此方法取值
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public V Get(K key)
+        {
+            if (base.ContainsKey(key))
+            {
+                return base[key];
+            }
+            return default(V);
+        }
+        /// <summary>
+        /// 当Key为int时，通过此方法取值
+        /// </summary>
+        public void Set(K key, V value)
+        {
+            if (base.ContainsKey(key))
+            {
+                base[key] = value;
+            }
+            else
+            {
+                base.Add(key, value);
             }
         }
     }

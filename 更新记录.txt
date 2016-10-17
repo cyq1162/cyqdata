@@ -606,3 +606,6 @@
 390：MDataTable AcceptChange 修正无主键时的的批量更新（2016-10-14)
 391：MDataTable 增加 GetIndex 方法（统计满足条件的行所在的索引）（2016-10-16)
 392：NoSqlAction 文本数据库修正无法删除最后1条数据的问题（2016-10-16)
+393：MDictionary增加索引取值或赋值。（2016-10-17)
+394：XHtmlAction、RSS的OnForeach的参数由Dictionary变为MDictionary（2016-10-17)
+395：JsonHelper 修正对数组的输出和还原（2016-10-17)

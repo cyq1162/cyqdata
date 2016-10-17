@@ -886,7 +886,7 @@ namespace CYQ.Data.Xml
                 _Row = _Table.Rows[0];
             }
         }
-        public delegate string SetForeachEventHandler(string text, Dictionary<string,string> values, int rowIndex);
+        public delegate string SetForeachEventHandler(string text, MDictionary<string,string> values, int rowIndex);
         /// <summary>
         /// 对于SetForeach函数调用的格式化事件
         /// </summary>
@@ -1004,7 +1004,7 @@ namespace CYQ.Data.Xml
                 {
                     formatValues = new object[colLen];
                 }
-                Dictionary<string, string> values = new Dictionary<string, string>(formatValues.Length, StringComparer.OrdinalIgnoreCase);
+                MDictionary<string, string> values = new MDictionary<string, string>(formatValues.Length, StringComparer.OrdinalIgnoreCase);
                // object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
 
                 //foreach (MDataRow row in _Table.Rows)

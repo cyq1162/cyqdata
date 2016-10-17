@@ -29,7 +29,7 @@ namespace CYQ.Data.UI
         /// <param name="otherParentControls">可选（其它的父控件）</param>
         /// <example><code>
         /// action.SetAutoPrefix("txt","ddl");//设置控件的前缀
-        /// action.SetToAll(this);
+        /// action.UI.SetToAll(this);
         /// </code></example>
         public void SetToAll(object parentControl, params object[] otherParentControls)
         {
@@ -41,7 +41,7 @@ namespace CYQ.Data.UI
         /// </summary>
         /// <param name="control">控件对象</param>
         /// <example><code>
-        /// 示例：action.SetTo(txtUserName);//同于：txtUserName.Text=action.Get&lt;string&gt;(Users.UserName);
+        /// 示例：action.UI.SetTo(txtUserName);//同于：txtUserName.Text=action.Get&lt;string&gt;(Users.UserName);
         /// </code></example>
         public void SetTo(object control)
         {
@@ -62,7 +62,7 @@ namespace CYQ.Data.UI
         /// </summary>
         /// <param name="control">控件对象</param>
         /// <example><code>
-        /// 示例：action.GetFrom(txtUserName);//获取TextBox默认Text属性的值
+        /// 示例：action.UI.GetFrom(txtUserName);//获取TextBox默认Text属性的值
         /// </code></example>
         public void GetFrom(object control)
         {

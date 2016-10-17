@@ -1138,40 +1138,32 @@ namespace CYQ.Data.Table
                     }
                     Type propType = p.PropertyType;
                     object objValue = null;
-                    switch (StaticTool.GetSystemType(ref propType))
+                    SysType sysType = StaticTool.GetSystemType(ref propType);
+                    switch (sysType)
                     {
                         case SysType.Enum:
                             p.SetValue(obj, Enum.Parse(propType, cell.ToString()), null);
                             break;
                         case SysType.Base:
-                            object value = StaticTool.ChangeType(cell.Value, p.PropertyType);
-                            p.SetValue(obj, value, null);
-                            break;
-                        case SysType.Array:
-                            if (cell.Value.GetType() == propType)
+                            if (propType.Name == "String")
                             {
-                                objValue = cell.Value;
+                                //去掉转义符号
+                                if (cell.strValue.IndexOf("\\\"") > -1)
+                                {
+                                    p.SetValue(obj, cell.strValue.Replace("\\\"", "\""), null);
+                                }
+                                else
+                                {
+                                    p.SetValue(obj, cell.strValue, null);
+                                }
                             }
                             else
                             {
-                                Type arrayType = Type.GetType(propType.FullName.Replace("[]", ""));
-                                MDataTable dtArray = MDataTable.CreateFrom(cell.ToString(), TableSchema.GetColumns(arrayType));
-                                objValue = Activator.CreateInstance(propType, dtArray.Rows.Count);//创建实例
-                                Type objArrayListType = objValue.GetType();
-                                MDataRow item;
-                                for (int i = 0; i < dtArray.Rows.Count; i++)
-                                {
-                                    item = dtArray.Rows[i];
-                                    object o = GetValue(item, arrayType);
-                                    MethodInfo method = objArrayListType.GetMethod("Set");
-                                    if (method != null)
-                                    {
-                                        method.Invoke(objValue, new object[] { i, o });
-                                    }
-                                }
+                                object value = StaticTool.ChangeType(cell.Value, p.PropertyType);
+                                p.SetValue(obj, value, null);
                             }
-                            p.SetValue(obj, objValue, null);
                             break;
+                        case SysType.Array:
                         case SysType.Collection:
                         case SysType.Generic:
                             if (cell.Value.GetType() == propType)
@@ -1182,31 +1174,43 @@ namespace CYQ.Data.Table
                             {
                                 Type[] argTypes = null;
                                 int len = StaticTool.GetArgumentLength(ref propType, out argTypes);
-
-                                objValue = Activator.CreateInstance(propType);//创建实例
-                                Type objListType = objValue.GetType();
                                 if (len == 1) // Table
                                 {
-
-                                    MDataTable dt = MDataTable.CreateFrom(cell.ToString());//, SchemaCreate.GetColumns(argTypes[0])
-                                    foreach (MDataRow rowItem in dt.Rows)
+                                    List<string> items = JsonSplit.SplitEscapeArray(cell.strValue);//内部去掉转义符号
+                                    objValue = Activator.CreateInstance(propType, items.Count);//创建实例
+                                    Type objListType = objValue.GetType();
+                                    bool isArray = sysType == SysType.Array;
+                                    for (int i = 0; i < items.Count; i++)
                                     {
-                                        object o = GetValue(rowItem, argTypes[0]);
-                                        MethodInfo method = objListType.GetMethod("Add");
-                                        if (method == null)
+                                        MethodInfo method;
+                                        if (isArray)
                                         {
-                                            method = objListType.GetMethod("Push");
+                                            Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
+                                            method = objListType.GetMethod("Set");
+                                            if (method != null)
+                                            {
+                                                method.Invoke(objValue, new object[] { i, item });
+                                            }
                                         }
-                                        if (method != null)
+                                        else
                                         {
-                                            method.Invoke(objValue, new object[] { o });
+                                            Object item = StaticTool.ChangeType(items[i], argTypes[0]);
+                                            method = objListType.GetMethod("Add");
+                                            if (method == null)
+                                            {
+                                                method = objListType.GetMethod("Push");
+                                            }
+                                            if (method != null)
+                                            {
+                                                method.Invoke(objValue, new object[] { item });
+                                            }
                                         }
                                     }
-                                    dt = null;
                                 }
                                 else if (len == 2) // row
                                 {
                                     MDataRow mRow = MDataRow.CreateFrom(cell.Value, argTypes[1]);
+                                    objValue = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
                                     foreach (MDataCell mCell in mRow)
                                     {
                                         object mObj = GetValue(mCell.ToRow(), argTypes[1]);

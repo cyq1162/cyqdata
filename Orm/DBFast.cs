@@ -186,7 +186,7 @@ namespace CYQ.Data.Orm
         {
             string conn = string.Empty;
             MAction action = new MAction(GetTableName<T>(out conn), conn);
-            //action.SetAopOff();
+            //action.SetAopState(CYQ.Data.Aop.AopOp.CloseAll);
             return action;
         }
         private static string GetTableName<T>(out string conn)
