@@ -317,12 +317,12 @@ namespace CYQ.Data.Table
         /// </summary>
         public MDataTable ToTable()
         {
-            MDataTable dt = new MDataTable(TableName);
-            dt.Columns.Add("ColumnName");
-            dt.Columns.Add("Value");
+            MDataTable dt = this.Columns.ToTable();
+            MCellStruct ms = new MCellStruct("Value", SqlDbType.NVarChar);
+            dt.Columns.Insert(1, ms);
             for (int i = 0; i < Count; i++)
             {
-                dt.NewRow(true).Set(0, this[i].ColumnName).Set(1, this[i].ToString());
+                dt.Rows[i][1].Value = this[i].Value;
             }
             return dt;
         }

@@ -332,7 +332,7 @@ namespace CYQ.Data.Table
             dt.Columns.Add("FKTableName");
             dt.Columns.Add("DefaultValue");
             dt.Columns.Add("Description");
-
+            dt.Columns.Add("TableName");
 
             for (int i = 0; i < Count; i++)
             {
@@ -349,7 +349,8 @@ namespace CYQ.Data.Table
                     .Set(8, ms.IsForeignKey)
                     .Set(9, ms.FKTableName)
                     .Set(10, ms.DefaultValue)
-                    .Set(11, ms.Description);
+                    .Set(11, ms.Description)
+                .Set(12, ms.TableName);
             }
             return dt;
         }
