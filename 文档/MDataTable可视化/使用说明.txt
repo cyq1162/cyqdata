@@ -1,3 +1,0 @@
-把对应的版本CYQ.Visualizer.dll
-放到路径下 ：VS安装目录下\Microsoft Visual Studio 对应版本号\Common7\Packages\Debugger\Visualizers
-介绍文章：http://www.cnblogs.com/cyq1162/p/4551652.html
