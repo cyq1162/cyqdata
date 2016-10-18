@@ -1176,35 +1176,63 @@ namespace CYQ.Data.Table
                                 int len = StaticTool.GetArgumentLength(ref propType, out argTypes);
                                 if (len == 1) // Table
                                 {
-                                    List<string> items = JsonSplit.SplitEscapeArray(cell.strValue);//内部去掉转义符号
-                                    objValue = Activator.CreateInstance(propType, items.Count);//创建实例
-                                    Type objListType = objValue.GetType();
-                                    bool isArray = sysType == SysType.Array;
-                                    for (int i = 0; i < items.Count; i++)
+
+                                    if (JsonSplit.IsJson(cell.strValue) && cell.strValue.Contains(":") && cell.strValue.Contains("{"))
                                     {
-                                        MethodInfo method;
-                                        if (isArray)
+                                        #region Json嵌套处理。
+                                        MDataTable dt = MDataTable.CreateFrom(cell.strValue);//, SchemaCreate.GetColumns(argTypes[0])
+                                        objValue = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
+                                        Type objListType = objValue.GetType();
+                                        foreach (MDataRow rowItem in dt.Rows)
                                         {
-                                            Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
-                                            method = objListType.GetMethod("Set");
-                                            if (method != null)
-                                            {
-                                                method.Invoke(objValue, new object[] { i, item });
-                                            }
-                                        }
-                                        else
-                                        {
-                                            Object item = StaticTool.ChangeType(items[i], argTypes[0]);
-                                            method = objListType.GetMethod("Add");
+                                            object o = GetValue(rowItem, argTypes[0]);
+                                            MethodInfo method = objListType.GetMethod("Add");
                                             if (method == null)
                                             {
                                                 method = objListType.GetMethod("Push");
                                             }
                                             if (method != null)
                                             {
-                                                method.Invoke(objValue, new object[] { item });
+                                                method.Invoke(objValue, new object[] { o });
                                             }
                                         }
+                                        dt = null;
+                                        #endregion
+                                    }
+                                    else
+                                    {
+                                        #region 数组处理
+                                        List<string> items = JsonSplit.SplitEscapeArray(cell.strValue);//内部去掉转义符号
+                                        objValue = Activator.CreateInstance(propType, items.Count);//创建实例
+                                        Type objListType = objValue.GetType();
+                                        bool isArray = sysType == SysType.Array;
+                                        for (int i = 0; i < items.Count; i++)
+                                        {
+                                            MethodInfo method;
+                                            if (isArray)
+                                            {
+                                                Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
+                                                method = objListType.GetMethod("Set");
+                                                if (method != null)
+                                                {
+                                                    method.Invoke(objValue, new object[] { i, item });
+                                                }
+                                            }
+                                            else
+                                            {
+                                                Object item = StaticTool.ChangeType(items[i], argTypes[0]);
+                                                method = objListType.GetMethod("Add");
+                                                if (method == null)
+                                                {
+                                                    method = objListType.GetMethod("Push");
+                                                }
+                                                if (method != null)
+                                                {
+                                                    method.Invoke(objValue, new object[] { item });
+                                                }
+                                            }
+                                        }
+                                        #endregion
                                     }
                                 }
                                 else if (len == 2) // row

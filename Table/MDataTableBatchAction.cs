@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Data;
 using System.Data.SqlTypes;
 using System.IO;
+using System.Diagnostics;
 
 //using Oracle.DataAccess.Client;
 
@@ -18,7 +19,7 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 批量操作。
     /// </summary>
-    internal class MDataTableBatchAction
+    internal partial class MDataTableBatchAction
     {
         /// <summary>
         /// 联合主键
@@ -190,22 +191,32 @@ namespace CYQ.Data.Table
                 {
                     return MsSqlBulkCopyInsert(keepID);
                 }
-                else if (dalTypeTo == DalType.Oracle && keepID && OracleDal.clientType == 1 && _dalHelper == null)
+                else if (dalTypeTo == DalType.Oracle && _dalHelper == null)
                 {
-                    return OracleBulkCopyInsert();
-                }
-                else if (dalTypeTo == DalType.MySql && IsAllowMySqlBulkCopy())
-                {
-                    return MySqlBulkCopyInsert(keepID);
-                }
-                else
-                {
-                    //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
+                    if (OracleDal.clientType == 1 && keepID)
+                    {
+                        return OracleBulkCopyInsert();
+                    }
+                    //else if (IsAllowBulkCopy(DalType.Oracle))
                     //{
-                    //    NoSqlAction.ResetStaticVar();//重置一下缓存
+                    //    return LoadDataInsert(dalTypeTo, keepID);
                     //}
-                    return NomalInsert(keepID);
                 }
+                else if (dalTypeTo == DalType.MySql && IsAllowBulkCopy(DalType.MySql))
+                {
+                    // Mysql在表为空时，用Load Data命令第一行的ID会被设置为起始索引1，所以自增加又带ID的，先不走Load Data
+                    if (!keepID || !mdt.Columns.FirstPrimary.IsAutoIncrement)
+                    {
+                        return LoadDataInsert(dalTypeTo, keepID);
+                    }
+                }
+
+                //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
+                //{
+                //    NoSqlAction.ResetStaticVar();//重置一下缓存
+                //}
+                return NomalInsert(keepID);
+
             }
             catch (Exception err)
             {
@@ -218,323 +229,6 @@ namespace CYQ.Data.Table
                 return false;
             }
         }
-        internal bool MsSqlBulkCopyInsert(bool keepID)
-        {
-            try
-            {
-                CheckGUIDAndDateTime(DalType.MsSql);
-                // string a, b, c;
-                string conn = AppConfig.GetConn(_Conn);// DAL.DalCreate.GetConnString(_Conn, out a, out b, out c);
-                SqlTransaction sqlTran = null;
-                SqlConnection con = null;
-                if (_dalHelper != null)
-                {
-                    sqlTran = _dalHelper._tran as SqlTransaction;
-                    con = _dalHelper.Con as SqlConnection;
-                    _dalHelper.OpenCon(null);//如果未开启，则开启
-                }
-                else
-                {
-                    con = new SqlConnection(conn);
-                    con.Open();
-                }
-
-                using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
-                {
-                    sbc.BatchSize = 100000;
-                    sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
-                    sbc.BulkCopyTimeout = AppConfig.DB.CommandTimeout;
-                    foreach (MCellStruct column in mdt.Columns)
-                    {
-                        sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-                    }
-                    sbc.WriteToServer(mdt);
-                }
-                if (_dalHelper == null)
-                {
-                    con.Close();
-                    con = null;
-                }
-                return true;
-            }
-            catch (Exception err)
-            {
-                sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
-            }
-            return false;
-        }
-        internal bool OracleBulkCopyInsert()
-        {
-            CheckGUIDAndDateTime(DalType.Oracle);
-            string conn = DalCreate.FormatConn(DalType.Oracle, AppConfig.GetConn(_Conn));
-            Assembly ass = OracleDal.GetAssembly();
-            object sbc = ass.CreateInstance("Oracle.DataAccess.Client.OracleBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
-            Type sbcType = sbc.GetType();
-            try
-            {
-
-                sbcType.GetProperty("BatchSize").SetValue(sbc, 100000, null);
-                sbcType.GetProperty("BulkCopyTimeout").SetValue(sbc, AppConfig.DB.CommandTimeout, null);
-                sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DalType.Oracle), null);
-                PropertyInfo cInfo = sbcType.GetProperty("ColumnMappings");
-                object cObj = cInfo.GetValue(sbc, null);
-                MethodInfo addMethod = cInfo.PropertyType.GetMethods()[4];
-                foreach (MCellStruct column in mdt.Columns)
-                {
-                    addMethod.Invoke(cObj, new object[] { column.ColumnName, column.ColumnName });
-                }
-
-                sbcType.GetMethods()[4].Invoke(sbc, new object[] { mdt });
-
-                return true;
-            }
-            catch (Exception err)
-            {
-                if (err.InnerException != null)
-                {
-                    err = err.InnerException;
-                }
-                sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
-                return false;
-            }
-            finally
-            {
-                sbcType.GetMethod("Dispose").Invoke(sbc, null);
-            }
-            //using (Oracle.DataAccess.Client.OracleBulkCopy sbc = new OracleBulkCopy(conn, OracleBulkCopyOptions.Default))
-            //{
-            //    sbc.BatchSize = 100000;
-            //    sbc.DestinationTableName = mdt.TableName;
-            //    foreach (MCellStruct column in mdt.Columns)
-            //    {
-            //        sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-            //    }
-            //    sbc.WriteToServer(mdt);
-            //}
-            //return true;
-
-
-
-        }
-        bool IsAllowMySqlBulkCopy()
-        {
-            foreach (MCellStruct st in mdt.Columns)
-            {
-                switch (DataType.GetGroup(st.SqlType))
-                {
-                    case 999:
-                    case 3://bool型也会有问题
-                        return false;
-                }
-            }
-            try
-            {
-                string path = Path.GetTempPath() + "t.t";
-                if (!File.Exists(path))
-                {
-                    File.Create(path).Close();//检测文件夹的读写权限
-                }
-                return IOHelper.Delete(path);
-            }
-            catch
-            {
-
-                return false;
-            }
-        }
-        internal bool MySqlBulkCopyInsert(bool keepID)
-        {
-            bool fillGUID = CheckGUIDAndDateTime(DalType.MySql);
-            string conn = DalCreate.FormatConn(DalType.MySql, AppConfig.GetConn(_Conn));
-            bool isNeedCreateDal = (_dalHelper == null);
-            if (isNeedCreateDal)
-            {
-                _dalHelper = DalCreate.CreateDal(conn);
-                _dalHelper.isAllowInterWriteLog = false;
-            }
-            string path = MDataTableToFile(mdt, fillGUID ? true : keepID);
-            string sql = string.Format(SqlCreate.MySqlBulkCopySql, path, SqlFormat.Keyword(mdt.TableName, DalType.MySql),
-                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepID, DalType.MySql));
-
-            try
-            {
-                if (_dalHelper.ExeNonQuery(sql, false) != -2)
-                {
-                    return true;
-                }
-
-            }
-            catch (Exception err)
-            {
-                if (err.InnerException != null)
-                {
-                    err = err.InnerException;
-                }
-                sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
-            }
-            finally
-            {
-                if (isNeedCreateDal)
-                {
-                    _dalHelper.Dispose();
-                    _dalHelper = null;
-                }
-                // File.Delete(path);
-            }
-            return false;
-        }
-        private static string MDataTableToFile(MDataTable dt, bool keepID)
-        {
-            string path = Path.GetTempPath() + dt.TableName + ".txt";
-            using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
-            {
-                MCellStruct ms;
-                string value;
-                foreach (MDataRow row in dt.Rows)
-                {
-                    for (int i = 0; i < dt.Columns.Count; i++)
-                    {
-                        ms = dt.Columns[i];
-                        if (!keepID && ms.IsAutoIncrement)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            value = row[i].ToString();
-                            if (ms.SqlType == SqlDbType.Bit && value != "1")
-                            {
-                                value = (value.ToLower() == "true") ? "1" : "0";
-                            }
-                            value = value.Replace("\\", "\\\\");//处理转义符号
-                            sw.Write(value);
-                        }
-
-                        if (i != dt.Columns.Count - 1)//不是最后一个就输出
-                        {
-                            sw.Write(AppConst.SplitChar);
-                        }
-                    }
-                    sw.WriteLine();
-                }
-            }
-            if (Path.DirectorySeparatorChar == '\\')
-            {
-                path = path.Replace(@"\", @"\\");
-            }
-            return path;
-        }
-        #region 注释掉
-        /*
-        internal bool SybaseBulkCopyInsert()
-        {
-
-            // string a, b, c;
-            string conn = DalCreate.FormatConn(DalType.Sybase, AppConfig.GetConn(_Conn));
-
-            using (Sybase.Data.AseClient.AseBulkCopy sbc = new Sybase.Data.AseClient.AseBulkCopy(conn, Sybase.Data.AseClient.AseBulkCopyOptions.KeepIdentity))
-            {
-                sbc.BatchSize = 100000;
-                sbc.DestinationTableName = mdt.TableName;
-                foreach (MCellStruct column in mdt.Columns)
-                {
-                    Sybase.Data.AseClient.AseBulkCopyColumnMapping ac = new Sybase.Data.AseClient.AseBulkCopyColumnMapping();
-                    ac.SourceColumn = ac.DestinationColumn = column.ColumnName;
-                    sbc.ColumnMappings.Add(ac);
-                }
-                sbc.WriteToServer(mdt.ToDataTable());
-            }
-            return true;
-
-
-            //Assembly ass = SybaseDal.GetAssembly();
-
-            //object sbc = ass.CreateInstance("Sybase.Data.AseClient.AseBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
-
-            //Type sbcType = sbc.GetType();
-            //try
-            //{
-
-            //    sbcType.GetProperty("BatchSize").SetValue(sbc, 100000, null);
-            //    sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DalType.Sybase), null);
-            //    PropertyInfo cInfo = sbcType.GetProperty("ColumnMappings");
-            //    object cObj = cInfo.GetValue(sbc, null);
-            //    MethodInfo addMethod = cInfo.PropertyType.GetMethods()[2];
-            //    foreach (MCellStruct column in mdt.Columns)
-            //    {
-            //        object columnMapping = ass.CreateInstance("Sybase.Data.AseClient.AseBulkCopyColumnMapping", false, BindingFlags.CreateInstance, null, new object[] { column.ColumnName, column.ColumnName }, null, null);
-            //        addMethod.Invoke(cObj, new object[] { columnMapping });
-            //    }
-            //    //Oracle.DataAccess.Client.OracleBulkCopy ttt = sbc as Oracle.DataAccess.Client.OracleBulkCopy;
-            //    //ttt.WriteToServer(mdt);
-            //    sbcType.GetMethods()[14].Invoke(sbc, new object[] { mdt.ToDataTable() });
-            //    return true;
-            //}
-            //catch (Exception err)
-            //{
-            //    Log.WriteLogToTxt(err);
-            //    return false;
-            //}
-            //finally
-            //{
-            //    sbcType.GetMethod("Dispose").Invoke(sbc, null);
-            //}
-        } 
-        */
-        #endregion
-        internal bool NomalInsert(bool keepID)
-        {
-            bool result = true;
-            using (MAction action = new MAction(mdt.TableName, _Conn))
-            {
-                DbBase sourceHelper = action.dalHelper;
-                action.SetAopState(Aop.AopOp.CloseAll);
-                if (_dalHelper != null)
-                {
-                    action.dalHelper = _dalHelper;
-                }
-                else
-                {
-                    action.BeginTransation();//事务由外部控制
-                }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
-                if (keepID)
-                {
-                    action.SetIdentityInsertOn();
-                }
-                MDataRow row;
-                for (int i = 0; i < mdt.Rows.Count; i++)
-                {
-                    row = mdt.Rows[i];
-                    action.ResetTable(row, false);
-                    action.Data.SetState(1, BreakOp.Null);
-                    result = action.Insert(InsertOp.None);
-                    sourceTable.RecordsAffected = i;
-                    if (!result)
-                    {
-                        string msg = "Error On : MDataTable.AcceptChanges.Insert." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
-                        sourceTable.DynamicData = msg;
-                        Log.WriteLogToTxt(msg);
-                        break;
-                    }
-                }
-                if (keepID)
-                {
-                    action.SetIdentityInsertOff();
-                }
-                if (_dalHelper == null)
-                {
-                    action.EndTransation();
-                }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
-                action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
-            }
-            return result;
-        }
-
         internal bool Update()
         {
             bool hasFK = (jointPrimaryIndex != null && jointPrimaryIndex.Count > 1) || mdt.Columns.JointPrimary.Count > 1;
@@ -562,130 +256,6 @@ namespace CYQ.Data.Table
             {
                 return BulkCopyUpdate();//只有一个主键，没有外键关联，同时只有基础类型。
             }
-        }
-
-        internal bool NormalUpdate()
-        {
-            List<int> indexList = new List<int>();
-            bool result = true;
-            using (MAction action = new MAction(mdt.TableName, _Conn))
-            {
-                action.SetAopState(Aop.AopOp.CloseAll);
-                DbBase sourceHelper = action.dalHelper;
-                if (_dalHelper != null)
-                {
-                    action.dalHelper = _dalHelper;
-                }
-                else
-                {
-                    action.BeginTransation();
-                }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
-
-                MDataRow row;
-                for (int i = 0; i < mdt.Rows.Count; i++)
-                {
-                    row = mdt.Rows[i];
-                    if (row.GetState(true) > 1)
-                    {
-                        action.ResetTable(row, false);
-                        string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
-                        result = action.Update(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
-                        sourceTable.RecordsAffected = i;
-                        if (!result)
-                        {
-                            string msg = "Error On : MDataTable.AcceptChanges.Update." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
-                            sourceTable.DynamicData = msg;
-                            Log.WriteLogToTxt(msg);
-                            break;
-                        }
-                        else
-                        {
-                            indexList.Add(i);
-                        }
-                    }
-                }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
-                if (_dalHelper == null)
-                {
-                    action.EndTransation();
-                }
-                else
-                {
-                    action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
-                }
-            }
-            if (result)
-            {
-                foreach (int index in indexList)
-                {
-                    mdt.Rows[index].SetState(0);
-                }
-                indexList.Clear();
-                indexList = null;
-            }
-            return result;
-        }
-
-        internal bool BulkCopyUpdate()
-        {
-            int count = 0, pageSize = 5000;
-            MDataTable dt = null;
-            bool result = false;
-            using (MAction action = new MAction(mdt.TableName, _Conn))
-            {
-                action.SetAopState(Aop.AopOp.CloseAll);
-                if (action.DalVersion.StartsWith("08"))
-                {
-                    pageSize = 1000;
-                }
-                count = mdt.Rows.Count / pageSize + 1;
-                DbBase sourceHelper = action.dalHelper;
-                if (_dalHelper != null)
-                {
-                    action.dalHelper = _dalHelper;
-                }
-                else
-                {
-                    action.BeginTransation();
-                }
-
-                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
-                string columnName = keyColumn.ColumnName;
-                for (int i = 0; i < count; i++)
-                {
-                    dt = mdt.Select(i + 1, pageSize, null);//分页读取
-                    if (dt != null && dt.Rows.Count > 0)
-                    {
-                        #region 核心逻辑
-                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
-                        MDataTable dtData = action.Select(whereIn);//获取远程数据。
-                        dtData.Load(dt, keyColumn);//重新加载赋值。
-                        action.IsIgnoreDeleteField = true;//处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
-                        result = action.Delete(whereIn);
-                        action.IsIgnoreDeleteField = false;
-                        if (result)
-                        {
-                            dtData.DynamicData = action;
-                            result = dtData.AcceptChanges(AcceptOp.InsertWithID);
-                        }
-                        if (!result)
-                        {
-                            break;
-                        }
-                        #endregion
-                    }
-                }
-                if (_dalHelper == null)
-                {
-                    action.EndTransation();
-                }
-                else
-                {
-                    action.dalHelper = sourceHelper;//还原。
-                }
-            }
-            return result;
         }
         internal bool Auto()
         {
@@ -838,6 +408,246 @@ namespace CYQ.Data.Table
             return result;
         }
 
+        #region 批量插入
+        internal bool MsSqlBulkCopyInsert(bool keepID)
+        {
+            try
+            {
+                CheckGUIDAndDateTime(DalType.MsSql);
+                // string a, b, c;
+                string conn = AppConfig.GetConn(_Conn);// DAL.DalCreate.GetConnString(_Conn, out a, out b, out c);
+                SqlTransaction sqlTran = null;
+                SqlConnection con = null;
+                if (_dalHelper != null)
+                {
+                    sqlTran = _dalHelper._tran as SqlTransaction;
+                    con = _dalHelper.Con as SqlConnection;
+                    _dalHelper.OpenCon(null);//如果未开启，则开启
+                }
+                else
+                {
+                    con = new SqlConnection(conn);
+                    con.Open();
+                }
+
+                using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
+                {
+                    sbc.BatchSize = 100000;
+                    sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
+                    sbc.BulkCopyTimeout = AppConfig.DB.CommandTimeout;
+                    foreach (MCellStruct column in mdt.Columns)
+                    {
+                        sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                    }
+                    sbc.WriteToServer(mdt);
+                }
+                if (_dalHelper == null)
+                {
+                    con.Close();
+                    con = null;
+                }
+                return true;
+            }
+            catch (Exception err)
+            {
+                sourceTable.DynamicData = err;
+                Log.WriteLogToTxt(err);
+            }
+            return false;
+        }
+        internal bool OracleBulkCopyInsert()
+        {
+            CheckGUIDAndDateTime(DalType.Oracle);
+            string conn = DalCreate.FormatConn(DalType.Oracle, AppConfig.GetConn(_Conn));
+            Assembly ass = OracleDal.GetAssembly();
+            object sbc = ass.CreateInstance("Oracle.DataAccess.Client.OracleBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
+            Type sbcType = sbc.GetType();
+            try
+            {
+
+                sbcType.GetProperty("BatchSize").SetValue(sbc, 100000, null);
+                sbcType.GetProperty("BulkCopyTimeout").SetValue(sbc, AppConfig.DB.CommandTimeout, null);
+                sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DalType.Oracle), null);
+                PropertyInfo cInfo = sbcType.GetProperty("ColumnMappings");
+                object cObj = cInfo.GetValue(sbc, null);
+                MethodInfo addMethod = cInfo.PropertyType.GetMethods()[4];
+                foreach (MCellStruct column in mdt.Columns)
+                {
+                    addMethod.Invoke(cObj, new object[] { column.ColumnName, column.ColumnName });
+                }
+
+                sbcType.GetMethods()[4].Invoke(sbc, new object[] { mdt });
+
+                return true;
+            }
+            catch (Exception err)
+            {
+                if (err.InnerException != null)
+                {
+                    err = err.InnerException;
+                }
+                sourceTable.DynamicData = err;
+                Log.WriteLogToTxt(err);
+                return false;
+            }
+            finally
+            {
+                sbcType.GetMethod("Dispose").Invoke(sbc, null);
+            }
+            //using (Oracle.DataAccess.Client.OracleBulkCopy sbc = new OracleBulkCopy(conn, OracleBulkCopyOptions.Default))
+            //{
+            //    sbc.BatchSize = 100000;
+            //    sbc.DestinationTableName = mdt.TableName;
+            //    foreach (MCellStruct column in mdt.Columns)
+            //    {
+            //        sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            //    }
+            //    sbc.WriteToServer(mdt);
+            //}
+            //return true;
+
+
+
+        }
+        bool IsAllowBulkCopy(DalType dalType)
+        {
+            foreach (MCellStruct st in mdt.Columns)
+            {
+                switch (DataType.GetGroup(st.SqlType))
+                {
+                    case 999:
+                        return false;
+                    case 3://bool型也会有问题
+                        if (dalType == DalType.MySql)
+                        {
+                            return false;
+                        }
+                        break;
+                }
+            }
+            try
+            {
+                if (dalType == DalType.Oracle && !HasSqlLoader())
+                {
+                    return false;
+                }
+                string path = Path.GetTempPath() + "t.t";
+                if (!File.Exists(path))
+                {
+                    File.Create(path).Close();//检测文件夹的读写权限
+                }
+                return IOHelper.Delete(path);
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
+        internal bool LoadDataInsert(DalType dalType, bool keepID)
+        {
+            bool fillGUID = CheckGUIDAndDateTime(dalType);
+            bool isNeedCreateDal = (_dalHelper == null);
+            if (isNeedCreateDal && dalType != DalType.Oracle)
+            {
+                _dalHelper = DalCreate.CreateDal(_Conn);
+                _dalHelper.isAllowInterWriteLog = false;
+            }
+            string path = MDataTableToFile(mdt, fillGUID ? true : keepID, dalType);
+            string formatSql = dalType == DalType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
+            string sql = string.Format(formatSql, path, SqlFormat.Keyword(mdt.TableName, dalType),
+                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepID, dalType));
+            if (dalType == DalType.Oracle)
+            {
+                string ctlPath = CreateCTL(sql, path);
+                sql = string.Format(SqlCreate.OracleSqlIDR, "sa/123456@ORCL", ctlPath, ctlPath.Replace(".ctl", ".out"));//只能用进程处理
+            }
+            try
+            {
+                if (dalType == DalType.Oracle)
+                {
+                    return ExeSqlLoader(sql);
+                }
+                else
+                {
+                    if (_dalHelper.ExeNonQuery(sql, false) != -2)
+                    {
+                        return true;
+                    }
+                }
+
+            }
+            catch (Exception err)
+            {
+                if (err.InnerException != null)
+                {
+                    err = err.InnerException;
+                }
+                sourceTable.DynamicData = err;
+                Log.WriteLogToTxt(err);
+            }
+            finally
+            {
+                if (isNeedCreateDal && _dalHelper != null)
+                {
+                    _dalHelper.Dispose();
+                    _dalHelper = null;
+                }
+                // File.Delete(path);
+            }
+            return false;
+        }
+        private static string CreateCTL(string sql, string path)
+        {
+            path = path.Replace(".txt", ".ctl");
+            IOHelper.Write(path, sql);
+            return path;
+        }
+        private static string MDataTableToFile(MDataTable dt, bool keepID, DalType dalType)
+        {
+            string path = Path.GetTempPath() + dt.TableName + ".txt";
+            using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+            {
+                if (dalType == DalType.Oracle)
+                {
+                    sw.WriteLine();//先输出空行（Oracle需要空行在前）
+                }
+                MCellStruct ms;
+                string value;
+                foreach (MDataRow row in dt.Rows)
+                {
+                    for (int i = 0; i < dt.Columns.Count; i++)
+                    {
+                        ms = dt.Columns[i];
+                        if (!keepID && ms.IsAutoIncrement)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            value = row[i].ToString();
+                            if (ms.SqlType == SqlDbType.Bit && value != "1")
+                            {
+                                value = (value.ToLower() == "true") ? "1" : "0";
+                            }
+                            value = value.Replace("\\", "\\\\");//处理转义符号
+                            sw.Write(value);
+                        }
+
+                        if (i != dt.Columns.Count - 1)//不是最后一个就输出
+                        {
+                            sw.Write(AppConst.SplitChar);
+                        }
+                    }
+                    sw.WriteLine();
+                }
+            }
+            if (Path.DirectorySeparatorChar == '\\')
+            {
+                path = path.Replace(@"\", @"\\");
+            }
+            return path;
+        }
         /// <summary>
         /// 检测GUID，若空，补值。
         /// </summary>
@@ -882,15 +692,287 @@ namespace CYQ.Data.Table
             }
             return fillGUID;
         }
-    }
-    //[Flags]
-    //internal enum OracleBulkCopyOptions
-    //{
-    //    Default = 0,
-    //    UseInternalTransaction = 1,
-    //}
-    /// <summary>
-    /// MDataTable的AcceptChanges方法的选项
-    /// </summary>
+        #endregion
 
+        #region 批量更新
+        internal bool BulkCopyUpdate()
+        {
+            int count = 0, pageSize = 5000;
+            MDataTable dt = null;
+            bool result = false;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                action.SetAopState(Aop.AopOp.CloseAll);
+                if (action.DalVersion.StartsWith("08"))
+                {
+                    pageSize = 1000;
+                }
+                count = mdt.Rows.Count / pageSize + 1;
+                DbBase sourceHelper = action.dalHelper;
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();
+                }
+
+                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
+                string columnName = keyColumn.ColumnName;
+                for (int i = 0; i < count; i++)
+                {
+                    dt = mdt.Select(i + 1, pageSize, null);//分页读取
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        #region 核心逻辑
+                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                        MDataTable dtData = action.Select(whereIn);//获取远程数据。
+                        dtData.Load(dt, keyColumn);//重新加载赋值。
+                        action.IsIgnoreDeleteField = true;//处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
+                        result = action.Delete(whereIn);
+                        action.IsIgnoreDeleteField = false;
+                        if (result)
+                        {
+                            dtData.DynamicData = action;
+                            result = dtData.AcceptChanges(AcceptOp.InsertWithID);
+                        }
+                        if (!result)
+                        {
+                            break;
+                        }
+                        #endregion
+                    }
+                }
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//还原。
+                }
+            }
+            return result;
+        }
+        #endregion
+
+
+        #region 注释掉
+        /*
+        internal bool SybaseBulkCopyInsert()
+        {
+
+            // string a, b, c;
+            string conn = DalCreate.FormatConn(DalType.Sybase, AppConfig.GetConn(_Conn));
+
+            using (Sybase.Data.AseClient.AseBulkCopy sbc = new Sybase.Data.AseClient.AseBulkCopy(conn, Sybase.Data.AseClient.AseBulkCopyOptions.KeepIdentity))
+            {
+                sbc.BatchSize = 100000;
+                sbc.DestinationTableName = mdt.TableName;
+                foreach (MCellStruct column in mdt.Columns)
+                {
+                    Sybase.Data.AseClient.AseBulkCopyColumnMapping ac = new Sybase.Data.AseClient.AseBulkCopyColumnMapping();
+                    ac.SourceColumn = ac.DestinationColumn = column.ColumnName;
+                    sbc.ColumnMappings.Add(ac);
+                }
+                sbc.WriteToServer(mdt.ToDataTable());
+            }
+            return true;
+
+
+            //Assembly ass = SybaseDal.GetAssembly();
+
+            //object sbc = ass.CreateInstance("Sybase.Data.AseClient.AseBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
+
+            //Type sbcType = sbc.GetType();
+            //try
+            //{
+
+            //    sbcType.GetProperty("BatchSize").SetValue(sbc, 100000, null);
+            //    sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DalType.Sybase), null);
+            //    PropertyInfo cInfo = sbcType.GetProperty("ColumnMappings");
+            //    object cObj = cInfo.GetValue(sbc, null);
+            //    MethodInfo addMethod = cInfo.PropertyType.GetMethods()[2];
+            //    foreach (MCellStruct column in mdt.Columns)
+            //    {
+            //        object columnMapping = ass.CreateInstance("Sybase.Data.AseClient.AseBulkCopyColumnMapping", false, BindingFlags.CreateInstance, null, new object[] { column.ColumnName, column.ColumnName }, null, null);
+            //        addMethod.Invoke(cObj, new object[] { columnMapping });
+            //    }
+            //    //Oracle.DataAccess.Client.OracleBulkCopy ttt = sbc as Oracle.DataAccess.Client.OracleBulkCopy;
+            //    //ttt.WriteToServer(mdt);
+            //    sbcType.GetMethods()[14].Invoke(sbc, new object[] { mdt.ToDataTable() });
+            //    return true;
+            //}
+            //catch (Exception err)
+            //{
+            //    Log.WriteLogToTxt(err);
+            //    return false;
+            //}
+            //finally
+            //{
+            //    sbcType.GetMethod("Dispose").Invoke(sbc, null);
+            //}
+        } 
+        */
+        #endregion
+
+        internal bool NomalInsert(bool keepID)
+        {
+            bool result = true;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                DbBase sourceHelper = action.dalHelper;
+                action.SetAopState(Aop.AopOp.CloseAll);
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();//事务由外部控制
+                }
+                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
+                if (keepID)
+                {
+                    action.SetIdentityInsertOn();
+                }
+                MDataRow row;
+                for (int i = 0; i < mdt.Rows.Count; i++)
+                {
+                    row = mdt.Rows[i];
+                    action.ResetTable(row, false);
+                    action.Data.SetState(1, BreakOp.Null);
+                    result = action.Insert(InsertOp.None);
+                    sourceTable.RecordsAffected = i;
+                    if (!result)
+                    {
+                        string msg = "Error On : MDataTable.AcceptChanges.Insert." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
+                        sourceTable.DynamicData = msg;
+                        Log.WriteLogToTxt(msg);
+                        break;
+                    }
+                }
+                if (keepID)
+                {
+                    action.SetIdentityInsertOff();
+                }
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+            }
+            return result;
+        }
+        internal bool NormalUpdate()
+        {
+            List<int> indexList = new List<int>();
+            bool result = true;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                action.SetAopState(Aop.AopOp.CloseAll);
+                DbBase sourceHelper = action.dalHelper;
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();
+                }
+                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
+
+                MDataRow row;
+                for (int i = 0; i < mdt.Rows.Count; i++)
+                {
+                    row = mdt.Rows[i];
+                    if (row.GetState(true) > 1)
+                    {
+                        action.ResetTable(row, false);
+                        string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
+                        result = action.Update(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
+                        sourceTable.RecordsAffected = i;
+                        if (!result)
+                        {
+                            string msg = "Error On : MDataTable.AcceptChanges.Update." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
+                            sourceTable.DynamicData = msg;
+                            Log.WriteLogToTxt(msg);
+                            break;
+                        }
+                        else
+                        {
+                            indexList.Add(i);
+                        }
+                    }
+                }
+                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+                }
+            }
+            if (result)
+            {
+                foreach (int index in indexList)
+                {
+                    mdt.Rows[index].SetState(0);
+                }
+                indexList.Clear();
+                indexList = null;
+            }
+            return result;
+        }
+
+    }
+    internal partial class MDataTableBatchAction
+    {
+        bool hasSqlLoader = false;
+        private bool HasSqlLoader()
+        {
+            hasSqlLoader = false;
+            Process proc = new Process();
+            proc.StartInfo.FileName = "sqlldr";
+            proc.StartInfo.CreateNoWindow = true;
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+
+            proc.OutputDataReceived += new DataReceivedEventHandler(proc_OutputDataReceived);
+            proc.Start();
+            proc.BeginOutputReadLine();
+            proc.WaitForExit();
+            return hasSqlLoader;
+        }
+
+        void proc_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (!hasSqlLoader)
+            {
+                hasSqlLoader = e.Data.StartsWith("SQL*Loader:");
+            }
+        }
+        //已经实现，但没有事务，所以暂时先不引入。
+        private bool ExeSqlLoader(string arg)
+        {
+            try
+            {
+                Process proc = new Process();
+                proc.StartInfo.FileName = "sqlldr";
+                proc.StartInfo.Arguments = arg;
+                proc.Start();
+                proc.WaitForExit();
+                return true;
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
+    }
 }

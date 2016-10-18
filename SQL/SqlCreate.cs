@@ -803,7 +803,15 @@ namespace CYQ.Data.SQL
         }
 
         internal static string MySqlBulkCopySql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE {1} CHARACTER SET utf8 FIELDS TERMINATED BY '{2}' LINES TERMINATED BY '\r\n' {3}";
-
+        internal static string OracleBulkCopySql = "LOAD DATA INFILE '{0}' APPEND INTO TABLE {1} FIELDS TERMINATED BY '{2}' OPTIONALLY ENCLOSED BY '\"' {3}";
+        internal static string OracleSqlIDR = " userid={0} control='{1}'   log='{2}'";//sqlldr   
+        /// <summary>
+        /// 获得批量导入的列名。
+        /// </summary>
+        /// <param name="mdc"></param>
+        /// <param name="keepID"></param>
+        /// <param name="dalType"></param>
+        /// <returns></returns>
         internal static string GetColumnName(MDataColumn mdc, bool keepID, DalType dalType)
         {
             StringBuilder sb = new StringBuilder();
@@ -814,7 +822,13 @@ namespace CYQ.Data.SQL
                 {
                     continue;
                 }
-                sb.Append(SqlFormat.Keyword(ms.ColumnName, dalType) + ",");
+                sb.Append(SqlFormat.Keyword(ms.ColumnName, dalType));
+                if (dalType == DalType.Oracle && DataType.GetGroup(ms.SqlType) == 2)
+                {
+                    //日期
+                    sb.Append(" DATE \"YYYY-MM-DD HH24:MI:SS\" NULLIF (" + ms.ColumnName + "=\"NULL\")");
+                }
+                sb.Append(",");
             }
             return sb.ToString().TrimEnd(',') + ")";
         }

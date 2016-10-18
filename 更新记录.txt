@@ -609,3 +609,5 @@
 393：MDictionary增加索引取值或赋值。（2016-10-17)
 394：XHtmlAction、RSS的OnForeach的参数由Dictionary变为MDictionary（2016-10-17)
 395：JsonHelper 修正对数组的输出和还原（2016-10-17)
+396：JsonHelper 修正Json嵌套问题。（2016-10-18)
+397：MDataTable 优化批量更新问题。（2016-10-18)
