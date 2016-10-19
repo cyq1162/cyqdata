@@ -143,6 +143,10 @@ namespace CYQ.Data.Tool
                 {
                     return SysType.Array;
                 }
+                if (t.FullName.Split('.').Length > 2)
+                {
+                    return SysType.Custom;
+                }
                 return SysType.Base;
             }
             else
