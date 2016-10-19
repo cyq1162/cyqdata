@@ -53,6 +53,10 @@ namespace CYQ.Data
         /// </summary>
         OutPut,
         /// <summary>
+        /// 输入输出类型
+        /// </summary>
+        InputOutput,
+        /// <summary>
         /// 返回值类型
         /// </summary>
         ReturnValue,

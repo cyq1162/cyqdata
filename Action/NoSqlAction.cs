@@ -51,14 +51,14 @@ namespace CYQ.Data
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
                     return _tableList[_FileFullName];
-                    //if (_Table.Rows.Count == 0)
-                    //{
-                    //    _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题。
-                    //}
-                    //else
-                    //{
-                    //    return _Table;
-                    //}
+                    if (_Table.Rows.Count == 0)
+                    {
+                        _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题(已修正该问题，所以可开放)。
+                    }
+                    else
+                    {
+                        return _Table;
+                    }
                 }
 
                 switch (_DalType)
@@ -279,6 +279,7 @@ namespace CYQ.Data
                     count = rowList.Count;
                     if (count > 0)
                     {
+                        bool isDeleteAll = count == Table.Rows.Count;
                         for (int i = rowList.Count - 1; i >= 0; i--)
                         {
                             try
@@ -299,7 +300,9 @@ namespace CYQ.Data
                             }
                             catch { }
                         }
+                        if (isDeleteAll) { Save(); }
                         needToSaveState = 2;
+
                         return true;
                     }
                 }

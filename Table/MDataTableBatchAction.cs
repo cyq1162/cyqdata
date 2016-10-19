@@ -204,11 +204,7 @@ namespace CYQ.Data.Table
                 }
                 else if (dalTypeTo == DalType.MySql && IsAllowBulkCopy(DalType.MySql))
                 {
-                    // Mysql在表为空时，用Load Data命令第一行的ID会被设置为起始索引1，所以自增加又带ID的，先不走Load Data
-                    if (!keepID || !mdt.Columns.FirstPrimary.IsAutoIncrement)
-                    {
-                        return LoadDataInsert(dalTypeTo, keepID);
-                    }
+                     return LoadDataInsert(dalTypeTo, keepID);
                 }
 
                 //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
@@ -517,12 +513,6 @@ namespace CYQ.Data.Table
                 {
                     case 999:
                         return false;
-                    case 3://bool型也会有问题
-                        if (dalType == DalType.MySql)
-                        {
-                            return false;
-                        }
-                        break;
                 }
             }
             try
@@ -560,7 +550,7 @@ namespace CYQ.Data.Table
             if (dalType == DalType.Oracle)
             {
                 string ctlPath = CreateCTL(sql, path);
-                sql = string.Format(SqlCreate.OracleSqlIDR, "sa/123456@ORCL", ctlPath, ctlPath.Replace(".ctl", ".out"));//只能用进程处理
+                sql = string.Format(SqlCreate.OracleSqlIDR, "sa/123456@ORCL", ctlPath);//只能用进程处理
             }
             try
             {
@@ -593,25 +583,21 @@ namespace CYQ.Data.Table
                     _dalHelper.Dispose();
                     _dalHelper = null;
                 }
-                // File.Delete(path);
+                IOHelper.Delete(path);//删除文件。
             }
             return false;
         }
         private static string CreateCTL(string sql, string path)
         {
-            path = path.Replace(".txt", ".ctl");
+            path = path.Replace(".csv", ".ctl");
             IOHelper.Write(path, sql);
             return path;
         }
         private static string MDataTableToFile(MDataTable dt, bool keepID, DalType dalType)
         {
-            string path = Path.GetTempPath() + dt.TableName + ".txt";
+            string path = Path.GetTempPath() + dt.TableName + ".csv";//不能用.txt（会产生默认编码，影响第一行数据（空表时自增的ID被置为初始1）
             using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
             {
-                if (dalType == DalType.Oracle)
-                {
-                    sw.WriteLine();//先输出空行（Oracle需要空行在前）
-                }
                 MCellStruct ms;
                 string value;
                 foreach (MDataRow row in dt.Rows)
@@ -623,14 +609,32 @@ namespace CYQ.Data.Table
                         {
                             continue;
                         }
+                        else if (dalType == DalType.MySql && row[i].IsNull)
+                        {
+                            sw.Write("\\N");//Mysql用\N表示null值。
+                        }
                         else
                         {
                             value = row[i].ToString();
-                            if (ms.SqlType == SqlDbType.Bit && value != "1")
+                            if (ms.SqlType == SqlDbType.Bit)
                             {
-                                value = (value.ToLower() == "true") ? "1" : "0";
+                                int v = (value.ToLower() == "true" || value == "1") ? 1 : 0;
+                                if (dalType == DalType.MySql)
+                                {
+                                    byte[] b = new byte[1];
+                                    b[0] = (byte)v;
+                                    value = System.Text.Encoding.UTF8.GetString(b);//mysql必须用字节存档。
+                                }
+                                else
+                                {
+                                    value = v.ToString();
+                                }
+
                             }
-                            value = value.Replace("\\", "\\\\");//处理转义符号
+                            else
+                            {
+                                value = value.Replace("\\", "\\\\");//处理转义符号
+                            }
                             sw.Write(value);
                         }
 

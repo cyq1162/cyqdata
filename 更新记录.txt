@@ -612,3 +612,6 @@
 396：JsonHelper 修正Json嵌套问题。（2016-10-18)
 397：MDataTable 优化批量更新问题。（2016-10-18)
 398：MDataRow和MDataColumn 的ToTable() 调整适应(新增智能提示)（2016-10-19)
+399：MySql 处理存储过程Out值。（2016-10-19）
+400：MySql 批量方法解决了Bit类型和空表时自增ID被置为1的问题（2016-10-20）
+401：JsonHelper、NoSqlAction小优化调整（2016-10-20）

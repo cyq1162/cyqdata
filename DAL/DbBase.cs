@@ -637,6 +637,19 @@ namespace CYQ.Data
         }
         internal virtual void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
         {
+            switch (paraType)
+            {
+
+                case ParaType.OutPut:
+                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.Output);
+                    break;
+                case ParaType.InputOutput:
+                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.InputOutput);
+                    break;
+                case ParaType.ReturnValue:
+                    AddParameters(paraName, null, DbType.Int32, 32, ParameterDirection.ReturnValue);
+                    break;
+            }
         }
         //internal virtual void AddCustomePara(string paraName, ParaType paraType, object value)
         //{
@@ -668,6 +681,10 @@ namespace CYQ.Data
             {
                 _com.CommandText += " COLLATE NOCASE";//忽略大小写
             }
+            //else if (isProc && dalType == DalType.MySql)
+            //{
+            //    _com.CommandText = "Call " + _com.CommandText;
+            //}
             _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
             if (isProc)
             {
