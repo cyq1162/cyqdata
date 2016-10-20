@@ -28,6 +28,16 @@ namespace CYQ.Data.Table
         MDataTable mdt, sourceTable;
         internal DalType dalTypeTo = DalType.None;
         internal string database = string.Empty;
+        private bool _IsTruncate;
+        /// <summary>
+        /// Insert前是否先清表
+        /// </summary>
+        public bool IsTruncate
+        {
+            get { return _IsTruncate; }
+            set { _IsTruncate = value; }
+        }
+
         string _Conn = string.Empty;
         /// <summary>
         /// 内部操作对象（需要同一个事务处理）。
@@ -191,11 +201,11 @@ namespace CYQ.Data.Table
                 {
                     return MsSqlBulkCopyInsert(keepID);
                 }
-                else if (dalTypeTo == DalType.Oracle && _dalHelper == null)
+                else if (dalTypeTo == DalType.Oracle && _dalHelper == null && !IsTruncate)
                 {
                     if (OracleDal.clientType == 1 && keepID)
                     {
-                        return OracleBulkCopyInsert();
+                        return OracleBulkCopyInsert();//不支持外部事务合并（因为参数只能传链接字符串。）
                     }
                     //else if (IsAllowBulkCopy(DalType.Oracle))
                     //{
@@ -204,7 +214,7 @@ namespace CYQ.Data.Table
                 }
                 else if (dalTypeTo == DalType.MySql && IsAllowBulkCopy(DalType.MySql))
                 {
-                     return LoadDataInsert(dalTypeTo, keepID);
+                    return LoadDataInsert(dalTypeTo, keepID);
                 }
 
                 //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
@@ -410,37 +420,67 @@ namespace CYQ.Data.Table
             try
             {
                 CheckGUIDAndDateTime(DalType.MsSql);
-                // string a, b, c;
-                string conn = AppConfig.GetConn(_Conn);// DAL.DalCreate.GetConnString(_Conn, out a, out b, out c);
+
+                string conn = AppConfig.GetConn(_Conn);
                 SqlTransaction sqlTran = null;
                 SqlConnection con = null;
+                bool isCreateDal = false;
+                if (_dalHelper == null)
+                {
+                    if (IsTruncate)
+                    {
+                        isCreateDal = true;
+                        _dalHelper = DalCreate.CreateDal(conn);
+                    }
+                    else
+                    {
+                        con = new SqlConnection(conn);
+                        con.Open();
+                    }
+                }
+                bool isGoOn = true;
                 if (_dalHelper != null)
                 {
-                    sqlTran = _dalHelper._tran as SqlTransaction;
-                    con = _dalHelper.Con as SqlConnection;
-                    _dalHelper.OpenCon(null);//如果未开启，则开启
-                }
-                else
-                {
-                    con = new SqlConnection(conn);
-                    con.Open();
-                }
-
-                using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
-                {
-                    sbc.BatchSize = 100000;
-                    sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
-                    sbc.BulkCopyTimeout = AppConfig.DB.CommandTimeout;
-                    foreach (MCellStruct column in mdt.Columns)
+                    if (IsTruncate)
                     {
-                        sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                        _dalHelper.isOpenTrans = true;
+                        if (_dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, mdt.TableName), false) == -2)
+                        {
+                            isGoOn = false;
+                            sourceTable.DynamicData = _dalHelper.debugInfo;
+                            Log.WriteLogToTxt(_dalHelper.debugInfo.ToString());
+                        }
                     }
-                    sbc.WriteToServer(mdt);
+                    if (isGoOn)
+                    {
+                        sqlTran = _dalHelper._tran as SqlTransaction;
+                        con = _dalHelper.Con as SqlConnection;
+                        _dalHelper.OpenCon(null);//如果未开启，则开启
+                    }
+                }
+                if (isGoOn)
+                {
+                    using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
+                    {
+                        sbc.BatchSize = 100000;
+                        sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
+                        sbc.BulkCopyTimeout = AppConfig.DB.CommandTimeout;
+                        foreach (MCellStruct column in mdt.Columns)
+                        {
+                            sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                        }
+                        sbc.WriteToServer(mdt);
+                    }
                 }
                 if (_dalHelper == null)
                 {
                     con.Close();
                     con = null;
+                }
+                else if (isCreateDal)
+                {
+                    _dalHelper.EndTransaction();
+                    _dalHelper.Dispose();
                 }
                 return true;
             }
@@ -560,10 +600,17 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    if (_dalHelper.ExeNonQuery(sql, false) != -2)
+                    bool isGoOn = true;
+                    if (IsTruncate)
+                    {
+                        _dalHelper.isOpenTrans = true;//开启事务
+                        isGoOn = _dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, mdt.TableName), false) != -2;
+                    }
+                    if (isGoOn && _dalHelper.ExeNonQuery(sql, false) != -2)
                     {
                         return true;
                     }
+
                 }
 
             }
@@ -580,10 +627,11 @@ namespace CYQ.Data.Table
             {
                 if (isNeedCreateDal && _dalHelper != null)
                 {
+                    _dalHelper.EndTransaction();
                     _dalHelper.Dispose();
                     _dalHelper = null;
                 }
-                IOHelper.Delete(path);//删除文件。
+                //IOHelper.Delete(path);//删除文件。
             }
             return false;
         }
@@ -596,7 +644,7 @@ namespace CYQ.Data.Table
         private static string MDataTableToFile(MDataTable dt, bool keepID, DalType dalType)
         {
             string path = Path.GetTempPath() + dt.TableName + ".csv";//不能用.txt（会产生默认编码，影响第一行数据（空表时自增的ID被置为初始1）
-            using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+            using (StreamWriter sw = new StreamWriter(path, false, new UTF8Encoding(false)))
             {
                 MCellStruct ms;
                 string value;
@@ -604,6 +652,7 @@ namespace CYQ.Data.Table
                 {
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
+                        #region 设置值
                         ms = dt.Columns[i];
                         if (!keepID && ms.IsAutoIncrement)
                         {
@@ -642,6 +691,7 @@ namespace CYQ.Data.Table
                         {
                             sw.Write(AppConst.SplitChar);
                         }
+                        #endregion
                     }
                     sw.WriteLine();
                 }
@@ -841,20 +891,37 @@ namespace CYQ.Data.Table
                 {
                     action.SetIdentityInsertOn();
                 }
-                MDataRow row;
-                for (int i = 0; i < mdt.Rows.Count; i++)
+                bool isGoOn = true;
+                if (IsTruncate)
                 {
-                    row = mdt.Rows[i];
-                    action.ResetTable(row, false);
-                    action.Data.SetState(1, BreakOp.Null);
-                    result = action.Insert(InsertOp.None);
-                    sourceTable.RecordsAffected = i;
-                    if (!result)
+                    if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
                     {
-                        string msg = "Error On : MDataTable.AcceptChanges.Insert." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
-                        sourceTable.DynamicData = msg;
-                        Log.WriteLogToTxt(msg);
-                        break;
+                        action.Delete("1=1");
+                    }
+                    else if (action.dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, action.TableName), false) == -2)
+                    {
+                        isGoOn = false;
+                        sourceTable.DynamicData = action.DebugInfo;
+                        Log.WriteLogToTxt(action.DebugInfo);
+                    }
+                }
+                if (isGoOn)
+                {
+                    MDataRow row;
+                    for (int i = 0; i < mdt.Rows.Count; i++)
+                    {
+                        row = mdt.Rows[i];
+                        action.ResetTable(row, false);
+                        action.Data.SetState(1, BreakOp.Null);
+                        result = action.Insert(InsertOp.None);
+                        sourceTable.RecordsAffected = i;
+                        if (!result)
+                        {
+                            string msg = "Error On : MDataTable.AcceptChanges.Insert." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
+                            sourceTable.DynamicData = msg;
+                            Log.WriteLogToTxt(msg);
+                            break;
+                        }
                     }
                 }
                 if (keepID)

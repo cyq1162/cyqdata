@@ -580,6 +580,11 @@ namespace CYQ.Data.Table
                 return false;//木有可更新的。
             }
             MDataTableBatchAction action = new MDataTableBatchAction(this, newConn);
+            if ((op & AcceptOp.Truncate) != 0)
+            {
+                action.IsTruncate = true;
+                op = (AcceptOp)(op - AcceptOp.Truncate);
+            }
             action.SetJoinPrimaryKeys(jointPrimaryKeys);
             switch (op)
             {
@@ -1690,7 +1695,7 @@ namespace CYQ.Data.Table
                 rowB = dt.FindRow(pkName + "='" + rowA[i1].strValue + "'");
                 if (rowB != null)
                 {
-                    rowA.LoadFrom(rowB,RowOp.IgnoreNull, false);
+                    rowA.LoadFrom(rowB, RowOp.IgnoreNull, false);
                 }
             }
         }

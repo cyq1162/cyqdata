@@ -182,7 +182,7 @@ namespace CYQ.Data.Cache
         }
         private static readonly object obj = new object();
         /// <summary>
-        /// 通过该方法可以预先加载整个数据库的表结构缓存
+        /// 通过该方法可以预先加载整个数据库的表结构缓存(异常会抛，外层Try Catch)
         /// </summary>
         /// <param name="conn">指定数据链接</param>
         /// <param name="isUseThread">是否开启线程</param>
@@ -208,20 +208,22 @@ namespace CYQ.Data.Cache
         }
         private static void LoadDBSchemaCache(object connObj)
         {
-            string conn = Convert.ToString(connObj);
-            Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
-            if (dic != null && dic.Count > 0)
-            {
-                DbBase helper = DalCreate.CreateDal(conn);
-                if (helper.dalType != DalType.Txt && helper.dalType != DalType.Xml)
+          
+                string conn = Convert.ToString(connObj);
+                Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
+                if (dic != null && dic.Count > 0)
                 {
-                    foreach (string key in dic.Keys)
+                    DbBase helper = DalCreate.CreateDal(conn);
+                    if (helper.dalType != DalType.Txt && helper.dalType != DalType.Xml)
                     {
-                        TableSchema.GetColumns(key, ref helper);
+                        foreach (string key in dic.Keys)
+                        {
+                            TableSchema.GetColumns(key, ref helper);
+                        }
                     }
+                    helper.Dispose();
                 }
-                helper.Dispose();
-            }
+            
         }
     }
     /// <summary>

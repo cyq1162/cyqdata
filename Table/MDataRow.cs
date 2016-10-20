@@ -1203,6 +1203,7 @@ namespace CYQ.Data.Table
                                     {
                                         #region 数组处理
                                         List<string> items = JsonSplit.SplitEscapeArray(cell.strValue);//内部去掉转义符号
+                                        if (items == null) { continue; }
                                         objValue = Activator.CreateInstance(propType, items.Count);//创建实例
                                         Type objListType = objValue.GetType();
                                         bool isArray = sysType == SysType.Array;

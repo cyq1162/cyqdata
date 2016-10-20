@@ -7,28 +7,33 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 批量更新选项
     /// </summary>
+    [Flags]
     public enum AcceptOp
     {
         /// <summary>
         /// 批量插入（由系统产生自增加ID）
         /// 该执行会开启事务。
         /// </summary>
-        Insert,
+        Insert = 1,
         /// <summary>
         /// 批量插入（由用户指定ID插入）
         /// 该执行会开启事务。
         /// </summary>
-        InsertWithID,
+        InsertWithID = 2,
         /// <summary>
         /// 批量更新
         /// 该执行会开启事务。
         /// </summary>
-        Update,
+        Update = 4,
         /// <summary>
         /// 批量自动插入或更新（检测主键数据若存在，则更新；不存在，则插入）
         /// 该执行不会开启事务。
         /// </summary>
-        Auto
+        Auto = 8,
+        /// <summary>
+        /// 清空表（只有和Insert或InsertWithID组合使用时才有效）
+        /// </summary>
+        Truncate = 16
     }
     /// <summary>
     /// MDataTable 与 MDataRow SetState 的过滤选项

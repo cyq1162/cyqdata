@@ -50,9 +50,13 @@ namespace CYQ.Data
                 }
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
-                    return _tableList[_FileFullName];
+                    _Table = _tableList[_FileFullName];
                     if (_Table.Rows.Count == 0)
                     {
+                        if (_maxID.ContainsKey(_FileFullName))
+                        {
+                            _maxID.Remove(_FileFullName);
+                        }
                         _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题(已修正该问题，所以可开放)。
                     }
                     else

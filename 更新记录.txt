@@ -615,3 +615,4 @@
 399：MySql 处理存储过程Out值。（2016-10-19）
 400：MySql 批量方法解决了Bit类型和空表时自增ID被置为1的问题（2016-10-20）
 401：JsonHelper、NoSqlAction小优化调整（2016-10-20）
+402：MDataTable的AcceptChanges新增加Truncate属性（2016-10-20）
