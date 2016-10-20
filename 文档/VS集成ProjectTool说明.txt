@@ -1,0 +1,13 @@
+在Visual Studio IDE 中 选择“工具”菜单下的“外部工具”。
+
+标题设置为：CYQ.Data 项目配置
+命令设置为：选择当前的项目配置工具"CYQ.Data.ProjectTool.exe"。
+参数设置为：选择项目文件，会自动产生值：$(ProjectDir)
+初始目录为空即可。
+
+然后确定，就会在工具菜单下多了一个快捷配置菜单。
+
+其它说明：
+
+如果使用的是SQLite数据库：请放置System.Data.SQLite.dll到本目录下（sqlite区分32和64位的)
+如果使用的是MySql 数据库：请放置MySql.Data.dll到本目录下
