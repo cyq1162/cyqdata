@@ -270,7 +270,7 @@ namespace CYQ.Data
             int count = 0;
             return Delete(where, out count);
         }
-        private bool isDeleteAll = false;
+        private static bool isDeleteAll = false;
         internal bool Delete(object where, out int count)
         {
             count = -1;
