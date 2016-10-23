@@ -51,7 +51,7 @@ namespace CYQ.Data
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
                     _Table = _tableList[_FileFullName];
-                    if (_Table.Rows.Count == 0)
+                    if (_Table.Rows.Count == 0 && !isDeleteAll)
                     {
                         if (_maxID.ContainsKey(_FileFullName))
                         {
@@ -270,6 +270,7 @@ namespace CYQ.Data
             int count = 0;
             return Delete(where, out count);
         }
+        private bool isDeleteAll = false;
         internal bool Delete(object where, out int count)
         {
             count = -1;
@@ -283,7 +284,7 @@ namespace CYQ.Data
                     count = rowList.Count;
                     if (count > 0)
                     {
-                        bool isDeleteAll = count == Table.Rows.Count;
+                        isDeleteAll = count == Table.Rows.Count;
                         for (int i = rowList.Count - 1; i >= 0; i--)
                         {
                             try
@@ -525,7 +526,6 @@ namespace CYQ.Data
             try
             {
                 string text = string.Empty;
-
                 if (string.IsNullOrEmpty(text))
                 {
                     text = _DalType == DalType.Txt ? Table.ToJson(false, true).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
@@ -539,6 +539,7 @@ namespace CYQ.Data
 
                         IOHelper.Write(_FileFullName, text);
                         tryAgainCount = 0;
+                        isDeleteAll = false;
                     }
                     catch
                     {
