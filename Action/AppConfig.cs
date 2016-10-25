@@ -12,7 +12,8 @@ namespace CYQ.Data
     public static partial class AppConfig
     {
         #region 基方法
-        private static MDictionary<string, string> configs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 设置Web.config或App.config的值。
         /// </summary>
@@ -20,13 +21,13 @@ namespace CYQ.Data
         {
             try
             {
-                if (configs.ContainsKey(key))
+                if (appConfigs.ContainsKey(key))
                 {
-                    configs[key] = value;
+                    appConfigs[key] = value;
                 }
                 else
                 {
-                    configs.Add(key, value);
+                    appConfigs.Add(key, value);
                 }
             }
             catch (Exception err)
@@ -46,9 +47,9 @@ namespace CYQ.Data
         /// </summary>
         public static string GetApp(string key, string defaultValue)
         {
-            if (configs.ContainsKey(key))
+            if (appConfigs.ContainsKey(key))
             {
-                return configs[key];
+                return appConfigs[key];
             }
             else
             {
@@ -56,7 +57,7 @@ namespace CYQ.Data
                 value = string.IsNullOrEmpty(value) ? defaultValue : value;
                 try
                 {
-                    configs.Add(key, value);
+                    appConfigs.Add(key, value);
                 }
                 catch
                 {
@@ -82,35 +83,43 @@ namespace CYQ.Data
         /// <summary>
         /// 获取Web.config或App.config的connectionStrings节点的值。
         /// </summary>
-        public static string GetConn(string key, out string providerName)
+        public static string GetConn(string name, out string providerName)
         {
             providerName = string.Empty;
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(name))
             {
-                key = "Conn";
+                name = "Conn";
             }
-            if (key.Trim().Contains(" "))
+            if (name.Trim().Contains(" "))
             {
-                return key;
+                return name;
             }
-            ConnectionStringSettings conn = ConfigurationManager.ConnectionStrings[key];
+            if (connConfigs.ContainsKey(name))
+            {
+                return connConfigs[name];
+            }
+            ConnectionStringSettings conn = ConfigurationManager.ConnectionStrings[name];
             if (conn != null)
             {
                 providerName = conn.ProviderName;
-                if (key == conn.ConnectionString)//避免误写自己造成死循环。
+                if (name == conn.ConnectionString)//避免误写自己造成死循环。
                 {
-                    return key;
+                    return name;
                 }
-                key = conn.ConnectionString;
-                if (!string.IsNullOrEmpty(key) && key.Length < 32 && key.Split(' ').Length == 1)
+                name = conn.ConnectionString;
+                if (!string.IsNullOrEmpty(name) && name.Length < 32 && name.Split(' ').Length == 1)
                 {
-                    return GetConn(key);
+                    return GetConn(name);
+                }
+                if (!connConfigs.ContainsKey(name) && string.IsNullOrEmpty(providerName)) // 如果有providerName，则不存档
+                {
+                    connConfigs.Add(name, conn.ConnectionString);
                 }
                 return conn.ConnectionString;
             }
-            if (key.Length > 32 && key.Split('=').Length > 3 && key.Contains(";")) //链接字符串很长，没空格的情况
+            if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况
             {
-                return key;
+                return name;
             }
             return "";
         }
@@ -118,14 +127,116 @@ namespace CYQ.Data
         /// <summary>
         /// 获取Web.config或App.config的connectionStrings节点的值。
         /// </summary>
-        public static string GetConn(string key)
+        public static string GetConn(string name)
         {
             string p;
-            return GetConn(key, out p);
+            return GetConn(name, out p);
+        }
+        /// <summary>
+        /// 添加自定义链接（内存有效，并未写入config文件）
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="connectionString">链接字符串</param>
+        public static void SetConn(string name, string connectionString)
+        {
+            if (!connConfigs.ContainsKey(name))
+            {
+                connConfigs.Add(name, connectionString);
+            }
+            else
+            {
+                connConfigs[name] = connectionString;
+            }
         }
 
         #endregion
 
+
+        /// <summary>
+        /// 是否使用表字段枚举转Int方式（默认为false）。
+        /// 设置为true时，可以加快一点性能，但生成的表字段枚举必须和数据库一致。
+        /// </summary>
+        public static bool IsEnumToInt
+        {
+            get
+            {
+                bool _IsEnumToInt;
+                bool.TryParse(GetApp("IsEnumToInt", "false"), out _IsEnumToInt);
+                return _IsEnumToInt;
+            }
+            set
+            {
+                SetApp("IsEnumToInt", value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Aop 插件配置项 示例配置：[ 完整类名,程序集(dll)名称]&lt;add key="Aop" value="Web.Aop.AopAction,Aop"/>
+        /// </summary>
+        public static string Aop
+        {
+            get
+            {
+                return GetApp("Aop");
+            }
+            set
+            {
+                SetApp("Aop", value);
+            }
+        }
+        /// <summary>
+        /// Tool.ThreadBreak 使用时，外置的文件配置相对路径（默认在环境变量Temp对应文件中）
+        /// </summary>
+        public static string ThreadBreakPath
+        {
+            get
+            {
+                return GetApp("ThreadBreakPath", Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User));
+            }
+            set
+            {
+                SetApp("ThreadBreakPath", value);
+            }
+        }
+
+        /// <summary>
+        /// 生成的实体类的后缀。
+        /// </summary>
+        public static string EntitySuffix
+        {
+            get
+            {
+                return GetApp("EntitySuffix", "Bean");
+            }
+            set
+            {
+                SetApp("EntitySuffix", value);
+            }
+        }
+        /// <summary>
+        /// 获取当前Dll的版本号
+        /// </summary>
+        public static string Version
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            }
+        }
+        /// <summary>
+        /// 框架的运行路径（Bin目录）
+        /// </summary>
+        public static string RunPath
+        {
+            get
+            {
+                return AppConst.RunFolderPath;
+            }
+        }
+    }
+
+    public static partial class AppConfig
+    {
         #region Xml相关配置
         /// <summary>
         /// XHtml 相关的配置
@@ -868,86 +979,5 @@ namespace CYQ.Data
         }
         #endregion
 
-        /// <summary>
-        /// 是否使用表字段枚举转Int方式（默认为false）。
-        /// 设置为true时，可以加快一点性能，但生成的表字段枚举必须和数据库一致。
-        /// </summary>
-        public static bool IsEnumToInt
-        {
-            get
-            {
-                bool _IsEnumToInt;
-                bool.TryParse(GetApp("IsEnumToInt", "false"), out _IsEnumToInt);
-                return _IsEnumToInt;
-            }
-            set
-            {
-                SetApp("IsEnumToInt", value.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Aop 插件配置项 示例配置：[ 完整类名,程序集(dll)名称]&lt;add key="Aop" value="Web.Aop.AopAction,Aop"/>
-        /// </summary>
-        public static string Aop
-        {
-            get
-            {
-                return GetApp("Aop");
-            }
-            set
-            {
-                SetApp("Aop", value);
-            }
-        }
-        /// <summary>
-        /// Tool.ThreadBreak 使用时，外置的文件配置相对路径（默认在环境变量Temp对应文件中）
-        /// </summary>
-        public static string ThreadBreakPath
-        {
-            get
-            {
-                return GetApp("ThreadBreakPath", Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User));
-            }
-            set
-            {
-                SetApp("ThreadBreakPath", value);
-            }
-        }
-
-        /// <summary>
-        /// 生成的实体类的后缀。
-        /// </summary>
-        public static string EntitySuffix
-        {
-            get
-            {
-                return GetApp("EntitySuffix", "Bean");
-            }
-            set
-            {
-                SetApp("EntitySuffix", value);
-            }
-        }
-        /// <summary>
-        /// 获取当前Dll的版本号
-        /// </summary>
-        public static string Version
-        {
-            get
-            {
-                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            }
-        }
-        /// <summary>
-        /// 框架的运行路径（Bin目录）
-        /// </summary>
-        public static string RunPath
-        {
-            get
-            {
-                return AppConst.RunFolderPath;
-            }
-        }
     }
 }

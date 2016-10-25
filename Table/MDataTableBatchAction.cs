@@ -631,7 +631,7 @@ namespace CYQ.Data.Table
                     _dalHelper.Dispose();
                     _dalHelper = null;
                 }
-                //IOHelper.Delete(path);//删除文件。
+                IOHelper.Delete(path);//删除文件。
             }
             return false;
         }
@@ -643,7 +643,7 @@ namespace CYQ.Data.Table
         }
         private static string MDataTableToFile(MDataTable dt, bool keepID, DalType dalType)
         {
-            string path = Path.GetTempPath() + dt.TableName + ".csv";//不能用.txt（会产生默认编码，影响第一行数据（空表时自增的ID被置为初始1）
+            string path = Path.GetTempPath() + dt.TableName + ".csv";
             using (StreamWriter sw = new StreamWriter(path, false, new UTF8Encoding(false)))
             {
                 MCellStruct ms;
@@ -678,7 +678,6 @@ namespace CYQ.Data.Table
                                 {
                                     value = v.ToString();
                                 }
-
                             }
                             else
                             {

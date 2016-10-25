@@ -244,7 +244,7 @@ namespace CYQ.Data
             _AllowInsertID = false;
         }
         /// <summary>
-        /// 当DeleteField被设置后（删除转更新操作），如果仍想删除操作（可将些属性置为true）
+        /// 当DeleteField被设置后（删除转更新操作），如果仍想删除操作（可将此属性置为true）
         /// </summary>
         internal bool IsIgnoreDeleteField = false;
         #endregion

@@ -364,7 +364,7 @@ namespace CYQ.Data.Tool
         /// <param name="json">Json字符串</param>
         /// <param name="key">键值</param>
         /// <returns></returns>
-        public static string GetJosnValue(string json, string key)
+        public static string GetValue(string json, string key)
         {
             string result = string.Empty;
             if (!string.IsNullOrEmpty(json))

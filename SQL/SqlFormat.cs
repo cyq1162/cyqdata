@@ -149,7 +149,16 @@ namespace CYQ.Data.SQL
                         return Regex.Replace(sql, key, " where 1=2 and ", RegexOptions.IgnoreCase);
                     }
                 }
-
+                //¼ì²âÊÇ·ñÓÐgroup by
+                keys = new string[] { " group by", "\ngroup by" };
+                foreach (string key in keys)
+                {
+                    if (sql.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        string newKey = key.Replace("group", "where 1=2 group");
+                        return Regex.Replace(sql, key, newKey, RegexOptions.IgnoreCase);
+                    }
+                }
                 return sql + " where 1=2";
             }
             return string.Format("select * from {0} where 1=2", tableName);

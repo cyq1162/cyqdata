@@ -671,6 +671,11 @@ namespace CYQ.Data.SQL
             {
                 where += " order by " + primaryKey + " asc";
             }
+            else if (where.IndexOf(" asc", StringComparison.OrdinalIgnoreCase) == -1 && where.IndexOf(" desc", StringComparison.OrdinalIgnoreCase) == -1)
+            {
+                //ÓÐorder by µ«Ã» asc
+                where += " asc";
+            }
             return where;
         }
         internal static string GetWhere(DalType dalType, params MDataCell[] cells)

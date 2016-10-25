@@ -616,3 +616,8 @@
 400：MySql 批量方法解决了Bit类型和空表时自增ID被置为1的问题（2016-10-20）
 401：JsonHelper、NoSqlAction小优化调整（2016-10-20）
 402：MDataTable的AcceptChanges新增加Truncate属性（2016-10-20）
+403：JsonHelper的GetJosnValue（json写错顺理）变更名称为GetValue（2016-10-21）
+404：NoSqlAction 文本数据库加强删除最后一条数据时的并发处理问题（2016-10-23）
+405：DBTool.GetColumns修正对于没有where的group by语句拿表结构的问题（2016-10-24）
+406：AppConfig增加SetConn方法（同时增加链接缓存)（2016-10-24）
+407：SqlCreateForPager 处理分页的order by aa,bb 没带asc的问题（2016-10-25）
