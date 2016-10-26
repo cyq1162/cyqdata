@@ -453,9 +453,9 @@ namespace CYQ.Data.Table
                     }
                     if (isGoOn)
                     {
-                        sqlTran = _dalHelper._tran as SqlTransaction;
                         con = _dalHelper.Con as SqlConnection;
-                        _dalHelper.OpenCon(null);//如果未开启，则开启
+                        _dalHelper.OpenCon(null);//如果未开启，则开启，打开链接后，如果以前没执行过数据，事务对象为空，这时会产生事务对象
+                        sqlTran = _dalHelper._tran as SqlTransaction;
                     }
                 }
                 if (isGoOn)

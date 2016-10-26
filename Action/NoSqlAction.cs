@@ -305,7 +305,7 @@ namespace CYQ.Data
                             }
                             catch { }
                         }
-                        if (isDeleteAll) { Save(); }
+                       // if (isDeleteAll) { Save(); }
                         needToSaveState = 2;
 
                         return true;
