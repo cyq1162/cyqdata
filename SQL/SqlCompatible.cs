@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 
 
@@ -15,7 +16,7 @@ namespace CYQ.Data.SQL
         /// </summary>
         internal static string Format(string text, DalType dalType)
         {
-            if (!string.IsNullOrEmpty(text))
+            if (!string.IsNullOrEmpty(text) && text.Contains("[#") && text.Contains("]"))
             {
                 text = FormatPara(text, dalType);
                 text = FormatTrueFalseAscDesc(text, dalType);
@@ -42,7 +43,7 @@ namespace CYQ.Data.SQL
             {
                 //substr(MAX(SheetId),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetId)length(MAX(SheetId))-4,4) 
                 case DalType.Oracle:
-                    int index = text.IndexOf(SqlValue.Left);//left(a,4) =>to_char(substr(a,1,4))
+                    int index = text.IndexOf(SqlValue.Left, StringComparison.OrdinalIgnoreCase);//left(a,4) =>to_char(substr(a,1,4))
                     if (index > -1)
                     {
                         do
@@ -52,14 +53,14 @@ namespace CYQ.Data.SQL
                             int end2 = text.IndexOf(')', end + 1);
                             text = text.Insert(end2, ")");
                             text = text.Insert(end + 1, "1,");
-                            index = text.IndexOf(SqlValue.Left, end);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(SqlValue.Left, end, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        return text.Replace(SqlValue.Left, "to_char(substr");
+                        return Replace(text, SqlValue.Left, "to_char(substr");
                     }
                     return text;
                 default:
-                    return text.Replace(SqlValue.Left, "Left");
+                    return Replace(text, SqlValue.Left, "Left");
             }
         }
         internal static string FormatRight(string text, DalType dalType)
@@ -67,7 +68,7 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Oracle:
-                    int index = text.IndexOf(SqlValue.Right);//right(a,4) => to_char(substr(a,length(a)-4,4))
+                    int index = text.IndexOf(SqlValue.Right, StringComparison.OrdinalIgnoreCase);//right(a,4) => to_char(substr(a,length(a)-4,4))
                     if (index > -1)
                     {
                         do
@@ -80,14 +81,14 @@ namespace CYQ.Data.SQL
                             string key2 = text.Substring(end + 1, end2 - end - 1);//找到b
                             text = text.Insert(end2, ")");
                             text = text.Insert(end + 1, "length(" + key + ")+1-" + key2 + ",");//
-                            index = text.IndexOf(SqlValue.Right, end);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(SqlValue.Right, end, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        return text.Replace(SqlValue.Right, "to_char(substr");
+                        return Replace(text, SqlValue.Right, "to_char(substr");
                     }
                     return text;
                 default:
-                    return text.Replace(SqlValue.Right, "Right");
+                    return Replace(text, SqlValue.Right, "Right");
             }
         }
         internal static string FormatContact(string text, DalType dalType)
@@ -95,9 +96,9 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Oracle:
-                    return text.Replace(SqlValue.Contact, "||");
+                    return Replace(text, SqlValue.Contact, "||");
                 default:
-                    return text.Replace(SqlValue.Contact, "+");
+                    return Replace(text, SqlValue.Contact, "+");
             }
         }
         internal static string FormatIsNull(string text, DalType dalType)
@@ -105,10 +106,10 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    int index = text.IndexOf(SqlValue.IsNull);//isnull  (isnull(aaa),'3,3')   iff(isnull   (aaa),333,aaa)
+                    int index = text.IndexOf(SqlValue.IsNull, StringComparison.OrdinalIgnoreCase);//isnull  (isnull(aaa),'3,3')   iff(isnull   (aaa),333,aaa)
                     if (index > -1)
                     {
-                        
+
                         do
                         {
                             index = text.IndexOf('(', index);
@@ -117,20 +118,22 @@ namespace CYQ.Data.SQL
                             text = text.Insert(end, ")");//
                             end = text.IndexOf(')', end + 3);
                             text = text.Insert(end, "," + key);
-                            index = text.IndexOf(SqlValue.IsNull, end);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(SqlValue.IsNull, end, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        return text.Replace(SqlValue.IsNull, "iff(isnull");
+                        return Replace(text, SqlValue.IsNull, "iff(isnull");
                     }
                     break;
                 case DalType.SQLite:
                 case DalType.MySql:
-                    return text.Replace(SqlValue.IsNull, "IfNull");
+                    return Replace(text, SqlValue.IsNull, "IfNull");
+                case DalType.Oracle:
+                    return Replace(text, SqlValue.IsNull, "NVL");
                 case DalType.MsSql:
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.IsNull, "IsNull");
-                case DalType.Oracle:
-                    return text.Replace(SqlValue.IsNull, "NVL");
+                default:
+                    return Replace(text, SqlValue.IsNull, "IsNull");
+
             }
             return text;
         }
@@ -139,16 +142,16 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    return text.Replace(SqlValue.Guid, "GenGUID()");
+                    return Replace(text, SqlValue.Guid, "GenGUID()");
                 case DalType.MySql:
-                    return text.Replace(SqlValue.Guid, "UUID()");
+                    return Replace(text, SqlValue.Guid, "UUID()");
                 case DalType.MsSql:
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.Guid, "newid()");
+                    return Replace(text, SqlValue.Guid, "newid()");
                 case DalType.Oracle:
-                    return text.Replace(SqlValue.Guid, "SYS_GUID()");
+                    return Replace(text, SqlValue.Guid, "SYS_GUID()");
                 case DalType.SQLite:
-                    return text.Replace(SqlValue.Guid, "");
+                    return Replace(text, SqlValue.Guid, "");
             }
             return text;
         }
@@ -160,7 +163,7 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                     return text.Replace("=:?", "=?");
                 case DalType.Oracle:
-                    return text.Replace("=:?", "=:");
+                    return text.Replace( "=:?", "=:");
                 default:
                     return text.Replace("=:?", "=@");
             }
@@ -171,9 +174,15 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    return text.Replace(SqlValue.True, "true").Replace(SqlValue.False, "false").Replace(SqlValue.Desc, "asc").Replace(SqlValue.Asc, "desc");
+                    text = Replace(text, SqlValue.True, "true");
+                    text = Replace(text, SqlValue.False, "false");
+                    text = Replace(text, SqlValue.Desc, "asc");
+                    return Replace(text, SqlValue.Asc, "desc");
                 default:
-                    return text.Replace(SqlValue.True, "1").Replace(SqlValue.False, "0").Replace(SqlValue.Desc, "desc").Replace(SqlValue.Asc, "asc");
+                    text = Replace(text, SqlValue.True, "1");
+                    text = Replace(text, SqlValue.False, "0");
+                    text = Replace(text, SqlValue.Desc, "desc");
+                    return Replace(text, SqlValue.Asc, "asc");
             }
         }
 
@@ -183,14 +192,18 @@ namespace CYQ.Data.SQL
             {
                 case DalType.Access:
                 case DalType.MsSql:
-                    return text.Replace(SqlValue.Len, "len").Replace(SqlValue.Substring, "substring");
+                    text = Replace(text, SqlValue.Len, "len");
+                    return Replace(text, SqlValue.Substring, "substring");
                 case DalType.Oracle:
                 case DalType.SQLite:
-                    return text.Replace(SqlValue.Len, "length").Replace(SqlValue.Substring, "substr");
+                    text = Replace(text, SqlValue.Len, "length");
+                    return Replace(text, SqlValue.Substring, "substr");
                 case DalType.MySql:
-                    return text.Replace(SqlValue.Len, "char_length").Replace(SqlValue.Substring, "substring");
+                    text = Replace(text, SqlValue.Len, "char_length");
+                    return Replace(text, SqlValue.Substring, "substring");
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.Len, "datalength").Replace(SqlValue.Substring, "substring");
+                    text = Replace(text, SqlValue.Len, "datalength");
+                    return Replace(text, SqlValue.Substring, "substring");
             }
             return text;
         }
@@ -236,7 +249,7 @@ namespace CYQ.Data.SQL
         }
         private static string FormatDate(string text, DalType dalType, string key, string func)
         {
-            int index = text.IndexOf(key);//[#year](字段)
+            int index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//[#year](字段)
             if (index > -1)//存在[#year]函数
             {
                 string format = GetFormatDateKey(dalType, key);
@@ -249,10 +262,11 @@ namespace CYQ.Data.SQL
                             text = text.Insert(index + 2, "_");//[#_year](字段)
                             found = text.IndexOf(')', index + 4);//从[#_year(字段)]找到 ')'的位置
                             text = text.Insert(found, format);//->[#_year](字段,'yyyy')
-                            index = text.IndexOf(key);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        text = text.Replace("#_", "#").Replace(key, "to_char");//[#year](字段,'yyyy')
+                        text = text.Replace("#_", "#");
+                        text = Replace(text, key, "to_char");//[#year](字段,'yyyy')
                         break;
                     case DalType.SQLite:
                         do
@@ -262,17 +276,18 @@ namespace CYQ.Data.SQL
                             text = text.Insert(found + 1, format);//->[#_year]('%Y',字段)
                             found = text.IndexOf(')', found + 1);
                             text = text.Insert(found + 1, " as int)");
-                            index = text.IndexOf(key);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        text = text.Replace("#_", "#").Replace(key, "cast(strftime");//cast(strftime('%Y', UpdateTime) as int) [%Y,%m,%d]
+                        text = text.Replace("#_", "#");
+                        text = Replace(text, key, "cast(strftime");//cast(strftime('%Y', UpdateTime) as int) [%Y,%m,%d]
                         break;
                     case DalType.Sybase:
-                        text = text.Replace(key + "(", "datepart(" + format);
-                    //// [#YEAR](getdate())  datepart(mm,getdate()) datepart(mm,getdate()) datepart(mm,getdate())
+                        text = Replace(text, key + "(", "datepart(" + format);
+                        //// [#YEAR](getdate())  datepart(mm,getdate()) datepart(mm,getdate()) datepart(mm,getdate())
                         break;
                     default:
-                        text = text.Replace(key, func);
+                        text = Replace(text, key, func);
                         break;
                 }
             }
@@ -284,14 +299,14 @@ namespace CYQ.Data.SQL
             {
                 case DalType.Access:
                 case DalType.MySql:
-                    return text.Replace(SqlValue.GetDate, "now()");
+                    return Replace(text, SqlValue.GetDate, "now()");
                 case DalType.MsSql:
                 case DalType.Sybase:
-                    return text.Replace(SqlValue.GetDate, "getdate()");
+                    return Replace(text, SqlValue.GetDate, "getdate()");
                 case DalType.Oracle:
-                    return text.Replace(SqlValue.GetDate, "current_date");
+                    return Replace(text, SqlValue.GetDate, "current_date");
                 case DalType.SQLite:
-                    return text.Replace(SqlValue.GetDate, "datetime('now','localtime')");
+                    return Replace(text, SqlValue.GetDate, "datetime('now','localtime')");
             }
             return text;
         }
@@ -299,7 +314,7 @@ namespace CYQ.Data.SQL
         {
             string key = SqlValue.CharIndex;
             //select [#charindex]('ok',xxx) from xxx where [#charindex]('ok',xx)>0
-            int index = text.IndexOf(key);
+            int index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
             if (index > -1)//存在charIndex函数
             {
                 switch (dalType)
@@ -317,33 +332,18 @@ namespace CYQ.Data.SQL
                             string[] funs = func.Split(',');
                             text = text.Remove(start + 2, found - start - 2);//移除//select [#_charindex]() from xxx where [#charindex]('ok',xx)>0
                             text = text.Insert(start + 2, funs[1] + "," + funs[0]);
-                            index = text.IndexOf(key);
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
                         }
                         while (index > -1);
                         text = text.Replace("#_", "#");
-                        return text.Replace(key, "instr");
+                        return Replace(text, key, "instr");
                     case DalType.MySql:
-                        return text.Replace(key, "locate");
+                        return Replace(text, key, "locate");
                     case DalType.MsSql:
                     case DalType.Sybase:
-                        return text.Replace(key, "charindex");
+                        return Replace(text, key, "charindex");
                     case DalType.SQLite:
-                        //int found = 0;
-                        //string func = string.Empty;
-                        //do
-                        //{
-                        //    int start = index + key.Length;
-                        //    text = text.Insert(index + 2, "_");//select [#_charindex]('ok',xxx) from xxx where [#charindex]('ok',xx)>0
-                        //    found = text.IndexOf(')', index + 4);
-                        //    func = text.Substring(start + 2, found - start - 2);
-                        //    string[] funs = func.Split(',');
-                        //    text = text.Remove(start + 2, found - start - 2);//移除//select [#_charindex]() from xxx where [#charindex]('ok',xx)>0
-                        //    text = text.Insert(start + 2, string.Format("lower({0}),lower({1})", funs[0], funs[1]));
-                        //    index = text.IndexOf(key);
-                        //}
-                        //while (index > -1);
-                        //text = text.Replace("#_", "#");
-                        return text.Replace(key, "charindex");
+                        return Replace(text, key, "charindex");
 
 
                 }
@@ -354,7 +354,7 @@ namespace CYQ.Data.SQL
         {
             string key = SqlValue.DateDiff;
             //select [#DATEDIFF](aa,'bb','cc') from xxx where [#DATEDIFF](aa,'bb','cc')>0
-            int index = text.IndexOf(key);
+            int index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
             if (index > -1)//'yyyy','q','m','y','d','ww','hh/h','n','s'
             {
                 string[] keys = new string[] { "yyyy", "q", "m", "y", "d", "h", "ww", "n", "s" };//"hh/h"
@@ -392,7 +392,7 @@ namespace CYQ.Data.SQL
                             string[] funs = func.Split(',');
                             text = text.Remove(start + 2, found - start - 2);//移除//select [#_DateDiff() from xxx where [#DateDiff](time1,time2)>0
                             text = text.Insert(start + 2, funs[1] + "," + funs[0]);
-                            index = text.IndexOf(key);
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
                         }
                         while (index > -1);
                         text = text.Replace("#_", "#").Replace(AppConst.SplitChar, "()");
@@ -409,14 +409,15 @@ namespace CYQ.Data.SQL
                             string[] funs = func.Split(',');
                             text = text.Remove(start + 2, found - start - 2);//移除[#_DateDiff]()
                             text = text.Insert(start + 2, "julianday(" + funs[2] + ")-julianday(" + funs[1] + ")");
-                            index = text.IndexOf(key);//寻找还有没有第二次出现的函数字段
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        text = text.Replace("#_", "#").Replace(key, string.Empty);
+                        text = text.Replace("#_", "#");
+                        text = Replace(text, key, string.Empty);
                         break;
                 }
             }
-            return text.Replace(key, "DateDiff");
+            return Replace(text, key, "DateDiff");
         }
         private static string FormatCaseWhen(string text, DalType dalType)
         {
@@ -429,19 +430,31 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                 case DalType.SQLite:
                 case DalType.Sybase:
-                    if (text.IndexOf(SqlValue.Case) > -1 || text.IndexOf(SqlValue.CaseWhen) > -1)
+                    if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1 || text.IndexOf(SqlValue.CaseWhen, StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        text = text.Replace(SqlValue.Case, "Case").Replace(SqlValue.CaseWhen, "Case When").Replace("[#WHEN]", "when").Replace("[#THEN]", "then").Replace("[#ELSE]", "else").Replace("[#END]", "end");
+                        text = Replace(text, SqlValue.Case, "Case");
+                        text = Replace(text, SqlValue.CaseWhen, "Case When");
+                        text = Replace(text, "[#WHEN]", "when");
+                        text = Replace(text, "[#THEN]", "then");
+                        text = Replace(text, "[#ELSE]", "else");
+                        text = Replace(text, "[#END]", "end");
                     }
                     break;
                 case DalType.Access:
-                    if (text.IndexOf(SqlValue.Case) > -1)
+                    if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        text = text.Replace(SqlValue.Case, string.Empty).Replace(" [#WHEN] ", "iif(").Replace(" [#THEN] ", ",").Replace(" [#ELSE] ", ",").Replace(" [#END]", ")");
+                        text = Replace(text, SqlValue.Case, string.Empty);
+                        text = Replace(text, " [#WHEN] ", "iif(");
+                        text = Replace(text, " [#THEN] ", ",");
+                        text = Replace(text, " [#ELSE] ", ",");
+                        text = Replace(text, " [#END]", ")");
                     }
-                    else if (text.IndexOf(SqlValue.CaseWhen) > -1)
+                    else if (text.IndexOf(SqlValue.CaseWhen, StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        text = text.Replace(SqlValue.CaseWhen, "SWITCH(").Replace("[#THEN]", ",").Replace("[#ELSE]", "TRUE,").Replace("[#END]", ")");
+                        text = Replace(text, SqlValue.CaseWhen, "SWITCH(");
+                        text = Replace(text, "[#THEN]", ",");
+                        text = Replace(text, "[#ELSE]", "TRUE,");
+                        text = Replace(text, "[#END]", ")");
                     }
                     break;
             }
@@ -449,5 +462,12 @@ namespace CYQ.Data.SQL
             return text;
         }
         #endregion
+
+        //忽略大小写的替换。
+        private static string Replace(string text, string oldValue, string newValue)
+        {
+            oldValue = oldValue.Replace("[", "\\[").Replace("]", "\\]");
+            return Regex.Replace(text, oldValue, newValue, RegexOptions.IgnoreCase);
+        }
     }
 }

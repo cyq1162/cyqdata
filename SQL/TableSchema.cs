@@ -837,6 +837,24 @@ namespace CYQ.Data.SQL
             }
             return result > 0;
         }
+        /// <summary>
+        /// 获得表的描述
+        /// </summary>
+        internal static string GetTableDescription(string conn, string tableName)
+        {
+            using (DbBase dbBase = DalCreate.CreateDal(conn))
+            {
+                string key = GetTableCacheKey(dbBase);
+                if (tableCache.ContainsKey(key))
+                {
+                    if (tableCache[key].ContainsKey(tableName))
+                    {
+                        return tableCache[key][tableName];
+                    }
+                }
+                return string.Empty;
+            }
+        }
 
         #region ICloneable 成员
 

@@ -170,7 +170,11 @@ namespace CYQ.Data.Table
             {
                 if (string.IsNullOrEmpty(_Description))
                 {
-                    return _TableName;
+                    _Description = TableSchema.GetTableDescription(Conn, _TableName);
+                    if (string.IsNullOrEmpty(_Description))
+                    {
+                        _Description = _TableName;
+                    }
                 }
                 return _Description;
             }

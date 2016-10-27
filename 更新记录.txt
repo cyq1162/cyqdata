@@ -623,3 +623,5 @@
 407：SqlCreateForPager 处理分页的order by aa,bb 没带asc的问题（2016-10-25）
 408：NoSqlAction（修正第404修改产生删除后无法批量插入的问题）（2016-10-26）
 409：MDataTable的AcceptChanges处理重复批量（同时外部没有产生事务对象的条件下）的问题（2016-10-26）
+411：MDataTable的Description增加表字段说明输出（2016-10-27）
+412：StaticTool优化处理GetDbName的细节（2016-10-28）

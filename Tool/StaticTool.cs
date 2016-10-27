@@ -210,7 +210,7 @@ namespace CYQ.Data.Tool
                         tableNamesEnum = a + " " + tName.Substring(tName.LastIndexOf('.') + 1);
                     }
                 }
-                if (tName.Contains("."))
+                if (tName.Contains(".") && !tName.Trim().Contains(" "))
                 {
                     dbName = tName.Split('.')[0];
                 }
