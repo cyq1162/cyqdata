@@ -670,7 +670,7 @@ namespace CYQ.Data
         public static class Cache
         {
             /// <summary>
-            /// 分布式缓存的服务器配置，多个用逗号（,）分隔
+            /// MemCache分布式缓存的服务器配置，多个用逗号（,）分隔
             /// </summary>
             public static string MemCacheServers
             {
@@ -683,20 +683,51 @@ namespace CYQ.Data
                     SetApp("MemCacheServers", value);
                 }
             }
+
             /// <summary>
-            /// Cache.CacheManage 调用GC.Collect()方法的间隔时间[(默认180)分钟]
+            /// MemCache 备份服务器（当主服务器挂了后，请求会转向备用机）
             /// </summary>
-            //public static int GCCollectTime
-            //{
-            //    get
-            //    {
-            //        return GetAppInt("GCCollectTime", 180);
-            //    }
-            //    set
-            //    {
-            //        SetApp("GCCollectTime", value.ToString());
-            //    }
-            //}
+            public static string MemCacheServersBak
+            {
+                get
+                {
+                    return GetApp("MemCacheServersBak", string.Empty);
+                }
+                set
+                {
+                    SetApp("MemCacheServersBak", value);
+                }
+            }
+
+            /// <summary>
+            /// Redis分布式缓存的服务器配置，多个用逗号（,）分隔
+            /// </summary>
+            public static string RedisServers
+            {
+                get
+                {
+                    return GetApp("RedisServers", string.Empty);
+                }
+                set
+                {
+                    SetApp("RedisServers", value);
+                }
+            }
+
+            /// <summary>
+            /// Redis  备份服务器（当主服务器挂了后，请求会转向备用机）
+            /// </summary>
+            public static string RedisServersBak
+            {
+                get
+                {
+                    return GetApp("RedisServersBak", string.Empty);
+                }
+                set
+                {
+                    SetApp("RedisServersBak", value);
+                }
+            }
 
             /// <summary>
             /// Cache.CacheManage 默认缓存项的时间[分钟(默认60)]

@@ -9,21 +9,21 @@ using CYQ.Data.Tool;
 namespace CYQ.Data.Cache
 {
     /// <summary>
-    /// MemCache分布式缓存类
+    /// Redis分布式缓存类
     /// </summary>
-    internal class MemCache : CacheManage
+    internal class RedisCache : CacheManage
     {
-        MemcachedClient client;
-        internal MemCache()
+        RedisClient client;
+        internal RedisCache()
         {
-            if (string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
+            if (string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
             {
-                Error.Throw("AppConfig.Cache.MemCacheServers cant' be Empty!");
+                Error.Throw("AppConfig.Cache.RedisServers cant' be Empty!");
             }
-            client = MemcachedClient.Setup("MemCache", AppConfig.Cache.MemCacheServers.Split(','));
-            if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServersBak))
+            client = RedisClient.Setup("RedisCache", AppConfig.Cache.RedisServers.Split(','));
+            if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServersBak))
             {
-                MemcachedClient clientBak = MemcachedClient.Setup("MemCacheBak", AppConfig.Cache.MemCacheServersBak.Split(','));
+                RedisClient clientBak = RedisClient.Setup("RedisCacheBak", AppConfig.Cache.RedisServersBak.Split(','));
                 client.serverPool.serverPoolBak = clientBak.serverPool;
             }
 
@@ -32,26 +32,26 @@ namespace CYQ.Data.Cache
 
         public override void Add(string key, object value, double cacheMinutes)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            Add(key, value, null, cacheMinutes, CacheItemPriority.Default);
         }
         public override void Add(string key, object value, string fileName, double cacheMinutes)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            Add(key, value, null, cacheMinutes, CacheItemPriority.Default);
         }
 
         public override void Add(string key, object value, string fileName)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
+            Add(key, value, null, 0, CacheItemPriority.Default);
         }
 
         public override void Add(string key, object value)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
+            Add(key, value, null, 0, CacheItemPriority.Default);
         }
 
         public override void Add(string key, object value, string fileName, double cacheMinutes, CacheItemPriority level)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
 
         public override Dictionary<string, CacheDependencyInfo> CacheInfo
@@ -90,7 +90,7 @@ namespace CYQ.Data.Cache
                             }
                         }
                     }
-                    cacheTable.TableName = "MemCache";
+                    cacheTable.TableName = "Redis";
                     allowCacheTableTime = DateTime.Now.AddMinutes(1);
                 }
                 return cacheTable;
@@ -104,7 +104,7 @@ namespace CYQ.Data.Cache
 
         public override bool Contains(string key)
         {
-            return Get(key) != null;
+            return client.ContainsKey(key);
         }
 
         //int count = -1;
@@ -114,12 +114,12 @@ namespace CYQ.Data.Cache
             get
             {
                 int count = 0;
-                MDataRow row = CacheTable.FindRow("Key='curr_items'");
+                MDataRow row = CacheTable.Rows[CacheTable.Rows.Count - 1];
                 if (row != null)
                 {
                     for (int i = 1; i < row.Columns.Count; i++)
                     {
-                        count += int.Parse(row[i].strValue);
+                        count += int.Parse(row[i].strValue.Split(',')[0].Split('=')[1]);
                     }
                 }
                 return count;
@@ -159,12 +159,12 @@ namespace CYQ.Data.Cache
 
         public override void Set(string key, object value)
         {
-            client.Set(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
+            Set(key, value, 0);
         }
 
         public override void Set(string key, object value, double cacheMinutes)
         {
-            client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
 
         public override void SetChange(string key, bool isChange)
@@ -174,7 +174,10 @@ namespace CYQ.Data.Cache
 
         public override void Update(string key, object value)
         {
-            client.Replace(key, value);
+            if (Contains(key))
+            {
+                Set(key, value);
+            }
         }
 
         DateTime allowGetWorkInfoTime = DateTime.Now;
@@ -207,7 +210,7 @@ namespace CYQ.Data.Cache
 
         public override CacheType CacheType
         {
-            get { return CacheType.MemCache; }
+            get { return CacheType.Redis; }
         }
     }
 }

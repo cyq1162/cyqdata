@@ -89,15 +89,19 @@
     <Compile Include="Aop\AopEnum.cs" />
     <Compile Include="Aop\IAop.cs" />
     <Compile Include="Cache\MemCache.cs" />
-    <Compile Include="Cache\MemCache\HashAlgorithms.cs" />
-    <Compile Include="Cache\MemCache\LogAdapter.cs" />
+    <Compile Include="Cache\MemRedis\HashAlgorithms.cs" />
+    <Compile Include="Cache\MemRedis\LogAdapter.cs" />
     <Compile Include="Cache\MemCache\MemcachedClient.cs" />
-    <Compile Include="Cache\MemCache\MemcachedClientException.cs" />
-    <Compile Include="Cache\MemCache\PooledSocket.cs" />
-    <Compile Include="Cache\MemCache\Serializer.cs" />
-    <Compile Include="Cache\MemCache\ServerPool.cs" />
-    <Compile Include="Cache\MemCache\SocketPool.cs" />
+    <Compile Include="Cache\MemRedis\MSocket.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Cache\MemRedis\Serializer.cs" />
+    <Compile Include="Cache\MemRedis\ServerPool.cs" />
+    <Compile Include="Cache\MemRedis\SocketPool.cs" />
     <Compile Include="Cache\LocalCache.cs" />
+    <Compile Include="Cache\RedisCache.cs" />
+    <Compile Include="Cache\Redis\RedisClient.cs" />
+    <Compile Include="Cache\Redis\RedisCommand.cs" />
     <Compile Include="DAL\Conn\ConnObject.cs" />
     <Compile Include="DAL\DalEnum.cs" />
     <Compile Include="DAL\NoSql\NoSqlConnection.cs">
@@ -197,7 +201,6 @@
     </Compile>
     <Compile Include="Tool\DBTool.cs" />
     <Compile Include="Tool\JsonSplit.cs" />
-    <Compile Include="Tool\MD5.cs" />
     <Compile Include="Tool\MDictionary.cs" />
     <Compile Include="Tool\StaticTool.cs" />
     <Compile Include="Tool\ThreadBreak.cs" />

@@ -625,3 +625,5 @@
 409：MDataTable的AcceptChanges处理重复批量（同时外部没有产生事务对象的条件下）的问题（2016-10-26）
 411：MDataTable的Description增加表字段说明输出（2016-10-27）
 412：StaticTool优化处理GetDbName的细节（2016-10-28）
+413：增加Redis分布式缓存支持（配置AppConfig.Cache.RedisServers）（2016-10-30）
+414：为Redis和MemCache增加备份节点支持(配置AppConfig.Cache.RedisServersBak、AppConfig.Cache.MemCacheServersBak）（2016-10-30）

@@ -48,13 +48,15 @@ namespace CYQ.Data.Cache
         /// If port is omitted, the default value of 11211 is used. 
         /// Both IP addresses and host names are accepted, for example:
         /// "localhost", "127.0.0.1", "cache01.example.com:12345", "127.0.0.1:12345", etc.</param>
-        public static void Setup(string name, string[] servers)
+        public static MemcachedClient Setup(string name, string[] servers)
         {
             if (instances.ContainsKey(name))
             {
                 throw new ConfigurationErrorsException("Trying to configure MemcachedClient instance \"" + name + "\" twice.");
             }
-            instances[name] = new MemcachedClient(name, servers);
+            MemcachedClient client = new MemcachedClient(name, servers);
+            instances[name] = client;
+            return client;
         }
 
         /// <summary>
@@ -99,7 +101,7 @@ namespace CYQ.Data.Cache
 
         #region Fields, constructors, and private methods.
         public readonly string Name;
-        private readonly ServerPool serverPool;
+        internal readonly ServerPool serverPool;
 
         /// <summary>
         /// If you specify a key prefix, it will be appended to all keys before they are sent to the memcached server.
@@ -313,23 +315,7 @@ namespace CYQ.Data.Cache
         public bool Replace(string key, object value, DateTime expiry) { return store("replace", key, true, value, hash(key), getUnixTime(expiry)); }
         public bool Replace(string key, object value, uint hash, DateTime expiry) { return store("replace", key, false, value, this.hash(hash), getUnixTime(expiry)); }
 
-        /// <summary>
-        /// This method corresponds to the "append" command in the memcached protocol.
-        /// It will append the given value to the given key, if the key already exists.
-        /// Modifying a key with this command will not change its expiry time.
-        /// Using the overload it is possible to specify a custom hash to override server selection.
-        /// </summary>
-        public bool Append(string key, object value) { return store("append", key, true, value, hash(key)); }
-        public bool Append(string key, object value, uint hash) { return store("append", key, false, value, this.hash(hash)); }
 
-        /// <summary>
-        /// This method corresponds to the "prepend" command in the memcached protocol.
-        /// It will prepend the given value to the given key, if the key already exists.
-        /// Modifying a key with this command will not change its expiry time.
-        /// Using the overload it is possible to specify a custom hash to override server selection.
-        /// </summary>
-        public bool Prepend(string key, object value) { return store("prepend", key, true, value, hash(key)); }
-        public bool Prepend(string key, object value, uint hash) { return store("prepend", key, false, value, this.hash(hash)); }
 
         public enum CasResult
         {
@@ -338,13 +324,6 @@ namespace CYQ.Data.Cache
             Exists = 2,
             NotFound = 3
         }
-
-        public CasResult CheckAndSet(string key, object value, ulong unique) { return store(key, true, value, hash(key), 0, unique); }
-        public CasResult CheckAndSet(string key, object value, uint hash, ulong unique) { return store(key, false, value, this.hash(hash), 0, unique); }
-        public CasResult CheckAndSet(string key, object value, TimeSpan expiry, ulong unique) { return store(key, true, value, hash(key), (int)expiry.TotalSeconds, unique); }
-        public CasResult CheckAndSet(string key, object value, uint hash, TimeSpan expiry, ulong unique) { return store(key, false, value, this.hash(hash), (int)expiry.TotalSeconds, unique); }
-        public CasResult CheckAndSet(string key, object value, DateTime expiry, ulong unique) { return store(key, true, value, hash(key), getUnixTime(expiry), unique); }
-        public CasResult CheckAndSet(string key, object value, uint hash, DateTime expiry, ulong unique) { return store(key, false, value, this.hash(hash), getUnixTime(expiry), unique); }
 
         //Private overload for the Set, Add and Replace commands.
         private bool store(string command, string key, bool keyIsChecked, object value, uint hash, int expiry)
@@ -385,7 +364,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            return serverPool.Execute<string>(hash, "", delegate(PooledSocket socket)
+            return serverPool.Execute<string>(hash, "", delegate(MSocket socket)
             {
                 SerializedType type;
                 byte[] bytes;
@@ -443,13 +422,6 @@ namespace CYQ.Data.Cache
         public object Get(string key) { ulong i; return get("get", key, true, hash(key), out i); }
         public object Get(string key, uint hash) { ulong i; return get("get", key, false, this.hash(hash), out i); }
 
-        /// <summary>
-        /// This method corresponds to the "gets" command in the memcached protocol.
-        /// It works exactly like the Get method, but it will also return the cas unique value for the item.
-        /// </summary>
-        public object Gets(string key, out ulong unique) { return get("gets", key, true, hash(key), out unique); }
-        public object Gets(string key, uint hash, out ulong unique) { return get("gets", key, false, this.hash(hash), out unique); }
-
         private object get(string command, string key, bool keyIsChecked, uint hash, out ulong unique)
         {
             if (!keyIsChecked)
@@ -458,7 +430,7 @@ namespace CYQ.Data.Cache
             }
 
             ulong __unique = 0;
-            object value = serverPool.Execute<object>(hash, null, delegate(PooledSocket socket)
+            object value = serverPool.Execute<object>(hash, null, delegate(MSocket socket)
             {
                 socket.Write(command + " " + keyPrefix + key + "\r\n");
                 object _value;
@@ -473,22 +445,6 @@ namespace CYQ.Data.Cache
             unique = __unique;
             return value;
         }
-
-        /// <summary>
-        /// This method executes a multi-get. It will group the keys by server and execute a single get 
-        /// for each server, and combine the results. The returned object[] will have the same size as
-        /// the given key array, and contain either null or a value at each position according to
-        /// the key on that position.
-        /// </summary>
-        public object[] Get(string[] keys) { ulong[] uniques; return get("get", keys, true, hash(keys), out uniques); }
-        public object[] Get(string[] keys, uint[] hashes) { ulong[] uniques; return get("get", keys, false, hash(hashes), out uniques); }
-
-        /// <summary>
-        /// This method does a multi-gets. It functions exactly like the multi-get method, but it will
-        /// also return an array of cas unique values as an out parameter.
-        /// </summary>
-        public object[] Gets(string[] keys, out ulong[] uniques) { return get("gets", keys, true, hash(keys), out uniques); }
-        public object[] Gets(string[] keys, uint[] hashes, out ulong[] uniques) { return get("gets", keys, false, hash(hashes), out uniques); }
 
         private object[] get(string command, string[] keys, bool keysAreChecked, uint[] hashes, out ulong[] uniques)
         {
@@ -542,7 +498,7 @@ namespace CYQ.Data.Cache
             ulong[] _uniques = new ulong[keys.Length];
             foreach (KeyValuePair<SocketPool, Dictionary<string, List<int>>> kv in dict)
             {
-                serverPool.Execute(kv.Key, delegate(PooledSocket socket)
+                serverPool.Execute(kv.Key, delegate(MSocket socket)
                 {
                     //Build the get request
                     StringBuilder getRequest = new StringBuilder(command);
@@ -575,7 +531,7 @@ namespace CYQ.Data.Cache
         }
 
         //Private method for reading results of the "get" command.
-        private bool readValue(PooledSocket socket, out object value, out string key, out ulong unique)
+        private bool readValue(MSocket socket, out object value, out string key, out ulong unique)
         {
             string response = socket.ReadResponse();
             string[] parts = response.Split(' '); //Result line from server: "VALUE <key> <flags> <bytes> <cas unique>"
@@ -623,21 +579,17 @@ namespace CYQ.Data.Cache
         /// Use the overloads to specify an amount of time the item should be in the delete queue on the server,
         /// or to specify a custom hash to override server selection.
         /// </summary>
-        public bool Delete(string key) { return delete(key, true, hash(key), 0); }
-        public bool Delete(string key, uint hash) { return delete(key, false, this.hash(hash), 0); }
-        public bool Delete(string key, TimeSpan delay) { return delete(key, true, hash(key), (int)delay.TotalSeconds); }
-        public bool Delete(string key, uint hash, TimeSpan delay) { return delete(key, false, this.hash(hash), (int)delay.TotalSeconds); }
-        public bool Delete(string key, DateTime delay) { return delete(key, true, hash(key), getUnixTime(delay)); }
-        public bool Delete(string key, uint hash, DateTime delay) { return delete(key, false, this.hash(hash), getUnixTime(delay)); }
+        public bool Delete(string key) { return Delete(key, true, hash(key), 0); }
 
-        private bool delete(string key, bool keyIsChecked, uint hash, int time)
+
+        private bool Delete(string key, bool keyIsChecked, uint hash, int time)
         {
             if (!keyIsChecked)
             {
                 checkKey(key);
             }
 
-            return serverPool.Execute<bool>(hash, false, delegate(PooledSocket socket)
+            return serverPool.Execute<bool>(hash, false, delegate(MSocket socket)
             {
                 string commandline;
                 if (time == 0)
@@ -654,92 +606,7 @@ namespace CYQ.Data.Cache
         }
         #endregion
 
-        #region Increment Decrement
-        /// <summary>
-        /// This method sets the key to the given value, and stores it in a format such that the methods
-        /// Increment and Decrement can be used successfully on it, i.e. decimal representation of a 64-bit unsigned integer. 
-        /// Using the overloads it is possible to specify an expiry time, either relative as a TimeSpan or 
-        /// absolute as a DateTime. It is also possible to specify a custom hash to override server selection.
-        /// This method returns true if the counter was successfully set.
-        /// </summary>
-        public bool SetCounter(string key, ulong value) { return Set(key, value.ToString(CultureInfo.InvariantCulture)); }
-        public bool SetCounter(string key, ulong value, uint hash) { return Set(key, value.ToString(CultureInfo.InvariantCulture), this.hash(hash)); }
-        public bool SetCounter(string key, ulong value, TimeSpan expiry) { return Set(key, value.ToString(CultureInfo.InvariantCulture), expiry); }
-        public bool SetCounter(string key, ulong value, uint hash, TimeSpan expiry) { return Set(key, value.ToString(CultureInfo.InvariantCulture), this.hash(hash), expiry); }
-        public bool SetCounter(string key, ulong value, DateTime expiry) { return Set(key, value.ToString(CultureInfo.InvariantCulture), expiry); }
-        public bool SetCounter(string key, ulong value, uint hash, DateTime expiry) { return Set(key, value.ToString(CultureInfo.InvariantCulture), this.hash(hash), expiry); }
 
-        /// <summary>
-        /// This method returns the value for the given key as a ulong?, a nullable 64-bit unsigned integer.
-        /// It returns null if the item did not exist, was not stored properly as per the SetCounter method, or 
-        /// if it was not able to successfully retrieve the item.
-        /// </summary>
-        public ulong? GetCounter(string key) { return getCounter(key, true, hash(key)); }
-        public ulong? GetCounter(string key, uint hash) { return getCounter(key, false, this.hash(hash)); }
-
-        private ulong? getCounter(string key, bool keyIsChecked, uint hash)
-        {
-            ulong parsedLong, unique;
-            return ulong.TryParse(get("get", key, keyIsChecked, hash, out unique) as string, out parsedLong) ? (ulong?)parsedLong : null;
-        }
-
-        public ulong?[] GetCounter(string[] keys) { return getCounter(keys, true, hash(keys)); }
-        public ulong?[] GetCounter(string[] keys, uint[] hashes) { return getCounter(keys, false, hash(hashes)); }
-
-        private ulong?[] getCounter(string[] keys, bool keysAreChecked, uint[] hashes)
-        {
-            ulong?[] results = new ulong?[keys.Length];
-            ulong[] uniques;
-            object[] values = get("get", keys, keysAreChecked, hashes, out uniques);
-            for (int i = 0; i < values.Length; i++)
-            {
-                ulong parsedLong;
-                results[i] = ulong.TryParse(values[i] as string, out parsedLong) ? (ulong?)parsedLong : null;
-            }
-            return results;
-        }
-
-        /// <summary>
-        /// This method corresponds to the "incr" command in the memcached protocol.
-        /// It will increase the item with the given value and return the new value.
-        /// It will return null if the item did not exist, was not stored properly as per the SetCounter method, or 
-        /// if it was not able to successfully retrieve the item. 
-        /// </summary>
-        public ulong? Increment(string key, ulong value) { return incrementDecrement("incr", key, true, value, hash(key)); }
-        public ulong? Increment(string key, ulong value, uint hash) { return incrementDecrement("incr", key, false, value, this.hash(hash)); }
-
-        /// <summary>
-        /// This method corresponds to the "decr" command in the memcached protocol.
-        /// It will decrease the item with the given value and return the new value. If the new value would be 
-        /// less than 0, it will be set to 0, and the method will return 0.
-        /// It will return null if the item did not exist, was not stored properly as per the SetCounter method, or 
-        /// if it was not able to successfully retrieve the item. 
-        /// </summary>
-        public ulong? Decrement(string key, ulong value) { return incrementDecrement("decr", key, true, value, hash(key)); }
-        public ulong? Decrement(string key, ulong value, uint hash) { return incrementDecrement("decr", key, false, value, this.hash(hash)); }
-
-        private ulong? incrementDecrement(string cmd, string key, bool keyIsChecked, ulong value, uint hash)
-        {
-            if (!keyIsChecked)
-            {
-                checkKey(key);
-            }
-            return serverPool.Execute<ulong?>(hash, null, delegate(PooledSocket socket)
-            {
-                string command = cmd + " " + keyPrefix + key + " " + value + "\r\n";
-                socket.Write(command);
-                string response = socket.ReadResponse();
-                if (response.StartsWith("NOT_FOUND"))
-                {
-                    return null;
-                }
-                else
-                {
-                    return Convert.ToUInt64(response.TrimEnd('\0', '\r', '\n'));
-                }
-            });
-        }
-        #endregion
 
         #region Flush All
         /// <summary>
@@ -760,7 +627,7 @@ namespace CYQ.Data.Cache
             uint count = 0;
             foreach (SocketPool pool in serverPool.HostList)
             {
-                serverPool.Execute(pool, delegate(PooledSocket socket)
+                serverPool.Execute(pool, delegate(MSocket socket)
                 {
                     uint delaySeconds = (staggered ? (uint)delay.TotalSeconds * count : (uint)delay.TotalSeconds);
                     //Funnily enough, "flush_all 0" has no effect, you have to send "flush_all" to flush immediately.
@@ -791,15 +658,6 @@ namespace CYQ.Data.Cache
             }
             return results;
         }
-
-        /// <summary>
-        /// This method corresponds to the "stats" command in the memcached protocol.
-        /// It will send the stats command to the server that corresponds to the given key, hash or host,
-        /// and return a Dictionary containing the results of the command.
-        /// </summary>
-        public Dictionary<string, string> Stats(string key) { return Stats(hash(key)); }
-        public Dictionary<string, string> Stats(uint hash) { return stats(serverPool.GetSocketPool(this.hash(hash))); }
-        public Dictionary<string, string> StatsByHost(string host) { return stats(serverPool.GetSocketPool(host)); }
         private Dictionary<string, string> stats(SocketPool pool)
         {
             if (pool == null)
@@ -807,7 +665,7 @@ namespace CYQ.Data.Cache
                 return null;
             }
             Dictionary<string, string> result = new Dictionary<string, string>();
-            serverPool.Execute(pool, delegate(PooledSocket socket)
+            serverPool.Execute(pool, delegate(MSocket socket)
             {
                 socket.Write("stats\r\n");
                 string line;

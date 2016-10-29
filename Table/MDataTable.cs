@@ -501,7 +501,8 @@ namespace CYQ.Data.Table
         {
             if (newTable != null && newTable.Rows.Count > 0)
             {
-                for (int i = 0; i < newTable.Rows.Count; i++)
+                int count = newTable.Rows.Count;//提前获取总数，是为了避免dt.Merge(dt);//加载自身导致的死循环。
+                for (int i = 0; i < count; i++)
                 {
                     // _Rows.Add(newTable.Rows[i]);
                     NewRow(true).LoadFrom(newTable.Rows[i]);

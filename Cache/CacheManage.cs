@@ -25,19 +25,24 @@ namespace CYQ.Data.Cache
 
         #region 对外实例
         /// <summary>
-        /// 返回唯一实例(根据是否配置AppConfig.Cache.MemCacheServers的服务器决定启用本地缓存或分布式缓存）
+        /// 返回唯一实例(根据配置(AppConfig.Cache.XXXCacheServers)决定启用顺序：Redis、MemCache、本地缓存）
         /// </summary>
         public static CacheManage Instance
         {
             get
             {
-                if (string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
+                if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
                 {
-                    return LocalShell.instance;
+                    return RedisShell.instance;
+                }
+                else if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
+                {
+                    return MemShell.instance;
                 }
                 else
                 {
-                    return MemShell.instance;
+                    return LocalShell.instance;
+                    
                 }
             }
         }
@@ -53,6 +58,28 @@ namespace CYQ.Data.Cache
             }
         }
 
+        /// <summary>
+        /// MemCache缓存（需要配置AppConfig.Cache.MemCacheServers）
+        /// </summary>
+        public static CacheManage MemCacheInstance
+        {
+            get
+            {
+
+                return MemShell.instance;
+            }
+        }
+        /// <summary>
+        /// Redis缓存（需要配置AppConfig.Cache.RedisServers）
+        /// </summary>
+        public static CacheManage RedisInstance
+        {
+            get
+            {
+
+                return RedisShell.instance;
+            }
+        }
         class LocalShell
         {
             internal static readonly LocalCache instance = new LocalCache();
@@ -60,6 +87,10 @@ namespace CYQ.Data.Cache
         class MemShell
         {
             internal static readonly MemCache instance = new MemCache();
+        }
+        class RedisShell
+        {
+            internal static readonly RedisCache instance = new RedisCache();
         }
         #endregion
         public abstract CacheType CacheType { get; }
@@ -236,9 +267,13 @@ namespace CYQ.Data.Cache
         /// </summary>
         LocalCache,
         /// <summary>
-        /// 分布式MemCached缓存
+        /// MemCached分布式缓存
         /// </summary>
-        MemCache
+        MemCache,
+        /// <summary>
+        /// Redis分布式缓存
+        /// </summary>
+        Redis
     }
     /// <summary>
     /// Cache的Key类型
