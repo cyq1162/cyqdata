@@ -114,13 +114,17 @@ namespace CYQ.Data.Cache
             get
             {
                 int count = 0;
-                MDataRow row = CacheTable.Rows[CacheTable.Rows.Count - 1];
-                if (row != null)
+                List<MDataRow> rows = CacheTable.FindAll("Key like 'db%'");
+                if (rows != null && rows.Count > 0)
                 {
-                    for (int i = 1; i < row.Columns.Count; i++)
+                    foreach (MDataRow row in rows)
                     {
-                        count += int.Parse(row[i].strValue.Split(',')[0].Split('=')[1]);
+                        for (int i = 1; i < row.Columns.Count; i++)
+                        {
+                            count += int.Parse(row[i].strValue.Split(',')[0].Split('=')[1]);
+                        }
                     }
+                   
                 }
                 return count;
             }

@@ -549,7 +549,7 @@ namespace CYQ.Data.Cache
                     unique = 0;
                 }
                 socket.Read(bytes);
-                socket.SkipUntilEndOfLine(); //Skip the trailing \r\n
+                socket.SkipToEndOfLine(); //Skip the trailing \r\n
                 try
                 {
                     value = Serializer.DeSerialize(bytes, type);

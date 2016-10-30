@@ -2,11 +2,36 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-
 using System.Text;
 
 namespace CYQ.Data.Cache
 {
+    /*
+     协议规范
+
+redis允许客户端以TCP方式连接，默认6379端口。传输数据都以\r\n结尾。
+
+请求格式
+
+*<number of arguments>\r\n$<number of bytes of argument 1>\r\n<argument data>\r\n
+
+例：*1\r\n$4\r\nINFO\r\n
+
+响应格式
+
+1：简单字符串，非二进制安全字符串，一般是状态回复。  +开头，例：+OK\r\n 
+
+2: 错误信息。　　　　　　　　　　-开头， 例：-ERR unknown command 'mush'\r\n
+
+3: 整型数字。                            :开头， 例：:1\r\n
+
+4：大块回复值，最大512M。           $开头+数据长度。 例：$4\r\mush\r\n
+
+5：多条回复。                           *开头， 例：*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n 
+     */
+    /// <summary>
+    /// RedisCommand
+    /// </summary>
     internal class RedisCommand : IDisposable
     {
         MSocket socket;
@@ -62,44 +87,6 @@ namespace CYQ.Data.Cache
         }
 
 
-        //public void Add(byte[] data, SerializedType st)
-        //{
-        //    string header = "$" + (data.Length);// + (st != SerializedType.None ? 1 : 0));
-        //    byte[] headerdata = Encoding.ASCII.GetBytes(header);
-        //    mStream.Write(headerdata, 0, headerdata.Length);
-        //    mStream.Write(Eof, 0, 2);
-        //    //if (st != SerializedType.None)
-        //    //{
-        //    //    //追加序列化的类型
-        //    //    byte[] b = new byte[1] { (byte)st };
-        //    //    mStream.Write(b, 0, 1);
-        //    //}
-        //    mStream.Write(data, 0, data.Length);
-        //    mStream.Write(Eof, 0, 2);
-        //    Count++;
-        //}
-
-        //public byte[] ToArray()
-        //{
-        //    try
-        //    {
-        //        string header = string.Format("*{0}\r\n", Count);
-        //        byte[] headerdata = Encoding.ASCII.GetBytes(header);
-        //        byte[] result = new byte[mStream.Length + headerdata.Length];
-        //        Buffer.BlockCopy(headerdata, 0, result, 0, headerdata.Length);
-        //        int length = (int)mStream.Position;
-        //        mStream.Position = 0;
-        //        mStream.Read(result, headerdata.Length, length);
-        //        return result;
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        Log.WriteLogToTxt(e);
-        //        return null;
-        //    }
-        //}
-
-        // public static byte[] Eof = Encoding.ASCII.GetBytes("\r\n");
 
         public void Reset(int commandCount, string command)
         {
@@ -109,9 +96,7 @@ namespace CYQ.Data.Cache
 
         public void Dispose()
         {
-            //mStream.Close();
-            //mStream.Dispose();
-            //mStream = null;
+
         }
 
 

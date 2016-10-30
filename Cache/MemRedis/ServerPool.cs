@@ -120,7 +120,7 @@ namespace CYQ.Data.Cache
             {
                 //Get the index of the first item bigger than the one searched for.
                 i = ~i;
-
+                 
                 //If i is bigger than the last index, it was bigger than the last item = use the first item.
                 if (i >= hostKeys.Length)
                 {

@@ -47,7 +47,6 @@ namespace CYQ.Data.Cache
         /// Socket的挂科时间。
         /// </summary>
         private DateTime socketDeadTime = DateTime.MinValue;
-
         /// <summary>
         /// If the host stops responding, we mark it as dead for this amount of seconds, 
         /// and we double this for each consecutive failed retry. If the host comes alive

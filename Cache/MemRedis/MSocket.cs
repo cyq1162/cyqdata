@@ -1,26 +1,3 @@
-//Copyright (c) 2007-2008 Henrik Schr鰀er, Oliver Kofoed Pedersen
-
-//Permission is hereby granted, free of charge, to any person
-//obtaining a copy of this software and associated documentation
-//files (the "Software"), to deal in the Software without
-//restriction, including without limitation the rights to use,
-//copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the
-//Software is furnished to do so, subject to the following
-//conditions:
-
-//The above copyright notice and this permission notice shall be
-//included in all copies or substantial portions of the Software.
-
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-//OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-//NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-//HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-//WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-//FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-//OTHER DEALINGS IN THE SOFTWARE.
-
 using System;
 using System.IO;
 using System.Net;
@@ -29,11 +6,6 @@ using System.Text;
 
 namespace CYQ.Data.Cache
 {
-    /// <summary>
-    /// The PooledSocket class encapsulates a socket connection to a specified memcached server.
-    /// It contains a buffered stream for communication, and methods for sending and retrieving
-    /// data from the memcached server, as well as general memcached error checking.
-    /// </summary>
     internal class MSocket : IDisposable
     {
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
@@ -42,6 +14,10 @@ namespace CYQ.Data.Cache
         private Socket socket;
         private Stream stream;
         public readonly DateTime Created;
+        /// <summary>
+        /// 额外扩展的属性（用于Redis）
+        /// </summary>
+        public uint DB = 0;
 
         public MSocket(SocketPool socketPool, IPEndPoint endPoint, int sendReceiveTimeout, int connectTimeout)
         {
@@ -131,13 +107,22 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// Reads from the socket until the sequence '\r\n' is encountered, 
         /// and returns everything up to but not including that sequence as a UTF8-encoded string
+        /// 返回Null即没有数据了！
         /// </summary>
         public string ReadLine()
         {
-            return Encoding.UTF8.GetString(ReadBytes());
+            byte[] data = ReadLineBytes();
+            if (data != null && data.Length > 0)
+            {
+                return Encoding.UTF8.GetString(data);
+            }
+            return null;
         }
-
-        public byte[] ReadBytes()
+        /// <summary>
+        /// 读一行的数据
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ReadLineBytes()
         {
             MemoryStream buffer = new MemoryStream();
             int b;
@@ -146,7 +131,7 @@ namespace CYQ.Data.Cache
             {
                 if (gotReturn)
                 {
-                    if (b == 10)
+                    if (b == 10)//\n
                     {
                         break;
                     }
@@ -156,7 +141,7 @@ namespace CYQ.Data.Cache
                         gotReturn = false;
                     }
                 }
-                if (b == 13)
+                if (b == 13)//\r
                 {
                     gotReturn = true;
                 }
@@ -212,7 +197,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// Reads from the socket until the sequence '\r\n' is encountered.
         /// </summary>
-        public void SkipUntilEndOfLine()
+        public void SkipToEndOfLine()
         {
             int b;
             bool gotReturn = false;

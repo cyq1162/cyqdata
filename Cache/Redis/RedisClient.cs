@@ -137,6 +137,9 @@ namespace CYQ.Data.Cache
         /// </summary>
         public TimeSpan SocketRecycleAge { get { return serverPool.SocketRecycleAge; } set { serverPool.SocketRecycleAge = value; } }
 
+        /// <summary>
+        /// 指定数据长度超过值时进行压缩
+        /// </summary>
         private uint compressionThreshold = 1024 * 128; //128kb
         /// <summary>
         /// If an object being stored is larger in bytes than the compression threshold, it will internally be compressed before begin stored,
@@ -243,7 +246,7 @@ namespace CYQ.Data.Cache
         }
 
         //Private Unix-time converter
-        private static DateTime epoch = new DateTime (1970 , 1 , 1 , 0 , 0 , 0, DateTimeKind.Utc);
+        private static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private static int getUnixTime(DateTime datetime)
         {
             return (int)(datetime.ToUniversalTime() - epoch).TotalSeconds;
@@ -252,7 +255,7 @@ namespace CYQ.Data.Cache
 
         #region Set、Append
 
-        public void Set(string key, object value) { Set(key, value, 0); }
+        public void Append(string key, object value, int seconds) { Set("append", key, false, value, hash(key), seconds); }
         public void Set(string key, object value, int seconds) { Set("set", key, false, value, hash(key), seconds); }
 
 
@@ -279,12 +282,13 @@ namespace CYQ.Data.Cache
                       logger.Error("Error serializing object for key '" + key + "'.", e);
                       return "";
                   }
+                  CheckDB(socket, hash);
                   using (RedisCommand cmd = new RedisCommand(socket, 3, command))
                   {
                       cmd.WriteKey(keyPrefix + key);
                       cmd.WriteValue(typeBit, bytes);
                       result = socket.ReadResponse();
-                      if (result.StartsWith("+OK"))
+                      if (result[0] != '-')
                       {
                           if (expirySeconds > 0)
                           {
@@ -314,6 +318,7 @@ namespace CYQ.Data.Cache
             }
             object value = serverPool.Execute<object>(hash, null, delegate(MSocket socket)
             {
+                CheckDB(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket, 2, command))
                 {
                     cmd.WriteKey(keyPrefix + key);
@@ -324,7 +329,7 @@ namespace CYQ.Data.Cache
                     int len = 0;
                     if (int.TryParse(result.Substring(1), out len) && len > 0)
                     {
-                        byte[] bytes = socket.ReadBytes();
+                        byte[] bytes = socket.ReadLineBytes();
                         if (bytes.Length > 0)
                         {
                             byte[] data = new byte[bytes.Length - 1];
@@ -353,16 +358,47 @@ namespace CYQ.Data.Cache
             }
             return serverPool.Execute<bool>(hash, false, delegate(MSocket socket)
             {
+                CheckDB(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket, 2, "Exists"))
                 {
                     cmd.WriteKey(keyPrefix + key);
                 }
-                return socket.ReadResponse().StartsWith(":1");
+                return !socket.ReadResponse().StartsWith("-");
             });
         }
 
         #endregion
 
+        #region Select DB
+        internal void CheckDB(MSocket socket, uint hash)
+        {
+            if (AppConfig.Cache.RedisUseDBCount > 1)
+            {
+                uint db = hash % (uint)AppConfig.Cache.RedisUseDBCount;//默认分散在16个DB中。
+                if (socket.DB != db)
+                {
+                    socket.DB = db;
+                    using (RedisCommand cmd = new RedisCommand(socket, 2, "Select"))
+                    {
+                        cmd.WriteKey(db.ToString());
+                    }
+                    socket.SkipToEndOfLine();
+                }
+            }
+        }
+        //public bool SelectDB(SocketPool pool, int num)
+        //{
+        //    return serverPool.Execute<bool>(pool, false, delegate(MSocket socket)
+        //              {
+        //                  using (RedisCommand cmd = new RedisCommand(socket, 2, "Select"))
+        //                  {
+        //                      cmd.WriteKey(num.ToString());
+        //                  }
+        //                  return !socket.ReadResponse().StartsWith("-");
+        //              });
+        //}
+
+        #endregion
 
         #region Delete
 
@@ -378,6 +414,7 @@ namespace CYQ.Data.Cache
 
             return serverPool.Execute<bool>(hash, false, delegate(MSocket socket)
             {
+                CheckDB(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket, 2, "DEL"))
                 {
                     cmd.WriteKey(keyPrefix + key);
@@ -452,14 +489,13 @@ namespace CYQ.Data.Cache
                     string line = null;
                     while (true)
                     {
-                        line = socket.ReadResponse();
-                        string[] s = line.Split(':');
-                        dic.Add(s[0], s[1]);
-                        if (line.Contains("keys="))
+                        line = socket.ReadLine();
+                        if (line == null)
                         {
-                            line = null;
                             break;
                         }
+                        string[] s = line.Split(':');
+                        dic.Add(s[0], s[1]);
                     }
 
 

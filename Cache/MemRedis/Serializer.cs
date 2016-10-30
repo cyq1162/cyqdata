@@ -55,6 +55,13 @@ namespace CYQ.Data.Cache
 
     internal class Serializer
     {
+        /// <summary>
+        /// 序列化
+        /// </summary>
+        /// <param name="value">值</param>
+        /// <param name="type">返回序列化类型</param>
+        /// <param name="compressionThreshold">指定超过长度时启用压缩功能</param>
+        /// <returns></returns>
         public static byte[] Serialize(object value, out SerializedType type, uint compressionThreshold)
         {
             byte[] bytes;
