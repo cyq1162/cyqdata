@@ -728,6 +728,20 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
+            /// Redis 使用的DB 索引（默认0，若配置，则会忽略RedisUseDBCount）
+            /// </summary>
+            public static int RedisUseDBIndex
+            {
+                get
+                {
+                    return GetAppInt("RedisUseDBIndex", 0);
+                }
+                set
+                {
+                    SetApp("RedisUseDBIndex", value.ToString());
+                }
+            }
+            /// <summary>
             /// Redis  备份服务器（当主服务器挂了后，请求会转向备用机）
             /// </summary>
             public static string RedisServersBak
