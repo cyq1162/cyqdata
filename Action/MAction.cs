@@ -18,7 +18,8 @@ using CYQ.Data.UI;
 namespace CYQ.Data
 {
     /// <summary>
-    /// 数据操作类[可操作单表/视图]
+    /// Manipulate：table / view / custom statement
+    ///<para>操作：表/视图/自定义语句</para>
     /// </summary>
     public partial class MAction : IDisposable
     {
@@ -30,7 +31,8 @@ namespace CYQ.Data
         private NoSqlAction _noSqlAction = null;
         private MDataRow _Data;//表示一行
         /// <summary>
-        /// Fill完之后返回的行数据
+        /// Archive the rows of the data structure
+        /// <para>存档数据结构的行</para>
         /// </summary>
         public MDataRow Data
         {
@@ -45,7 +47,8 @@ namespace CYQ.Data
         private string _sourceTableName;
         private string _TableName; //表名
         /// <summary>
-        /// 当前操作的表名(若操作的是视图语句，则为最后的视图名字）
+        /// Table name (if the view statement is the operation, the final view of the name)
+        ///<para>当前操作的表名(若操作的是视图语句，则为最后的视图名字</para> ）
         /// </summary>
         public string TableName
         {
@@ -59,7 +62,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 获取当前数据库链接字符串
+        /// The database connection string
+        ///<para>数据库链接字符串</para> 
         /// </summary>
         public string ConnectionString
         {
@@ -74,7 +78,8 @@ namespace CYQ.Data
         }
         private string _debugInfo = string.Empty;
         /// <summary>
-        /// 调试信息[如需要查看所有执行的SQL语句,请设置AppDebug.OpenDebugInfo或配置文件OpenDebugInfo项为ture]
+        /// Get or set debugging information [need to set App Config.Debug.Open DebugInfo to ture]
+        ///<para>获取或设置调试信息[需要设置AppConfig.Debug.OpenDebugInfo为ture]</para>
         /// </summary>
         public string DebugInfo
         {
@@ -96,7 +101,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库类型[Access/Mssql/Oracle/SQLite/MySql/Txt/Xml等]
+        /// The database type
+        /// <para>数据库类型</para>
         /// </summary>
         public DalType DalType
         {
@@ -106,7 +112,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库名称
+        /// The database name
+        /// <para>数据库名称</para>
         /// </summary>
         public string DataBase
         {
@@ -116,7 +123,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库的版本号
+        /// The database version
+        /// 数据库的版本号
         /// </summary>
         public string DalVersion
         {
@@ -126,7 +134,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 执行SQL命令时受影响的行数（-2则为异常）。
+        /// The number of rows affected when executing a SQL command (-2 is an exception)
+        /// <para>执行SQL命令时受影响的行数（-2则为异常）。</para>
         /// </summary>
         public int RecordsAffected
         {
@@ -136,7 +145,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 命令超时设置[单位秒]
+        /// Command Timeout[seconds]
+        ///<para>命令超时设置[单位秒]</para>
         /// </summary>
         public int TimeOut
         {
@@ -158,7 +168,8 @@ namespace CYQ.Data
         }
         private bool _AllowInsertID = false;
         /// <summary>
-        /// 对于主键列为：Int自增标识的，是否允许手动插入ID
+        /// Whether to allow manual insertion of IDs for self-incrementing primary key identification
+        ///<para>自增主键标识的，是否允许手动插入ID</para> 
         /// </summary>
         public bool AllowInsertID
         {
@@ -252,33 +263,18 @@ namespace CYQ.Data
         #region 构造函数
 
         /// <summary>
-        /// 构造函数
+        /// Instantiation
+        /// <para>实例化</para>
         /// </summary>
-        /// <param name="tableNamesEnum">表名/视图名称</param>
-        /// <example><code>
-        ///     MAction action=new MAction(TableNames.Users);
-        /// 或  MAction action=new MAction("Users");
-        /// 或  MAction action=new MAction("(select m.*,u.UserName from Users u left join Message m on u.ID=m.UserID) v");
-        /// 或  MAction action=new MAction(ViewNames.Users);//传视图
-        /// 或多数据库方式：
-        /// MAction action=new MAction(U_DataBaseNameEnum.Users);
-        /// 说明：自动截取数据库链接[U_及Enum为前后缀],取到的数据库配置项为DataBaseNameConn
-        /// U_为表 V_为视图 P_为存储过程
-        /// </code></example>
+        /// <param name="tableNamesEnum">Parameters: table name, view, custom statement, DataRow
+        /// <para>参数：表名、视图、自定义语句、MDataRow</para></param>
         public MAction(object tableNamesEnum)
         {
             Init(tableNamesEnum, AppConfig.DB.DefaultConn);
         }
 
-        /// <summary>
-        /// 构造函数2
-        /// </summary>
-        /// <param name="tableNamesEnum">表名/视图名称</param>
-        /// <param name="conn">web.config下的connectionStrings的name配置项名称,或完整的链接字符串</param>
-        /// <example><code>
-        ///     MAction action=new MAction(TableNames.Users,"Conn");
-        /// 或  MAction action=new MAction(TableNames.Users,"server=.;database=CYQ;uid=sa;pwd=123456");
-        /// </code></example>
+        /// <param name="conn">Database connection statement or configuration key
+        /// <para>数据库链接语句或配置Key</para></param>
         public MAction(object tableNamesEnum, string conn)
         {
             Init(tableNamesEnum, conn);
@@ -567,46 +563,31 @@ namespace CYQ.Data
         #region 插入
 
         /// <summary>
-        ///  插入数据
+        /// Insert To DataBase
+        ///  <para>插入数据</para>
         /// </summary>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     action.Set(Users.UserName,"路过秋天");
-        ///     action.Insert();
-        /// }
-        /// </code></example>
         public bool Insert()
         {
             return Insert(false, _option);
         }
-        /// <summary>
-        /// 插入数据
-        /// </summary>
-        /// <param name="option">插入选项</param>
+
+        /// <param name="option">InsertOp
+        /// <para>插入选项</para></param>
         public bool Insert(InsertOp option)
         {
             return Insert(false, option);
         }
-        /// <summary>
-        ///  插入数据
-        /// </summary>
-        /// <param name="autoSetValue">自动从控制获取值</param>
+
+
+        /// <param name="autoSetValue">Automatic get values from context
+        /// <para>自动取值（从上下文环境中）</para></param>
         public bool Insert(bool autoSetValue)
         {
             return Insert(autoSetValue, _option);
         }
-        /// <summary>
-        /// 插入数据
-        /// </summary>
-        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix方法设置控件前缀]</param>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     action.SetAutoPrefix("txt","ddl");
-        ///     action.Insert(true);
-        /// }
-        /// </code></example>
+
+        /// <param name="option">InsertOp
+        /// <para>插入选项</para></param>
         public bool Insert(bool autoSetValue, InsertOp option)
         {
             CheckDisposed();
@@ -661,56 +642,32 @@ namespace CYQ.Data
 
         #region 更新
         /// <summary>
-        ///  更新数据[不传where条件时将自动尝试从UI获取]
+        /// Update to database [Will automatically try to fetch from the UI when conditions are not passed]
+        /// <para>更新数据[不传where条件时将自动尝试从UI获取]</para>
         /// </summary>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     action.Set(Users.UserName,"路过秋天");
-        ///     action.Set(Users.ID,1);
-        ///     action.Update();
-        /// }
-        /// </code></example>
         public bool Update()
         {
             return Update(null, true);
         }
-        /// <summary>
-        ///  更新数据
-        /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     action.Set(Users.UserName,"路过秋天");
-        ///     action.Update("id=1");
-        /// }
-        /// </code></example>
+
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Update(object where)
         {
             return Update(where, false);
         }
-        /// <summary>
-        ///  更新数据
-        /// </summary>
-        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
+
+
+        /// <param name="autoSetValue">Automatic get values from context
+        /// <para>自动取值（从上下文环境中）</para></param>
         public bool Update(bool autoSetValue)
         {
             return Update(null, autoSetValue);
         }
 
-        /// <summary>
-        ///  更新数据
-        /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
-        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     action.SetAutoPrefix("txt","ddl");
-        ///     action.Update("name='路过秋天'",true);
-        /// }
-        /// </code></example>
+        /// <param name="autoSetValue">Automatic get values from context
+        /// <para>自动取值（从上下文环境中）</para></param>
         public bool Update(object where, bool autoSetValue)
         {
             CheckDisposed();
@@ -763,16 +720,16 @@ namespace CYQ.Data
         #endregion
 
         /// <summary>
-        ///  删除数据[不传where条件时将自动尝试从UI获取]
+        /// Delete from database [Will automatically try to fetch from the UI when conditions are not passed]
+        /// <para>删除数据[不传where条件时将自动尝试从UI获取]</para>
         /// </summary>
         public bool Delete()
         {
             return Delete(null);
         }
-        /// <summary>
-        ///  删除数据
-        /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Delete(object where)
         {
             CheckDisposed();
@@ -795,7 +752,7 @@ namespace CYQ.Data
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
                 string deleteField = AppConfig.DB.DeleteField;
-                bool isToUpdate =!IsIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
+                bool isToUpdate = !IsIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
                 switch (dalHelper.dalType)
                 {
                     case DalType.Txt:
@@ -830,17 +787,17 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 选择所有数据
+        /// select all data
+        ///<para>选择所有数据</para>
         /// </summary>
         public MDataTable Select()
         {
             int count;
             return Select(0, 0, null, out count);
         }
-        /// <summary>
-        /// 根据条件查询所有数据
-        /// </summary>
-        /// <param name="where">where条件如:id>1</param>
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public MDataTable Select(object where)
         {
             int count;
@@ -851,6 +808,8 @@ namespace CYQ.Data
             int count;
             return Select(0, topN, where, out count);
         }
+        /// <param name="pageIndex">pageIndex<para>第几页</para></param>
+        /// <param name="pageSize">pageSize<para>每页数量[为0时默认选择所有]</para></param>
         public MDataTable Select(int pageIndex, int pageSize)
         {
             int count;
@@ -861,14 +820,9 @@ namespace CYQ.Data
             int count;
             return Select(pageIndex, pageSize, where, out count);
         }
-        /// <summary>
-        /// 带分布功能的选择[多条件查询,选择所有时只需把PageIndex/PageSize设置为0]
-        /// </summary>
-        /// <param name="pageIndex">第几页</param>
-        /// <param name="pageSize">每页数量[为0时默认选择所有]</param>
-        /// <param name="where"> 查询条件[可附带 order by 语句]</param>
-        /// <param name="rowCount">返回的记录总数</param>
-        /// <returns>返回值MDataTable</returns>
+
+        /// <param name="rowCount">The total number of records returned
+        /// <para>返回的记录总数</para></param>
         public MDataTable Select(int pageIndex, int pageSize, object where, out int rowCount)
         {
             CheckDisposed();
@@ -994,26 +948,16 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 填充自身，即单行选择[不传where条件时将自动尝试从UI获取]
+        /// Select top one row to fill this.Data
+        /// <para>选择一行数据，并填充到Data属性[不传where条件时将自动尝试从UI获取]</para>
         /// </summary>
         public bool Fill()
         {
             return Fill(null);
         }
 
-        /// <summary>
-        /// 填充自身[即单行选择]（填充后所有非Null值的状态会变更为1）
-        /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:"id=88 or name='路过秋天'"</param>
-        /// <example><code>
-        /// using(MAction action=new MAction(TableNames.Users))
-        /// {
-        ///     if(action.Fill("name='路过秋天'")) //或者action.Fill(888) 或者 action.Fill(id=888)
-        ///     {
-        ///         action.UI.SetTo(labUserName);
-        ///     }
-        /// }
-        /// </code></example>
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Fill(object where)
         {
             CheckDisposed();
@@ -1104,16 +1048,16 @@ namespace CYQ.Data
             return _aop.Para.IsSuccess;
         }
         /// <summary>
-        /// 返回记录总数
+        /// Returns the number of records
+        /// <para>返回记录数</para>
         /// </summary>
         public int GetCount()
         {
             return GetCount(null);
         }
-        /// <summary>
-        /// 返回记录总数
-        /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public int GetCount(object where)
         {
             CheckDisposed();
@@ -1167,9 +1111,11 @@ namespace CYQ.Data
             return _aop.Para.RowCount;
         }
         /// <summary>
-        /// 是否存在指定条件的数据
+        /// Whether or not the specified condition exists
+        /// <para>是否存在指定条件的数据</para>
         /// </summary>
-        /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Exists(object where)
         {
             CheckDisposed();
@@ -1189,39 +1135,33 @@ namespace CYQ.Data
 
 
         /// <summary>
-        /// 取值
+        /// Get value from this.Data
+        /// <para>从Data属性里取值</para>
         /// </summary>
         public T Get<T>(object key)
         {
             return _Data.Get<T>(key);
         }
-        /// <summary>
-        /// 取值
-        /// </summary>
-        /// <param name="key">字段名</param>
-        /// <param name="defaultValue">值为Null时的默认替换值</param>
+
+
+        /// <param name="defaultValue">defaultValue<para>值为Null时的默认替换值</para></param>
         public T Get<T>(object key, T defaultValue)
         {
             return _Data.Get<T>(key, defaultValue);
         }
         /// <summary>
-        /// 设置值,例如:[action.Set(TableName.ID,10);]
+        /// Set value to this.Data
+        /// <para>为Data属性设置值</para>
         /// </summary>
-        /// <param name="key">字段名称,可用枚举如:[TableName.ID]</param>
-        /// <param name="value">要设置给字段的值</param>
-        /// <example><code>
-        /// set示例：action.Set(Users.UserName,"路过秋天");
-        /// get示例：int id=action.Get&lt;int&gt;(Users.ID);
-        /// </code></example>
+        /// <param name="key">columnName<para>列名</para></param>
+        /// <param name="value">value<para>值</para></param>
         public MAction Set(object key, object value)
         {
             return Set(key, value, -1);
         }
-        /// <summary>
-        /// 设置值
-        /// </summary>
-        /// <param name="state">手工设置状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</param>
-        /// <returns></returns>
+
+        /// <param name="state">set value state (0: unchanged; 1: assigned, the same value [insertable]; 2: assigned, different values [updateable])
+        /// <para>设置值状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</para></param>
         public MAction Set(object key, object value, int state)
         {
             MDataCell cell = _Data[key];
@@ -1240,28 +1180,28 @@ namespace CYQ.Data
             return this;
         }
         /// <summary>
-        /// 更新(Update)操作的自定义表达式设置。
+        /// Sets a custom expression for the Update operation.
+        /// <para>为Update操作设置自定义表达式。</para>
         /// </summary>
-        /// <param name="updateExpression">例如a字段值自加1："a=a+1"</param>
+        /// <param name="updateExpression">as："a=a+1"<para>如："a=a+1"</para></param>
         public MAction SetExpression(string updateExpression)
         {
             _sqlCreate.updateExpression = updateExpression;
             return this;
         }
         /// <summary>
-        /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]
+        /// Parameterized pass [used when the Where condition is a parameterized (such as: name = @ name) statement]
+        /// <para>参数化传参[当Where条件为参数化(如：name=@name)语句时使用]</para>
         /// </summary>
+        /// <param name="paraName">paraName<para>参数名称</para></param>
+        /// <param name="value">value<para>参数值</para></param>
         public MAction SetPara(object paraName, object value)
         {
             return SetPara(paraName, value, DbType.String);
         }
         List<AopCustomDbPara> customParaNames = new List<AopCustomDbPara>();
-        /// <summary>
-        /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]
-        /// </summary>
-        /// <param name="paraName">参数名称</param>
-        /// <param name="value">参数值</param>
-        /// <param name="dbType">参数类型</param>
+
+        /// <param name="dbType">dbType<para>参数类型</para></param>
         public MAction SetPara(object paraName, object value, DbType dbType)
         {
             if (dalHelper.AddParameters(Convert.ToString(paraName), value, dbType, -1, ParameterDirection.Input))
@@ -1278,10 +1218,12 @@ namespace CYQ.Data
             }
             return this;
         }
+        
         /// <summary>
-        /// 参数化传参[传进多个参数列表]
+        /// Aop scenes can only be used by the parameterization of the Senate
+        /// <para>Aop场景才可能使用的参数化传参</para>
         /// </summary>
-        /// <param name="customParas">Aop场景使用，传进多个参数。</param>
+        /// <param name="customParas">Paras<para>参数列表</para></param>
         public MAction SetPara(List<AopCustomDbPara> customParas)
         {
             if (customParas != null && customParas.Count > 0)
@@ -1294,7 +1236,8 @@ namespace CYQ.Data
             return this;
         }
         /// <summary>
-        /// 清除(SetPara设置的)自定义参数
+        /// Clears paras (from SetPara method)
+        /// <para>清除(SetPara设置的)自定义参数</para>
         /// </summary>
         public void ClearPara()
         {
@@ -1318,25 +1261,8 @@ namespace CYQ.Data
                 customParaNames.Clear();
             }
         }
-        /// <summary>
-        /// 清除内部系统定义的参数
-        /// </summary>
-        /// <param name="withSysPara"></param>
-        //private void ClearSysPara()
-        //{
-        //    if (customParaNames.Count > 0)
-        //    {
-        //        string paraName = string.Empty;
-        //        for (int i = customParaNames.Count - 1; i >= 0; i--)
-        //        {
-        //            paraName = _DalHelper.Pre + customParaNames[i].ParaName;
-        //            if (customParaNames[i].IsSysPara && _DalHelper.Com.Parameters.Contains(paraName))
-        //            {
-        //                _DalHelper.Com.Parameters.Remove(_DalHelper.Com.Parameters[paraName]);
-        //            }
-        //        }
-        //    }
-        //}
+       
+
         /// <summary>
         /// 清除系统参数[保留自定义参数]
         /// </summary>
@@ -1374,10 +1300,10 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 本方法可以在单表使用时查询指定的列[设置后可使用Fill与Select方法]
-        /// 提示：分页查询时，排序条件的列必须指定选择。
+        /// Specifies the column to read
+        /// <para>指定读取的列</para>
         /// </summary>
-        /// <param name="columnNames">可设置多个列名[调用Fill或Select后,本参数将被清除]</param>
+        /// <param name="columnNames">as："columnA","columnB as B"</param>
         public MAction SetSelectColumns(params object[] columnNames)
         {
             _sqlCreate.selectColumns = columnNames;
@@ -1385,21 +1311,17 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 根据元数据列组合where条件。
+        ///  Get where statement
+        /// <para>根据元数据列组合where条件。</para>
         /// </summary>
-        /// <param name="isAnd">true为and连接，反之为or链接</param>
-        /// <param name="cells">单元格</param>
-        /// <returns></returns>
+       
         public string GetWhere(bool isAnd, params MDataCell[] cells)
         {
             return SqlCreate.GetWhere(DalType, isAnd, cells);
         }
 
-        /// <summary>
-        /// 根据元数据列组合and连接的where条件。
-        /// </summary>
-        /// <param name="cells">单元格</param>
-        /// <returns></returns>
+        /// <param name="isAnd">connect by and/or<para>true为and连接，反之为or链接</para></param>
+        /// <param name="cells">MDataCell<para>单元格</para></param>
         public string GetWhere(params MDataCell[] cells)
         {
             return SqlCreate.GetWhere(DalType, cells);
@@ -1411,9 +1333,10 @@ namespace CYQ.Data
 
         #region 事务操作
         /// <summary>
-        /// 设置事务级别
+        /// Set the transaction level
+        /// <para>设置事务级别</para>
         /// </summary>
-        /// <param name="level"></param>
+        /// <param name="level">IsolationLevel</param>
         public MAction SetTransLevel(IsolationLevel level)
         {
             dalHelper.tranLevel = level;
@@ -1421,15 +1344,16 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 开始事务
+        /// Begin Transation
+        /// <para>开始事务</para>
         /// </summary>
         public void BeginTransation()
         {
             dalHelper.isOpenTrans = true;
         }
         /// <summary>
-        /// 提交结束事务[默认调用Close/Disponse时会自动调用]
-        /// 如果需要提前结束事务,可调用此方法
+        /// Commit Transation
+        /// <para>提交事务</para>
         /// </summary>
         public bool EndTransation()
         {
@@ -1440,7 +1364,8 @@ namespace CYQ.Data
             return false;
         }
         /// <summary>
-        /// 事务回滚
+        /// RollBack Transation
+        /// <para>事务回滚</para>
         /// </summary>
         public bool RollBack()
         {
@@ -1458,7 +1383,8 @@ namespace CYQ.Data
             Dispose(false);
         }
         /// <summary>
-        /// 释放资源
+        /// Dispose
+        /// <para>释放资源</para>
         /// </summary>
         internal void Dispose(bool isonError)
         {
