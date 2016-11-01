@@ -713,7 +713,7 @@ namespace CYQ.Data.SQL
                             string guid = cell.strValue;
                             if (string.IsNullOrEmpty(guid) || guid.Length != 36)
                             {
-                                return "1=2--(" + guid + " is not guid)";
+                                return "1=2--('" + guid + "' is not guid)";
                             }
                             if (dalType == DalType.Access)
                             {
@@ -844,7 +844,7 @@ namespace CYQ.Data.SQL
             if (sqlObj is String)
             {
                 string sql = Convert.ToString(sqlObj).ToLower().Trim();
-                if (sql.StartsWith("select ") || (sql.Contains(" ") && sql.IndexOf('(') == -1))
+                if (sql.StartsWith("select ") || (sql.Contains(" ") && sql[0] != '('))
                 {
                     sqlObj = "(" + sqlObj + ") v";
                 }

@@ -95,7 +95,7 @@ namespace CYQ.Data.SQL
 
                 if (!columnCache.ContainsKey(key))
                 {
-                    columnCache.Add(typeInfo.FullName, mdc.Clone());
+                    columnCache.Add(key, mdc.Clone());
                 }
 
                 return mdc;

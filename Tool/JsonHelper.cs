@@ -362,7 +362,7 @@ namespace CYQ.Data.Tool
         /// 获取Json字符串的值
         /// </summary>
         /// <param name="json">Json字符串</param>
-        /// <param name="key">键值</param>
+        /// <param name="key">键值(有层级时用：XXX.YYY.ZZZ)</param>
         /// <returns></returns>
         public static string GetValue(string json, string key)
         {
@@ -374,8 +374,18 @@ namespace CYQ.Data.Tool
                 {
                     result = jsonDic[key];
                 }
+
                 else
                 {
+                    int fi = key.IndexOf('.');
+                    if (fi > -1)
+                    {
+                        string fKey = key.Substring(0, fi);
+                        if (jsonDic.ContainsKey(fKey))
+                        {
+                            return GetValue(jsonDic[fKey], key.Substring(fi + 1));
+                        }
+                    }
                     #region 字符串截取
                     key = "\"" + key.Trim('"') + "\"";
                     int index = json.IndexOf(key, StringComparison.OrdinalIgnoreCase) + key.Length + 1;

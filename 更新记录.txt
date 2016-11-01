@@ -628,3 +628,4 @@
 413：增加Redis分布式缓存支持（配置AppConfig.Cache.RedisServers）（2016-10-30）
 414：为Redis和MemCache增加备份节点支持(配置AppConfig.Cache.RedisServersBak、AppConfig.Cache.MemCacheServersBak）（2016-10-30）
 415：RedisCache 增加两个配置项：AppConfig.Cache.RedisUseDBCount、AppConfig.Cache.RedisUseDBIndex（2016-10-31）
+416：TableSchema的GetColumns的缓存失效问题（key没对应上，该问题会产生性能问题）（2016-11-01）
