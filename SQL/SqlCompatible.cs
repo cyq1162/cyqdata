@@ -16,23 +16,29 @@ namespace CYQ.Data.SQL
         /// </summary>
         internal static string Format(string text, DalType dalType)
         {
-            if (!string.IsNullOrEmpty(text) && text.Contains("[#") && text.Contains("]"))
+            if (!string.IsNullOrEmpty(text))
             {
-                text = FormatPara(text, dalType);
-                text = FormatTrueFalseAscDesc(text, dalType);
-                text = FormatDateDiff(text, dalType);//必须在日期替换之前出现
-                text = FormatGetDate(text, dalType);
-                text = FormatCaseWhen(text, dalType);
-                text = FormatCharIndex(text, dalType);
-                text = FormatLen(text, dalType);
-                text = FormatGUID(text, dalType);
-                text = FormatIsNull(text, dalType);
-                text = FormatContact(text, dalType);
-                text = FormatLeft(text, dalType);
-                text = FormatRight(text, dalType);
-                text = FormatDate(text, dalType, SqlValue.Year, "Year");
-                text = FormatDate(text, dalType, SqlValue.Month, "Month");
-                text = FormatDate(text, dalType, SqlValue.Day, "Day");
+                if (text.IndexOf("=") > -1)
+                {
+                    text = FormatPara(text, dalType);
+                }
+                if (text.Contains("[#") && text.Contains("]"))
+                {
+                    text = FormatTrueFalseAscDesc(text, dalType);
+                    text = FormatDateDiff(text, dalType);//必须在日期替换之前出现
+                    text = FormatGetDate(text, dalType);
+                    text = FormatCaseWhen(text, dalType);
+                    text = FormatCharIndex(text, dalType);
+                    text = FormatLen(text, dalType);
+                    text = FormatGUID(text, dalType);
+                    text = FormatIsNull(text, dalType);
+                    text = FormatContact(text, dalType);
+                    text = FormatLeft(text, dalType);
+                    text = FormatRight(text, dalType);
+                    text = FormatDate(text, dalType, SqlValue.Year, "Year");
+                    text = FormatDate(text, dalType, SqlValue.Month, "Month");
+                    text = FormatDate(text, dalType, SqlValue.Day, "Day");
+                }
             }
             return text;
         }
@@ -163,7 +169,7 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                     return text.Replace("=:?", "=?");
                 case DalType.Oracle:
-                    return text.Replace( "=:?", "=:");
+                    return text.Replace("=:?", "=:");
                 default:
                     return text.Replace("=:?", "=@");
             }
