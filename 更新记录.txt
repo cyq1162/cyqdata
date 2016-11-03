@@ -629,3 +629,6 @@
 414：为Redis和MemCache增加备份节点支持(配置AppConfig.Cache.RedisServersBak、AppConfig.Cache.MemCacheServersBak）（2016-10-30）
 415：RedisCache 增加两个配置项：AppConfig.Cache.RedisUseDBCount、AppConfig.Cache.RedisUseDBIndex（2016-10-31）
 416：TableSchema的GetColumns的缓存失效问题（key没对应上，该问题会产生性能问题）（2016-11-01）
+417：JsonHelper、SqlCompatible、MDataRowCollection 小细节调整（2016-11-02）
+418：DBTool.GetColumns 修正Access下的视图判断 （2016-11-03）
+419：MDataTable.CreateFrom 增加对 HashTable、NameValueCollection、HttpCookieCollection的转换支持（2016-11-03）

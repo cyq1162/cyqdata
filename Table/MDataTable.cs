@@ -13,6 +13,8 @@ using CYQ.Data.UI;
 using CYQ.Data.Cache;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
+using System.Collections.Specialized;
+using System.Web;
 namespace CYQ.Data.Table
 {
 
@@ -902,9 +904,8 @@ namespace CYQ.Data.Table
 
         string IDataRecord.GetDataTypeName(int i)
         {
-            return "";
-            //return _Mdr[_Ptr][i]._CellValue.Value.GetType().Name;
-            //return DataType.GetDbType(_Mdr[_Ptr][i]._CellStruct.SqlType.ToString()).ToString();
+            return "";//绑定的可以不需要返回
+            //return DataType.GetDbType(Columns[i].SqlType.ToString()).ToString();
         }
 
         DateTime IDataRecord.GetDateTime(int i)
@@ -925,7 +926,6 @@ namespace CYQ.Data.Table
         Type IDataRecord.GetFieldType(int i)
         {
             return _Columns[i].ValueType;
-            //return _Mdr[_Ptr][i]._CellStruct.ValueType;
         }
 
         float IDataRecord.GetFloat(int i)
@@ -955,10 +955,6 @@ namespace CYQ.Data.Table
 
         string IDataRecord.GetName(int i)
         {
-            //if (!string.IsNullOrEmpty(_Columns[i].Description))
-            //{
-            //    return _Columns[i].Description;
-            //}
             return _Columns[i].ColumnName;
         }
 
@@ -1117,32 +1113,7 @@ namespace CYQ.Data.Table
 
         #endregion
 
-        #region IEnumerator 成员
 
-        //object IEnumerator.Current
-        //{
-        //    get
-        //    {
-        //        if (_Ptr > -1 && _Ptr < _Rows.Count)
-        //        {
-        //            return _Rows[_Ptr];
-        //        }
-        //        return null;
-        //    }
-        //}
-
-        //bool IEnumerator.MoveNext()
-        //{
-        //    _Ptr++;
-        //    return _Ptr < _Rows.Count - 1;
-        //}
-
-        //void IEnumerator.Reset()
-        //{
-        //    _Ptr = -1;//行索引
-        //}
-
-        #endregion
     }
 
     public partial class MDataTable
@@ -1309,6 +1280,11 @@ namespace CYQ.Data.Table
                         }
                         #endregion
                     }
+                    else if (entityList is Hashtable)
+                    {
+                        dt.Columns.Add("Key");
+                        dt.Columns.Add("Value");
+                    }
                     else
                     {
                         isObj = false;
@@ -1331,6 +1307,45 @@ namespace CYQ.Data.Table
                 catch (Exception err)
                 {
                     Log.WriteLogToTxt(err);
+                }
+            }
+            return dt;
+        }
+
+        public static MDataTable CreateFrom(NameObjectCollectionBase noc)
+        {
+            MDataTable dt = new MDataTable("SysDefault");
+            if (noc != null)
+            {
+                if (noc is NameValueCollection)
+                {
+                    dt.Columns.Add("Key");
+                    dt.Columns.Add("Value");
+                    NameValueCollection nv = noc as NameValueCollection;
+                    foreach (string key in nv)
+                    {
+                        dt.NewRow(true).Set(0, key, 1).Set(1, nv[key], 1);
+                    }
+                }
+                else if (noc is HttpCookieCollection)
+                {
+
+                    HttpCookieCollection nv = noc as HttpCookieCollection;
+                    dt.Columns.Add("Name");
+                    dt.Columns.Add("Value");
+                    dt.Columns.Add("Expires");
+                    dt.Columns.Add("Domain");
+                    dt.Columns.Add("HttpOnly");
+                    dt.Columns.Add("Path");
+                    for (int i = 0; i < nv.Count; i++)
+                    {
+                        HttpCookie cookie = nv[i];
+                        dt.NewRow(true).Set(0, cookie.Name).Set(1, cookie.Value)
+                        .Set(2, cookie.Expires)
+                         .Set(3, cookie.Domain)
+                         .Set(4, cookie.HttpOnly)
+                         .Set(5, cookie.Path);
+                    }
                 }
             }
             return dt;

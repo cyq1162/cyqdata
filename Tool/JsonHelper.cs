@@ -1002,7 +1002,7 @@ namespace CYQ.Data.Tool
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = op;
             js.Fill(obj);
-            return js.ToString();
+            return js.ToString(obj is IList);
         }
 
         #region Xml 转 Json

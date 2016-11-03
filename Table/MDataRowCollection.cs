@@ -4,6 +4,7 @@ using System.Text;
 using CYQ.Data.SQL;
 using System.ComponentModel;
 using System.Collections;
+using System.Data;
 
 namespace CYQ.Data.Table
 {
@@ -13,6 +14,25 @@ namespace CYQ.Data.Table
     [Serializable]
     public partial class MDataRowCollection : List<MDataRow>, IComparer<MDataRow>
     {
+        /// <summary>
+        /// 隐式转换列头
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <returns></returns>
+        public static implicit operator MDataRowCollection(DataRowCollection rows)
+        {
+            MDataRowCollection mrc=new MDataRowCollection();
+            if (rows != null && rows.Count > 0)
+            {
+                foreach (DataRow row in rows)
+                {
+                    mrc.Add(row);
+                }
+            }
+            return mrc;
+            
+ 
+        }
         internal MDataRowCollection()
         {
 

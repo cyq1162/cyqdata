@@ -792,7 +792,19 @@ namespace CYQ.Data.SQL
                     {
                         System.Data.OleDb.OleDbConnection con = new System.Data.OleDb.OleDbConnection(helper.Con.ConnectionString);
                         con.Open();
-                        result = con.GetOleDbSchemaTable(System.Data.OleDb.OleDbSchemaGuid.Tables, new object[] { null, null, SqlFormat.NotKeyword(name), "Table" }).Rows.Count;
+                        DataTable dt = null;
+                        if (type == "U")
+                        {
+                            dt = con.GetOleDbSchemaTable(System.Data.OleDb.OleDbSchemaGuid.Tables, new object[] { null, null, SqlFormat.NotKeyword(name), "Table" });
+                        }
+                        else if (type == "V")
+                        {
+                            dt = con.GetOleDbSchemaTable(System.Data.OleDb.OleDbSchemaGuid.Views, new object[] { null, null, SqlFormat.NotKeyword(name) });
+                        }
+                        if (dt != null)
+                        {
+                            result = dt.Rows.Count;
+                        }
                         con.Close();
                     }
                     catch (Exception err)
