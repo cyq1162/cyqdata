@@ -1262,7 +1262,7 @@ namespace CYQ.Data.Table
                         else
                         {
                             Type objType = types[0];
-                            if (objType.FullName.StartsWith("System.") || objType.IsEnum)//系统类型。
+                            if ((objType.FullName.StartsWith("System.") && objType.FullName.Split('.').Length == 2) || objType.IsEnum)//系统类型。
                             {
                                 isObj = false;
                                 string name = objType.Name.Split('`')[0];

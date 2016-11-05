@@ -511,7 +511,7 @@ namespace CYQ.Data
                             bool isTrans = dalHelper.isOpenTrans;
                             int groupID = DataType.GetGroup(_Data.PrimaryCell.Struct.SqlType);
                             bool isNum = groupID == 1 && _Data.PrimaryCell.Struct.Scale <= 0;
-                            if (!isTrans && (isNum || _Data.PrimaryCell.Struct.IsAutoIncrement)) // 数字自增加
+                            if (!isTrans && (isNum || _Data.PrimaryCell.Struct.IsAutoIncrement) && (!AllowInsertID || _Data.PrimaryCell.IsNullOrEmpty)) // 数字自增加
                             {
                                 dalHelper.isOpenTrans = true;//开启事务。
                                 dalHelper.tranLevel = IsolationLevel.ReadCommitted;//默认事务级别已是这个，还是设置一下，避免外部调整对此的影响。
@@ -519,7 +519,11 @@ namespace CYQ.Data
                             ID = dalHelper.ExeNonQuery(sqlCommandText, false);//返回的是受影响的行数
                             if (_option != InsertOp.None && ID != null && Convert.ToInt32(ID) > 0)
                             {
-                                if (isNum)
+                                if (AllowInsertID && !_Data.PrimaryCell.IsNullOrEmpty)//手工插ID
+                                {
+                                    ID = _Data.PrimaryCell.Value;
+                                }
+                                else if (isNum)
                                 {
                                     ClearParameters();
                                     ID = dalHelper.ExeScalar(_sqlCreate.GetMaxID(), false);

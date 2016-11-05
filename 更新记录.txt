@@ -632,3 +632,5 @@
 417：JsonHelper、SqlCompatible、MDataRowCollection 小细节调整（2016-11-02）
 418：DBTool.GetColumns 修正Access下的视图判断 （2016-11-03）
 419：MDataTable.CreateFrom 增加对 HashTable、NameValueCollection、HttpCookieCollection的转换支持（2016-11-03）
+420：MAction 对内部方法InsertUpdate代码进行小优化调整（2016-11-03）
+421：MDataTable修正对于System开关的自定义实体类的序列化的问题（2016-11-05）
