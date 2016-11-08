@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Configuration;
 using System.Data.SqlClient;
 
 using System.Threading;
@@ -135,7 +134,7 @@ namespace CYQ.Data
             try
             {
                 string pageUrl = string.Empty;
-                if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Request != null)
+                if (AppConfig.IsWeb)
                 {
                     System.Web.HttpRequest request = System.Web.HttpContext.Current.Request;
                     pageUrl = request.Url.Scheme + "://" + request.Url.Authority + request.RawUrl;
@@ -191,7 +190,7 @@ namespace CYQ.Data
         {
             try
             {
-                string folder = AppDomain.CurrentDomain.BaseDirectory;
+                string folder = AppConfig.WebRootPath;
                 string logPath = AppConfig.Log.LogPath;
                 if (logPath.StartsWith("~/"))
                 {
@@ -247,7 +246,7 @@ namespace CYQ.Data
             get
             {
                 string pageUrl = string.Empty;
-                if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Request != null)
+                if (AppConfig.IsWeb)
                 {
                     System.Web.HttpRequest request = System.Web.HttpContext.Current.Request;
                     pageUrl = request.Url.Scheme + "://" + request.Url.Authority + request.RawUrl;

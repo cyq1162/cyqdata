@@ -13,24 +13,15 @@ using System.Data.Common;
 namespace CYQ.Data
 {
     /// <summary>
-    /// 存储过程或SQL语句操作类
+    /// Manipulate：sql / procedure
+    ///<para>操作：SQL或存储过程</para>
     /// </summary>
-    /// <example><code>
-    /// 使用示例：
-    ///           MDataTable table;
-    /// 实例化：  using(MProc proc = new MProc(ProcNames.GetList))
-    ///           {
-    /// 添加参数：    proc.Set(GetList.ID, 10);
-    /// 获取列表：    table = proc.ExeMDataTable();
-    /// 关闭链接：}
-    /// 绑定控件：table.Bind(GridView1);
-    /// </code></example>
     public class MProc : IDisposable
     {
         /// <summary>
-        /// 将一个MAction 转换成一个MProc。
+        /// Change MAction to MProc
+        /// <para>将一个MAction 转换成一个MProc。</para>
         /// </summary>
-        /// <returns></returns>
         public static implicit operator MProc(MAction action)
         {
             return new MProc(action.dalHelper);
@@ -49,7 +40,8 @@ namespace CYQ.Data
         private string _conn = string.Empty;
 
         /// <summary>
-        /// 调试信息[如需要查看所有执行的SQL语句,请设置配置文件OpenDebugInfo项为ture]
+        /// Get or set debugging information [need to set App Config.Debug.Open DebugInfo to ture]
+        ///<para>获取或设置调试信息[需要设置AppConfig.Debug.OpenDebugInfo为ture]</para>
         /// </summary>
         public string DebugInfo
         {
@@ -63,7 +55,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库类型[Access/Mssql/Oracle/SQLite/MySql等]
+        /// The database type
+        /// <para>数据库类型</para>
         /// </summary>
         public DalType DalType
         {
@@ -73,7 +66,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库名称
+        /// The database name
+        /// <para>数据库名称</para>
         /// </summary>
         public string DataBase
         {
@@ -83,7 +77,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 当前操作的数据库的版本号
+        /// The database version
+        /// 数据库的版本号
         /// </summary>
         public string DalVersion
         {
@@ -93,7 +88,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 执行SQL命令时受影响的行数（-2则为异常）。
+        /// The number of rows affected when executing a SQL command (-2 is an exception)
+        /// <para>执行SQL命令时受影响的行数（-2则为异常）。</para>
         /// </summary>
         public int RecordsAffected
         {
@@ -103,7 +99,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 获取当前数据库链接字符串
+        /// The database connection string
+        ///<para>数据库链接字符串</para> 
         /// </summary>
         public string ConnectionString
         {
@@ -117,7 +114,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 命令超时设置[单位秒]
+        /// Command Timeout[seconds]
+        ///<para>命令超时设置[单位秒]</para>
         /// </summary>
         public int TimeOut
         {
@@ -139,33 +137,19 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 构造函数
+        /// Instantiation
+        /// <para>实例化</para>
         /// </summary>
-        /// <param name="procNameOrSql">存储过程名称,可通过枚举传入</param>
-        /// <example><code>
-        ///     MProc action=new MProc(ProcNames.SelectAll);
-        /// 或  MProc action=new MProc("SelectAll");
-        /// 或多数据库方式：
-        /// MAction action=new MAction(P_DataBaseNameEnum.SelectAll);
-        /// 说明：自动截取数据库链接[P_及Enum为前后缀],取到的数据库配置项为DataBaseNameConn
-        /// U_为表 V_为视图 P_为存储过程
-        /// </code></example>
+        /// <param name="procNameOrSql">Parameters: sql or procedure
+        /// <para>参数：SQL语句或存储过程名称</para></param>
         public MProc(object procNameOrSql)
         {
             Init(procNameOrSql, AppConfig.DB.DefaultConn);
         }
-        /// <summary>
-        /// 构造函数2
-        /// </summary>
-        /// <param name="procNameOrSql">存储过程名称,可通过枚举传入</param>
-        /// <param name="conn">web.config下的connectionStrings的name配置项名称,或完整的链接字符串</param>
-        /// <example><code>
-        ///     MProc action=new MProc(ProcNames.SelectAll,"CYQ");
-        /// 或  MProc action=new MProc(ProcNames.SelectAll,"server=.;database=CYQ;uid=sa;pwd=123456");
-        /// </code></example>
-        public MProc(object procNameOrSql, string conn, params bool[] isFixProc)
+
+        public MProc(object procNameOrSql, string conn)
         {
-            Init(procNameOrSql, conn, isFixProc);
+            Init(procNameOrSql, conn);
         }
         internal MProc(DbBase dbBase)
         {
@@ -174,7 +158,7 @@ namespace CYQ.Data
             SetDbBase(dbBase);
 
         }
-        private void Init(object procNameOrSql, string conn, params bool[] isFixProc)
+        private void Init(object procNameOrSql, string conn)
         {
             #region 分析是Sql或者存储过程
             if (procNameOrSql != null)
@@ -202,14 +186,8 @@ namespace CYQ.Data
                     t = null;
                 }
                 _procName = procNameOrSql.ToString().Trim();
-                if (isFixProc.Length > 0)
-                {
-                    _isProc = isFixProc[0];
-                }
-                else
-                {
-                    _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-                }
+                _isProc = _procName.IndexOf(' ') == -1;//不包含空格
+
             }
             #endregion
             _conn = conn;
@@ -236,26 +214,18 @@ namespace CYQ.Data
             //}
         }
         /// <summary>
-        ///  表切存储过程,在操作完A存储过程后，如果需要操作B存储过程,不需要重新new一个MProc,可直接换用本函数切换
-        /// 用法参考MAction的ResetTable
-        /// </summary>
-        /// <param name="procNameOrSql">存储过程名或Sql语句</param>
-        /// <param name="isClearParaAndisFixProc">允许多两个bool参数：1：是否清除参数；2：是否为存储过程</param>
-        public void ResetProc(object procNameOrSql, params bool[] isClearParaAndisFixProc)
+
+
+        /// <param name="isClearPara">IsClearParameters
+        /// <para>是否清除参数</para></param>
+        public void ResetProc(object procNameOrSql, bool isClearPara)
         {
             _procName = procNameOrSql.ToString().Trim();
-            if (isClearParaAndisFixProc.Length > 0 && isClearParaAndisFixProc[0])
+            if (isClearPara)
             {
                 dalHelper.ClearParameters();
             }
-            if (isClearParaAndisFixProc.Length > 1)
-            {
-                _isProc = isClearParaAndisFixProc[1];
-            }
-            else
-            {
-                _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-            }
+            _isProc = _procName.IndexOf(' ') == -1;//不包含空格
             switch (dalHelper.dalType)
             {
                 case DalType.Txt:
@@ -265,10 +235,12 @@ namespace CYQ.Data
                     break;
             }
         }
-        /// <summary>
-        ///  表切存储过程,在操作完A存储过程后，如果需要操作B存储过程,不需要重新new一个MProc,可直接换用本函数切换
-        /// 用法参考MAction的ResetTable
+
+        /// Toggle tProc Action: To switch between other sql/procedure, use this method
+        /// <para>切换操作：如需操作其它语句或存储过程，通过此方法切换</para>
         /// </summary>
+        /// <param name="procNameOrSql">Parameters: sql or procedure
+        /// <para>参数：存储过程名或Sql语句</para></param>
         public void ResetProc(object procNameOrSql)
         {
             ResetProc(procNameOrSql, true);
@@ -290,9 +262,8 @@ namespace CYQ.Data
             return AopResult.Default;
         }
         /// <summary>
-        /// 返回MDataTable
+        /// Get MDataTable
         /// </summary>
-        /// <returns></returns>
         public MDataTable ExeMDataTable()
         {
             CheckDisposed();
@@ -329,9 +300,8 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 执行的语句有多个结果集返回
+        /// Get MDataTables
         /// </summary>
-        /// <returns></returns>
         public List<MDataTable> ExeMDataTableList()
         {
             CheckDisposed();
@@ -400,9 +370,9 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 返回受影响的行数[用于更新或删除]，执行异常时返回-2
+        /// Returns the number of rows affected [used to insert update or delete], and returns -2 if an exception is executed
+        /// <para>返回受影响的行数[用于更新或删除]，执行异常时返回-2</para>
         /// </summary>
-        /// <returns></returns>
         public int ExeNonQuery()
         {
             CheckDisposed();
@@ -435,7 +405,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 返回首行首列的单个值
+        /// Returns the value of the first column of the first row
+        /// <para>返回首行首列的值</para>
         /// </summary>
         public T ExeScalar<T>()
         {
@@ -489,23 +460,17 @@ namespace CYQ.Data
             }
             return (T)value;
         }
-        //public string ExeXmlScalar()
-        //{
-        //    return helper.ExeXmlScalar(procName, true);
-        //}
+     
 
         /// <summary>
-        /// 设置存储过程参数
+        /// <para>Set Input Para</para>
+        /// <para>设置存储过程Input参数</para>
         /// </summary>
-        /// <param name="paraName">参数名称如["ID"或Users.ID]</param>
-        /// <param name="value">参数值如"11"</param>
         public MProc Set(object paraName, object value)
         {
             dalHelper.AddParameters(Convert.ToString(paraName), value); return this;
         }
-        /// <summary>
-        /// 设置存储过程参数
-        /// </summary>
+
         public MProc Set(object paraName, object value, DbType dbType)
         {
             dalHelper.AddParameters(Convert.ToString(paraName), value, dbType, -1, ParameterDirection.Input); return this;
@@ -517,44 +482,36 @@ namespace CYQ.Data
         {
             return SetCustom(paraName, paraType, null, null);
         }
+
         /// <summary>
-        /// 设置特殊自定义参数
+        /// <para>Set the stored procedure OutPut, the return value and other special types of parameters</para>
+        /// <para>设置存储过程OutPut、返回值等特殊类型参数</para>
         /// </summary>
-        /// <param name="paraName">参数名称</param>
-        /// <param name="paraType">参数类型</param>
-        /// <param name="value">参数值</param>
         public MProc SetCustom(object paraName, ParaType paraType, object value)
         {
             return SetCustom(paraName, paraType, value, null);
         }
-        /// <summary>
-        /// 设置特殊自定义参数
-        /// </summary>
-        /// <param name="typeName">MSSQL的用户定义表类型的名称</param>
+
+
+        /// <param name="typeName">MSSQL The name of the user-defined table type<para>MSSQL的用户定义表类型的名称</para></param>
         public MProc SetCustom(object paraName, ParaType paraType, object value, string typeName)
         {
             dalHelper.AddCustomePara(Convert.ToString(paraName), paraType, value, typeName); return this;
         }
+       
+
         /// <summary>
-        ///设置存储过程参数
-        /// </summary>
-        /// <param name="paraName">参数名称如["ID"或Users.ID]</param>
-        /// <param name="value">参数值如"11"</param>
-        /// <param name="sqlDbType">值的sql类型</param>
-        //public void Set(object paraName, object value,SqlDbType sqlDbType)
-        //{
-        //    string name = Convert.ToString(paraName);
-        //    helper.AddParameters(name.Substring(0, 1) == "@" ? name : "@" + name, value, sqlDbType);
-        //}
-        /// <summary>
-        /// 清除存储过程参数
+        /// Clear Parameters
+        /// <para>清除存储过程参数</para>
         /// </summary>
         public void Clear()
         {
             dalHelper.ClearParameters();
         }
+
         /// <summary>
-        /// 存储过程的返回值
+        /// Get Procedure Return Value
+        /// <para>存储过程的返回值</para>
         /// </summary>
         public int ReturnValue
         {
@@ -564,9 +521,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 存储过程的OutPut值
-        /// 单个输出时为值；
-        /// 多个输出时为Dictionary
+        /// The OutPut value for the stored procedure: Dictionary for multiple values
+        /// <para>存储过程的OutPut值：多个值时为Dictionary</para>
         /// </summary>
         public object OutPutValue
         {
@@ -578,35 +534,19 @@ namespace CYQ.Data
 
         #region Aop 相关操作
         /// <summary>
-        /// 设置Aop状态
+        /// Set Aop State
+        /// <para>设置Aop状态</para>
         /// </summary>
-        /// <param name="op">Aop状态选项</param>
-        /// <returns></returns>
         public MProc SetAopState(AopOp op)
         {
             _aop.aopOp = op;
             return this;
         }
-        ///// <summary>
-        ///// 取消AOP
-        ///// </summary>
-        //public MProc SetAopOff()
-        //{
-        //    _aop.IsCustomAop = false;
-        //    return this;
-        //}
-        ///// <summary>
-        ///// 恢复默认配置的Aop。
-        ///// </summary>
-        //public MProc SetAopOn()
-        //{
-        //    _aop.IsCustomAop = true;
-        //    return this;
-        //}
+
         /// <summary>
-        /// 需要传递额外的参数供Aop使用时可设置。
+        /// Pass additional parameters for Aop use
+        /// <para>传递额外的参数供Aop使用</para>
         /// </summary>
-        /// <param name="para"></param>
         public MProc SetAopPara(object para)
         {
             _aop.Para.AopPara = para;
@@ -623,24 +563,26 @@ namespace CYQ.Data
 
         #region 事务操作
         /// <summary>
-        /// 设置事务级别
+        /// Set the transaction level
+        /// <para>设置事务级别</para>
         /// </summary>
-        /// <param name="level">事务级别</param>
+        /// <param name="level">IsolationLevel</param>
         public MProc SetTransLevel(IsolationLevel level)
         {
             dalHelper.tranLevel = level; return this;
         }
 
         /// <summary>
-        /// 开启事务
+        /// Begin Transation
+        /// <para>开始事务</para>
         /// </summary>
         public void BeginTransation()
         {
             dalHelper.isOpenTrans = true;
         }
         /// <summary>
-        /// 提交结束事务[默认调用Close/Disponse时会自动调用]
-        /// 如果需要提前结束事务,可调用此方法
+        /// Commit Transation
+        /// <para>提交事务</para>
         /// </summary>
         public bool EndTransation()
         {
@@ -651,7 +593,8 @@ namespace CYQ.Data
             return false;
         }
         /// <summary>
-        /// 事务回滚
+        /// RollBack Transation
+        /// <para>事务回滚</para>
         /// </summary>
         public bool RollBack()
         {
@@ -664,7 +607,8 @@ namespace CYQ.Data
         #endregion
         #region IDisposable 成员
         /// <summary>
-        /// 释放资源
+        /// Dispose
+        /// <para>释放资源</para>
         /// </summary>
         public void Dispose()
         {

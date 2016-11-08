@@ -117,7 +117,7 @@ namespace CYQ.Data.Cache
             }
 
 
-            if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.RemainMemoryPercentage < 15)//可用内存低于15%
+            if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.Count > 5000000)//数量超过500万
             {
                 return;
             }
@@ -141,7 +141,7 @@ namespace CYQ.Data.Cache
                         JsonHelper js = new JsonHelper(false, false);
                         foreach (MDataTable table in aopInfo.TableList)
                         {
-                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull,false, EscapeOp.No));
+                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.No));
                         }
                         js.AddBr();
                         _MemCache.Set(key, js.ToString(), cacheTime);

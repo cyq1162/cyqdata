@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Configuration;
 using CYQ.Data.Tool;
 
 
@@ -215,11 +214,11 @@ namespace CYQ.Data
                 cEntity.ProviderNameBak = DalCreate.GetProvider(cEntity.ConnBak);
                 cEntity.ConnBakDalType = GetDalType(cEntity.ProviderNameBak);
             }
-            cEntity.Conn = string.Format(cEntity.Conn, AppDomain.CurrentDomain.BaseDirectory);
-            cEntity.ConnBak = string.Format(cEntity.ConnBak ?? string.Empty, AppDomain.CurrentDomain.BaseDirectory);
+            cEntity.Conn = string.Format(cEntity.Conn, AppConfig.WebRootPath);
+            cEntity.ConnBak = string.Format(cEntity.ConnBak ?? string.Empty, AppConfig.WebRootPath);
             if (!connCache.ContainsKey(dbConn))
             {
-                connCache.Add(dbConn, cEntity);
+                connCache.Set(dbConn, cEntity);
             }
             return cEntity;
         }
@@ -287,7 +286,7 @@ namespace CYQ.Data
             }
             if (!connDicCache.ContainsKey(dbConn))
             {
-                connDicCache.Add(dbConn, co);
+                connDicCache.Set(dbConn, co);
             }
             return co;
         }
@@ -295,7 +294,7 @@ namespace CYQ.Data
         private static ConnBean GetConnBean(string dbConn)
         {
             string provider;
-            string conn = string.Format(AppConfig.GetConn(dbConn, out provider), AppDomain.CurrentDomain.BaseDirectory);
+            string conn = string.Format(AppConfig.GetConn(dbConn, out provider), AppConfig.WebRootPath);
             if (string.IsNullOrEmpty(conn))
             {
                 return null;

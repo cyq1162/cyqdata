@@ -414,6 +414,20 @@ namespace CYQ.Data.Table
             return result;
         }
 
+        internal bool Delete()
+        {
+            bool hasFK = (jointPrimaryIndex != null && jointPrimaryIndex.Count > 1) || mdt.Columns.JointPrimary.Count > 1;
+            if (hasFK)
+            {
+                return NormalDelete();
+            }
+            else
+            {
+                return BulkCopyDelete();//只有一个主键，没有外键关联，同时只有基础类型。
+            }
+        }
+
+
         #region 批量插入
         internal bool MsSqlBulkCopyInsert(bool keepID)
         {
@@ -810,6 +824,67 @@ namespace CYQ.Data.Table
         }
         #endregion
 
+        #region 批量删除
+        internal bool BulkCopyDelete()
+        {
+            int count = 0, pageSize = 5000;
+            MDataTable dt = null;
+            bool result = false;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                action.SetAopState(Aop.AopOp.CloseAll);
+                if (action.DalVersion.StartsWith("08"))
+                {
+                    pageSize = 1000;
+                }
+                count = mdt.Rows.Count / pageSize + 1;
+                DbBase sourceHelper = action.dalHelper;
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();
+                }
+
+                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
+                string columnName = keyColumn.ColumnName;
+                for (int i = 0; i < count; i++)
+                {
+                    dt = mdt.Select(i + 1, pageSize, null);//分页读取
+                    if (dt != null && dt.Rows.Count > 0)
+                    {
+                        #region 核心逻辑
+                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                        result = action.Delete(whereIn) || action.RecordsAffected == 0;
+                        if (result)
+                        {
+                            sourceTable.RecordsAffected += action.RecordsAffected;//记录总删除的数量。
+                        }
+                        else
+                        {
+                            sourceTable.RecordsAffected = 0;
+                            string msg = "Error On : MDataTable.AcceptChanges.Delete." + mdt.TableName + " : where (" + whereIn + ") : " + action.DebugInfo;
+                            sourceTable.DynamicData = msg;
+                            Log.WriteLogToTxt(msg);
+                            break;
+                        }
+                        #endregion
+                    }
+                }
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//还原。
+                }
+            }
+            return result;
+        }
+        #endregion
 
         #region 注释掉
         /*
@@ -963,10 +1038,14 @@ namespace CYQ.Data.Table
                         action.ResetTable(row, false);
                         string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
                         result = action.Update(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
-                        sourceTable.RecordsAffected = i;
+                        if (action.RecordsAffected > 0)
+                        {
+                            sourceTable.RecordsAffected += action.RecordsAffected;//记录总更新的数量。
+                        }
                         if (!result)
                         {
-                            string msg = "Error On : MDataTable.AcceptChanges.Update." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
+                            sourceTable.RecordsAffected = 0;
+                            string msg = "Error On : MDataTable.AcceptChanges.Update." + mdt.TableName + " : where (" + where + ") : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
                             Log.WriteLogToTxt(msg);
                             break;
@@ -998,7 +1077,56 @@ namespace CYQ.Data.Table
             }
             return result;
         }
+        internal bool NormalDelete()
+        {
+            bool result = true;
+            using (MAction action = new MAction(mdt.TableName, _Conn))
+            {
+                action.SetAopState(Aop.AopOp.CloseAll);
+                DbBase sourceHelper = action.dalHelper;
+                if (_dalHelper != null)
+                {
+                    action.dalHelper = _dalHelper;
+                }
+                else
+                {
+                    action.BeginTransation();
+                }
+                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
 
+                MDataRow row;
+                for (int i = 0; i < mdt.Rows.Count; i++)
+                {
+                    row = mdt.Rows[i];
+                    action.ResetTable(row, false);
+                    string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
+                    result = action.Delete(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
+                    if (action.RecordsAffected > 0)
+                    {
+                        sourceTable.RecordsAffected += action.RecordsAffected;//记录总删除的数量。
+                    }
+                    if (!result)
+                    {
+                        sourceTable.RecordsAffected = 0;
+                        string msg = "Error On : MDataTable.AcceptChanges.Delete." + mdt.TableName + " : where (" + where + ") : " + action.DebugInfo;
+                        sourceTable.DynamicData = msg;
+                        Log.WriteLogToTxt(msg);
+                        break;
+                    }
+                }
+                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                if (_dalHelper == null)
+                {
+                    action.EndTransation();
+                }
+                else
+                {
+                    action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
+                }
+            }
+
+            return result;
+        }
     }
     internal partial class MDataTableBatchAction
     {

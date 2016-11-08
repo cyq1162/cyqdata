@@ -321,7 +321,7 @@ namespace CYQ.Data.Tool
                 sb.Append(footText.ToString() + "}");
             }
             string json = sb.ToString();
-            if ((Escape == EscapeOp.Default && System.Web.HttpContext.Current != null) || Escape == EscapeOp.Yes) // Web应用
+            if ((Escape == EscapeOp.Default && AppConfig.IsWeb) || Escape == EscapeOp.Yes) // Web应用
             {
                 json = json.Replace("\n", "<br/>").Replace("\t", " ").Replace("\r", " ");
             }

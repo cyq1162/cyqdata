@@ -1,7 +1,6 @@
 using System;
 using System.Xml;
 using CYQ.Data.Cache;
-using System.Web.Caching;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
@@ -108,30 +107,7 @@ namespace CYQ.Data.Xml
                 _IsLoadFromCache = value;
             }
         }
-        /// <summary>
-        /// Cache发生变化[用户更改缓存并设置更改标识]
-        /// </summary>
-        public bool IsCacheChanged
-        {
-            get
-            {
-                return theCache.GetHasChanged(XmlCacheKey);
-            }
-            set
-            {
-                theCache.SetChange(XmlCacheKey, value);
-            }
-        }
-        /// <summary>
-        /// 目标XHtml文件是否被修改
-        /// </summary>
-        public bool IsXHtmlChanged
-        {
-            get
-            {
-                return theCache.GetFileDependencyHasChanged(XmlCacheKey);
-            }
-        }
+
         private double _CacheMinutes = 5;
         /// <summary>
         /// 缓存分钟数
@@ -151,6 +127,16 @@ namespace CYQ.Data.Xml
             get
             {
                 return _XmlDocument.OuterXml;
+            }
+        }
+        /// <summary>
+        /// 加载的Html是否已改变
+        /// </summary>
+        public bool IsXHtmlChanged
+        {
+            get
+            {
+                return !theCache.Contains(XmlCacheKey);
             }
         }
         ///// <summary>
@@ -175,7 +161,7 @@ namespace CYQ.Data.Xml
         private string GenerateKey(string fileName)
         {
             _FileName = fileName;
-            fileName = fileName.Replace(AppDomain.CurrentDomain.BaseDirectory, "XHtmlBase_");
+            fileName = fileName.Replace(AppConfig.WebRootPath, "XHtmlBase_");
             fileName = fileName.Replace("/", "").Replace("\\", "");
             return fileName;
         }
@@ -302,7 +288,7 @@ namespace CYQ.Data.Xml
                     ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
                 }
 
-                if (html != string.Empty) 
+                if (html != string.Empty)
                 {
                     LoadXml(html);//从字符串加载html
                 }
@@ -355,11 +341,11 @@ namespace CYQ.Data.Xml
             {
                 if (!isClone)
                 {
-                    theCache.Add(key, _XmlDocument, _FileName, cacheTimeMinutes);//添加Cache缓存
+                    theCache.Set(key, _XmlDocument, cacheTimeMinutes, _FileName);//添加Cache缓存
                 }
                 else
                 {
-                    theCache.Add(key, GetCloneFrom(_XmlDocument), _FileName, cacheTimeMinutes);//添加Cache缓存Clone
+                    theCache.Set(key, GetCloneFrom(_XmlDocument), cacheTimeMinutes, _FileName);//添加Cache缓存Clone
                 }
             }
         }
@@ -618,95 +604,4 @@ namespace CYQ.Data.Xml
         #endregion
     }
 
-    /// <summary>
-    /// 开线程保存xml文件
-    /// </summary>
-    //internal class ThreadSaveXml
-    //{
-    //    private static readonly object lockWriteObj = new object();
-    //    /// <summary>
-    //    /// 保存的文件列表。
-    //    /// </summary>
-    //    private static Dictionary<string, string> saveList = new Dictionary<string, string>();
-    //    public static void AddToSaveList(string savePath, string html)
-    //    {
-    //        try
-    //        {
-    //            if (saveList.ContainsKey(savePath))
-    //            {
-    //                saveList[savePath] = html;
-    //            }
-    //            else
-    //            {
-    //                saveList.Add(savePath, html);
-    //            }
-    //        }
-    //        catch (Exception err)
-    //        {
-    //            Log.WriteLogToTxt(err);
-    //        }
-    //        //修改线程属性。
-    //        Run();
-    //    }
-
-    //    static Thread thread = null;
-    //    public static void Run()
-    //    {
-    //        lock (lockWriteObj)
-    //        {
-    //            if (thread == null || !thread.IsAlive)
-    //            {
-    //                thread = new Thread(new ThreadStart(WriteFile));
-    //                thread.IsBackground = true;
-
-    //            }
-    //        }
-    //        switch (thread.ThreadState)
-    //        {
-    //            case ThreadState.Background | ThreadState.Suspended:
-    //                thread.Resume();
-    //                break;
-    //            case ThreadState.Background:
-    //            case ThreadState.Background | ThreadState.WaitSleepJoin:
-    //                break;
-    //            default:
-    //                thread.Start();
-    //                break;
-    //        }
-    //    }
-    //    private static void WriteFile()
-    //    {
-    //        while (true)
-    //        {
-    //            if (saveList.Count > 0)
-    //            {
-    //                Dictionary<string, string> newList = saveList;
-    //                saveList = new Dictionary<string, string>();//直接转移。
-    //                foreach (KeyValuePair<string, string> list in newList)
-    //                {
-    //                    try
-    //                    {
-    //                        File.WriteAllText(list.Key, list.Value, Encoding.UTF8);
-    //                    }
-    //                    catch (Exception err)
-    //                    {
-    //                        Log.WriteLogToTxt("XHtmlBase.Save : InvalidPath : " + fileName);
-    //                        Log.WriteLogToTxt(err);
-    //                    }
-    //                    finally
-    //                    {
-    //                        Thread.Sleep(10);
-    //                    }
-    //                }
-    //                newList.Clear();
-    //                newList = null;
-    //                Thread.Sleep(100);//0.1秒。
-    //            }
-    //            else
-    //            {
-    //                Thread.Sleep(10000);//10秒
-    //            }
-    //        }
-    //    }
-    //}
 }

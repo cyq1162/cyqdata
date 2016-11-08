@@ -21,7 +21,6 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 表格
     /// </summary>
-    [Serializable]
     public partial class MDataTable
     {
         #region 隐式转换
@@ -603,6 +602,9 @@ namespace CYQ.Data.Table
                     break;
                 case AcceptOp.Update:
                     result = action.Update();
+                    break;
+                case AcceptOp.Delete:
+                    result = action.Delete();
                     break;
                 case AcceptOp.Auto:
                     result = action.Auto();
@@ -1347,6 +1349,10 @@ namespace CYQ.Data.Table
                          .Set(5, cookie.Path);
                     }
                 }
+                else
+                {
+                    dt = CreateFrom(noc as IEnumerable);
+                }
             }
             return dt;
         }
@@ -1757,7 +1763,7 @@ namespace CYQ.Data.Table
             {
                 if (fileName[1] != ':')
                 {
-                    fileName = AppDomain.CurrentDomain.BaseDirectory + fileName;
+                    fileName = AppConfig.WebRootPath + fileName;
                 }
                 fileName = fileName.Replace(Path.GetExtension(fileName), string.Empty) + ".ts";
                 if (!File.Exists(fileName) || overwrite)

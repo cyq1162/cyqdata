@@ -26,14 +26,18 @@ namespace CYQ.Data.Table
         /// </summary>
         Update = 4,
         /// <summary>
+        /// 批量删除
+        /// </summary>
+        Delete = 8,
+        /// <summary>
         /// 批量自动插入或更新（检测主键数据若存在，则更新；不存在，则插入）
         /// 该执行不会开启事务。
         /// </summary>
-        Auto = 8,
+        Auto = 16,
         /// <summary>
         /// 清空表（只有和Insert或InsertWithID组合使用时才有效）
         /// </summary>
-        Truncate = 16
+        Truncate = 32
     }
     /// <summary>
     /// MDataTable 与 MDataRow SetState 的过滤选项
@@ -81,34 +85,5 @@ namespace CYQ.Data.Table
         Update = 2
     }
 
-    /// <summary>
-    /// 转实体所用参数
-    /// </summary>
-    internal enum SysType
-    {
-        /// <summary>
-        /// 基础类型
-        /// </summary>
-        Base = 1,
-        /// <summary>
-        /// 枚举类型
-        /// </summary>
-        Enum = 2,
-        /// <summary>
-        /// 数组
-        /// </summary>
-        Array = 3,
-        /// <summary>
-        /// 集合类型
-        /// </summary>
-        Collection = 4,
-        /// <summary>
-        /// 泛型
-        /// </summary>
-        Generic = 5,
-        /// <summary>
-        /// 自定义类
-        /// </summary>
-        Custom = 99
-    }
+
 }

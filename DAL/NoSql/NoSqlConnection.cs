@@ -177,7 +177,7 @@ namespace CYQ.Data
         {
             if (conn.IndexOf("{0}") > -1)
             {
-                conn = string.Format(conn, AppDomain.CurrentDomain.BaseDirectory);
+                conn = string.Format(conn, AppConfig.WebRootPath);
             }
             int start = conn.IndexOf('=') + 1;//1=2;3 -- 1
             int end = conn.IndexOf(";");//3

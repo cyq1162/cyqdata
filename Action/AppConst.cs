@@ -43,7 +43,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HR))
                 {
-                    _HR = System.Web.HttpContext.Current != null ? "<hr>" : "\r\n<---END--->\r\n";
+                    _HR = AppConfig.IsWeb ? "<hr>" : "\r\n<---END--->\r\n";
                 }
                 return _HR;
             }
@@ -60,7 +60,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_BR))
                 {
-                    _BR = System.Web.HttpContext.Current != null ? "<br>" : "\r\n";
+                    _BR = AppConfig.IsWeb ? "<br>" : "\r\n";
                 }
                 return _BR;
             }

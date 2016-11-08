@@ -37,7 +37,7 @@ namespace CYQ.Data
                         Error.Throw(name);
                     }
                     ass = Assembly.Load(name);
-                    CacheManage.LocalInstance.Add("Sybase_Assembly", ass, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    CacheManage.LocalInstance.Set("Sybase_Assembly", ass, 10080);
                 }
                 catch (Exception err)
                 {
@@ -60,7 +60,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    CacheManage.LocalInstance.Add("Sybase_Factory", factory, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    CacheManage.LocalInstance.Set("Sybase_Factory", factory, 10080);
                 }
 
             }

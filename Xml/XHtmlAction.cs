@@ -755,15 +755,15 @@ namespace CYQ.Data.Xml
                     case "img":
                         setType = SetType.Src; break;
                 }
-                try
-                {
+                //try
+                //{
                     Set(node, setType, value);
-                }
-                catch (Exception err)
-                {
+                //}
+                //catch (Exception err)
+                //{
 
-                    throw;
-                }
+                //    throw;
+                //}
 
 
             }

@@ -2,6 +2,7 @@
 using System.Configuration;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
+using System.Web;
 
 namespace CYQ.Data
 {
@@ -233,8 +234,36 @@ namespace CYQ.Data
                 return AppConst.RunFolderPath;
             }
         }
-    }
 
+    }
+    public static partial class AppConfig
+    {
+        //内部变量
+        /// <summary>
+        /// Web根目录
+        /// </summary>
+        internal static string WebRootPath
+        {
+            get
+            {
+                return AppDomain.CurrentDomain.BaseDirectory;
+            }
+        }
+        internal static bool IsWeb
+        {
+            get
+            {
+                return HttpContext.Current != null;
+            }
+        }
+        internal static Uri WebUri
+        {
+            get
+            {
+                return HttpContext.Current.Request.Url;
+            }
+        }
+    }
     public static partial class AppConfig
     {
         #region Xml相关配置
@@ -282,7 +311,7 @@ namespace CYQ.Data
                     string dtdUri = GetApp("DtdUri", "/Setting/DTD/xhtml1-transitional.dtd");
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
-                        dtdUri = AppDomain.CurrentDomain.BaseDirectory + dtdUri.TrimStart('/').Replace("/", "\\");
+                        dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/').Replace("/", "\\");
                     }
                     return dtdUri;
                 }
@@ -308,20 +337,20 @@ namespace CYQ.Data
                             {
                                 _Domain = domains[0];
                             }
-                            else if (System.Web.HttpContext.Current != null)
+                            else if (AppConfig.IsWeb)
                             {
                                 foreach (string domain in domains)
                                 {
-                                    if (System.Web.HttpContext.Current.Request.Url.Authority.Contains(domain))
+                                    if (AppConfig.WebUri.Authority.Contains(domain))
                                     {
                                         _Domain = domain;
                                     }
                                 }
                             }
                         }
-                        else if (System.Web.HttpContext.Current != null)
+                        else if (AppConfig.IsWeb)
                         {
-                            _Domain = System.Web.HttpContext.Current.Request.Url.Authority.Replace("www.", string.Empty);
+                            _Domain = AppConfig.WebUri.Authority.Replace("www.", string.Empty);
                         }
                     }
                     return _Domain;

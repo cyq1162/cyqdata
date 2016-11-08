@@ -677,7 +677,7 @@ namespace CYQ.Data.Tool
                             mapTable.Add(mapName.ToLower(), item);
                         }
                     }
-                    Cache.CacheManage.LocalInstance.Add(key, mapTable, null, 1440);
+                    Cache.CacheManage.LocalInstance.Set(key, mapTable, 1440);
 
                 }
             }

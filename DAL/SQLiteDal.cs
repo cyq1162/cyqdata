@@ -43,7 +43,7 @@ namespace CYQ.Data
                 try
                 {
                     ass = Assembly.Load(providerName);
-                    _Cache.Add("SQLite_Assembly", ass, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    _Cache.Set("SQLite_Assembly", ass, 10080);
                 }
                 catch (Exception err)
                 {
@@ -74,7 +74,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    _Cache.Add("SQLite_Factory", factory, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    _Cache.Set("SQLite_Factory", factory, 10080);
                 }
 
             }
@@ -127,7 +127,7 @@ namespace CYQ.Data
         //    //    }
         //    //    else
         //    //    {
-        //    //        _Cache.Add("SQLite_Parameter", para, null, 10080);
+        //    //        _Cache.Set("SQLite_Parameter", para, null, 10080);
         //    //    }
         //    //}
         //    //return para as DbParameter;

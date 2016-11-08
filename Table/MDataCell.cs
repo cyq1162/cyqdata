@@ -35,8 +35,7 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 单元结构的值
     /// </summary>
-    [Serializable]
-    internal class MCellValue
+    internal partial class MCellValue
     {
         internal bool IsNull = true;
         /// <summary>
@@ -49,8 +48,7 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 单元结构属性
     /// </summary>
-    [Serializable]
-    public class MCellStruct
+    public partial class MCellStruct
     {
         private MDataColumn _MDataColumn = null;
         /// <summary>
@@ -249,7 +247,6 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 单元格
     /// </summary>
-    [Serializable]
     public partial class MDataCell
     {
         internal MCellValue cellValue;

@@ -8,7 +8,6 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 仅用于Winform的列表绑定。
     /// </summary>
-    [Serializable]
     internal partial class MDataView : IListSource
     {
         MDataTable table;

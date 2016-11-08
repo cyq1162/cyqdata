@@ -17,7 +17,6 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 一行记录
     /// </summary>
-    [Serializable]
     public partial class MDataRow : List<MDataCell>, IDataRecord
     {
         public MDataRow(MDataTable dt)
@@ -849,6 +848,7 @@ namespace CYQ.Data.Table
                 MDataRow row = this;
                 using (MActionUI mui = new MActionUI(ref row, null, null))
                 {
+                
                     if (prefixOrParentControl.Length > 0)
                     {
                         if (isWeb)
@@ -1031,7 +1031,26 @@ namespace CYQ.Data.Table
         /// <param name="entity">实体对象</param>
         public void LoadFrom(object entity)
         {
-            LoadFrom(entity, BreakOp.None);
+            if (entity == null || entity is Boolean)
+            {
+                LoadFrom(true);
+            }
+            else if (entity is String)
+            {
+                LoadFrom(entity as String);
+            }
+            else if (entity is MDataRow)
+            {
+                LoadFrom(entity as MDataRow);
+            }
+            else if (entity is IEnumerable)
+            {
+                LoadFrom(entity as IEnumerable);
+            }
+            else
+            {
+                LoadFrom(entity, BreakOp.None);
+            }
         }
         /// <summary>
         /// 将实体转成数据行。
@@ -1271,87 +1290,6 @@ namespace CYQ.Data.Table
             }
         }
 
-    }
-
-    public partial class MDataRow : System.ComponentModel.ICustomTypeDescriptor
-    {
-        #region ICustomTypeDescriptor 成员
-
-        System.ComponentModel.AttributeCollection ICustomTypeDescriptor.GetAttributes()
-        {
-            return null;
-        }
-
-        string ICustomTypeDescriptor.GetClassName()
-        {
-            return "MDataRow";
-        }
-
-        string ICustomTypeDescriptor.GetComponentName()
-        {
-            return string.Empty;
-        }
-
-        TypeConverter ICustomTypeDescriptor.GetConverter()
-        {
-            return null;
-        }
-
-        EventDescriptor ICustomTypeDescriptor.GetDefaultEvent()
-        {
-            return null;
-        }
-
-        PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty()
-        {
-            return null;
-        }
-
-        object ICustomTypeDescriptor.GetEditor(Type editorBaseType)
-        {
-            return null;
-        }
-
-        EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[] attributes)
-        {
-            return null;
-        }
-
-        EventDescriptorCollection ICustomTypeDescriptor.GetEvents()
-        {
-            return null;
-        }
-        PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
-        {
-            return Create();
-
-        }
-        PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties()
-        {
-            return Create();
-        }
-
-        object ICustomTypeDescriptor.GetPropertyOwner(System.ComponentModel.PropertyDescriptor pd)
-        {
-            return this;
-        }
-        [NonSerialized]
-        PropertyDescriptorCollection properties;
-        PropertyDescriptorCollection Create()
-        {
-            if (properties != null)
-            {
-                return properties;
-            }
-            properties = new PropertyDescriptorCollection(null);
-
-            foreach (MDataCell mdc in this)
-            {
-                properties.Add(new MDataProperty(mdc, null));
-            }
-            return properties;
-        }
-        #endregion
     }
 
 }

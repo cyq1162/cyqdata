@@ -634,3 +634,7 @@
 419：MDataTable.CreateFrom 增加对 HashTable、NameValueCollection、HttpCookieCollection的转换支持（2016-11-03）
 420：MAction 对内部方法InsertUpdate代码进行小优化调整（2016-11-03）
 421：MDataTable修正对于System开关的自定义实体类的序列化的问题（2016-11-05）
+422：【为支持.NET Core】模块分离（将不支持.NET Core的功能分离到Extension文件夹下（2016-11-06）
+423：【为支持.NET Core】重写LocalCache（不用系统的Cache）（2016-11-06）
+424：CacheManage 简化（去掉Add方法，统一为Set方法，掉到Update等其它方法或属性）（2016-11-08）
+425：MDataTable的AcceptChanges新增加Delete属性，增加批量删除功能（2016-11-08）

@@ -22,7 +22,7 @@ namespace CYQ.Data.Tool
             if (ClearThreadBreak(threadName))
             {
                 //创建自身线程
-                threadPath = AppDomain.CurrentDomain.BaseDirectory + AppConfig.ThreadBreakPath + threadName + "_" + threadID + ".threadbreak";
+                threadPath = AppConfig.WebRootPath + AppConfig.ThreadBreakPath + threadName + "_" + threadID + ".threadbreak";
                 try
                 {
                     File.Create(threadPath).Close();
@@ -61,7 +61,7 @@ namespace CYQ.Data.Tool
                 {
                     if (threadPath.IndexOf(":\\") == -1)
                     {
-                        threadPath = AppDomain.CurrentDomain.BaseDirectory + threadPath;
+                        threadPath = AppConfig.WebRootPath + threadPath;
                         if (!Directory.Exists(threadPath))
                         {
                             Directory.CreateDirectory(threadPath);
@@ -110,7 +110,7 @@ namespace CYQ.Data.Tool
                 string path = AppConfig.DB.SchemaMapPath;
                 if (!string.IsNullOrEmpty(path))
                 {
-                    path = AppDomain.CurrentDomain.BaseDirectory + path;
+                    path = AppConfig.WebRootPath + path;
                     if (Directory.Exists(path))
                     {
                         string[] files = Directory.GetFiles(path, "*.ts");

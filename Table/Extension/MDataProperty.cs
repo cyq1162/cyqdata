@@ -7,8 +7,7 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 实现Winform的表格控件绑定功能。
     /// </summary>
-    [Serializable]
-    internal class MDataProperty : System.ComponentModel.PropertyDescriptor
+    internal partial class MDataProperty : System.ComponentModel.PropertyDescriptor
     {
         private MDataCell cell = null;
         public MDataProperty(MDataCell mdc, Attribute[] attrs)

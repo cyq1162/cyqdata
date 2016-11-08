@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}</ProjectGuid>
+    <ProjectGuid>{1B2FA92C-3892-428C-84ED-4CE1D27A89A8}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CYQ.Data</RootNamespace>
@@ -83,7 +83,6 @@
     <Compile Include="Action\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
     <Compile Include="Cache\AutoCache.cs" />
-    <Compile Include="Cache\CacheDependencyInfo.cs" />
     <Compile Include="Cache\CacheManage.cs" />
     <Compile Include="Aop\InterAop.cs" />
     <Compile Include="Aop\AopEnum.cs" />
@@ -131,9 +130,22 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SQL\SqlCreateForSchema.cs" />
+    <Compile Include="Table\Extension\MDataProperty.cs" />
+    <Compile Include="Table\Extension\MDataRow.cs" />
+    <Compile Include="Table\Extension\MDataRowCollection.cs" />
+    <Compile Include="Table\Extension\MDataView.cs" />
+    <Compile Include="Table\Extension\Serializable.cs" />
+    <Compile Include="Table\FastToT.cs" />
+    <Compile Include="Table\MDataCell.cs" />
+    <Compile Include="Table\MDataColumn.cs" />
+    <Compile Include="Table\MDataRow.cs" />
+    <Compile Include="Table\MDataRowCollection.cs" />
+    <Compile Include="Table\MDataTable.cs" />
+    <Compile Include="Table\MDataTableBatchAction.cs" />
+    <Compile Include="Table\MDataTableFilter.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
-    <Compile Include="Table\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
+    <Compile Include="Tool\SysTypeEnum.cs" />
     <Compile Include="UI\IUIValue.cs" />
     <Compile Include="UI\RegisterUI.cs" />
     <Compile Include="SQL\SqlCreateForProc.cs" />
@@ -175,26 +187,6 @@
     <Compile Include="SQL\SqlCreate.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Table\MDataCell.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Table\MDataColumn.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Table\MDataProperty.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Table\MDataRow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Table\MDataRowCollection.cs" />
-    <Compile Include="Table\MDataTable.cs">
-    </Compile>
-    <Compile Include="Table\MDataTableBatchAction.cs" />
-    <Compile Include="Table\MDataTableFilter.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Tool\FastToT.cs" />
     <Compile Include="Tool\IOHelper.cs" />
     <Compile Include="Tool\JsonHelper.cs">
       <SubType>Code</SubType>
@@ -233,7 +225,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
     <None Include="Resources\xhtml-lat1.ent" />
     <None Include="Resources\xhtml-special.ent" />
     <None Include="Resources\xhtml-symbol.ent" />

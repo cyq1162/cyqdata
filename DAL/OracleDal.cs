@@ -134,7 +134,7 @@ namespace CYQ.Data
                 //try
                 //{
                 ass = Assembly.Load("Oracle." + ManagedName + "DataAccess");
-                CacheManage.LocalInstance.Add("OracleClient_Assembly", ass, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                CacheManage.LocalInstance.Set("OracleClient_Assembly", ass, 10080);
                 //}
                 //catch(Exception err)
                 //{
@@ -159,7 +159,7 @@ namespace CYQ.Data
                     }
                     else
                     {
-                        CacheManage.LocalInstance.Add("OracleClient_Factory", factory, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                        CacheManage.LocalInstance.Set("OracleClient_Factory", factory, 10080);
                     }
 
                 }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Data.Common;
-using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using CYQ.Data.SQL;
 using System.Collections.Generic;
 using CYQ.Data.Tool;
-using System.Threading;
 using System.Data.SqlTypes;
+using System.Threading;
 
 
 namespace CYQ.Data

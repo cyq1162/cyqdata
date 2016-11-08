@@ -95,7 +95,7 @@ namespace CYQ.Data.SQL
 
                 if (!columnCache.ContainsKey(key))
                 {
-                    columnCache.Add(key, mdc.Clone());
+                    columnCache.Set(key, mdc.Clone());
                 }
 
                 return mdc;
@@ -410,7 +410,7 @@ namespace CYQ.Data.SQL
             }
             if (!CacheManage.LocalInstance.Contains(key) && mdcs.Count > 0)//拿不到表结构时不缓存。
             {
-                CacheManage.LocalInstance.Add(key, mdcs.Clone());
+                CacheManage.LocalInstance.Set(key, mdcs.Clone());
             }
             return mdcs;
         }
@@ -703,7 +703,7 @@ namespace CYQ.Data.SQL
             }
             else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                string fullPath = AppDomain.CurrentDomain.BaseDirectory + AppConfig.DB.SchemaMapPath + key + ".ts";
+                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
                 if (System.IO.File.Exists(fullPath))
                 {
                     MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
@@ -711,7 +711,7 @@ namespace CYQ.Data.SQL
                     {
                         row = mdcs.ToRow(sourceTableName);
                         returnResult = row.Count > 0;
-                        CacheManage.LocalInstance.Add(key, mdcs.Clone(), null, 1440);
+                        CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
                     }
                 }
             }
@@ -735,7 +735,7 @@ namespace CYQ.Data.SQL
                 row = mdcs.ToRow(sourceTableName);
                 row.TableName = sourceTableName;
                 string key = GetSchemaKey(tableName, dbBase.DataBase, dbBase.dalType);
-                CacheManage.LocalInstance.Add(key, mdcs.Clone(), null, 1440);
+                CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
 
                 switch (dbBase.dalType)//文本数据库不保存。
                 {
@@ -746,7 +746,7 @@ namespace CYQ.Data.SQL
                     case DalType.Oracle:
                         if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                         {
-                            string folderPath = AppDomain.CurrentDomain.BaseDirectory + AppConfig.DB.SchemaMapPath;
+                            string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath;
                             if (System.IO.Directory.Exists(folderPath))
                             {
                                 mdcs.WriteSchema(folderPath + key + ".ts");

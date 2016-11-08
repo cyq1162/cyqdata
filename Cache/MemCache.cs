@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Cache;
-using System.Web.Caching;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
 
@@ -29,38 +28,22 @@ namespace CYQ.Data.Cache
 
 
         }
-
-        public override void Add(string key, object value, double cacheMinutes)
+        public override void Set(string key, object value)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            Set(key, value, 0);
         }
-        public override void Add(string key, object value, string fileName, double cacheMinutes)
+        public override void Set(string key, object value, double cacheMinutes)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            Set(key, value, cacheMinutes, null);
         }
-
-        public override void Add(string key, object value, string fileName)
-        {
-            client.Add(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
-        }
-
-        public override void Add(string key, object value)
-        {
-            client.Add(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
-        }
-
-        public override void Add(string key, object value, string fileName, double cacheMinutes, CacheItemPriority level)
+        public override void Set(string key, object value, double cacheMinutes, string fileName)
         {
             client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
 
-        public override Dictionary<string, CacheDependencyInfo> CacheInfo
-        {
-            get { return null; }
-        }
         DateTime allowCacheTableTime = DateTime.Now;
         private MDataTable cacheTable = null;
-        public override MDataTable CacheTable
+        public override MDataTable CacheInfo
         {
             get
             {
@@ -114,7 +97,7 @@ namespace CYQ.Data.Cache
             get
             {
                 int count = 0;
-                MDataRow row = CacheTable.FindRow("Key='curr_items'");
+                MDataRow row = CacheInfo.FindRow("Key='curr_items'");
                 if (row != null)
                 {
                     for (int i = 1; i < row.Columns.Count; i++)
@@ -132,50 +115,11 @@ namespace CYQ.Data.Cache
         }
 
 
-        public override bool GetFileDependencyHasChanged(string key)
-        {
-            return false;
-        }
-
-        public override bool GetHasChanged(string key)
-        {
-            return false;
-        }
-
-        public override long RemainMemoryBytes
-        {
-            get { return 0; }
-        }
-
-        public override long RemainMemoryPercentage
-        {
-            get { return 0; }
-        }
-
         public override void Remove(string key)
         {
             client.Delete(key);
         }
 
-        public override void Set(string key, object value)
-        {
-            client.Set(key, value, DateTime.Now.AddMinutes(AppConfig.Cache.DefaultCacheTime));
-        }
-
-        public override void Set(string key, object value, double cacheMinutes)
-        {
-            client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
-        }
-
-        public override void SetChange(string key, bool isChange)
-        {
-
-        }
-
-        public override void Update(string key, object value)
-        {
-            client.Replace(key, value);
-        }
 
         DateTime allowGetWorkInfoTime = DateTime.Now;
         string workInfo = string.Empty;

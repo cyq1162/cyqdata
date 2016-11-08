@@ -28,7 +28,7 @@ namespace CYQ.Data
                 try
                 {
                     ass = Assembly.Load("MySql.Data");
-                    CacheManage.LocalInstance.Add("MySqlClient_Assembly", ass, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    CacheManage.LocalInstance.Set("MySqlClient_Assembly", 10080);
                 }
                 catch(Exception err)
                 {
@@ -55,7 +55,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    _Cache.Add("MySqlClient_Factory", factory, null, 10080, System.Web.Caching.CacheItemPriority.High);
+                    _Cache.Set("MySqlClient_Factory", factory, 10080);
                 }
 
             }

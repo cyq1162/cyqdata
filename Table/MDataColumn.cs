@@ -13,7 +13,6 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 头列表集合
     /// </summary>
-    [Serializable]
     public partial class MDataColumn : List<MCellStruct>
     {
         /// <summary>

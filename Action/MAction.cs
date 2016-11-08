@@ -4,7 +4,6 @@ using System.Text;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Configuration;
 using System.ComponentModel;
 using CYQ.Data.SQL;
 using CYQ.Data.Cache;
@@ -399,45 +398,25 @@ namespace CYQ.Data
 
 
         /// <summary>
-        /// 表切换,在A表时，如果需要操作B,不需要重新new一个MAaction,可直接换用本函数切换
+        /// Toggle Table Action: To switch between other tables, use this method
+        /// <para>切换表操作：如需操作其它表，通过此方法切换</para>
         /// </summary>
-        /// <param name="tableObj">要切换的表/视图名</param>
-        /// <example><code>
-        ///     using(MAction action = new MAction(TableNames.Users))
-        ///     {
-        ///         if (action.Fill("UserName='路过秋天'"))
-        ///         {
-        ///             int id = action.Get&lt;int&gt;(Users.ID);
-        ///             if (action.ResetTable(TableNames.Message))
-        ///             {
-        ///                  //other logic...
-        ///             }
-        ///         }
-        ///     }
-        /// </code></example>
+        /// <param name="tableObj">Parameters: table name, view, custom statement, DataRow
+        /// <para>参数：表名、视图、自定义语句、MDataRow</para></param>
         public void ResetTable(object tableObj)
         {
             ResetTable(tableObj, true, null);
         }
-        /// <summary>
-        /// 表切换
-        /// </summary>
-        /// <param name="tableObj">要切换的表/视图名</param>
-        /// <param name="resetState">是否重置原有的数据状态（默认true)</param>
+
+        /// <param name="resetState">Reset Row State (defaultValue:true)
+        /// <para>是否重置原有的数据状态（默认true)</para></param>
         public void ResetTable(object tableObj, bool resetState)
         {
             ResetTable(tableObj, resetState, null);
         }
-        /// <summary>
-        /// 表切换
-        /// </summary>
-        /// <param name="tableObj">要切换的表/视图名</param>
-        /// <param name="newDbName">要切换的数据库名称</param>
-        public void ResetTable(object tableObj, string newDbName)
-        {
-            ResetTable(tableObj, true, newDbName);
-        }
-        private void ResetTable(object tableObj, bool resetState, string newDbName)
+        /// <param name="newDbName">Other DataBaseName
+        /// <para>其它数据库名称</para></param>
+        public void ResetTable(object tableObj, bool resetState, string newDbName)
         {
             tableObj = SqlCreate.SqlToViewSql(tableObj);
             newDbName = newDbName ?? StaticTool.GetDbName(ref tableObj);
@@ -1448,19 +1427,18 @@ namespace CYQ.Data
         #region Aop操作
         private InterAop _aop = new InterAop();
         /// <summary>
-        /// 设置Aop状态
+        /// Set Aop State
+        /// <para>设置Aop状态</para>
         /// </summary>
-        /// <param name="op">Aop状态选项</param>
-        /// <returns></returns>
         public MProc SetAopState(AopOp op)
         {
             _aop.aopOp = op;
             return this;
         }
         /// <summary>
-        /// 需要传递额外的参数供Aop使用时可设置。
+        /// Pass additional parameters for Aop use
+        /// <para>传递额外的参数供Aop使用</para>
         /// </summary>
-        /// <param name="para"></param>
         public MAction SetAopPara(object para)
         {
             _aop.Para.AopPara = para;
@@ -1474,7 +1452,8 @@ namespace CYQ.Data
     {
         private MActionUI _UI;
         /// <summary>
-        /// UI操作
+        /// Manipulate UI
+        /// <para>UI操作</para>
         /// </summary>
         public MActionUI UI
         {

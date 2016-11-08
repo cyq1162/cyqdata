@@ -193,7 +193,7 @@ namespace CYQ.Data.Orm
 
                     if (Columns != null && Columns.Count > 0)
                     {
-                        CacheManage.LocalInstance.Add(key, Columns, null, 1440);
+                        CacheManage.LocalInstance.Set(key, Columns, 1440, null);
                     }
                 }
                 else

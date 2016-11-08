@@ -5,12 +5,13 @@ using System.Text;
 namespace CYQ.Data.Tool
 {
     /// <summary>
-    /// 半线程安全字典类
+    /// 线程安全字典类
     /// </summary>
     /// <typeparam name="K">key</typeparam>
     /// <typeparam name="V">value</typeparam>
     public class MDictionary<K, V> : Dictionary<K, V>
     {
+        private static readonly object lockObj = new object();
         public MDictionary()
             : base()
         {
@@ -40,7 +41,10 @@ namespace CYQ.Data.Tool
         {
             try
             {
-                base.Add(key, value);
+                lock (lockObj)
+                {
+                    base.Add(key, value);
+                }
             }
             catch (Exception err)
             {
@@ -69,7 +73,10 @@ namespace CYQ.Data.Tool
         {
             try
             {
-                base.Remove(key);
+                lock (lockObj)
+                {
+                    base.Remove(key);
+                }
             }
             catch (Exception err)
             {
@@ -98,9 +105,12 @@ namespace CYQ.Data.Tool
         {
             get
             {
-                if (base.ContainsKey(key))
+                lock (lockObj)
                 {
-                    return base[key];
+                    if (base.ContainsKey(key))
+                    {
+                        return base[key];
+                    }
                 }
                 return default(V);
             }
@@ -116,17 +126,20 @@ namespace CYQ.Data.Tool
         public V this[int index]
         {
             get
-            {
+            { 
                 if (index >= 0 && index < this.Count)
                 {
-                    int i = 0;
-                    foreach (V value in this.Values)
+                    lock (lockObj)
                     {
-                        if (i == index)
+                        int i = 0;
+                        foreach (V value in this.Values)
                         {
-                            return value;
+                            if (i == index)
+                            {
+                                return value;
+                            }
+                            i++;
                         }
-                        i++;
                     }
                 }
                 return default(V);
@@ -135,15 +148,18 @@ namespace CYQ.Data.Tool
             {
                 if (index >= 0 && index < this.Count)
                 {
-                    int i = 0;
-                    foreach (K key in this.Keys)
+                    lock (lockObj)
                     {
-                        if (i == index)
+                        int i = 0;
+                        foreach (K key in this.Keys)
                         {
-                            this[key] = value;
-                            break;
+                            if (i == index)
+                            {
+                                this[key] = value;
+                                break;
+                            }
+                            i++;
                         }
-                        i++;
                     }
                 }
             }
@@ -156,9 +172,12 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public V Get(K key)
         {
-            if (base.ContainsKey(key))
+            lock (lockObj)
             {
-                return base[key];
+                if (base.ContainsKey(key))
+                {
+                    return base[key];
+                }
             }
             return default(V);
         }
@@ -167,13 +186,23 @@ namespace CYQ.Data.Tool
         /// </summary>
         public void Set(K key, V value)
         {
-            if (base.ContainsKey(key))
+            lock (lockObj)
             {
-                base[key] = value;
+                if (base.ContainsKey(key))
+                {
+                    base[key] = value;
+                }
+                else
+                {
+                    base.Add(key, value);
+                }
             }
-            else
+        }
+        public new void Clear()
+        {
+            lock (lockObj)
             {
-                base.Add(key, value);
+                base.Clear();
             }
         }
     }

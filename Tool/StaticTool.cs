@@ -32,7 +32,7 @@ namespace CYQ.Data.Tool
                 PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
                 try
                 {
-                    propCache.Add(t.GUID, pInfo);
+                    propCache.Set(t.GUID, pInfo);
                 }
                 catch
                 {

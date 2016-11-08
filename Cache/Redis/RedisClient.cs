@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Globalization;
 using System.Text;
 
@@ -29,7 +28,7 @@ namespace CYQ.Data.Cache
         {
             if (instances.ContainsKey(name))
             {
-                throw new ConfigurationErrorsException("Trying to configure RedisClient instance \"" + name + "\" twice.");
+                Error.Throw("Trying to configure RedisClient instance \"" + name + "\" twice.");
             }
             RedisClient client = new RedisClient(name, servers);
             instances[name] = client;
@@ -110,7 +109,7 @@ namespace CYQ.Data.Cache
             get { return serverPool.MinPoolSize; }
             set
             {
-                if (value > MaxPoolSize) { throw new ConfigurationErrorsException("MinPoolSize (" + value + ") may not be larger than the MaxPoolSize (" + MaxPoolSize + ")."); }
+                if (value > MaxPoolSize) { Error.Throw("MinPoolSize (" + value + ") may not be larger than the MaxPoolSize (" + MaxPoolSize + ")."); }
                 serverPool.MinPoolSize = value;
             }
         }
@@ -125,7 +124,7 @@ namespace CYQ.Data.Cache
             get { return serverPool.MaxPoolSize; }
             set
             {
-                if (value < MinPoolSize) { throw new ConfigurationErrorsException("MaxPoolSize (" + value + ") may not be smaller than the MinPoolSize (" + MinPoolSize + ")."); }
+                if (value < MinPoolSize) { Error.Throw("MaxPoolSize (" + value + ") may not be smaller than the MinPoolSize (" + MinPoolSize + ")."); }
                 serverPool.MaxPoolSize = value;
             }
         }
@@ -153,11 +152,11 @@ namespace CYQ.Data.Cache
         {
             if (String.IsNullOrEmpty(name))
             {
-                throw new ConfigurationErrorsException("Name of RedisClient instance cannot be empty.");
+                Error.Throw("Name of RedisClient instance cannot be empty.");
             }
             if (hosts == null || hosts.Length == 0)
             {
-                throw new ConfigurationErrorsException("Cannot configure RedisClient with empty list of hosts.");
+                Error.Throw("Cannot configure RedisClient with empty list of hosts.");
             }
 
             Name = name;
