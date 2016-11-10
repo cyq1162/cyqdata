@@ -145,6 +145,7 @@
     <Compile Include="Table\MDataTableFilter.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\TableEnum.cs" />
+    <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\SysTypeEnum.cs" />
     <Compile Include="UI\IUIValue.cs" />
     <Compile Include="UI\RegisterUI.cs" />
