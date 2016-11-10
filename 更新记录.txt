@@ -638,3 +638,4 @@
 423：【为支持.NET Core】重写LocalCache（不用系统的Cache）（2016-11-06）
 424：CacheManage 简化（去掉Add方法，统一为Set方法，掉到Update等其它方法或属性）（2016-11-08）
 425：MDataTable的AcceptChanges新增加Delete属性，增加批量删除功能（2016-11-08）
+426：优化LocalCache，改进算法和性能（2016-11-10）

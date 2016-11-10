@@ -17,13 +17,13 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal class LocalCache : CacheManage
     {
+        private MDictionary<string, object> theCache = new MDictionary<string, object>(2048, StringComparer.OrdinalIgnoreCase);//key,cache
+        private MDictionary<string, DateTime> theKeyTime = new MDictionary<string, DateTime>(2048, StringComparer.OrdinalIgnoreCase);//key,time
+        private MDictionary<string, string> theFileName = new MDictionary<string, string>();//key,filename
 
-        private List<string> theKey = new List<string>();
-        private MDictionary<string, object> theCache = new MDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-        private MDictionary<string, DateTime> theKeyTime = new MDictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
-        private SortedDictionary<int, List<string>> theTime = new SortedDictionary<int, List<string>>();
-        private MDictionary<string, FileSystemWatcher> theFile = new MDictionary<string, FileSystemWatcher>();
-        private MDictionary<string, List<string>> theFileKeys = new MDictionary<string, List<string>>();//一个路径对应多个Key
+        private SortedDictionary<int, MList<string>> theTime = new SortedDictionary<int, MList<string>>();//worktime,keylist
+        private MDictionary<string, FileSystemWatcher> theFolderWatcher = new MDictionary<string, FileSystemWatcher>();//folderPath,watch
+        private MDictionary<string, MList<string>> theFolderKeys = new MDictionary<string, MList<string>>();//folderPath,keylist
 
         private static object lockObj = new object();
         private DateTime workTime, startTime;
@@ -36,7 +36,7 @@ namespace CYQ.Data.Cache
                 {
                     _CacheSchemaTable = new MDataTable(CacheType.ToString());
                     _CacheSchemaTable.Columns.Add("Key", System.Data.SqlDbType.NVarChar);
-                    _CacheSchemaTable.Columns.Add("Value", System.Data.SqlDbType.Float);
+                    _CacheSchemaTable.Columns.Add("Value", System.Data.SqlDbType.NVarChar);
                 }
                 return _CacheSchemaTable;
             }
@@ -54,13 +54,15 @@ namespace CYQ.Data.Cache
                 {
                     getCacheTableTime = DateTime.Now;
                     CacheSchemaTable.Rows.Clear();
-                    CacheSchemaTable.NewRow(true).Set(0, "KeyCount").Set(1, theKey.Count);
-                    CacheSchemaTable.NewRow(true).Set(0, "KeyTimeCount").Set(1, theKeyTime.Count);
                     CacheSchemaTable.NewRow(true).Set(0, "CacheCount").Set(1, theCache.Count);
-                    CacheSchemaTable.NewRow(true).Set(0, "FileCount").Set(1, theFile.Count);
                     CacheSchemaTable.NewRow(true).Set(0, "TimeCount").Set(1, theTime.Count);
-                    CacheSchemaTable.NewRow(true).Set(0, "TaskCount").Set(1, taskCount);
+                    CacheSchemaTable.NewRow(true).Set(0, "FileCount").Set(1, theFileName.Count);
+                    CacheSchemaTable.NewRow(true).Set(0, "KeyTimeCount").Set(1, theKeyTime.Count);
+                    CacheSchemaTable.NewRow(true).Set(0, "FolderWatcherCount").Set(1, theFolderWatcher.Count);
+                    CacheSchemaTable.NewRow(true).Set(0, "TaskStartTime").Set(1, startTime);
+                    CacheSchemaTable.NewRow(true).Set(0, "TaskWorkCount").Set(1, taskCount);
                     CacheSchemaTable.NewRow(true).Set(0, "ErrorCount").Set(1, errorCount);
+
                 }
                 return _CacheSchemaTable;
             }
@@ -99,7 +101,7 @@ namespace CYQ.Data.Cache
                     #region 新的机制
                     if (theTime.ContainsKey(taskCount))
                     {
-                        RemoveList(theTime[taskCount]);
+                        RemoveList(theTime[taskCount].GetList());
                         theTime.Remove(taskCount);
                     }
                     #endregion
@@ -127,7 +129,7 @@ namespace CYQ.Data.Cache
                     {
                         try
                         {
-                            if (theKey.Count > 500000)
+                            if (theCache.Count > 100000)// theKey.Count > 100000)
                             {
                                 NoSqlAction.ResetStaticVar();
                                 GC.Collect();
@@ -166,7 +168,8 @@ namespace CYQ.Data.Cache
         {
             get
             {
-                return theKey.Count;
+                return theCache.Count;
+                // return theKey.Count;
             }
         }
 
@@ -189,7 +192,7 @@ namespace CYQ.Data.Cache
         /// <returns></returns>
         public override bool Contains(string key)
         {
-            return theKey.Contains(key) && theKeyTime.ContainsKey(key) && theKeyTime[key] > DateTime.Now;
+            return theCache.ContainsKey(key) && theKeyTime.ContainsKey(key) && theKeyTime[key] > DateTime.Now;
         }
         /// <summary>
         /// 添加一个Cache对象
@@ -212,11 +215,6 @@ namespace CYQ.Data.Cache
             {
                 lock (lockObj)
                 {
-                    if (!theKey.Contains(key))
-                    {
-                        theKey.Add(key);//1：设置 key
-                    }
-
                     if (theCache.ContainsKey(key))
                     {
                         theCache[key] = value;
@@ -249,7 +247,6 @@ namespace CYQ.Data.Cache
                         theKeyTime.Add(key, cTime);
                     }
 
-
                     if (theTime.ContainsKey(workCount))//3：设置time
                     {
                         if (!theTime[workCount].Contains(key))
@@ -259,32 +256,42 @@ namespace CYQ.Data.Cache
                     }
                     else
                     {
-                        List<string> list = new List<string>();
+                        MList<string> list = new MList<string>();
                         list.Add(key);
                         theTime.Add(workCount, list);
                     }
 
-                    if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))//3：设置file
+                    if (!string.IsNullOrEmpty(fileName))//3：设置file
                     {
-                        if (!theFile.ContainsKey(key))
+                        if (fileName.IndexOf("\\\\") > -1)
                         {
-                            if (fileName.IndexOf("\\\\") > -1)
+                            fileName = fileName.Replace("\\\\", "\\");
+                        }
+                        if (!theFileName.ContainsKey(key))
+                        {
+                            theFileName.Add(key, fileName);
+                        }
+                        string folder = Path.GetDirectoryName(fileName);
+                        if (!theFolderWatcher.ContainsKey(folder) && Directory.Exists(folder))
+                        {
+                            theFolderWatcher.Add(folder, CreateFileSystemWatcher(folder));
+                        }
+
+                        if (theFolderKeys.ContainsKey(folder))
+                        {
+                            if (!theFolderKeys[folder].Contains(key))
                             {
-                                fileName = fileName.Replace("\\\\", "\\");
-                            }
-                            theFile.Add(key, CreateFileSystemWatcher(fileName));
-                            if (theFileKeys.ContainsKey(fileName))
-                            {
-                                theFileKeys[fileName].Add(key);
-                            }
-                            else
-                            {
-                                List<string> list = new List<string>();
-                                list.Add(key);
-                                theFileKeys.Add(fileName, list);
+                                theFolderKeys[folder].Add(key);
                             }
                         }
+                        else
+                        {
+                            MList<string> list = new MList<string>();
+                            list.Add(key);
+                            theFolderKeys.Add(folder, list);
+                        }
                     }
+
                 }
             }
             catch
@@ -305,17 +312,7 @@ namespace CYQ.Data.Cache
         /// <param name="key">标识</param>
         public override void Remove(string key)
         {
-            if (Contains(key))//检测存在时中会自动清除cacheState
-            {
-                try
-                {
-                    theKey.Remove(key);//只清除Key（value和Time会在定时器中被清除
-                }
-                catch
-                {
-                    errorCount++;
-                }
-            }
+            theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>
         /// 移除Key和Value
@@ -331,27 +328,27 @@ namespace CYQ.Data.Cache
                     {
                         try
                         {
-                            Remove(key);//key
                             if (theCache.ContainsKey(key))
                             {
-                                theCache.Remove(key);//value
+                                theCache.Remove(key);
                             }
                             if (theKeyTime.ContainsKey(key))
                             {
                                 theKeyTime.Remove(key);
                             }
-                            if (theFile.ContainsKey(key))
+                            if (theFileName.ContainsKey(key))
                             {
-                                string file = theFile[key].Path;
-                                theFile[key].Changed -= new FileSystemEventHandler(fsy_Changed);//取消事件
-                                List<string> keys = theFileKeys[file];
+                                string folder = Path.GetDirectoryName(theFileName[key]);
+                                MList<string> keys = theFolderKeys[folder];
                                 keys.Remove(key);
                                 if (keys.Count == 0)
                                 {
-                                    theFileKeys.Remove(file);//filekeys
+                                    theFolderWatcher[folder].Changed -= new FileSystemEventHandler(fsy_Changed);//取消事件
+                                    theFolderWatcher.Remove(folder);//文件夹下没有要监视的文件，取消事件和对象。
+                                    theFolderKeys.Remove(folder);//移除对象。
                                 }
-                                theFile.Remove(key);//file
 
+                                theFileName.Remove(key);//file
                             }
                             //file
                         }
@@ -375,17 +372,18 @@ namespace CYQ.Data.Cache
                 {
                     TableSchema.tableCache.Clear();
                     TableSchema.columnCache.Clear();
-                    theKey.Clear();
+
                     theCache.Clear();
                     theTime.Clear();
+                    theFileName.Clear();
                     theKeyTime.Clear();
-                    for (int i = 0; i < theFile.Count; i++)
+                    for (int i = 0; i < theFolderWatcher.Count; i++)
                     {
-                        theFile[i].Changed -= new FileSystemEventHandler(fsy_Changed);
-                        theFile[i] = null;
+                        theFolderWatcher[i].Changed -= new FileSystemEventHandler(fsy_Changed);
+                        theFolderWatcher[i] = null;
                     }
-                    theFile.Clear();
-                    theFileKeys.Clear();
+                    theFolderWatcher.Clear();
+                    theFolderKeys.Clear();
                 }
             }
             catch
@@ -401,11 +399,12 @@ namespace CYQ.Data.Cache
         }
 
         #region 处理文件依赖
-        private FileSystemWatcher CreateFileSystemWatcher(string fileName)
+        private FileSystemWatcher CreateFileSystemWatcher(string folderName)
         {
-            FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), "*" + Path.GetFileName(fileName));
+            FileSystemWatcher fsy = new FileSystemWatcher(folderName, "*.*");
             fsy.EnableRaisingEvents = true;
             fsy.IncludeSubdirectories = false;
+            fsy.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName | NotifyFilters.DirectoryName;
             fsy.Changed += new FileSystemEventHandler(fsy_Changed);
             return fsy;
         }
@@ -415,15 +414,24 @@ namespace CYQ.Data.Cache
             lock (obj2)
             {
                 string fileName = e.FullPath;
-                if (theFileKeys.ContainsKey(fileName))
+                string folder = Path.GetDirectoryName(fileName);
+                if (theFolderKeys.ContainsKey(folder))
                 {
-                    List<string> keys = theFileKeys[fileName];
+                    List<string> keys = theFolderKeys[folder].GetList();
                     int count = keys.Count;
                     for (int i = 0; i < count; i++)
                     {
-                        Remove(keys[i]);
+                        if (i < keys.Count)
+                        {
+                            if (theFileName[keys[i]] == fileName)
+                            {
+                                Remove(keys[i]);
+                                keys.Remove(keys[i]);
+                                i--;
+                            }
+                        }
                     }
-                    keys.Clear();
+
                 }
             }
         }
