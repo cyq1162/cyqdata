@@ -14,33 +14,39 @@ namespace CYQ.Data.Tool
     /// </summary>
     internal static class StaticTool
     {
-        static MDictionary<Guid, PropertyInfo[]> propCache = new MDictionary<Guid, PropertyInfo[]>();
+        /// <summary>
+        /// 将PropertyInfo[] 改成PropertyInfo List，是因为.NET的CLR会引发内存读写异常（启用IntelliTrace时）
+        /// </summary>
+        static MDictionary<string, List<PropertyInfo>> propCache = new MDictionary<string, List<PropertyInfo>>();
         /// <summary>
         /// 获取属性列表
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        internal static PropertyInfo[] GetPropertyInfo(Type t)
+        internal static List<PropertyInfo> GetPropertyInfo(Type t)
         {
-            if (propCache.ContainsKey(t.GUID))
+            string key = t.GUID.ToString();
+            if (propCache.ContainsKey(key))
             {
-                return propCache[t.GUID];
+                return propCache[key];
             }
             else
             {
                 bool isInheritOrm = t.BaseType.Name == "OrmBase" || t.BaseType.Name == "SimpleOrmBase";
                 PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
+                List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
                 try
                 {
-                    propCache.Set(t.GUID, pInfo);
+                    
+                    list.AddRange(pInfo);
+                    propCache.Set(key, list);
                 }
-                catch
+                catch (Exception err)
                 {
-
+                    Log.WriteLogToTxt(err);
                 }
-                return pInfo;
+                return list;
             }
-
         }
 
         static Dictionary<string, Type[]> argumentCache = new Dictionary<string, Type[]>();

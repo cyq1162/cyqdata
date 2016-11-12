@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 
 
@@ -10,14 +11,18 @@ namespace CYQ.Data.SQL
         //select;from,
         internal const string filterSqlInjection = "select;into,delete;from,drop;table,drop;database,update;set,truncate;table,create;table,exists;select,insert;into,xp_cmdshell,declare;@,exec;master,waitfor;delay";
         //internal const string replaceSqlInjection = "--";
-        private static string[] filterKeyList = null;
-        internal static string[] FilterKeyList
+        private static List<string> filterKeyList = null;
+        /// <summary>
+        /// 用List 也是因为内存读写异常问题（所有的[]数组，看似都有这问题）
+        /// </summary>
+        internal static List<string> FilterKeyList
         {
             get
             {
                 if (filterKeyList == null)
                 {
-                    filterKeyList = filterSqlInjection.TrimEnd(',').Split(',');
+                    filterKeyList = new List<string>();
+                    filterKeyList.AddRange(filterSqlInjection.TrimEnd(',').Split(','));
                 }
                 return filterKeyList;
             }
@@ -81,7 +86,7 @@ namespace CYQ.Data.SQL
             string tempKey = string.Empty;
             string filterKey = string.Empty;
             string[] filterSpitItems = null;
-            for (int i = 0; i < FilterKeyList.Length; i++)
+            for (int i = 0; i < FilterKeyList.Count; i++)
             {
                 filterSpitItems = filterKeyList[i].Split(';');//分隔
                 filterKey = filterSpitItems[0];//取第一个为关键词

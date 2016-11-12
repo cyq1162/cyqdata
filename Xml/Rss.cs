@@ -263,8 +263,8 @@ namespace CYQ.Data.Xml
         private void CreateNode(XmlNode parent, object obj)
         {
             object propValue = null;
-            PropertyInfo[] pis = Tool.StaticTool.GetPropertyInfo(obj.GetType());
-            for (int i = 0; i < pis.Length; i++)
+            List<PropertyInfo> pis = Tool.StaticTool.GetPropertyInfo(obj.GetType());
+            for (int i = 0; i < pis.Count; i++)
             {
                 if (pis[i].Name == "Items")
                 {

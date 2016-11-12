@@ -175,22 +175,21 @@ namespace CYQ.Data.Table
                 }
             }
         }
-        internal MDataCell[] GetJoinPrimaryCell(MDataRow row)
+        internal List<MDataCell> GetJoinPrimaryCell(MDataRow row)
         {
-            MDataCell[] cells = null;
             if (jointPrimaryIndex != null && jointPrimaryIndex.Count > 0)
             {
-                cells = new MDataCell[jointPrimaryIndex.Count];
+                List<MDataCell> cells = new List<MDataCell>(jointPrimaryIndex.Count);
                 for (int i = 0; i < jointPrimaryIndex.Count; i++)
                 {
-                    cells[i] = row[jointPrimaryIndex[i]];
+                    cells.Add(row[jointPrimaryIndex[i]]);
                 }
+                return cells;
             }
             else
             {
-                cells = row.JointPrimaryCell.ToArray();
+                return row.JointPrimaryCell;
             }
-            return cells;
         }
 
         internal bool Insert(bool keepID)
@@ -431,14 +430,13 @@ namespace CYQ.Data.Table
         #region 批量插入
         internal bool MsSqlBulkCopyInsert(bool keepID)
         {
+            SqlTransaction sqlTran = null;
+            SqlConnection con = null;
+            bool isCreateDal = false;
             try
             {
                 CheckGUIDAndDateTime(DalType.MsSql);
-
                 string conn = AppConfig.GetConn(_Conn);
-                SqlTransaction sqlTran = null;
-                SqlConnection con = null;
-                bool isCreateDal = false;
                 if (_dalHelper == null)
                 {
                     if (IsTruncate)
@@ -458,7 +456,7 @@ namespace CYQ.Data.Table
                     if (IsTruncate)
                     {
                         _dalHelper.isOpenTrans = true;
-                        if (_dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, mdt.TableName), false) == -2)
+                        if (_dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(mdt.TableName, dalTypeTo)), false) == -2)
                         {
                             isGoOn = false;
                             sourceTable.DynamicData = _dalHelper.debugInfo;
@@ -486,6 +484,15 @@ namespace CYQ.Data.Table
                         sbc.WriteToServer(mdt);
                     }
                 }
+                return true;
+            }
+            catch (Exception err)
+            {
+                sourceTable.DynamicData = err;
+                Log.WriteLogToTxt(err);
+            }
+            finally
+            {
                 if (_dalHelper == null)
                 {
                     con.Close();
@@ -496,12 +503,6 @@ namespace CYQ.Data.Table
                     _dalHelper.EndTransaction();
                     _dalHelper.Dispose();
                 }
-                return true;
-            }
-            catch (Exception err)
-            {
-                sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
             }
             return false;
         }
@@ -618,7 +619,7 @@ namespace CYQ.Data.Table
                     if (IsTruncate)
                     {
                         _dalHelper.isOpenTrans = true;//开启事务
-                        isGoOn = _dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, mdt.TableName), false) != -2;
+                        isGoOn = _dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(mdt.TableName, dalTypeTo)), false) != -2;
                     }
                     if (isGoOn && _dalHelper.ExeNonQuery(sql, false) != -2)
                     {
@@ -972,7 +973,7 @@ namespace CYQ.Data.Table
                     {
                         action.Delete("1=1");
                     }
-                    else if (action.dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, action.TableName), false) == -2)
+                    else if (action.dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(action.TableName, dalTypeTo)), false) == -2)
                     {
                         isGoOn = false;
                         sourceTable.DynamicData = action.DebugInfo;

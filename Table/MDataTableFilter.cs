@@ -112,8 +112,8 @@ namespace CYQ.Data.Table
                 else
                 {
 
-                    TFilter[] filters = GetTFilter(whereObj, table.Columns);
-                    if (filters.Length > 0)
+                    List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                    if (filters.Count > 0)
                     {
                         for (int i = 0; i < table.Rows.Count; i++)
                         {
@@ -141,8 +141,8 @@ namespace CYQ.Data.Table
                 {
                     return 0;
                 }
-                TFilter[] filters = GetTFilter(whereObj, table.Columns);
-                if (filters.Length > 0)
+                List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                if (filters.Count > 0)
                 {
                     for (int i = 0; i < table.Rows.Count; i++)
                     {
@@ -166,8 +166,8 @@ namespace CYQ.Data.Table
                 {
                     return table.Rows.Count;
                 }
-                TFilter[] filters = GetTFilter(whereObj, table.Columns);
-                if (filters.Length > 0)
+                List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                if (filters.Count > 0)
                 {
                     for (int i = 0; i < table.Rows.Count; i++)
                     {
@@ -194,9 +194,9 @@ namespace CYQ.Data.Table
                 string whereStr = SqlFormat.GetIFieldSql(whereObj);
                 string orderby;
                 SplitWhereOrderby(ref whereStr, out orderby);
-                TFilter[] filters = GetTFilter(whereStr, table.Columns);
+                List<TFilter> filters = GetTFilter(whereStr, table.Columns);
                 List<MDataRow> rows = table.Rows;
-                if (filters.Length > 0)
+                if (filters.Count > 0)
                 {
                     rows = table.Rows.FindAll(delegate(MDataRow row)
                      {
@@ -236,9 +236,9 @@ namespace CYQ.Data.Table
                     sortRows.AddRange(table.Rows);
                     sortRows.Sort(orderby);
                 }
-                TFilter[] filters = GetTFilter(whereStr, table.Columns);
+                List<TFilter> filters = GetTFilter(whereStr, table.Columns);
 
-                if (filters.Length > 0)
+                if (filters.Count > 0)
                 {
                     if (sortRows == null)
                     {
@@ -325,7 +325,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 多个条件
         /// </summary>
-        private static TFilter[] GetTFilter(object whereObj, MDataColumn mdc)
+        private static List<TFilter> GetTFilter(object whereObj, MDataColumn mdc)
         {
             List<TFilter> tFilterList = new List<TFilter>();
             string whereStr = SqlFormat.GetIFieldSql(whereObj);
@@ -450,7 +450,7 @@ namespace CYQ.Data.Table
             // string firstFilter=whereStr.su
 
 
-            return tFilterList.ToArray();
+            return tFilterList;
         }
         /// <summary>
         /// SQL操作符号
@@ -557,7 +557,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 值比较
         /// </summary>
-        private static bool CompareMore(MDataRow row, params TFilter[] filters)
+        private static bool CompareMore(MDataRow row, List<TFilter> filters)
         {
             if (row == null) { return false; }
             bool result = false;

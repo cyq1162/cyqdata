@@ -817,6 +817,7 @@ namespace CYQ.Data.Tool
                 List<Dictionary<string, string>> result = SplitArray(json);
                 if (result != null && result.Count > 0)
                 {
+                    #region 加载数据
                     if (result.Count == 1 && result[0].ContainsKey("total") && result[0].ContainsKey("rows"))
                     {
                         int count = 0;
@@ -887,6 +888,15 @@ namespace CYQ.Data.Tool
                                 }
                             }
                         }
+                    }
+                    #endregion
+                }
+                else if (mdc.Count == 1)
+                {
+                    string[] items = json.Trim('[', ']').Split(',');
+                    foreach (string item in items)
+                    {
+                        table.NewRow(true).Set(0, item.Trim('"', '\''));
                     }
                 }
                 #endregion

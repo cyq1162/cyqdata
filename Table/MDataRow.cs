@@ -781,7 +781,14 @@ namespace CYQ.Data.Table
         /// <typeparam name="T">实体名称</typeparam>
         public T ToEntity<T>()
         {
-            object obj = Activator.CreateInstance(typeof(T));
+            Type t = typeof(T);
+            switch (StaticTool.GetSystemType(ref t))
+            {
+                case SysType.Base:
+                    return (T)StaticTool.ChangeType(this[0].Value, t);
+
+            }
+            object obj = Activator.CreateInstance(t);
             SetToEntity(ref obj, this);
             return (T)obj;
         }
@@ -1081,7 +1088,7 @@ namespace CYQ.Data.Table
                 {
                     TableName = t.Name;
                 }
-                PropertyInfo[] pis = StaticTool.GetPropertyInfo(t);
+                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(t);
                 if (pis != null)
                 {
                     foreach (PropertyInfo pi in pis)
@@ -1146,7 +1153,7 @@ namespace CYQ.Data.Table
             try
             {
                 #region 处理核心
-                PropertyInfo[] pis = StaticTool.GetPropertyInfo(objType);
+                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(objType);
                 foreach (PropertyInfo p in pis)
                 {
                     cellName = p.Name;

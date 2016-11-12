@@ -66,10 +66,10 @@ namespace CYQ.Data.SQL
 
                 }
 
-                PropertyInfo[] pis = StaticTool.GetPropertyInfo(typeInfo);
+                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(typeInfo);
 
                 SqlDbType sqlType;
-                for (int i = 0; i < pis.Length; i++)
+                for (int i = 0; i < pis.Count; i++)
                 {
                     sqlType = SQL.DataType.GetSqlType(pis[i].PropertyType);
                     mdc.Add(pis[i].Name, sqlType);
@@ -85,7 +85,7 @@ namespace CYQ.Data.SQL
                             column.IsAutoIncrement = true;
                         }
                     }
-                    else if (i > pis.Length - 3 && sqlType == SqlDbType.DateTime && pis[i].Name.EndsWith("Time"))
+                    else if (i > pis.Count - 3 && sqlType == SqlDbType.DateTime && pis[i].Name.EndsWith("Time"))
                     {
                         column.DefaultValue = SqlValue.GetDate;
                     }
@@ -571,6 +571,15 @@ namespace CYQ.Data.SQL
                                 break;
                             case DalType.Txt:
                             case DalType.Xml:
+                                tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                                string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1]);
+                                string[] files = Directory.GetFiles(folder, "*.ts");
+                                foreach (string file in files)
+                                {
+                                    tables.Add(Path.GetFileNameWithoutExtension(file), "");
+                                }
+                                files = null;
+                                break;
                             case DalType.Access:
                             case DalType.SQLite:
                             case DalType.Sybase:

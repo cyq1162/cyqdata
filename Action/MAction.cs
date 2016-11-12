@@ -1201,7 +1201,7 @@ namespace CYQ.Data
             }
             return this;
         }
-        
+
         /// <summary>
         /// Aop scenes can only be used by the parameterization of the Senate
         /// <para>Aop场景才可能使用的参数化传参</para>
@@ -1244,7 +1244,7 @@ namespace CYQ.Data
                 customParaNames.Clear();
             }
         }
-       
+
 
         /// <summary>
         /// 清除系统参数[保留自定义参数]
@@ -1297,17 +1297,21 @@ namespace CYQ.Data
         ///  Get where statement
         /// <para>根据元数据列组合where条件。</para>
         /// </summary>
-       
+        /// <param name="isAnd">connect by and/or<para>true为and连接，反之为or链接</para></param>
         public string GetWhere(bool isAnd, params MDataCell[] cells)
         {
-            return SqlCreate.GetWhere(DalType, isAnd, cells);
+            List<MDataCell> cs = new List<MDataCell>(cells.Length);
+            if (cs.Count > 0)
+            {
+                cs.AddRange(cells);
+            }
+            return SqlCreate.GetWhere(DalType, isAnd, cs);
         }
 
-        /// <param name="isAnd">connect by and/or<para>true为and连接，反之为or链接</para></param>
         /// <param name="cells">MDataCell<para>单元格</para></param>
         public string GetWhere(params MDataCell[] cells)
         {
-            return SqlCreate.GetWhere(DalType, cells);
+            return GetWhere(true, cells);
         }
 
 

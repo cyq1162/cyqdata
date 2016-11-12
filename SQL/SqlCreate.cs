@@ -384,7 +384,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         internal string GetPrimaryWhere()
         {
-            return GetWhere(_action.DalType, _action.Data.JointPrimaryCell.ToArray());
+            return GetWhere(_action.DalType, _action.Data.JointPrimaryCell);
         }
         #endregion
         #region 共用函数
@@ -678,7 +678,7 @@ namespace CYQ.Data.SQL
             }
             return where;
         }
-        internal static string GetWhere(DalType dalType, params MDataCell[] cells)
+        internal static string GetWhere(DalType dalType, List<MDataCell> cells)
         {
             return GetWhere(dalType, true, cells);
         }
@@ -686,11 +686,11 @@ namespace CYQ.Data.SQL
         /// 根据元数据列组合where条件。
         /// </summary>
         /// <returns></returns>
-        internal static string GetWhere(DalType dalType, bool isAnd, params MDataCell[] cells)
+        internal static string GetWhere(DalType dalType, bool isAnd, List<MDataCell> cells)
         {
             string where = "";
             MDataCell cell;
-            for (int i = 0; i < cells.Length; i++)
+            for (int i = 0; i < cells.Count; i++)
             {
                 cell = cells[i];
                 if (i > 0)

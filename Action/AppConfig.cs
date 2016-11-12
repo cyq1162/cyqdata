@@ -3,6 +3,7 @@ using System.Configuration;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
 using System.Web;
+using System.Collections.Generic;
 
 namespace CYQ.Data
 {
@@ -551,7 +552,9 @@ namespace CYQ.Data
                     SetApp("FilterSqlInjection", value);
                     if (!string.IsNullOrEmpty(value))
                     {
-                        SqlInjection.FilterKeyList = value.TrimEnd(',').Split(',');
+                        List<string> list = new List<string>();
+                        list.AddRange(value.TrimEnd(',').Split(','));
+                        SqlInjection.FilterKeyList = list;
                     }
                 }
             }
