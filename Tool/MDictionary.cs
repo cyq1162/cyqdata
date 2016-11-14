@@ -9,7 +9,7 @@ namespace CYQ.Data.Tool
     /// </summary>
     /// <typeparam name="K">key</typeparam>
     /// <typeparam name="V">value</typeparam>
-    public class MDictionary<K, V> : Dictionary<K, V>
+    public partial class MDictionary<K, V> : Dictionary<K, V>
     {
         private static readonly object lockObj = new object();
         public MDictionary()
@@ -200,10 +200,18 @@ namespace CYQ.Data.Tool
         }
         public new void Clear()
         {
-            lock (lockObj)
+            if (Count > 0)
             {
-                base.Clear();
+                lock (lockObj)
+                {
+                    if (Count > 0)
+                    {
+                        base.Clear();
+                    }
+                }
             }
         }
     }
+
+    
 }

@@ -641,3 +641,5 @@
 426：优化LocalCache，改进算法和性能（2016-11-10）
 427：修正MDataTable的AcceptChanges方法（MSSQL异常时链接未关闭问题）（2016-11-12）
 428：JsonHelper、MDataTable 增加对List<string>等基础类型的Json转换（2016-11-12）
+429：MDataColumn 算法改进，提升列名的查找性能（2016-11-12）
+430：MySql，修正更换MySql.Data.dll版本（旧版本并发下的事务有问题，所以升级了版本）引起的Byte[]数据插不进去的问题（旧版本不允许指定长度，新版本必须指定长度）（2016-11-14）

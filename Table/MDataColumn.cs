@@ -16,6 +16,11 @@ namespace CYQ.Data.Table
     public partial class MDataColumn : List<MCellStruct>
     {
         /// <summary>
+        /// 存储列名的索引
+        /// </summary>
+        [NonSerialized]
+        private MDictionary<string, int> columnIndex = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
         /// 添加列时，检测名称是否重复(默认为true)。
         /// </summary>
         public bool CheckDuplicate = true;
@@ -121,16 +126,32 @@ namespace CYQ.Data.Table
         /// </summary>
         public int GetIndex(string columnName)
         {
-            if (!string.IsNullOrEmpty(columnName))
+            if (columnIndex.Count == 0 || columnIndex.Count != Count)
             {
-                columnName = columnName.Replace("_", "");//兼容映射处理
+                columnIndex.Clear();
                 for (int i = 0; i < Count; i++)
                 {
-                    if (string.Compare(this[i].ColumnName.Replace("_", ""), columnName, StringComparison.OrdinalIgnoreCase) == 0)//第三个参数用StringComparison.OrdinalIgnoreCase比用true快。
-                    {
-                        return i;
-                    }
+                    columnIndex.Add(this[i].ColumnName.Replace("_", ""), i);
                 }
+            }
+
+            if (!string.IsNullOrEmpty(columnName))
+            {
+                if (columnName.IndexOf('_') > -1)
+                {
+                    columnName = columnName.Replace("_", "");//兼容映射处理
+                }
+                if (columnIndex.ContainsKey(columnName))
+                {
+                    return columnIndex[columnName];
+                }
+                //for (int i = 0; i < Count; i++)
+                //{
+                //    if (string.Compare(this[i].ColumnName.Replace("_", ""), columnName, StringComparison.OrdinalIgnoreCase) == 0)//第三个参数用StringComparison.OrdinalIgnoreCase比用true快。
+                //    {
+                //        return i;
+                //    }
+                //}
             }
             return -1;
         }
@@ -165,17 +186,8 @@ namespace CYQ.Data.Table
                     }
                     base.Insert(ordinal, mstruct);
                 }
-                //if (_Table != null && _Table.Rows.Count > 0)
-                //{
-                //    MDataCell cell;
-                //    foreach (MDataRow row in _Table.Rows)
-                //    {
-                //        cell = row[index];
-                //        row.RemoveAt(index);
-                //        row.Insert(ordinal, cell);
-                //    }
-                //}
             }
+            columnIndex.Clear();
         }
 
         /// <summary>
@@ -412,6 +424,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
+                columnIndex.Clear();
             }
         }
         public new void AddRange(IEnumerable<MCellStruct> collection)
@@ -420,12 +433,16 @@ namespace CYQ.Data.Table
         }
         public void AddRange(MDataColumn items)
         {
-            foreach (MCellStruct item in items)
+            if (items.Count > 0)
             {
-                if (!Contains(item.ColumnName))
+                foreach (MCellStruct item in items)
                 {
-                    Add(item);
+                    if (!Contains(item.ColumnName))
+                    {
+                        Add(item);
+                    }
                 }
+                columnIndex.Clear();
             }
         }
         public new void Remove(MCellStruct item)
@@ -438,6 +455,7 @@ namespace CYQ.Data.Table
             if (index > -1)
             {
                 RemoveAt(index);
+                columnIndex.Clear();
             }
         }
         public new void RemoveAll(Predicate<MCellStruct> match)
@@ -464,6 +482,7 @@ namespace CYQ.Data.Table
                     }
                 }
             }
+            columnIndex.Clear();
 
         }
         public new void Insert(int index, MCellStruct item)
@@ -482,6 +501,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
+                columnIndex.Clear();
             }
 
         }

@@ -146,6 +146,10 @@ namespace CYQ.Data.Table
                         return base[index];
                     }
                 }
+                else if (field is string)
+                {
+                    return this[field as string];
+                }
                 else if (field is IField)
                 {
                     IField iFiled = field as IField;

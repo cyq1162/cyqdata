@@ -618,9 +618,17 @@ namespace CYQ.Data
                 }
                 para.DbType = dbType;
             }
-            if (dbType == DbType.Binary && dalType == DalType.MySql)//mysql不能设定长度，否则会报索引超出了数组界限错误。
+            if (dbType == DbType.Binary && dalType == DalType.MySql)//（mysql不能设定长度，否则会报索引超出了数组界限错误【已过时，旧版本的MySql.Data.dll不能指定长度】）。
             {
-                para.Size = -1;
+                if (value != null)
+                {
+                    byte[] bytes = value as byte[];
+                    para.Size = bytes.Length;//新版本的MySql.Data.dll 修正了长度指定（不指定就没数据进去），所以又要指定长度，Shit
+                }
+                else
+                {
+                    para.Size = -1;
+                }
             }
             else if (dbType != DbType.Binary && size > -1)
             {
