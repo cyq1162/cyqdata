@@ -698,13 +698,14 @@ namespace CYQ.Data.SQL
                     where += (isAnd ? " and " : " or ");
                 }
                 int groupID = DataType.GetGroup(cell.Struct.SqlType);
+                string columnName = SqlFormat.Keyword(cell.ColumnName, dalType);
                 switch (groupID)
                 {
                     case 1:
-                        where += cell.ColumnName + "=" + (cell.IsNullOrEmpty ? -9999 : cell.Value);
+                        where += columnName + "=" + (cell.IsNullOrEmpty ? -9999 : cell.Value);
                         break;
                     case 3:
-                        where += cell.ColumnName + "=" + (cell.Value.ToString().ToLower() == "true" ? SqlValue.True : SqlValue.False);
+                        where += columnName + "=" + (cell.Value.ToString().ToLower() == "true" ? SqlValue.True : SqlValue.False);
                         break;
                     default:
 
@@ -717,32 +718,32 @@ namespace CYQ.Data.SQL
                             }
                             if (dalType == DalType.Access)
                             {
-                                where += cell.ColumnName + "='{" + guid + "}'";
+                                where += columnName + "='{" + guid + "}'";
                             }
                             else if (dalType == DalType.SQLite)
                             {
-                                where += cell.ColumnName + "=x'" + StaticTool.ToGuidByteString(guid) + "'";
+                                where += columnName + "=x'" + StaticTool.ToGuidByteString(guid) + "'";
                             }
                             else
                             {
-                                where += cell.ColumnName + "='" + guid + "'";
+                                where += columnName + "='" + guid + "'";
                             }
                         }
                         else if (groupID == 2 && dalType == DalType.Oracle) // Oracle的日期时间要转类型
                         {
                             if (cell.Struct.SqlType == SqlDbType.Timestamp)
                             {
-                                where += cell.ColumnName + "=to_timestamp('" + cell.strValue + "','yyyy-MM-dd HH24:MI:ss.ff')";
+                                where += columnName + "=to_timestamp('" + cell.strValue + "','yyyy-MM-dd HH24:MI:ss.ff')";
                             }
                             else
                             {
-                                where += cell.ColumnName + "=to_date('" + cell.strValue + "','yyyy-mm-dd hh24:mi:ss')";
+                                where += columnName + "=to_date('" + cell.strValue + "','yyyy-mm-dd hh24:mi:ss')";
                             }
                         }
                         else
                         {
 
-                            where += cell.ColumnName + "='" + cell.Value + "'";
+                            where += columnName + "='" + cell.Value + "'";
                         }
                         break;
                 }

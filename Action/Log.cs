@@ -25,7 +25,8 @@ namespace CYQ.Data
         }
     }
     /// <summary>
-    /// 日志类型
+    /// LogType
+    /// <para>日志类型</para>
     /// </summary>
     public enum LogType
     {
@@ -51,7 +52,8 @@ namespace CYQ.Data
         Assert
     }
     /// <summary>
-    /// 日志静态类（可将日志输出到文本中）
+    /// Write Log to txt or database
+    /// <para>日志静态类（可将日志输出到文本中）</para>
     /// </summary>
     public static class Log
     {
@@ -83,46 +85,33 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        ///  将日志写到数据库中[需要配置LogConn项后方生效 ]
+        /// write log to database [LogConn must has config value]
+        ///  <para>将日志写到数据库中[需要配置LogConn项后方生效 ]</para>
         /// </summary>
-        /// <param name="err">日志信息</param>
         public static void WriteLogToDB(Exception err)
         {
             WriteLogToDB(GetExceptionMessage(err));
         }
         /// <summary>
-        ///  将日志写到数据库中[需要配置LogConn项后方生效 ]
+        /// write log to database [LogConn must has config value]
+        ///  <para>将日志写到数据库中[需要配置LogConn项后方生效 ]</para>
         /// </summary>
-        /// <param name="message">日志信息</param>
         public static void WriteLogToDB(string message)
         {
             WriteLogToDB(message, LogType.Error);
         }
-        /// <summary>
-        ///  将日志写到数据库中[需要配置LogConn项后方生效 ]
-        /// </summary>
-        /// <param name="message">日志信息</param>
-        /// <param name="logType">日志类型</param>
+
         public static void WriteLogToDB(string message, LogType logType)
         {
             WriteLogToDB(message, logType, "System");
         }
-        /// <summary>
-        ///  将日志写到数据库中[需要配置LogConn项后方生效 ]
-        /// </summary>
-        /// <param name="message">日志信息</param>
-        /// <param name="logType">日志类型</param>
-        /// <param name="userName">用户账号</param>
+
         public static void WriteLogToDB(string message, LogType logType, string userName)
         {
             WriteLogToDB(message, logType.ToString(), userName);
         }
-        /// <summary>
-        ///  将日志写到数据库中[需要配置LogConn项后方生效 ]
-        /// </summary>
-        /// <param name="message">日志信息</param>
-        /// <param name="logType">日志类型</param>
-        /// <param name="userName">用户账号</param>
+
+
         public static void WriteLogToDB(string message, string logType, string userName)
         {
             string conn = AppConfig.Log.LogConn;
@@ -165,27 +154,20 @@ namespace CYQ.Data
 
 
         /// <summary>
-        /// 将日志写到外部txt[web.config中配置路径，配置项为Logpath,默认路径为 "Log/" ]
+        /// Write log to txt
+        ///  <para>将日志写到外部txt[web.config中配置路径，配置项为Logpath,默认路径为 "Log/" ]</para>
         /// </summary>
-        /// <param name="message">日志内容</param>
         public static void WriteLogToTxt(string message)
         {
             WriteLogToTxt(message, null);
         }
-        /// <summary>
-        /// 将日志写到外部txt[web.config中配置路径，配置项为Logpath,默认路径为 "Log/" ]
-        /// </summary>
-        /// <param name="message">日志内容</param>
-        /// <param name="logType">日志类型</param>
+
+
         public static void WriteLogToTxt(string message, LogType logType)
         {
             WriteLogToTxt(message, logType.ToString());
         }
-        /// <summary>
-        /// 将日志写到外部txt[web.config中配置路径，配置项为Logpath,默认路径为 "Log/" ]
-        /// </summary>
-        /// <param name="message">日志内容</param>
-        /// <param name="logType">日志类型</param>
+
         public static void WriteLogToTxt(string message, string logType)
         {
             try
@@ -227,9 +209,6 @@ namespace CYQ.Data
             }
         }
 
-        /// <summary>
-        /// 将异常写入文件
-        /// </summary>
         public static void WriteLogToTxt(Exception err)
         {
             if (err is ThreadAbortException)//线程中止异常不记录
@@ -260,7 +239,8 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 获取异常的内部信息
+        /// Convert Exception to string
+        /// <para>获取异常的内部信息</para>
         /// </summary>
         public static string GetExceptionMessage(Exception err)
         {
@@ -277,7 +257,8 @@ namespace CYQ.Data
         }
     }
     /// <summary>
-    /// 日志记录到数据库（需要配置LogConn链接后方有效）
+    /// A class for you to Write log to database
+    /// <para>日志记录到数据库（需要配置LogConn链接后方有效）</para>
     /// </summary>
     public class SysLogs : Orm.SimpleOrmBase
     {

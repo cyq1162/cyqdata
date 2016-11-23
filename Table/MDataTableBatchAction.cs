@@ -280,7 +280,7 @@ namespace CYQ.Data.Table
                 }
                 action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
 
-                if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || mdt.Columns.JointPrimary.Count == 1)
+                if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1))
                 //jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000
                 //&& (!action.DalVersion.StartsWith("08") || mdt.Rows.Count < 1001)) //只有一个主键-》组合成In远程查询返回数据-》
                 {
@@ -374,23 +374,28 @@ namespace CYQ.Data.Table
                         #region 循环处理
                         action.ResetTable(row, false);
                         string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
-                        if (!action.Exists(where))//row.PrimaryCell.IsNullOrEmpty || 
+                        bool isExists = action.Exists(where);
+                        if (action.RecordsAffected == -2)
                         {
-                            action.AllowInsertID = !row.PrimaryCell.IsNullOrEmpty;
-                            action.Data.SetState(1, BreakOp.Null);
-                            result = action.Insert(InsertOp.None);
+                            result = false;
                         }
                         else
                         {
-                            action.Data.SetState(2);
-                            //if (action.Data.GetState(true) == 2)
-                            //{
-                            result = action.Update(where);
-                            //}
+                            if (!isExists)
+                            {
+                                action.AllowInsertID = !row.PrimaryCell.IsNullOrEmpty;
+                                action.Data.SetState(1, BreakOp.Null);
+                                result = action.Insert(InsertOp.None);
+                            }
+                            else
+                            {
+                                action.Data.SetState(2);
+                                result = action.Update(where);
+                            }
                         }
                         if (!result)
                         {
-                            string msg = "Error On : MDataTable.AcceptChanges.Auto." + mdt.TableName + " : [" + row[0].Value + "] : " + action.DebugInfo;
+                            string msg = "Error On : MDataTable.AcceptChanges.Auto." + mdt.TableName + " : [" + where + "] : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
                             Log.WriteLogToTxt(msg);
                             break;

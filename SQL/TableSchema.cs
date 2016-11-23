@@ -572,7 +572,7 @@ namespace CYQ.Data.SQL
                             case DalType.Txt:
                             case DalType.Xml:
                                 tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                                string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1]);
+                                string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1] + "\\");
                                 string[] files = Directory.GetFiles(folder, "*.ts");
                                 foreach (string file in files)
                                 {
