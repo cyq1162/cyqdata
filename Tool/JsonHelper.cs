@@ -339,7 +339,7 @@ namespace CYQ.Data.Tool
             return json;
 
         }
-       
+
         /// <param name="arrayEnd">end with [] ?</param>
         /// <returns></returns>
         public string ToString(bool arrayEnd)
@@ -452,64 +452,17 @@ namespace CYQ.Data.Tool
         /// a easy method for you to return a json
         /// <para>返回Json格式的结果信息</para>
         /// </summary>
-        public static string OutResult(bool result, string msg, params Dictionary<string, object>[] otherKeyValues)
+        public static string OutResult(bool result, string msg)
         {
             JsonHelper js = new JsonHelper(false, false);
             js.Add("success", result.ToString().ToLower(), true);
             js.Add("msg", msg);
-            if (otherKeyValues.Length > 0)
-            {
-                string value = string.Empty;
-                foreach (KeyValuePair<string, object> item in otherKeyValues[0])
-                {
-                    if (item.Value != null)
-                    {
-                        value = item.Value.ToString();
-                        Type t = item.Value.GetType();
-                        bool isValueType = t.IsValueType;
-                        if (isValueType)
-                        {
-                            if (t.Name == "Boolean")
-                            {
-                                value = value.ToLower();
-                            }
-                        }
-                        js.Add(item.Key, value, isValueType);
-                    }
-                }
-            }
             return js.ToString();
-            /*
-            StringBuilder sb = new StringBuilder();
-            sb.Append("{");
-            sb.Append("\"success\":" + result.ToString().ToLower() + ",");
-            sb.Append("\"msg\":\"" + msg + "\"");
-            if (otherKeyValues.Length > 0)
-            {
-                string value = string.Empty;
-                foreach (KeyValuePair<string, object> item in otherKeyValues[0])
-                {
-                    if (item.Value != null)
-                    {
-                        value = item.Value.ToString();
-                        Type t = item.Value.GetType();
-                        bool isValueType = t.IsValueType;
-                        if (isValueType)
-                        {
-                            if (t.Name == "Boolean")
-                            {
-                                value = value.ToLower();
-                            }
-                        }
-                        sb.AppendFormat(",\"{0}\":{1}", item.Key, isValueType ? value : "\"" + value + "\"");
-                    }
-                }
-            }
-            sb.Append("}");
-            return sb.ToString();
-             * */
         }
-
+        public static string OutResult(bool result, object msgObj)
+        {
+            return OutResult(result, ToJson(msgObj));
+        }
         /// <summary>
         ///  split json to dicationary
         /// <para>将Json分隔成键值对。</para>

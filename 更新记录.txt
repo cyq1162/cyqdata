@@ -647,3 +647,4 @@
 432：修正MDataTable的AcceptChanges方法的Auto参数下多个联合主键条件的问题。（2016-11-23）
 433：JsonHelper 优化Oracle下的number1转bool型的大小写（2016-11-25）
 434：JsonHelper 增加对DataTable的转换支持（2016-11-25）
+435：JsonHelper 扩展OutResult方法，增加使用体验（2016-11-25）
