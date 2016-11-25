@@ -645,3 +645,5 @@
 430：MySql，修正更换MySql.Data.dll版本（旧版本并发下的事务有问题，所以升级了版本）引起的Byte[]数据插不进去的问题（旧版本不允许指定长度，新版本必须指定长度）（2016-11-14）
 431：DBTool.GetTables 修正文本数据库的获取表（2016-11-15）
 432：修正MDataTable的AcceptChanges方法的Auto参数下多个联合主键条件的问题。（2016-11-23）
+433：JsonHelper 优化Oracle下的number1转bool型的大小写（2016-11-25）
+434：JsonHelper 增加对DataTable的转换支持（2016-11-25）

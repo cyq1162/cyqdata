@@ -13,7 +13,8 @@ using System.Reflection;
 namespace CYQ.Data.Tool
 {
     /// <summary>
-    /// JsonHelper 的符号转义选项
+    /// Escape json char options
+    /// <para>JsonHelper 的符号转义选项</para>
     /// </summary>
     public enum EscapeOp
     {
@@ -25,7 +26,8 @@ namespace CYQ.Data.Tool
         Yes
     }
     /// <summary>
-    /// json 帮助类
+    /// Json class for you easy to operate json
+    /// <para>功能全面的json帮助类</para>
     /// </summary>
     public partial class JsonHelper
     {
@@ -35,13 +37,14 @@ namespace CYQ.Data.Tool
         public JsonHelper()
         {
         }
-        /// <param name="addHead">是否带输出头</param>
+        /// <param name="addHead">with easyui header ?<para>是否带输出头</para></param>
         public JsonHelper(bool addHead)
         {
             _AddHead = addHead;
         }
 
-        /// <param name="addSchema">是否首行带表结构[MDataTable.LoadFromJson可以还原表的数据类型]</param>
+        /// <param name="addSchema">first row with table schema ?
+        /// <para>是否首行带表结构[MDataTable.LoadFromJson可以还原表的数据类型]</para></param>
         public JsonHelper(bool addHead, bool addSchema)
         {
             _AddHead = addHead;
@@ -49,21 +52,25 @@ namespace CYQ.Data.Tool
         }
         #region 属性
         /// <summary>
-        /// 转义符号
+        /// Escape options
+        /// <para>转义符号</para>
         /// </summary>
         public EscapeOp Escape = EscapeOp.Default;
         /// <summary>
-        /// 是否将名称转为小写
+        /// convert filed to lower
+        /// <para>是否将名称转为小写</para>
         /// </summary>
         public bool IsConvertNameToLower = false;
         /// <summary>
-        /// 日期的格式化（默认：yyyy-MM-dd HH:mm:ss）
+        /// formate datetime
+        /// <para>日期的格式化（默认：yyyy-MM-dd HH:mm:ss）</para>
         /// </summary>
         public string DateTimeFormatter = "yyyy-MM-dd HH:mm:ss";
         private string brFlag = "[#<br>]";
         RowOp _RowOp = RowOp.IgnoreNull;
         /// <summary>
-        ///  Json输出行数据的过滤选项
+        ///  filter json data
+        /// <para>Json输出行数据的过滤选项</para>
         /// </summary>
         public RowOp RowOp
         {
@@ -80,7 +87,8 @@ namespace CYQ.Data.Tool
         private bool _AddHead = false;
         private bool _AddSchema = false;
         /// <summary>
-        /// 是否成功   
+        ///  is success
+        /// <para>是否成功</para>
         /// </summary>
         public bool Success
         {
@@ -91,7 +99,8 @@ namespace CYQ.Data.Tool
         }
         private string errorMsg = "";
         /// <summary>
-        /// 错误提示信息   
+        /// Error message
+        /// <para>错误提示信息  </para> 
         /// </summary>
         public string ErrorMsg
         {
@@ -106,7 +115,8 @@ namespace CYQ.Data.Tool
         }
         private int rowCount = 0;
         /// <summary>
-        /// 当前返回的行数
+        /// data rows count
+        /// <para>当前返回的行数</para>
         /// </summary>
         public int RowCount
         {
@@ -121,7 +131,8 @@ namespace CYQ.Data.Tool
         }
         private int total;
         /// <summary>
-        /// 所有记录的总数（多数用于分页的记录总数）。
+        /// totla count
+        /// <para>所有记录的总数（多数用于分页的记录总数）。</para>
         /// </summary>
         public int Total
         {
@@ -144,7 +155,8 @@ namespace CYQ.Data.Tool
 
 
         /// <summary>
-        /// 添加完一行数据后调用此方法换行
+        /// flag a json is end and start a new json
+        /// <para> 添加完一个Json数据后调用此方法换行</para>
         /// </summary>
         public void AddBr()
         {
@@ -153,15 +165,14 @@ namespace CYQ.Data.Tool
         }
         StringBuilder footText = new StringBuilder();
         /// <summary>
-        /// 添加底部数据（只有AddHead为true情况才能添加数据）
+        /// attach json data (AddHead must be true)
+        /// <para>添加底部数据（只有AddHead为true情况才能添加数据）</para>
         /// </summary>
         public void AddFoot(string name, string value)
         {
             AddFoot(name, value, false);
         }
-        /// <summary>
-        ///  添加底部数据（只有AddHead为true情况才能添加数据）
-        /// </summary>
+
         public void AddFoot(string name, string value, bool noQuotes)
         {
             if (_AddHead)
@@ -171,18 +182,17 @@ namespace CYQ.Data.Tool
         }
 
         /// <summary>
-        /// 添加一个字段的值
+        /// add json key value
+        /// <para>添加一个字段的值</para>
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
         public void Add(string name, string value)
         {
             jsonItems.Add(Format(name, value, false));
         }
-        /// <summary>
-        /// 添加一个字段的值
-        /// </summary>
-        /// <param name="noQuotes">值不带引号</param>
+
+
+        /// <param name="noQuotes">value is no quotes
+        /// <para>值不带引号</para></param>
         public void Add(string name, string value, bool noQuotes)
         {
             jsonItems.Add(Format(name, value, noQuotes));
@@ -239,7 +249,8 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 输出Json字符串
+        /// out json result
+        /// <para>输出Json字符串</para>
         /// </summary>
         public override string ToString()
         {
@@ -328,6 +339,9 @@ namespace CYQ.Data.Tool
             return json;
 
         }
+       
+        /// <param name="arrayEnd">end with [] ?</param>
+        /// <returns></returns>
         public string ToString(bool arrayEnd)
         {
             string result = ToString();
@@ -341,28 +355,27 @@ namespace CYQ.Data.Tool
         #endregion
 
         /// <summary>
-        /// 检测是否Json格式的字符串
+        /// check string is json
+        /// <para>检测是否Json格式的字符串</para>
         /// </summary>
-        /// <param name="json">要检测的字符串</param>
         public static bool IsJson(string json)
         {
             return JsonSplit.IsJson(json);
         }
-        /// <summary>
-        /// 检测是否Json格式的字符串
-        /// </summary>
-        /// <param name="json">要检测的字符串</param>
-        /// <param name="errIndex">错误的字符索引</param>
-        /// <returns></returns>
+
+
+        /// <param name="errIndex">the index of the error char
+        /// <para>错误的字符索引</para></param>
         public static bool IsJson(string json, out int errIndex)
         {
             return JsonSplit.IsJson(json, out errIndex);
         }
         /// <summary>
-        /// 获取Json字符串的值
+        /// Get json value
+        /// <para>获取Json字符串的值</para>
         /// </summary>
-        /// <param name="json">Json字符串</param>
-        /// <param name="key">键值(有层级时用：XXX.YYY.ZZZ)</param>
+        /// <param name="key">the name or key of json
+        /// <para>键值(有层级时用：XXX.YYY.ZZZ)</para></param>
         /// <returns></returns>
         public static string GetValue(string json, string key)
         {
@@ -420,7 +433,7 @@ namespace CYQ.Data.Tool
 
                             }
                         }
-                    endfor:
+                        endfor:
                         if (end > index)
                         {
                             //index = json.IndexOf('"', index + key.Length + 1) + 1;
@@ -436,7 +449,8 @@ namespace CYQ.Data.Tool
             return result;
         }
         /// <summary>
-        /// 返回Json格式的结果信息
+        /// a easy method for you to return a json
+        /// <para>返回Json格式的结果信息</para>
         /// </summary>
         public static string OutResult(bool result, string msg, params Dictionary<string, object>[] otherKeyValues)
         {
@@ -497,7 +511,8 @@ namespace CYQ.Data.Tool
         }
 
         /// <summary>
-        /// 将Json分隔成键值对。
+        ///  split json to dicationary
+        /// <para>将Json分隔成键值对。</para>
         /// </summary>
         public static Dictionary<string, string> Split(string json)
         {
@@ -509,7 +524,8 @@ namespace CYQ.Data.Tool
             return null;
         }
         /// <summary>
-        /// 将Json 数组分隔成多个键值对。
+        ///  split json to dicationary array
+        /// <para>将Json 数组分隔成多个键值对。</para>
         /// </summary>
         public static List<Dictionary<string, string>> SplitArray(string jsonArray)
         {
@@ -528,7 +544,8 @@ namespace CYQ.Data.Tool
     public partial class JsonHelper
     {
         /// <summary>
-        /// 从数据表中取数据填充,最终可输出json字符串
+        /// Fill obj and get json from  ToString() method
+        /// <para>从数据表中取数据填充,最终可输出json字符串</para>
         /// </summary>
         public void Fill(MDataTable table)
         {
@@ -553,9 +570,8 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 从数据行中填充，最终可输出json字符串。
-        /// </summary>
-        /// <param name="row"></param>
+        /// Fill obj and get json from  ToString() method
+        /// <para>从数据行中取数据填充,最终可输出json字符串</para>
         public void Fill(MDataRow row)
         {
             if (row == null)
@@ -591,7 +607,7 @@ namespace CYQ.Data.Tool
                     else
                     {
 
-                        if (groupID == 3)
+                        if (groupID == 3 || (cell.Struct.MaxSize == 1 && groupID == 1)) // oracle 下的number 1会处理成bool类型
                         {
                             value = value.ToLower();
                         }
@@ -637,12 +653,17 @@ namespace CYQ.Data.Tool
                                 }
                                 else
                                 {
-
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
                                         MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
                                         oRow.LoadFrom(cell.Value);
                                         value = oRow.ToJson(_RowOp, IsConvertNameToLower);
+                                        noQuot = true;
+                                    }
+                                    else if (t.FullName == "System.Data.DataTable")
+                                    {
+                                        MDataTable dt = cell.Value as DataTable;
+                                        value = dt.ToJson(false, false);
                                         noQuot = true;
                                     }
                                 }
@@ -705,7 +726,8 @@ namespace CYQ.Data.Tool
             rowCount = 0;//重置为0
         }
         /// <summary>
-        /// 可从类(对象,泛型List、泛型Dictionary）中填充，最终可输出json字符串。
+        ///  Fill obj and get json from  ToString() method
+        /// <para>可从类(对象,泛型List、泛型Dictionary）中填充，最终可输出json字符串。</para>
         /// </summary>
         /// <param name="obj">实体类对象</param>
         public void Fill(object obj)
@@ -714,6 +736,7 @@ namespace CYQ.Data.Tool
             {
                 if (obj is IEnumerable)
                 {
+                    #region IEnumerable
                     Type t = obj.GetType();
                     int len = StaticTool.GetArgumentLength(ref t);
                     if (len == 1)
@@ -756,6 +779,22 @@ namespace CYQ.Data.Tool
                     {
                         Fill(MDataRow.CreateFrom(obj));
                     }
+                    #endregion
+                }
+                else if (obj is DataTable)
+                {
+                    MDataTable dt = obj as DataTable;
+                    Fill(dt);
+                }
+                else if (obj is DataRow)
+                {
+                    MDataRow row = obj as DataRow;
+                    Fill(row);
+                }
+                else if (obj is DataColumnCollection)
+                {
+                    MDataColumn mdc = obj as DataColumnCollection;
+                    Fill(mdc, true);
                 }
                 else
                 {
@@ -958,10 +997,10 @@ namespace CYQ.Data.Tool
             return default(T);
         }
         /// <summary>
-        /// 将Json转换为实体
+        /// Convert json to Entity
+        /// <para>将Json转换为实体</para>
         /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <param name="json">json数据</param>
+        /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static T ToEntity<T>(string json) where T : class
         {
             Type t = typeof(T);
@@ -977,35 +1016,32 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 将Json转换为实体列表
+        ///  Convert json to Entity List
+        ///  <para>将Json转换为实体列表</para>
         /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <param name="json">json数据</param>
+        /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json) where T : class
         {
             return ToMDataTable(json, TableSchema.GetColumns(typeof(T))).ToList<T>();
         }
         /// <summary>
-        /// 将一个对象（实体，泛型List，字典Dictionary）转成Json
+        /// Convert object to json
+        /// <para>将一个对象（实体，泛型List，字典Dictionary）转成Json</para>
         /// </summary>
         public static string ToJson(object obj)
         {
             return ToJson(obj, false, RowOp.IgnoreNull);
         }
-        /// <summary>
-        /// 将一个对象（实体，泛型List，字典Dictionary）转成Json
-        /// </summary>
+
+
         public static string ToJson(object obj, bool isConvertNameToLower)
         {
             return ToJson(obj, isConvertNameToLower, RowOp.IgnoreNull);
         }
-        /// <summary>
-        ///  将一个对象（实体，泛型List，字典Dictionary）转成Json
-        /// </summary>
-        /// <param name="obj">对象</param>
-        /// <param name="isConvertNameToLower">字段是否转小写</param>
-        /// <param name="op">默认值为RowOp.All</param>
-        /// <returns></returns>
+
+
+        /// <param name="op">default value is RowOp.All
+        /// <para>默认值为RowOp.All</para></param>
         public static string ToJson(object obj, bool isConvertNameToLower, RowOp op)
         {
             JsonHelper js = new JsonHelper();
@@ -1045,19 +1081,17 @@ namespace CYQ.Data.Tool
 
         #region Json转Xml
         /// <summary>
-        /// 将一个Json转成Xml
+        /// Convert json to Xml
+        /// <para>将一个Json转成Xml</para>
         /// </summary>
-        /// <param name="json">Json字符串</param>
         public static string ToXml(string json)
         {
             return ToXml(json, true);
         }
-        /// <summary>
-        /// 将一个Json转成Xml
-        /// </summary>
-        /// <param name="json">Json字符串</param>
-        /// <param name="isWithAttr">是否转成属性，默认true</param>
-        /// <returns></returns>
+
+
+        /// <param name="isWithAttr">default value is true
+        /// <para>是否转成属性，默认true</para></param>
         public static string ToXml(string json, bool isWithAttr)
         {
             StringBuilder xml = new StringBuilder();
