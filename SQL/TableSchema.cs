@@ -281,7 +281,7 @@ namespace CYQ.Data.SQL
                             foreach (DataRow row in sqliteDt.Rows)
                             {
                                 object len = row["NUMERIC_PRECISION"];
-                                if (len == null)
+                                if (len == null || len == DBNull.Value)
                                 {
                                     len = row["CHARACTER_MAXIMUM_LENGTH"];
                                 }

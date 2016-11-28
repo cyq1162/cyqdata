@@ -249,6 +249,11 @@ namespace CYQ.Data.Tool
                         break;
                     default: //值开头。。
                         isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && state == 0);//
+                        if (!isError && jsonStart && !arrayStart && state != 1 && keyStart < 2)
+                        {
+                            //不是引号开头的，只允许数字
+                            isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                        }
                         break;
                 }
                 //if (isError)

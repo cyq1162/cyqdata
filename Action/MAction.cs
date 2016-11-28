@@ -871,6 +871,8 @@ namespace CYQ.Data
                             if (byPager)
                             {
                                 rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                                _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
+                                _aop.isHasCache = false;//不能影响Select的后续操作。
                                 //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
                             }
                             if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
@@ -1051,7 +1053,6 @@ namespace CYQ.Data
                 _aop.Para.TableName = _sourceTableName;
                 _aop.Para.Row = _Data;
                 _aop.Para.Where = where;
-                // _aop.Para.AopPara = aopPara;
                 _aop.Para.IsTransaction = dalHelper.isOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.GetCount);
             }
@@ -1102,14 +1103,51 @@ namespace CYQ.Data
         public bool Exists(object where)
         {
             CheckDisposed();
-            switch (dalHelper.dalType)
+            AopResult aopResult = AopResult.Default;
+            if (_aop.IsLoadAop)
             {
-                case DalType.Txt:
-                case DalType.Xml:
-                    return _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
-                default:
-                    return GetCount(where) > 0;
+                _aop.Para.MAction = this;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.Exists);
             }
+            if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
+            {
+                switch (dalHelper.dalType)
+                {
+                    case DalType.Txt:
+                    case DalType.Xml:
+                        _aop.Para.IsSuccess = _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
+                        _aop.Para.ExeResult = _aop.Para.IsSuccess;
+                        break;
+                    default:
+                        ClearParameters();//清除系统参数
+                        string countSql = _sqlCreate.GetExistsSql(where);
+                        _aop.Para.ExeResult = Convert.ToString(dalHelper.ExeScalar(countSql, false)) == "1" ? true : false;
+                        _aop.Para.IsSuccess = dalHelper.recordsAffected != -2;
+                        break;
+                }
+            }
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            {
+                _aop.End(Aop.AopEnum.Exists);
+            }
+            if (dalHelper.recordsAffected == -2)
+            {
+                OnError();
+            }
+            return Convert.ToBoolean(_aop.Para.ExeResult);
+
+            //switch (dalHelper.dalType)
+            //{
+            //    case DalType.Txt:
+            //    case DalType.Xml:
+            //        return _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
+            //    default:
+            //        return GetCount(where) > 0;
+            //}
         }
         #endregion
 

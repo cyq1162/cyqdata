@@ -115,7 +115,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static SqlDbType GetSqlType(string typeName)
         {
-            typeName = typeName.ToLower().Replace("system.", "");
+            typeName = typeName.ToLower().Replace("system.", "").Split('(')[0];
             switch (typeName)
             {
                 case "char":

@@ -595,6 +595,7 @@ namespace CYQ.Data.UI
                     {
                         if (requestValue.Trim().Length == 0)//空字符串
                         {
+                            #region Set Value
                             int groupID = DataType.GetGroup(cell.Struct.SqlType);
                             if (groupID > 0)
                             {
@@ -615,6 +616,7 @@ namespace CYQ.Data.UI
                                 }
                                 break;
                             }
+                            #endregion
                         }
                         cell.Value = requestValue.Trim(' ');
                         break;
@@ -851,6 +853,11 @@ namespace CYQ.Data.UI
             autoPrefixList.Add("txt");
             autoPrefixList.Add("ddl");
             autoPrefixList.Add("chb");
+            if (_Data != null && !string.IsNullOrEmpty(_Data.TableName) && !_Data.TableName.Contains(" "))
+            {
+                autoPrefixList.Add(_Data.TableName + "_");
+                autoPrefixList.Add(_Data.TableName + ".");
+            }
         }
 
         #endregion

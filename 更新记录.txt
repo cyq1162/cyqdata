@@ -648,3 +648,6 @@
 433：JsonHelper 优化Oracle下的number1转bool型的大小写（2016-11-25）
 434：JsonHelper 增加对DataTable的转换支持（2016-11-25）
 435：JsonHelper 扩展OutResult方法，增加使用体验（2016-11-25）
+436：MAction 优化Exists方法的语句（2016-11-28）
+437：MAction 修正Select分页（自动缓存受内部的GetCount影响没生效的问题）（2016-11-28）
+438：JsonHelper IsJson 的判断（增加Key无引号时必须是字母的判断）（2016-11-28）

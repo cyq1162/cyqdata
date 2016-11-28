@@ -83,6 +83,12 @@ namespace CYQ.Data.Cache
                         aopInfo.RowCount = int.Parse(obj.ToString());
                     }
                     break;
+                case AopEnum.Exists:
+                    if (obj != null)
+                    {
+                        aopInfo.ExeResult = obj;
+                    }
+                    break;
             }
             baseKey = key = null;
             return obj != null;
@@ -162,6 +168,9 @@ namespace CYQ.Data.Cache
                     break;
                 case AopEnum.GetCount:
                     _MemCache.Set(key, aopInfo.RowCount, cacheTime);
+                    break;
+                case AopEnum.Exists:
+                    _MemCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
             }
 
@@ -574,6 +583,7 @@ namespace CYQ.Data.Cache
                     sb.Append(aopInfo.IsProc);
                     sb.Append(aopInfo.ProcName);
                     break;
+                case AopEnum.Exists:
                 case AopEnum.Fill:
                 case AopEnum.GetCount:
                     sb.Append(aopInfo.Where);
@@ -584,6 +594,7 @@ namespace CYQ.Data.Cache
                     sb.Append(aopInfo.Where);
                     break;
             }
+
             return StaticTool.GetHashKey(sb.ToString());
         }
         #endregion

@@ -433,7 +433,7 @@ namespace CYQ.Data.Tool
 
                             }
                         }
-                        endfor:
+                    endfor:
                         if (end > index)
                         {
                             //index = json.IndexOf('"', index + key.Length + 1) + 1;
@@ -454,14 +454,20 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static string OutResult(bool result, string msg)
         {
+            return OutResult(result, msg, false);
+        }
+      
+        /// <param name="noQuates">no ""</param>
+        private static string OutResult(bool result, string msg, bool noQuates)
+        {
             JsonHelper js = new JsonHelper(false, false);
             js.Add("success", result.ToString().ToLower(), true);
-            js.Add("msg", msg);
+            js.Add("msg", msg, noQuates);
             return js.ToString();
         }
         public static string OutResult(bool result, object msgObj)
         {
-            return OutResult(result, ToJson(msgObj));
+            return OutResult(result, ToJson(msgObj), true);
         }
         /// <summary>
         ///  split json to dicationary
@@ -525,6 +531,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// Fill obj and get json from  ToString() method
         /// <para>从数据行中取数据填充,最终可输出json字符串</para>
+        /// </summary>
         public void Fill(MDataRow row)
         {
             if (row == null)

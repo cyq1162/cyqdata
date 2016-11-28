@@ -9,45 +9,16 @@ namespace CYQ.Data.Aop
     /// </summary>
     public enum AopEnum
     {
-        /// <summary>
-        /// 查询多条记录方法 [参数为顺序为：Aop.AopEnum.Fill, out result, _TableName, aop_where, aop_otherInfo]
-        /// </summary>
         Select,
-        /// <summary>
-        /// 插入方法 [参数为顺序为：Aop.AopEnum.Insert, out result, _TableName, aop_Row, aop_otherInfo]
-        /// </summary>
         Insert,
-        /// <summary>
-        /// 更新方法  [参数为顺序为：Aop.AopEnum.Update, out result, _TableName, aop_Row, aop_otherInfo]
-        /// </summary>
         Update,
-        /// <summary>
-        /// 删除方法  [参数为顺序为：Aop.AopEnum.Fill, out result, _TableName,aop_Row,aop_where, aop_otherInfo]
-        /// </summary>
         Delete,
-        /// <summary>
-        /// 查询一条记录方法 [参数为顺序为：Aop.AopEnum.Fill, out result, _TableName, aop_where, aop_otherInfo]
-        /// </summary>
         Fill,
-        /// <summary>
-        /// 取记录总数 [参数为顺序为：Aop.AopEnum.GetCount, out result, _TableName, aop_where, aop_otherInfo]
-        /// </summary>
         GetCount,
-        /// <summary>
-        /// MProc查询返回List<MDataTable>方法 [参数为顺序为：AopEnum.ExeMDataTableList, out result, procName, isProc, DbParameterCollection, aopInfo]
-        /// </summary>
+        Exists,
         ExeMDataTableList,
-        /// <summary>
-        /// MProc查询返回MDataTable方法 [参数为顺序为：AopEnum.ExeMDataTable, out result, procName, isProc, DbParameterCollection, aopInfo]
-        /// </summary>
         ExeMDataTable,
-        /// <summary>
-        /// MProc执行返回受影响行数方法 [参数为顺序为：AopEnum.ExeNonQuery, out result, procName, isProc, DbParameterCollection, aopInfo]
-        /// </summary>
         ExeNonQuery,
-        /// <summary>
-        /// MProc执行返回首行首列方法 [参数为顺序为：AopEnum.ExeScalar, out result, procName, isProc, DbParameterCollection, aopInfo]
-        /// </summary>
         ExeScalar
     }
     /// <summary>

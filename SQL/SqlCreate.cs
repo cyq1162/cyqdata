@@ -260,10 +260,17 @@ namespace CYQ.Data.SQL
 
             return "select count(*) from " + TableName + where;
         }
-
+        internal string GetExistsSql(object whereObj)
+        {
+            return GetTopOneSql(whereObj, "1");
+        }
         internal string GetTopOneSql(object whereObj)
         {
-            string columnNames = GetColumnsSql();
+            return GetTopOneSql(whereObj, null);
+        }
+        private string GetTopOneSql(object whereObj, string customColumn)
+        {
+            string columnNames = !string.IsNullOrEmpty(customColumn) ? customColumn : GetColumnsSql();
             switch (_action.dalHelper.dalType)
             {
                 case DalType.Sybase:

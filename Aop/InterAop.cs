@@ -12,7 +12,7 @@ namespace CYQ.Data.Aop
         private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
         // private AutoCache cacheAop = new AutoCache();
         private static readonly object lockObj = new object();
-        private bool isHasCache = false;
+        internal bool isHasCache = false;
         public AopOp aopOp = AopOp.OpenAll;
         internal bool IsLoadAop
         {
@@ -70,6 +70,7 @@ namespace CYQ.Data.Aop
                 }
                 if (isHasCache)  //找到Cache
                 {
+
                     if (outerAop == null || ar == AopResult.Default)//不执行End
                     {
                         return AopResult.Return;
@@ -88,7 +89,7 @@ namespace CYQ.Data.Aop
             }
             if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                if (!isHasCache && !IsTxtDataBase && Para.IsSuccess)
+                if (!isHasCache && !IsTxtDataBase && Para.IsSuccess)//Select内部调用了GetCount，GetCount的内部isHasCache为true影响了
                 {
                     AutoCache.SetCache(action, Para); //找看有没有Cache
                 }
