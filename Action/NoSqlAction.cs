@@ -35,6 +35,8 @@ namespace CYQ.Data
         private static MDictionary<string, DateTime> _lastWriteTimeList = new MDictionary<string, DateTime>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大ID
         // private static MDictionary<string, object> _lockOperatorObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//增删改时的互锁
         private List<MDataRow> _insertRows = new List<MDataRow>();//新插入的集合，仅是引用MDataTable的索引
+        private static List<string> _isDeleteAll = new List<string>(5);
+
         /// <summary>
         /// 最后的写入时间
         /// </summary>
@@ -51,7 +53,7 @@ namespace CYQ.Data
                 else if (_tableList.ContainsKey(_FileFullName))
                 {
                     _Table = _tableList[_FileFullName];
-                    if (_Table.Rows.Count == 0 && !isDeleteAll)
+                    if (_Table.Rows.Count == 0 && !_isDeleteAll.Contains(_FileFullName))
                     {
                         if (_maxID.ContainsKey(_FileFullName))
                         {
@@ -270,7 +272,7 @@ namespace CYQ.Data
             int count = 0;
             return Delete(where, out count);
         }
-        private static bool isDeleteAll = false;
+
         internal bool Delete(object where, out int count)
         {
             count = -1;
@@ -284,30 +286,41 @@ namespace CYQ.Data
                     count = rowList.Count;
                     if (count > 0)
                     {
-                        isDeleteAll = count == Table.Rows.Count;
-                        for (int i = rowList.Count - 1; i >= 0; i--)
+                        bool isDeleteAll = count == Table.Rows.Count;
+                        if (isDeleteAll)
                         {
-                            try
+                            _Table.Rows.Clear();//清空竟然无效，暂时未找到原因
+                            _insertRows.Clear();
+                            if (!_isDeleteAll.Contains(_FileFullName))
                             {
-                                MDataRow row = rowList[i];
-                                if (row != null)
-                                {
-                                    if (Table.Rows.Contains(row)) //线程多时，有时候会重复删
-                                    {
-                                        Table.Rows.Remove(row);
-                                    }
-                                    if (_insertRows.Count > 0 && _insertRows.Contains(row))
-                                    {
-                                        _insertRows.Remove(row);
-                                    }
-
-                                }
+                                _isDeleteAll.Add(_FileFullName);
                             }
-                            catch { }
                         }
-                       // if (isDeleteAll) { Save(); }
-                        needToSaveState = 2;
+                        else
+                        {
+                            for (int i = rowList.Count - 1; i >= 0; i--)
+                            {
+                                try
+                                {
+                                    MDataRow row = rowList[i];
+                                    if (row != null)
+                                    {
+                                        if (Table.Rows.Contains(row)) //线程多时，有时候会重复删
+                                        {
+                                            Table.Rows.Remove(row);
+                                        }
+                                        if (_insertRows.Count > 0 && _insertRows.Contains(row))
+                                        {
+                                            _insertRows.Remove(row);
+                                        }
 
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        // if (isDeleteAll) { Save(); }
+                        needToSaveState = 2;
                         return true;
                     }
                 }
@@ -498,7 +511,7 @@ namespace CYQ.Data
         /// <param name="isNeedToReloadTable"></param>
         private void CheckFileChanged(bool isNeedToReloadTable)
         {
-            if (isNeedToReloadTable)
+            if (isNeedToReloadTable && !_isDeleteAll.Contains(_FileFullName))
             {
                 DateTime _lastWriteTimeUtc = _lastWriteTimeList[_FileFullName];
                 if (IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref _lastWriteTimeUtc))
@@ -539,7 +552,10 @@ namespace CYQ.Data
 
                         IOHelper.Write(_FileFullName, text);
                         tryAgainCount = 0;
-                        isDeleteAll = false;
+                        if (_isDeleteAll.Contains(_FileFullName))
+                        {
+                            _isDeleteAll.Remove(_FileFullName);
+                        }
                     }
                     catch
                     {

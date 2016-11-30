@@ -46,6 +46,10 @@ namespace CYQ.Data.Table
         /// </summary>
         Like,
         /// <summary>
+        /// 操作符号:"not like"
+        /// </summary>
+        NotLike,
+        /// <summary>
         /// 是否Null值
         /// </summary>
         IsNull,
@@ -186,7 +190,8 @@ namespace CYQ.Data.Table
             if (table != null && table.Rows.Count > 0)
             {
                 MDataRowCollection findRows = new MDataRowCollection();
-                if (Convert.ToString(whereObj).Trim() == "")
+                string where = Convert.ToString(whereObj).Trim();
+                if (where == "" || where == "1=1")
                 {
                     findRows.AddRange(table.Rows);
                     return findRows;
@@ -466,6 +471,7 @@ namespace CYQ.Data.Table
                 _ops.Add("=", Op.Equal);
                 _ops.Add(">", Op.Big);
                 _ops.Add("<", Op.Small);
+                _ops.Add(" not like ", Op.NotLike);
                 _ops.Add(" like ", Op.Like);
                 _ops.Add(" is null", Op.IsNull);
                 _ops.Add(" is not null", Op.IsNotNull);
@@ -555,7 +561,7 @@ namespace CYQ.Data.Table
             return result;
         }
         /// <summary>
-        /// 值比较
+        /// 多条件下值比较
         /// </summary>
         private static bool CompareMore(MDataRow row, List<TFilter> filters)
         {
@@ -564,6 +570,7 @@ namespace CYQ.Data.Table
 
             MDataCell cell = null, otherCell = null;
             SqlDbType sqlDbType = SqlDbType.Int;
+            //单个条件比较的结果
             bool moreResult = false;
             object valueA = null, valueB = null;
             foreach (TFilter item in filters)
@@ -629,6 +636,7 @@ namespace CYQ.Data.Table
                                     case Op.Small:
                                         moreResult = a < b;
                                         break;
+                                    case Op.NotLike:
                                     case Op.NotEqual:
                                         moreResult = a != b;
                                         break;
@@ -699,19 +707,22 @@ namespace CYQ.Data.Table
                                 return op == Op.Small ? value == -1 : value <= 0;
                         }
                     case Op.Like:
+                    case Op.NotLike:
+                        bool result = false;
                         string bValue = Convert.ToString(valueB);
                         if (!bValue.StartsWith("%"))
                         {
-                            return Convert.ToString(valueA).StartsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
+                            result = Convert.ToString(valueA).StartsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
                         }
                         else if (!bValue.EndsWith("%"))
                         {
-                            return Convert.ToString(valueA).EndsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
+                            result = Convert.ToString(valueA).EndsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
                         }
                         else
                         {
-                            return Convert.ToString(valueA).IndexOf(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase) > -1;
+                            result = Convert.ToString(valueA).IndexOf(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase) > -1;
                         }
+                        return op == Op.Like ? result : !result;
                     case Op.In:
                         return Convert.ToString(valueB).Contains(',' + Convert.ToString(valueA) + ",");
                     case Op.NotIn:

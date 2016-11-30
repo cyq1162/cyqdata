@@ -257,7 +257,10 @@ namespace CYQ.Data.Table
         #endregion
 
         #endregion
-
+        public void Clear()
+        {
+            base.Clear();
+        }
         //public void Remove(MDataRow row)
         //{
         //    if (this.Count == 1 && row == this[0])

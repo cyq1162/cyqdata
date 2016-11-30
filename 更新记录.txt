@@ -652,3 +652,5 @@
 437：MAction 修正Select分页（自动缓存受内部的GetCount影响没生效的问题）（2016-11-28）
 438：JsonHelper IsJson 的判断（增加Key无引号时必须是字母的判断）（2016-11-28）
 439：JsonHelper ToJson 对于嵌套的List都输出[]格式（2016-11-30）
+440：MDataTable的Select 支持not like 查询（2016-11-30）
+441：NoSqlAction 修正批量导入清空表再插入时（会重新加载旧数据）的问题（2016-11-30）
