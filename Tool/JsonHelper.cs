@@ -456,7 +456,7 @@ namespace CYQ.Data.Tool
         {
             return OutResult(result, msg, false);
         }
-      
+
         /// <param name="noQuates">no ""</param>
         private static string OutResult(bool result, string msg, bool noQuates)
         {
@@ -602,7 +602,7 @@ namespace CYQ.Data.Tool
                                         js.DateTimeFormatter = DateTimeFormatter;
                                         js.IsConvertNameToLower = IsConvertNameToLower;
                                         js.Fill(cell.Value);
-                                        value = js.ToString();
+                                        value = js.ToString(true);
                                         noQuot = true;
                                     }
                                     else if (len == 2)

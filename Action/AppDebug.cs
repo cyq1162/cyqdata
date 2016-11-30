@@ -4,13 +4,15 @@ using CYQ.Data.Cache;
 namespace CYQ.Data
 {
     /// <summary>
-    /// 应用程序调试类,能截到应用程序所有执行的SQL
+    /// this class can intercept sql
+    ///<para> 应用程序调试类,能截到应用程序所有执行的SQL</para>
     /// </summary>
     public static class AppDebug
     {
         private static CacheManage _Cache = CacheManage.LocalInstance;
         /// <summary>
-        /// 正在记录中
+        /// is recoreding sql ?
+        /// <para>正在记录中</para>
         /// </summary>
         public static bool IsRecording
         {
@@ -22,7 +24,8 @@ namespace CYQ.Data
         private const string _Key = "AppDebug_RecordSQL";// "CYQ.Data.AppDebug_RecordSQL";
         private const string _KeyTime = "AppDebug_RecordTime";// "CYQ.Data.AppDebug_RecordTime";
         /// <summary>
-        /// 获取调试信息
+        /// get sql detail info
+        /// <para>获取调试信息</para>
         /// </summary>
         public static string Info
         {
@@ -45,7 +48,8 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 开始记录调试信息
+        /// start to record sql
+        /// <para>开始记录调试信息</para>
         /// </summary>
         public static void Start()
         {
@@ -53,7 +57,8 @@ namespace CYQ.Data
             _Cache.Set(_KeyTime, DateTime.Now);
         }
         /// <summary>
-        /// 停止并清除记录的调试信息
+        /// stop to record sql
+        /// <para>停止并清除记录的调试信息</para>
         /// </summary>
         public static void Stop()
         {
