@@ -654,3 +654,4 @@
 439：JsonHelper ToJson 对于嵌套的List都输出[]格式（2016-11-30）
 440：MDataTable的Select 支持not like 查询（2016-11-30）
 441：NoSqlAction 修正批量导入清空表再插入时（会重新加载旧数据）的问题（2016-11-30）
+442：JsonHelper 修正转义符被忽略的问题（2016-12-01）

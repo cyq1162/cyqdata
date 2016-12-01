@@ -214,8 +214,10 @@ namespace CYQ.Data.Tool
         }
         private void SetEscape(ref string value)
         {
-            if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)
+            //if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)
+            if (value.IndexOfAny(new char[] { '"' }) > -1)
             {
+                bool isInsert = false;
                 int len = value.Length;
                 StringBuilder sb = new StringBuilder(len + 10);
                 for (int i = 0; i < len; i++)
@@ -226,26 +228,31 @@ namespace CYQ.Data.Tool
                         case '"':
                             if (i == 0 || value[i - 1] != '\\')
                             {
+                                isInsert = true;
                                 sb.Append("\\");
                                 //value.Insert(i, "\\");
                                 //len++;//新插入了一个字符。
                                 //i++;//索引往前一个。
                             }
                             break;
-                        case '\\':
-                            if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
-                            {
-                                sb.Append("\\");
-                                //value.Insert(i, "\\");
-                                //len++;//新插入了一个字符。
-                                //i++;//索引往前一个。
-                            }
-                            break;
+                        //case '\\':
+                        //    if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
+                        //    {
+                        //        sb.Append("\\");
+                        //        //value.Insert(i, "\\");
+                        //        //len++;//新插入了一个字符。
+                        //        //i++;//索引往前一个。
+                        //    }
+                        //    break;
                     }
                     sb.Append(c);
                 }
-                value = null;
-                value = sb.ToString();
+                if (isInsert)
+                {
+                    value = null;
+                    value = sb.ToString();
+                }
+                else { sb = null; }
             }
         }
         /// <summary>

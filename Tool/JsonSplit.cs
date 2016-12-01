@@ -408,6 +408,7 @@ namespace CYQ.Data.Tool
                 case ' ':
                 case '\r':
                 case '\n':
+                case '\t':
                     if (cs.jsonStart && cs.keyStart <= 0 && cs.valueStart <= 0)
                     {
                         return true;//Ìø¹ý¿Õ¸ñ¡£
@@ -424,7 +425,7 @@ namespace CYQ.Data.Tool
                         else
                         {
                             cs.escapeChar = true;
-                            return true;
+                            //return true;
                         }
                     }
                     else
