@@ -316,6 +316,7 @@ namespace CYQ.Data.UI
                                 break;
                             case "HiddenField"://web
                             case "HtmlInputText"://web html runat=server
+                            case "HtmlInputHidden":
                                 t.GetProperty("Value").SetValue(ct, strValue, null);
                                 break;
                             case "ListBox"://wpf , win

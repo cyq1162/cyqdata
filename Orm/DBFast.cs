@@ -114,11 +114,11 @@ namespace CYQ.Data.Orm
         }
         public static bool Insert<T>(T t)
         {
-            return Insert<T>(t, InsertOp.ID);
+            return Insert<T>(t, InsertOp.ID, false);
         }
         public static bool Insert<T>(T t, InsertOp op)
         {
-            return Insert<T>(t, InsertOp.ID, false);
+            return Insert<T>(t, op, false);
         }
         /// <summary>
         /// 添加一条记录

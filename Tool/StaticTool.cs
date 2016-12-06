@@ -37,7 +37,7 @@ namespace CYQ.Data.Tool
                 List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
                 try
                 {
-                    
+
                     list.AddRange(pInfo);
                     propCache.Set(key, list);
                 }
@@ -91,7 +91,7 @@ namespace CYQ.Data.Tool
                     {
                         len = 1;
                     }
-                    else if (t.Name.StartsWith("NameValueCollection"))
+                    else if (t.Name == "NameValueCollection" || (t.BaseType != null && t.BaseType.Name == "NameValueCollection"))
                     {
                         len = 2;
                     }

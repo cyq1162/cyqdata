@@ -859,7 +859,7 @@ namespace CYQ.Data.Table
                 MDataRow row = this;
                 using (MActionUI mui = new MActionUI(ref row, null, null))
                 {
-                
+
                     if (prefixOrParentControl.Length > 0)
                     {
                         if (isWeb)
@@ -1001,12 +1001,22 @@ namespace CYQ.Data.Table
                 }
                 string key = null; object value = null;
                 Type t = null;
+                int i = -1;
                 foreach (object o in dic)
                 {
+                    i++;
                     if (isNameValue)
                     {
-                        key = Convert.ToString(o);
-                        value = ((NameValueCollection)dic)[key];
+                        if (o == null)
+                        {
+                            key = "null";
+                            value = ((NameValueCollection)dic)[i];
+                        }
+                        else
+                        {
+                            key = Convert.ToString(o);
+                            value = ((NameValueCollection)dic)[key];
+                        }
                     }
                     else
                     {

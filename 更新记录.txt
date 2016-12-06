@@ -655,3 +655,6 @@
 440：MDataTable的Select 支持not like 查询（2016-11-30）
 441：NoSqlAction 修正批量导入清空表再插入时（会重新加载旧数据）的问题（2016-11-30）
 442：JsonHelper 修正转义符被忽略的问题（2016-12-01）
+443：DBFast Insert 修正InsertOp设置无效问题（2016-12-02）
+444：MDataTableFilter 的判断，改为不严谨模式，支持右空格（"a "=="a"为true)（2016-12-03）
+445：JsonHelper 增强（支持Request.Form、Cookie、Request.Query字符串格式转换）（2016-12-07）

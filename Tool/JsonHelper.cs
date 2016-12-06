@@ -482,6 +482,11 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static Dictionary<string, string> Split(string json)
         {
+            json = json.Trim();
+            if (json[0] != '{' && json[0] != '[')
+            {
+                json = ToJson(json);
+            }
             List<Dictionary<string, string>> result = JsonSplit.Split(json);
             if (result != null && result.Count > 0)
             {
@@ -701,7 +706,11 @@ namespace CYQ.Data.Tool
         {
             if (obj != null)
             {
-                if (obj is IEnumerable)
+                if (obj is String)
+                {
+                    Fill(obj as String);
+                }
+                else if (obj is IEnumerable)
                 {
                     #region IEnumerable
                     Type t = obj.GetType();
@@ -768,6 +777,30 @@ namespace CYQ.Data.Tool
                     MDataRow row = new MDataRow();
                     row.LoadFrom(obj);
                     Fill(row);
+                }
+            }
+        }
+
+        public void Fill(string query)
+        {
+            if (!string.IsNullOrEmpty(query))
+            {
+                query = query.Trim('?');
+                string[] items = query.Split('&');
+                foreach (string item in items)
+                {
+                    if (!string.IsNullOrEmpty(item))
+                    {
+                        int index = item.IndexOf('=');
+                        if (index > -1)
+                        {
+                            Add(item.Substring(0, index), item.Substring(index + 1, item.Length - index - 1));
+                        }
+                        else
+                        {
+                            Add(item, "");
+                        }
+                    }
                 }
             }
         }
@@ -1011,6 +1044,10 @@ namespace CYQ.Data.Tool
         /// <para>默认值为RowOp.All</para></param>
         public static string ToJson(object obj, bool isConvertNameToLower, RowOp op)
         {
+            if (Convert.ToString(obj) == "")
+            {
+                return "{}";
+            }
             JsonHelper js = new JsonHelper();
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = op;

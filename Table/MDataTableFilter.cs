@@ -691,9 +691,9 @@ namespace CYQ.Data.Table
                         }
 
                     case Op.Equal:
-                        return string.Compare(Convert.ToString(valueA), Convert.ToString(valueB), true) == 0;
+                        return string.Compare(Convert.ToString(valueA).TrimEnd(), Convert.ToString(valueB).TrimEnd(), true) == 0;
                     case Op.NotEqual:
-                        return string.Compare(Convert.ToString(valueA), Convert.ToString(valueB), true) != 0;
+                        return string.Compare(Convert.ToString(valueA).TrimEnd(), Convert.ToString(valueB).TrimEnd(), true) != 0;
                     case Op.Small:
                     case Op.SmallEqual:
                         switch (DataType.GetGroup(sqlType))
@@ -714,9 +714,9 @@ namespace CYQ.Data.Table
                         {
                             result = Convert.ToString(valueA).StartsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
                         }
-                        else if (!bValue.EndsWith("%"))
+                        else if (!bValue.EndsWith("%")) //'123    ' like '123%'
                         {
-                            result = Convert.ToString(valueA).EndsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
+                            result = Convert.ToString(valueA).TrimEnd().EndsWith(bValue.Trim('%'), StringComparison.OrdinalIgnoreCase);
                         }
                         else
                         {
