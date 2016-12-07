@@ -23,20 +23,22 @@ namespace CYQ.Data.Table
         {
             if (dt != null)
             {
+                base.Capacity = dt.Columns.Count;
                 Table = dt;
                 MCellStruct cellStruct;
                 foreach (MCellStruct item in dt.Columns)
                 {
                     cellStruct = item;
-                    base.Add(new MDataCell(ref cellStruct));
+                    MDataCell cell = new MDataCell(ref cellStruct, null);
+                    base.Add(cell);
                 }
-                base.Capacity = dt.Columns.Count;
+
             }
         }
         public MDataRow(MDataColumn mdc)
         {
-            Table.Columns.AddRange(mdc);
             base.Capacity = mdc.Count;
+            Table.Columns.AddRange(mdc);
         }
         public MDataRow()
             : base()
@@ -338,9 +340,9 @@ namespace CYQ.Data.Table
         {
             for (int i = 0; i < this.Count; i++)
             {
-                this[i].cellValue.Value = null;
-                this[i].cellValue.State = 0;
-                this[i].cellValue.IsNull = true;
+                this[i].CellValue.Value = null;
+                this[i].CellValue.State = 0;
+                this[i].CellValue.IsNull = true;
                 this[i].strValue = null;
             }
         }
@@ -366,7 +368,7 @@ namespace CYQ.Data.Table
                 {
                     continue;
                 }
-                state = cell.cellValue.State > state ? cell.cellValue.State : state;
+                state = cell.CellValue.State > state ? cell.CellValue.State : state;
             }
             return state;
         }
@@ -434,7 +436,7 @@ namespace CYQ.Data.Table
                         }
                         break;
                 }
-                this[i].cellValue.State = state;
+                this[i].CellValue.State = state;
             }
             return this;
         }
@@ -529,11 +531,12 @@ namespace CYQ.Data.Table
                 MCellStruct mcb = base[i].Struct;
                 MDataCell mdc = new MDataCell(ref mcb);
                 mdc.strValue = base[i].strValue;
-                mdc.cellValue.Value = base[i].cellValue.Value;
-                mdc.cellValue.State = base[i].cellValue.State;
-                mdc.cellValue.IsNull = base[i].cellValue.IsNull;
+                mdc.CellValue.Value = base[i].CellValue.Value;
+                mdc.CellValue.State = base[i].CellValue.State;
+                mdc.CellValue.IsNull = base[i].CellValue.IsNull;
                 row.Add(mdc);
             }
+            row._Table = _Table;
             row.RowError = RowError;
             row.TableName = TableName;
             row.Conn = Conn;
@@ -921,13 +924,13 @@ namespace CYQ.Data.Table
                     {
                         continue;
                     }
-                    if (rowOp == RowOp.None || (!rowCell.IsNull && rowCell.cellValue.State >= (int)rowOp))
+                    if (rowOp == RowOp.None || (!rowCell.IsNull && rowCell.CellValue.State >= (int)rowOp))
                     {
-                        cell.Value = rowCell.cellValue.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
+                        cell.Value = rowCell.CellValue.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
                         //cell._CellValue.IsNull = rowCell._CellValue.IsNull;//
                         if (isWithValueState)
                         {
-                            cell.cellValue.State = rowCell.cellValue.State;
+                            cell.CellValue.State = rowCell.CellValue.State;
                         }
                     }
                 }

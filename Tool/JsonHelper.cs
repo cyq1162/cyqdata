@@ -559,7 +559,7 @@ namespace CYQ.Data.Tool
                 //{
                 //    continue;
                 //}
-                if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.cellValue.State >= (int)_RowOp)))
+                if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.CellValue.State >= (int)_RowOp)))
                 {
                     #region MyRegion
                     string name = row[i].ColumnName;
@@ -1044,9 +1044,17 @@ namespace CYQ.Data.Tool
         /// <para>默认值为RowOp.All</para></param>
         public static string ToJson(object obj, bool isConvertNameToLower, RowOp op)
         {
-            if (Convert.ToString(obj) == "")
+            string text=Convert.ToString(obj);
+            if (text == "")
             {
                 return "{}";
+            }
+            else if (text[0] == '{' || text[0] == '[')
+            {
+                if (IsJson(text))
+                {
+                    return text;
+                }
             }
             JsonHelper js = new JsonHelper();
             js.IsConvertNameToLower = isConvertNameToLower;

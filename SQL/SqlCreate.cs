@@ -123,7 +123,7 @@ namespace CYQ.Data.SQL
                     isCanDo = false;
                     break;
                 }
-                if (cell.cellValue.State > 0)
+                if (cell.CellValue.State > 0)
                 {
                     _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DalType) + ",");
                     _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
@@ -212,7 +212,7 @@ namespace CYQ.Data.SQL
                     continue;//跳过自增或主键列。
                 }
 
-                if (cell.cellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
+                if (cell.CellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
                 {
                     if (cell.Struct.SqlType == SqlDbType.Timestamp && (_action.DalType == DalType.MsSql || _action.DalType == DalType.Sybase))
                     {

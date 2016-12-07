@@ -83,6 +83,16 @@ namespace CYQ.Data
             return result;
         }
         /// <summary>
+        /// 获取Web.config或App.config的数字值（允许值不存在或为空时输出默认值）。
+        /// </summary>
+        public static bool GetAppBool(string key, bool defaultValue)
+        {
+            bool result;
+            bool.TryParse(GetApp(key, defaultValue.ToString()), out result);
+            return result;
+        }
+
+        /// <summary>
         /// 获取Web.config或App.config的connectionStrings节点的值。
         /// </summary>
         public static string GetConn(string name, out string providerName)
@@ -162,9 +172,7 @@ namespace CYQ.Data
         {
             get
             {
-                bool _IsEnumToInt;
-                bool.TryParse(GetApp("IsEnumToInt", "false"), out _IsEnumToInt);
-                return _IsEnumToInt;
+                return GetAppBool("IsEnumToInt", false);
             }
             set
             {
@@ -276,7 +284,7 @@ namespace CYQ.Data
             /// <summary>
             /// Xml.XHtmlHelper 中使用的 "&lt;![CDATA[" 项
             /// </summary>
-            public static string CDataLeft
+            internal static string CDataLeft
             {
                 get
                 {
@@ -290,7 +298,7 @@ namespace CYQ.Data
             /// <summary>
             /// Xml.XHtmlHelper 中使用的 "]]&gt;" 项
             /// </summary>
-            public static string CDataRight
+            internal static string CDataRight
             {
                 get
                 {
@@ -512,9 +520,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    bool _PagerBySelectBase;
-                    bool.TryParse(GetApp("PagerBySelectBase", "false"), out _PagerBySelectBase);
-                    return _PagerBySelectBase;
+                    return GetAppBool("PagerBySelectBase", false);
                 }
                 set
                 {
@@ -803,7 +809,6 @@ namespace CYQ.Data
                 }
             }
 
-            private static int _IsAutoCache = -1;
             /// <summary>
             /// 是否智能缓存数据（默认开启）
             /// </summary>
@@ -811,16 +816,11 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_IsAutoCache == -1)
-                    {
-                        _IsAutoCache = AppConfig.GetApp("IsAutoCache").ToLower() == "false" ? 0 : 1;//默认开启
-
-                    }
-                    return _IsAutoCache == 1;
+                    return GetAppBool("IsAutoCache", true);
                 }
                 set
                 {
-                    _IsAutoCache = value ? 1 : 0;
+                    SetApp("IsAutoCache", value.ToString());
                 }
             }
             /// <summary>
@@ -957,7 +957,7 @@ namespace CYQ.Data
                     }
                 }
             }
-            private static int _IsWriteLog = -1;
+
             /// <summary>
             /// 是否写数据库异常日志:开启时：有异常不抛出，转写入数据库；不开启：有异常会抛出
             /// </summary>
@@ -965,16 +965,11 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_IsWriteLog == -1)
-                    {
-                        _IsWriteLog = AppConfig.GetApp("IsWriteLog").ToLower() == "true" ? 1 : 0;
-
-                    }
-                    return _IsWriteLog == 1;
+                    return GetAppBool("IsWriteLog", false);
                 }
                 set
                 {
-                    _IsWriteLog = value ? 1 : 0;
+                    SetApp("IsWriteLog", value.ToString());
                 }
             }
             private static string _LogTableName;
@@ -1007,7 +1002,6 @@ namespace CYQ.Data
         public class Debug
         {
             #region 配置文件的其它属性
-            private static int _SqlFilter = -2;
             /// <summary>
             ///毫秒数（这个是在对所有SQL语句的：将所有长时间(ms)的SQL语句写入日志，对应配置项LogPath的路径）
             /// </summary>
@@ -1015,18 +1009,14 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_SqlFilter == -2)
-                    {
-                        _SqlFilter = AppConfig.GetAppInt("SqlFilter", -1);
-                    }
-                    return _SqlFilter;
+                    return GetAppInt("SqlFilter", -1);
                 }
                 set
                 {
-                    _SqlFilter = value;
+                    SetApp("SqlFilter", value.ToString());
                 }
             }
-            private static int _InfoFilter = -1;
+
             /// <summary>
             /// 毫秒数（这个是在AppDebug开启后的：可通过此项设置条件过滤出时间(ms)较长的SQL语句）
             /// </summary>
@@ -1034,18 +1024,14 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_InfoFilter == -1)
-                    {
-                        _InfoFilter = AppConfig.GetAppInt("InfoFilter", 0);
-                    }
-                    return _InfoFilter;
+                    return GetAppInt("InfoFilter", 0);
                 }
                 set
                 {
-                    _InfoFilter = value;
+                    SetApp("InfoFilter", value.ToString());
                 }
             }
-            private static int _OpenDebugInfo = -1;
+
             /// <summary>
             /// 开启信息调试记录：开启后MAction.DebugInfo可输出执行日志。
             /// 同时AppDebug若要使用，也需要开启此项。
@@ -1054,15 +1040,11 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_OpenDebugInfo == -1)
-                    {
-                        _OpenDebugInfo = AppConfig.GetApp("OpenDebugInfo").ToLower() == "true" ? 1 : 0;
-                    }
-                    return _OpenDebugInfo == 1;
+                    return GetAppBool("OpenDebugInfo", false);
                 }
                 set
                 {
-                    _OpenDebugInfo = value ? 1 : 0;
+                    SetApp("OpenDebugInfo", value.ToString());
                 }
             }
             #endregion

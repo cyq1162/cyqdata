@@ -239,13 +239,13 @@ namespace CYQ.Data.Table
         public MDataRow NewRow(bool isAddToTable)
         {
             MDataRow mdr = new MDataRow(this);
-            mdr.TableName = _TableName;
             if (isAddToTable)
             {
-                Rows.Add(mdr);
+                Rows.Add(mdr,false);
             }
             return mdr;
         }
+
         #region 准备新开始的方法
         /// <summary>
         /// 使用本查询，得到克隆后的数据
@@ -1215,13 +1215,13 @@ namespace CYQ.Data.Table
 
                             if (value == null || value == DBNull.Value)
                             {
-                                mRecord[i].cellValue.Value = DBNull.Value;
+                                mRecord[i].CellValue.Value = DBNull.Value;
                             }
                             else if (Convert.ToString(value) == string.Empty)
                             {
-                                mRecord[i].cellValue.Value = string.Empty;
-                                mRecord[i].cellValue.IsNull = false;
-                                mRecord[i].cellValue.State = 1;
+                                mRecord[i].CellValue.Value = string.Empty;
+                                mRecord[i].CellValue.IsNull = false;
+                                mRecord[i].CellValue.State = 1;
                             }
                             else
                             {

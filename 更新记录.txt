@@ -658,3 +658,6 @@
 443：DBFast Insert 修正InsertOp设置无效问题（2016-12-02）
 444：MDataTableFilter 的判断，改为不严谨模式，支持右空格（"a "=="a"为true)（2016-12-03）
 445：JsonHelper 增强（支持Request.Form、Cookie、Request.Query字符串格式转换）（2016-12-07）
+446：MDataTable 内部细节代码优化（2016-12-07）
+447：AppConfig 简化代码，并增加GetAppBool方法（2016-12-07）
+448：JsonHelper 小优化（2016-12-07）

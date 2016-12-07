@@ -567,7 +567,7 @@ namespace CYQ.Data.UI
             for (int i = 0; i < _Data.Count; i++)
             {
                 cell = _Data[i];
-                if (cell.cellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
+                if (cell.CellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
                 {
                     continue;
                 }
@@ -650,7 +650,7 @@ namespace CYQ.Data.UI
             for (int i = 0; i < _Data.Columns.Count; i++)
             {
                 cell = _Data[i];
-                if (cell.cellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
+                if (cell.CellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
                 {
                     continue;
                 }

@@ -249,7 +249,19 @@ namespace CYQ.Data.Table
     /// </summary>
     public partial class MDataCell
     {
-        internal MCellValue cellValue;
+        internal MCellValue _CellValue;
+        internal MCellValue CellValue
+        {
+            get
+            {
+                if (_CellValue == null)
+                {
+                    _CellValue = new MCellValue();
+                }
+                return _CellValue;
+            }
+        }
+        
         private MCellStruct _CellStruct;
 
         #region 构造函数
@@ -268,10 +280,10 @@ namespace CYQ.Data.Table
         #region 初始化
         private void Init(MCellStruct dataStruct, object value)
         {
-            cellValue = new MCellValue();
             _CellStruct = dataStruct;
             if (value != null)
             {
+                _CellValue = new MCellValue();
                 Value = value;
             }
 
@@ -287,7 +299,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return cellValue.Value;
+                return CellValue.Value;
             }
             set
             {
@@ -300,15 +312,15 @@ namespace CYQ.Data.Table
                 bool valueIsNull = value == null || value == DBNull.Value;
                 if (valueIsNull)
                 {
-                    if (cellValue.IsNull)
+                    if (CellValue.IsNull)
                     {
-                        cellValue.State = (value == DBNull.Value) ? 2 : 1;
+                        CellValue.State = (value == DBNull.Value) ? 2 : 1;
                     }
                     else
                     {
-                        cellValue.State = 2;
-                        cellValue.Value = null;
-                        cellValue.IsNull = true;
+                        CellValue.State = 2;
+                        CellValue.Value = null;
+                        CellValue.IsNull = true;
                         strValue = string.Empty;
                     }
                 }
@@ -320,8 +332,8 @@ namespace CYQ.Data.Table
                     {
                         if (strValue == "" && groupID > 0)
                         {
-                            cellValue.Value = null;
-                            cellValue.IsNull = true;
+                            CellValue.Value = null;
+                            CellValue.IsNull = true;
                             return;
                         }
                         value = ChangeValue(value, _CellStruct.ValueType, groupID);
@@ -331,15 +343,15 @@ namespace CYQ.Data.Table
                         }
                     }
 
-                    if (!cellValue.IsNull && (cellValue.Value.Equals(value) || (groupID != 999 && cellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
+                    if (!CellValue.IsNull && (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
                     {
-                        cellValue.State = 1;
+                        CellValue.State = 1;
                     }
                     else
                     {
-                        cellValue.Value = value;
-                        cellValue.State = 2;
-                        cellValue.IsNull = false;
+                        CellValue.Value = value;
+                        CellValue.State = 2;
+                        CellValue.IsNull = false;
                     }
 
                 }
@@ -361,7 +373,7 @@ namespace CYQ.Data.Table
             ex = null;
             if (!IsNull)
             {
-                cellValue.Value = ChangeValue(cellValue.Value, _CellStruct.ValueType, DataType.GetGroup(_CellStruct.SqlType), out ex);
+                CellValue.Value = ChangeValue(CellValue.Value, _CellStruct.ValueType, DataType.GetGroup(_CellStruct.SqlType), out ex);
             }
             return ex == null;
         }
@@ -383,12 +395,12 @@ namespace CYQ.Data.Table
             strValue = Convert.ToString(value);
             if (value == null)
             {
-                cellValue.IsNull = true;
+                CellValue.IsNull = true;
                 return value;
             }
             if (groupID > 0 && strValue == "")
             {
-                cellValue.IsNull = true;
+                CellValue.IsNull = true;
                 return null;
             }
             try
@@ -509,8 +521,8 @@ namespace CYQ.Data.Table
             catch (Exception err)
             {
                 value = null;
-                cellValue.Value = null;
-                cellValue.IsNull = true;
+                CellValue.Value = null;
+                CellValue.IsNull = true;
                 ex = err;
                 string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, strValue);
                 strValue = null;
@@ -525,12 +537,12 @@ namespace CYQ.Data.Table
 
         internal T Get<T>()
         {
-            if (cellValue.IsNull)
+            if (CellValue.IsNull)
             {
                 return default(T);
             }
             Type t = typeof(T);
-            return (T)ChangeValue(cellValue.Value, t, DataType.GetGroup(DataType.GetSqlType(t)));
+            return (T)ChangeValue(CellValue.Value, t, DataType.GetGroup(DataType.GetSqlType(t)));
         }
 
         /// <summary>
@@ -540,7 +552,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return cellValue.IsNull;
+                return CellValue.IsNull;
             }
         }
         /// <summary>
@@ -550,7 +562,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return cellValue.IsNull || strValue.Length == 0;
+                return CellValue.IsNull || strValue.Length == 0;
             }
         }
         /// <summary>
@@ -580,11 +592,11 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return cellValue.State;
+                return CellValue.State;
             }
             set
             {
-                cellValue.State = value;
+                CellValue.State = value;
             }
         }
         #endregion
@@ -632,13 +644,13 @@ namespace CYQ.Data.Table
         public override bool Equals(object value)
         {
             bool valueIsNull = (value == null || value == DBNull.Value);
-            if (cellValue.IsNull)
+            if (CellValue.IsNull)
             {
                 return valueIsNull;
             }
             if (valueIsNull)
             {
-                return cellValue.IsNull;
+                return CellValue.IsNull;
             }
             return strValue.ToLower() == Convert.ToString(value).ToLower();
         }
