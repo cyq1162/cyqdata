@@ -536,7 +536,7 @@ namespace CYQ.Data.Table
                 mdc.CellValue.IsNull = base[i].CellValue.IsNull;
                 row.Add(mdc);
             }
-            row._Table = _Table;
+            //row._Table = _Table;//不能带，会造成单行移除列时，移除的是原引用的行，而不是自身
             row.RowError = RowError;
             row.TableName = TableName;
             row.Conn = Conn;
