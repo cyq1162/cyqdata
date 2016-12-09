@@ -108,10 +108,25 @@ namespace CYQ.Data.Table
         /// 旧的列名（AlterOp为Rename时可用）
         /// </summary>
         public string OldName;
+        private string _ColumnName = string.Empty;
         /// <summary>
         /// 列名
         /// </summary>
-        public string ColumnName;
+        public string ColumnName
+        {
+            get
+            {
+                return _ColumnName;
+            }
+            set
+            {
+                _ColumnName = value;
+                if (_MDataColumn != null)
+                {
+                    _MDataColumn.IsColumnNameChanged = true;//列名已变更，存储索引也需要变更
+                }
+            }
+        }
         /// <summary>
         /// 表名
         /// </summary>
@@ -261,7 +276,7 @@ namespace CYQ.Data.Table
                 return _CellValue;
             }
         }
-        
+
         private MCellStruct _CellStruct;
 
         #region 构造函数

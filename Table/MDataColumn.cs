@@ -16,9 +16,12 @@ namespace CYQ.Data.Table
     public partial class MDataColumn : List<MCellStruct>
     {
         /// <summary>
+        /// 列名是否变更
+        /// </summary>
+        internal bool IsColumnNameChanged = false;
+        /// <summary>
         /// 存储列名的索引
         /// </summary>
-        [NonSerialized]
         private MDictionary<string, int> columnIndex = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 添加列时，检测名称是否重复(默认为true)。
@@ -126,13 +129,14 @@ namespace CYQ.Data.Table
         /// </summary>
         public int GetIndex(string columnName)
         {
-            if (columnIndex.Count == 0 || columnIndex.Count != Count)
+            if (columnIndex.Count == 0 || IsColumnNameChanged || columnIndex.Count != Count)
             {
                 columnIndex.Clear();
                 for (int i = 0; i < Count; i++)
                 {
                     columnIndex.Add(this[i].ColumnName.Replace("_", ""), i);
                 }
+                IsColumnNameChanged = false;
             }
 
             if (!string.IsNullOrEmpty(columnName))

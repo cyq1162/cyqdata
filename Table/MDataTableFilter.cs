@@ -803,9 +803,14 @@ namespace CYQ.Data.Table
                     contain = false;
                     foreach (string columnName in selectColumns)
                     {
-                        if (string.Compare(table.Columns[i].ColumnName, columnName, true) == 0)
+                        string[] items = columnName.Split(' ');//a as b
+                        if (string.Compare(table.Columns[i].ColumnName, items[0], true) == 0)
                         {
                             contain = true;
+                            if (items.Length > 1)
+                            {
+                                table.Columns[i].ColumnName = items[items.Length - 1];//修改列名
+                            }
                             break;
                         }
                     }

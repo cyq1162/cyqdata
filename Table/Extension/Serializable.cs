@@ -50,5 +50,4 @@ namespace CYQ.Data.Table
     {
 
     }
-    
 }

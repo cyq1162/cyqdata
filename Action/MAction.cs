@@ -880,6 +880,10 @@ namespace CYQ.Data
                                 string sql = SqlCreateForPager.GetSql(dalHelper.dalType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.dalType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
                                 sdReader = dalHelper.ExeDataReader(sql, false);
                             }
+                            else if (_sqlCreate.selectColumns != null)
+                            {
+                                _aop.Para.Table = _aop.Para.Table.Select(0, 0, null, _sqlCreate.selectColumns);
+                            }
                             #endregion
                         }
                         if (sdReader != null)

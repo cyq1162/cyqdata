@@ -120,9 +120,29 @@ namespace CYQ.Data.Table
             {
                 foreach (string column in columns)
                 {
-                    if (dtB.Columns.Contains(column))
+                    string[] items = column.Split(' ');
+                    string name = items[0];
+                    MCellStruct ms = null;
+                    if (dtB.Columns.Contains(name))
                     {
-                        joinTable.Columns.Add(dtB.Columns[column].Clone());
+                        ms = dtB.Columns[name].Clone();
+                    }
+                    if (items.Length > 1)
+                    {
+                        name = items[items.Length - 1];
+                        if (ms == null && dtB.Columns.Contains(name))
+                        {
+                            ms = dtB.Columns[name].Clone();
+                        }
+                    }
+
+                    if (ms != null)
+                    {
+                        if (ms.ColumnName != name)
+                        {
+                            ms.ColumnName = name;
+                        }
+                        joinTable.Columns.Add(ms);
                     }
                 }
             }

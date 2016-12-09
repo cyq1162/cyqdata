@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace CYQ.Data.Tool
@@ -213,5 +214,13 @@ namespace CYQ.Data.Tool
         }
     }
 
-    
+    [Serializable]
+    public partial class MDictionary<K, V>
+    {
+        protected MDictionary(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            
+        }
+    }
 }
