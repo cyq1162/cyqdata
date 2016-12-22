@@ -13,7 +13,7 @@ namespace CYQ.Data
 {
 
     /// <summary>
-    /// 数据库操作基类
+    /// 数据库操作基类 （模板模式：Template Method）
     /// </summary>
     internal abstract class DbBase : IDisposable
     {

@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{1B2FA92C-3892-428C-84ED-4CE1D27A89A8}</ProjectGuid>
+    <ProjectGuid>{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CYQ.Data</RootNamespace>
@@ -33,6 +33,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <AssemblyOriginatorKeyFile>cyqdata.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -87,6 +88,7 @@
     <Compile Include="Aop\InterAop.cs" />
     <Compile Include="Aop\AopEnum.cs" />
     <Compile Include="Aop\IAop.cs" />
+    <Compile Include="Cache\LocalCache.cs" />
     <Compile Include="Cache\MemCache.cs" />
     <Compile Include="Cache\MemRedis\HashAlgorithms.cs" />
     <Compile Include="Cache\MemRedis\LogAdapter.cs" />
@@ -97,7 +99,6 @@
     <Compile Include="Cache\MemRedis\Serializer.cs" />
     <Compile Include="Cache\MemRedis\ServerPool.cs" />
     <Compile Include="Cache\MemRedis\SocketPool.cs" />
-    <Compile Include="Cache\LocalCache.cs" />
     <Compile Include="Cache\RedisCache.cs" />
     <Compile Include="Cache\Redis\RedisClient.cs" />
     <Compile Include="Cache\Redis\RedisCommand.cs" />
@@ -130,20 +131,13 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SQL\SqlCreateForSchema.cs" />
-    <Compile Include="Table\Extension\MDataProperty.cs" />
+    <Compile Include="SQL\SqlSyntax.cs" />
     <Compile Include="Table\Extension\MDataRow.cs" />
     <Compile Include="Table\Extension\MDataRowCollection.cs" />
-    <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\Extension\Serializable.cs" />
     <Compile Include="Table\FastToT.cs" />
-    <Compile Include="Table\MDataCell.cs" />
-    <Compile Include="Table\MDataColumn.cs" />
-    <Compile Include="Table\MDataRow.cs" />
-    <Compile Include="Table\MDataRowCollection.cs" />
-    <Compile Include="Table\MDataTable.cs" />
-    <Compile Include="Table\MDataTableBatchAction.cs" />
-    <Compile Include="Table\MDataTableFilter.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
+    <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\SysTypeEnum.cs" />
@@ -188,6 +182,25 @@
     <Compile Include="SQL\SqlCreate.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Table\MDataCell.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Table\MDataColumn.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Table\Extension\MDataProperty.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Table\MDataRow.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Table\MDataRowCollection.cs" />
+    <Compile Include="Table\MDataTable.cs">
+    </Compile>
+    <Compile Include="Table\MDataTableBatchAction.cs" />
+    <Compile Include="Table\MDataTableFilter.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Tool\IOHelper.cs" />
     <Compile Include="Tool\JsonHelper.cs">
       <SubType>Code</SubType>
@@ -226,6 +239,8 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="cyqdata.pfx" />
     <None Include="Resources\xhtml-lat1.ent" />
     <None Include="Resources\xhtml-special.ent" />
     <None Include="Resources\xhtml-symbol.ent" />

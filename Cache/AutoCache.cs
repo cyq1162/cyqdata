@@ -483,18 +483,41 @@ namespace CYQ.Data.Cache
             {
                 if (para.MAction != null)
                 {
-                    if (para.MAction.Data.Columns.isViewOwner)
+                    foreach (MCellStruct ms in para.MAction.Data.Columns)
                     {
-                        tableName = "ActionV" + para.TableName.GetHashCode();
+                        if(!string.IsNullOrEmpty(ms.TableName))
+                        {
+                            tableName = ms.TableName;
+                            break;
+                        }
                     }
-                    else
+                    if (string.IsNullOrEmpty(tableName))
                     {
-                        tableName = para.TableName;
+                        if (para.TableName.Contains(" "))
+                        {
+                            tableName = "View_" + Math.Abs(para.TableName.GetHashCode());
+                        }
+                        else
+                        {
+                            tableName = para.TableName;
+                        }
+                        //if (para.MAction.Data.Columns.isViewOwner)
+                        //{
+                        //    tableName = "ActionV" + Math.Abs(para.TableName.GetHashCode());
+                        //}
+                       
                     }
                 }
                 else
                 {
-                    tableName = "ProcS" + para.ProcName.GetHashCode();
+                    if (!para.IsProc)
+                    {
+                        tableName = SqlSyntax.Analyze(para.ProcName).TableName;
+                    }
+                    else
+                    {
+                        tableName = "Proc_" + para.ProcName;
+                    }
                 }
             }
             return GetBaseKey(para.DalType, para.DataBase, tableName);
@@ -586,9 +609,11 @@ namespace CYQ.Data.Cache
                 case AopEnum.Exists:
                 case AopEnum.Fill:
                 case AopEnum.GetCount:
+                    sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.Where);
                     break;
                 case AopEnum.Select:
+                    sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.PageIndex);
                     sb.Append(aopInfo.PageSize);
                     sb.Append(aopInfo.Where);

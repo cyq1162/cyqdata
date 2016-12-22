@@ -280,6 +280,10 @@ namespace CYQ.Data.Table
         private MCellStruct _CellStruct;
 
         #region 构造函数
+        /// <summary>
+        /// 原型模式（Prototype Method）
+        /// </summary>
+        /// <param name="dataStruct"></param>
         internal MDataCell(ref MCellStruct dataStruct)
         {
             Init(dataStruct, null);

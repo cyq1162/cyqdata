@@ -9,8 +9,7 @@ namespace CYQ.Data
 {
     internal class NoSqlCommand : IDisposable // DbCommand
     {
-        string tableName = string.Empty;
-        string whereSql = string.Empty;
+        SqlSyntax ss;
         string sourceSql = string.Empty;//传过来的SQL语句
         public string CommandText
         {
@@ -21,7 +20,10 @@ namespace CYQ.Data
             set
             {
                 sourceSql = value;
-                FormatSqlText(sourceSql);
+                if (ss == null)
+                {
+                    ss = SqlSyntax.Analyze(sourceSql);
+                }
             }
         }
 
@@ -35,19 +37,19 @@ namespace CYQ.Data
                     return;
                 }
                 sourceSql = sqlText;
-                FormatSqlText(sqlText);
+                ss = SqlSyntax.Analyze(sqlText);
             }
             catch (Exception err)
             {
                 Log.WriteLogToTxt(err);
             }
-            if (IsSelect || IsUpdate || IsDelete || IsInsert)
+            if (ss.IsSelect || ss.IsUpdate || ss.IsDelete || ss.IsInsert)
             {
                 MDataRow row = new MDataRow();
-                if (TableSchema.FillTableSchema(ref row, ref dbBase, tableName, tableName))
+                if (TableSchema.FillTableSchema(ref row, ref dbBase, ss.TableName, ss.TableName))
                 {
                     row.Conn = dbBase.conn;
-                    action = new NoSqlAction(ref row, tableName, dbBase.Con.DataSource, dbBase.dalType);
+                    action = new NoSqlAction(ref row, ss.TableName, dbBase.Con.DataSource, dbBase.dalType);
                 }
             }
             else
@@ -58,12 +60,12 @@ namespace CYQ.Data
         public MDataTable ExeMDataTable()
         {
             int count = 0;
-            MDataTable dt = action.Select(1, topN, whereSql, out count);
-            if (fieldItems.Count > 0)
+            MDataTable dt = action.Select(1, ss.TopN, ss.Where, out count);
+            if (ss.FieldItems.Count > 0)
             {
                 //处理 a as B 的列。
                 Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                foreach (string field in fieldItems)
+                foreach (string field in ss.FieldItems)
                 {
                     string[] items = field.Trim().Split(' ');
                     dic.Add(items[0], items.Length > 1 ? items[items.Length - 1] : "");
@@ -81,7 +83,7 @@ namespace CYQ.Data
                     }
                 }
             }
-            if (IsDistinct)
+            if (ss.IsDistinct)
             {
                 dt.Distinct();
             }
@@ -91,10 +93,10 @@ namespace CYQ.Data
         public int ExeNonQuery()
         {
             int count = -1;
-            if (IsInsert || IsUpdate)
+            if (ss.IsInsert || ss.IsUpdate)
             {
                 int index = 0;
-                foreach (string item in fieldItems)
+                foreach (string item in ss.FieldItems)
                 {
                     index = item.IndexOf('=');//处理，号。
                     if (index > -1)
@@ -108,32 +110,32 @@ namespace CYQ.Data
                         action._Row.Set(key, value);
                     }
                 }
-                if (IsUpdate)
+                if (ss.IsUpdate)
                 {
-                    action.Update(whereSql, out count);
+                    action.Update(ss.Where, out count);
                 }
-                else if (IsInsert && action.Insert(false))
+                else if (ss.IsInsert && action.Insert(false))
                 {
                     count = 1;
                 }
             }
-            else if (IsDelete)
+            else if (ss.IsDelete)
             {
-                action.Delete(whereSql, out count);
+                action.Delete(ss.Where, out count);
             }
             return count;
         }
         public object ExeScalar()
         {
-            if (IsSelect)
+            if (ss.IsSelect)
             {
-                if (IsGetCount)
+                if (ss.IsGetCount)
                 {
-                    return action.GetCount(whereSql);
+                    return action.GetCount(ss.Where);
                 }
-                else if (fieldItems.Count > 0 && action.Fill(whereSql) && action._Row.Columns.Contains(fieldItems[0]))
+                else if (ss.FieldItems.Count > 0 && action.Fill(ss.Where) && action._Row.Columns.Contains(ss.FieldItems[0]))
                 {
-                    return action._Row[fieldItems[0]].Value;
+                    return action._Row[ss.FieldItems[0]].Value;
                 }
                 return null;
             }
@@ -142,200 +144,6 @@ namespace CYQ.Data
                 return ExeNonQuery();
             }
         }
-
-        void FormatSqlText(string sqlText)
-        {
-            string[] items = sqlText.Split(' ');
-            foreach (string item in items)
-            {
-                switch (item.ToLower())
-                {
-                    case "insert":
-                        IsInsert = true;
-                        break;
-                    case "into":
-                        if (IsInsert)
-                        {
-                            IsInsertInto = true;
-                        }
-                        break;
-                    case "select":
-                        IsSelect = true;
-                        break;
-                    case "update":
-                        IsUpdate = true;
-                        break;
-                    case "delete":
-                        IsDelete = true;
-                        break;
-                    case "from":
-                        IsFrom = true;
-                        break;
-                    case "count(*)":
-                        IsGetCount = true;
-                        break;
-                    case "where":
-                        whereSql = sqlText.Substring(sqlText.IndexOf(item) + item.Length + 1);
-                        //该结束语句了。
-                        goto end;
-                    case "top":
-                        if (IsSelect && !IsFrom)
-                        {
-                            IsTopN = true;
-                        }
-                        break;
-                    case "distinct":
-                        if (IsSelect && !IsFrom)
-                        {
-                            IsDistinct = true;
-                        }
-                        break;
-                    case "set":
-                        if (IsUpdate && !string.IsNullOrEmpty(tableName) && fieldItems.Count == 0)
-                        {
-                            #region 解析Update的字段与值
-
-                            int start = sqlText.IndexOf(item) + item.Length;
-                            int end = sqlText.ToLower().IndexOf("where");
-                            string itemText = sqlText.Substring(start, end == -1 ? sqlText.Length - start : end - start);
-                            int quoteCount = 0, commaIndex = 0;
-
-                            for (int i = 0; i < itemText.Length; i++)
-                            {
-                                if (i == itemText.Length - 1)
-                                {
-                                    string keyValue = itemText.Substring(commaIndex).Trim();
-                                    if (!fieldItems.Contains(keyValue))
-                                    {
-                                        fieldItems.Add(keyValue);
-                                    }
-                                }
-                                else
-                                {
-                                    switch (itemText[i])
-                                    {
-                                        case '\'':
-                                            quoteCount++;
-                                            break;
-                                        case ',':
-                                            if (quoteCount % 2 == 0)//双数，则允许分隔。
-                                            {
-                                                string keyValue = itemText.Substring(commaIndex, i - commaIndex).Trim();
-                                                if (!fieldItems.Contains(keyValue))
-                                                {
-                                                    fieldItems.Add(keyValue);
-                                                }
-                                                commaIndex = i + 1;
-                                            }
-                                            break;
-
-                                    }
-                                }
-                            }
-                            #endregion
-                        }
-                        break;
-                    default:
-                        if (IsTopN && topN == -1)
-                        {
-                            int.TryParse(item, out topN);//查询TopN
-                            IsTopN = false;//关闭topN
-                        }
-                        else if ((IsFrom || IsUpdate || IsInsertInto) && string.IsNullOrEmpty(tableName))
-                        {
-                            tableName = item.Split('(')[0].Trim();//获取表名。
-                        }
-                        else if (IsSelect && !IsFrom)//提取查询的中间条件。
-                        {
-                            #region Select 字段搜集
-                            switch (item)
-                            {
-                                case "*":
-                                case "count(*)":
-                                case "distinct":
-                                    break;
-                                default:
-                                    fieldText.Append(item + " ");
-                                    break;
-                            }
-
-                            #endregion
-                        }
-                        else if (IsInsertInto && !string.IsNullOrEmpty(tableName) && fieldItems.Count == 0)
-                        {
-                            #region 解析Insert Into的字段与值
-
-                            int start = sqlText.IndexOf(tableName) + tableName.Length;
-                            int end = sqlText.IndexOf("values", start, StringComparison.OrdinalIgnoreCase);
-                            string keys = sqlText.Substring(start, end - start).Trim();
-                            string[] keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
-
-                            string values = sqlText.Substring(end + 6).Trim();
-                            values = values.Substring(1, values.Length - 2);//去除两边括号
-                            int quoteCount = 0, commaIndex = 0, valueIndex = 0;
-
-                            for (int i = 0; i < values.Length; i++)
-                            {
-                                if (valueIndex >= keyItems.Length)
-                                {
-                                    break;
-                                }
-                                if (i == values.Length - 1)
-                                {
-                                    string value = values.Substring(commaIndex).Trim();
-                                    keyItems[valueIndex] += "=" + value;
-                                }
-                                else
-                                {
-                                    switch (values[i])
-                                    {
-                                        case '\'':
-                                            quoteCount++;
-                                            break;
-                                        case ',':
-                                            if (quoteCount % 2 == 0)//双数，则允许分隔。
-                                            {
-                                                string value = values.Substring(commaIndex, i - commaIndex).Trim();
-                                                keyItems[valueIndex] += "=" + value;
-                                                commaIndex = i + 1;
-                                                valueIndex++;
-                                            }
-                                            break;
-
-                                    }
-                                }
-                            }
-                            fieldItems.AddRange(keyItems);
-
-                            #endregion
-                        }
-                        break;
-                }
-            }
-        end:
-            #region Select 字段解析
-            if (fieldText.Length > 0)
-            {
-                string[] fields = fieldText.ToString().Split(',');
-                fieldItems.AddRange(fields);
-                fieldText.Length = 0;
-            }
-            #endregion
-        }
-        StringBuilder fieldText = new StringBuilder();
-        int topN = -1;
-        bool IsInsert = false;
-        bool IsInsertInto = false;
-        bool IsSelect = false;
-        bool IsUpdate = false;
-        bool IsDelete = false;
-        bool IsFrom = false;
-        bool IsGetCount = false;
-        // bool IsAll = false;
-        bool IsTopN = false;
-        bool IsDistinct = false;
-        List<string> fieldItems = new List<string>();
-
 
         #region IDisposable 成员
 
@@ -349,111 +157,5 @@ namespace CYQ.Data
 
         #endregion
 
-        //public override void Cancel()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override int CommandTimeout
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //public override System.Data.CommandType CommandType
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //protected override DbParameter CreateDbParameter()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //protected override DbConnection DbConnection
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //protected override DbParameterCollection DbParameterCollection
-        //{
-        //    get { throw new NotImplementedException(); }
-        //}
-
-        //protected override DbTransaction DbTransaction
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //public override bool DesignTimeVisible
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
-        //protected override DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override int ExecuteNonQuery()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override object ExecuteScalar()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override void Prepare()
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //public override System.Data.UpdateRowSource UpdatedRowSource
-        //{
-        //    get
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //    set
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
     }
 }

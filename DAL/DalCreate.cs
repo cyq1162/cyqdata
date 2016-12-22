@@ -21,6 +21,11 @@ namespace CYQ.Data
         private const string XmlClient = "CYQ.Data.XmlClient";
         private const string XHtmlClient = "CYQ.Data.XHtmlClient";
 
+        /// <summary>
+        /// 简单工厂（Factory Method）
+        /// </summary>
+        /// <param name="dbConn"></param>
+        /// <returns></returns>
         public static DbBase CreateDal(string dbConn)
         {
             return GetDbBaseBy(GetConnObject(dbConn));
@@ -60,7 +65,11 @@ namespace CYQ.Data
         public static string GetProvider(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//去掉空格
-            if (connString.Contains("microsoft.jet.oledb.4.0") || connString.Contains("microsoft.ace.oledb") || connString.Contains(".mdb"))
+            if (connString.Contains("initial catalog="))
+            {
+                return SqlClient;
+            }
+            else if (connString.Contains("microsoft.jet.oledb.4.0") || connString.Contains("microsoft.ace.oledb") || connString.Contains(".mdb"))
             {
                 return OleDb;
             }

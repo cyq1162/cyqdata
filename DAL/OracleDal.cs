@@ -83,6 +83,7 @@ namespace CYQ.Data
         private void AddParaForOdpNet(string paraName, ParaType paraType, object value)
         {
             Assembly ass = GetAssembly();
+            //工厂方法理解点
             DbParameter para = ass.CreateInstance("Oracle." + ManagedName + "DataAccess.Client.OracleParameter") as DbParameter;
             para.ParameterName = paraName;
             switch (paraType)
@@ -143,6 +144,9 @@ namespace CYQ.Data
             }
             return ass as Assembly;
         }
+        /// <summary>
+        /// 抽象工厂
+        /// </summary>
         protected override DbProviderFactory GetFactory(string providerName)
         {
             if (IsUseOdpNet)

@@ -104,7 +104,10 @@ namespace CYQ.Data.Orm
         /// </code></example>
         protected void Set(object key, object value)
         {
-            sob.Set(key, value);
+            if (sob != null)
+            {
+                sob.Set(key, value);
+            }
         }
 
         #region 基础增删改查 成员
