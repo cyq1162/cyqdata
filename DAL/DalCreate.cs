@@ -263,15 +263,22 @@ namespace CYQ.Data
             ConnBean cbMaster = GetConnBean(dbConn);
             if (cbMaster == null)
             {
-
+                string errMsg = string.Format("Can't find the connection key '{0}' from web.config or app.config!", dbConn);
                 if (dbConn == AppConfig.DB.DefaultConn)
                 {
-                    Error.Throw(string.Format("Can't find the connection key '{0}' from web.config or app.config!", dbConn));
+                    Error.Throw(errMsg);
                 }
                 else
                 {
                     ConnBean cb = GetConnBean(AppConfig.DB.DefaultConn);
-                    cbMaster = cb.Clone();//获取默认的值。
+                    if (cb != null)
+                    {
+                        cbMaster = cb.Clone();//获取默认的值。
+                    }
+                    else
+                    {
+                        Error.Throw(errMsg);
+                    }
                 }
             }
             ConnObject co = new ConnObject();

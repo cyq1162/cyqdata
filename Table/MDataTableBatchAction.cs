@@ -712,7 +712,9 @@ namespace CYQ.Data.Table
                         }
                         #endregion
                     }
+                    sw.Write('|');
                     sw.WriteLine();
+                    sw.Write('|');
                 }
             }
             if (Path.DirectorySeparatorChar == '\\')

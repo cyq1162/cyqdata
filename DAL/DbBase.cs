@@ -146,7 +146,15 @@ namespace CYQ.Data
             dalType = co.Master.ConnDalType;
             _fac = GetFactory(providerName);
             _con = _fac.CreateConnection();
-            _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
+            try
+            {
+                _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
+            }
+            catch (Exception err)
+            {
+                Error.Throw("check the connectionstring is be ok!" + AppConst.BR + "error:" + err.Message + AppConst.BR + conn);
+            }
+
             _com = _con.CreateCommand();
             if (_com != null)//Txt| Xml 时返回Null
             {

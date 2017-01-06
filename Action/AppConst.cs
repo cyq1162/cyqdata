@@ -60,7 +60,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_BR))
                 {
-                    _BR = AppConfig.IsWeb ? "<br>" : "\r\n";
+                    _BR = AppConfig.IsWeb ? "<br />" : Environment.NewLine ;
                 }
                 return _BR;
             }
