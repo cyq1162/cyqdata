@@ -735,10 +735,13 @@ namespace CYQ.Data.Xml
                                 XmlNodeList nodeList = GetList("input", "type", "radio");
                                 for (int i = 0; i < nodeList.Count; i++)
                                 {
-                                    RemoveAttr(nodeList[i], "checked");
-                                    if (GetAttrValue(nodeList[i], "value") == value)
+                                    if (GetAttrValue(nodeList[i], "name") == idOrName)
                                     {
-                                        node = nodeList[i];
+                                        RemoveAttr(nodeList[i], "checked");
+                                        if (GetAttrValue(nodeList[i], "value") == value)
+                                        {
+                                            node = nodeList[i];
+                                        }
                                     }
                                 }
                                 setType = SetType.Checked; break;
