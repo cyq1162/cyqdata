@@ -100,6 +100,7 @@ namespace CYQ.Data.Tool
                 return false;
             }
         }
+        /*
         /// <summary>
         /// 清除所有的表架构。
         /// </summary>
@@ -129,6 +130,7 @@ namespace CYQ.Data.Tool
                 Log.WriteLogToTxt(err);
             }
         }
+        */
         private static List<ParameterizedThreadStart> globalThread = new List<ParameterizedThreadStart>();
         private static readonly object lockThreadObj = new object();
         /// <summary>
@@ -142,7 +144,7 @@ namespace CYQ.Data.Tool
         {
             if (globalThread.Count == 0)//第一次加载，清除所有可能存在的线程Break。
             {
-                ClearSchema();
+                //ClearSchema();// 表结构外置（解决第一次加载的问题，后续表结构都缓存在内存中）！因此不能清空~
                 ClearThreadBreak(string.Empty);
             }
             if (!globalThread.Contains(start))

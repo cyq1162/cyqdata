@@ -1343,7 +1343,7 @@ namespace CYQ.Data
         public string GetWhere(bool isAnd, params MDataCell[] cells)
         {
             List<MDataCell> cs = new List<MDataCell>(cells.Length);
-            if (cs.Count > 0)
+            if (cells.Length > 0)
             {
                 cs.AddRange(cells);
             }

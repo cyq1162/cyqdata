@@ -190,12 +190,38 @@ namespace CYQ.Data.Tool
             jsonItems.Add(Format(name, value, false));
         }
 
-
         /// <param name="noQuotes">value is no quotes
         /// <para>值不带引号</para></param>
         public void Add(string name, string value, bool noQuotes)
         {
             jsonItems.Add(Format(name, value, noQuotes));
+        }
+        private void Add(string name, object value)
+        {
+            if (value != null)
+            {
+                string v = null;
+                Type t = value.GetType();
+                int groupID = DataType.GetGroup(DataType.GetSqlType(t));
+                bool noQuotes = groupID == 1 || groupID == 3;
+                if (groupID == 999)
+                {
+                    v = ToJson(value);
+                }
+                else
+                {
+                    v = Convert.ToString(value);
+                    if (groupID == 3)
+                    {
+                        v = v.ToLower();
+                    }
+                }
+                Add(name, v, noQuotes);
+            }
+            else
+            {
+                Add(name, "null", true);
+            }
         }
         private string Format(string name, string value, bool children)
         {
@@ -475,6 +501,22 @@ namespace CYQ.Data.Tool
         public static string OutResult(bool result, object msgObj)
         {
             return OutResult(result, ToJson(msgObj), true);
+        }
+        public static string OutResult(string name, object value, params object[] nameValues)
+        {
+            JsonHelper js = new JsonHelper();
+            js.Add(name, value);
+            for (int i = 0; i < nameValues.Length; i++) // 1
+            {
+                if (i % 2 == 0)
+                {
+                    string k = Convert.ToString(nameValues[i]);
+                    i++;
+                    object v = i == nameValues.Length ? null : nameValues[i];
+                    js.Add(k, v);
+                }
+            }
+            return js.ToString();
         }
         /// <summary>
         ///  split json to dicationary
@@ -1044,7 +1086,7 @@ namespace CYQ.Data.Tool
         /// <para>默认值为RowOp.All</para></param>
         public static string ToJson(object obj, bool isConvertNameToLower, RowOp op)
         {
-            string text=Convert.ToString(obj);
+            string text = Convert.ToString(obj);
             if (text == "")
             {
                 return "{}";
@@ -1062,6 +1104,8 @@ namespace CYQ.Data.Tool
             js.Fill(obj);
             return js.ToString(obj is IList);
         }
+
+
 
         #region Xml 转 Json
         /*

@@ -668,3 +668,5 @@
 453：AutoCache 修正MProc执行时缓存key不一致导致缓存未失效问题(2016-12-22）
 454：XHtmlAction 修正XHtml对radio赋值问题（界面存在多个radio组合时只能赋一个的Bug）(2017-01-06）
 455：MDataTable 批量导入处理MySql下的数据存在\r\n冲突的问题 (2017-01-06）
+456：MAction 修正GetWhere方法(2017-01-13）
+457：JsonHelper OutResult方法增加重载方法（方便Json快捷生成)(2017-01-13）
