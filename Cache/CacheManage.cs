@@ -32,11 +32,11 @@ namespace CYQ.Data.Cache
             {
                 if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
                 {
-                    return RedisShell.instance;
+                    return RedisInstance;
                 }
                 else if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
                 {
-                    return MemShell.instance;
+                    return MemCacheInstance;
                 }
                 else
                 {
@@ -56,7 +56,8 @@ namespace CYQ.Data.Cache
                 return LocalShell.instance;
             }
         }
-
+        private static CacheManage _MemCacheInstance;
+        private static readonly object lockMemCache = new object();
         /// <summary>
         /// MemCache缓存（需要配置AppConfig.Cache.MemCacheServers）
         /// </summary>
@@ -64,10 +65,21 @@ namespace CYQ.Data.Cache
         {
             get
             {
-
-                return MemShell.instance;
+                if (_MemCacheInstance == null)
+                {
+                    lock (lockMemCache)
+                    {
+                        if (_MemCacheInstance == null)
+                        {
+                            _MemCacheInstance = new MemCache();
+                        }
+                    }
+                }
+                return _MemCacheInstance;
             }
         }
+        private static CacheManage _RedisInstance;
+        private static readonly object lockRedisCache = new object();
         /// <summary>
         /// Redis缓存（需要配置AppConfig.Cache.RedisServers）
         /// </summary>
@@ -75,22 +87,33 @@ namespace CYQ.Data.Cache
         {
             get
             {
-
-                return RedisShell.instance;
+                if (_RedisInstance == null)
+                {
+                    lock (lockRedisCache)
+                    {
+                        if (_RedisInstance == null)
+                        {
+                            _RedisInstance = new RedisCache();
+                        }
+                    }
+                }
+                return _RedisInstance;
+               
             }
         }
         class LocalShell
         {
             internal static readonly LocalCache instance = new LocalCache();
         }
-        class MemShell
-        {
-            internal static readonly MemCache instance = new MemCache();
-        }
-        class RedisShell
-        {
-            internal static readonly RedisCache instance = new RedisCache();
-        }
+        //此种方式，会提前处理，导致异常。
+        //class MemShell
+        //{
+        //    internal static readonly MemCache instance = new MemCache();
+        //}
+        //class RedisShell
+        //{
+        //    internal static readonly RedisCache instance = new RedisCache();
+        //}
         #endregion
 
         /// <summary>

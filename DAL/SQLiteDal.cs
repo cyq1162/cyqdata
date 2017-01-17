@@ -48,9 +48,16 @@ namespace CYQ.Data
                 catch (Exception err)
                 {
                     string errMsg = err.Message;
-                    if (!System.IO.File.Exists(AppConst.RunFolderPath + "System.Data.SQLite.DLL"))
+                    if (errMsg.Contains("v2.0"))
                     {
-                        errMsg = "Can't find the System.Data.SQLite.dll more info : " + errMsg;
+                        //混合模式程序集是针对“v2.0.50727”版的运行时生成的，在没有配置其他信息的情况下，无法在 4.0 运行时中加载该程序集。
+                        //提示用户要增加配置文件
+                        errMsg = "You need to add web.config or app.config : <startup useLegacyV2RuntimeActivationPolicy=\"true\"></startup> more info : \r\n" + errMsg;
+
+                    }
+                    else if (!System.IO.File.Exists(AppConst.RunFolderPath + "System.Data.SQLite.DLL"))
+                    {
+                        errMsg = "Can't find the System.Data.SQLite.dll more info : \r\n" + errMsg;
                     }
                     else
                     {

@@ -72,9 +72,10 @@ namespace CYQ.Data.Table
             _Conn = !string.IsNullOrEmpty(conn) ? conn : mTable.Conn;
             if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
             {
+                DBTool.ErrorMsg = null;
                 if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn))
                 {
-                    Error.Throw("Create Table Error:" + mdt.TableName);
+                    Error.Throw("Create Table Error:" + mdt.TableName + DBTool.ErrorMsg);
                 }
             }
             MDataColumn column = DBTool.GetColumns(mdt.TableName, _Conn);

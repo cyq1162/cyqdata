@@ -169,9 +169,10 @@ namespace CYQ.Data.Orm
                         Columns = TableSchema.GetColumns(typeInfo);
                         if (!DBTool.ExistsTable(tableName, conn))
                         {
+                            DBTool.ErrorMsg = null;
                             if (!DBTool.CreateTable(tableName, Columns, conn))
                             {
-                                Error.Throw("SimpleOrmBase £ºCreate Table Error:" + tableName);
+                                Error.Throw("SimpleOrmBase £ºCreate Table Error:" + tableName + DBTool.ErrorMsg);
                             }
                         }
                     }

@@ -341,7 +341,7 @@ namespace CYQ.Data.Tool
                     else
                     {
                         sb.Remove(sb.Length - 1, 1);//性能优化（内部时，必须多了一个“，”号）。
-                        //sb = sb.Replace(",", "", sb.Length - 1, 1);
+                        // sb = sb.Replace(",", "", sb.Length - 1, 1);
                         sb.Append(right + ",");
                         if (index < jsonItems.Count)
                         {
@@ -415,69 +415,84 @@ namespace CYQ.Data.Tool
             string result = string.Empty;
             if (!string.IsNullOrEmpty(json))
             {
-                Dictionary<string, string> jsonDic = Split(json);
-                if (jsonDic.ContainsKey(key))
+                List<Dictionary<string, string>> jsonList = JsonSplit.Split(json);
+                if (jsonList.Count > 0)
                 {
-                    result = jsonDic[key];
-                }
-
-                else
-                {
+                    string[] items = key.Split('.');
+                    string fKey = items[0];
+                    int i = -1;
                     int fi = key.IndexOf('.');
-                    if (fi > -1)
+                    if (int.TryParse(fKey, out i))//数字
                     {
-                        string fKey = key.Substring(0, fi);
-                        if (jsonDic.ContainsKey(fKey))
+                        if (i < jsonList.Count)
                         {
+                            Dictionary<string, string> numJson = jsonList[i];
+                            if (items.Length == 1)
+                            {
+                                result = ToJson(numJson);
+                            }
+                            else if (items.Length == 2) // 0.xxx
+                            {
+                                string sKey = items[1];
+                                if (numJson.ContainsKey(sKey))
+                                {
+                                    result = numJson[sKey];
+                                }
+                            }
+                            else
+                            {
+                                return GetValue(ToJson(numJson), key.Substring(fi + 1));
+                            }
+                        }
+                    }
+                    else // 非数字
+                    {
+                        Dictionary<string, string> jsonDic = jsonList[0];
+                        if (items.Length == 1)
+                        {
+                            if (jsonDic.ContainsKey(fKey))
+                            {
+                                result = jsonDic[fKey];
+                            }
+                        }
+                        else  // 取子集
+                        {
+                            
                             return GetValue(jsonDic[fKey], key.Substring(fi + 1));
                         }
                     }
-                    #region 字符串截取
-                    key = "\"" + key.Trim('"') + "\"";
-                    int index = json.IndexOf(key, StringComparison.OrdinalIgnoreCase) + key.Length + 1;
-                    if (index > key.Length + 1)
-                    {
-                        int end = 0;
-                        for (int i = index; i < json.Length; i++)
-                        {
-                            switch (json[i])
-                            {
-                                case '{':
-                                    end = json.IndexOf('}', i) + 1;
-                                    goto endfor;
-                                case '[':
-                                    end = json.IndexOf(']', i) + 1;
-                                    goto endfor;
-                                case '"':
-                                    end = json.IndexOf('"', i) + 1;
-                                    goto endfor;
-                                case '\'':
-                                    end = json.IndexOf('\'', i) + 1;
-                                    goto endfor;
-                                case ' ':
-                                    continue;
-                                default:
-                                    end = json.IndexOf(',', i);
-                                    if (end == -1)
-                                    {
-                                        end = json.IndexOf('}', index);
-                                    }
-                                    goto endfor;
 
-                            }
-                        }
-                    endfor:
-                        if (end > index)
-                        {
-                            //index = json.IndexOf('"', index + key.Length + 1) + 1;
-                            result = json.Substring(index, end - index);
-                            //过滤引号或空格
-                            result = result.Trim(new char[] { '"', ' ', '\'' });
-                        }
-                    }
-                    #endregion
+
+
+
+                    //int fi = key.IndexOf('.');
+                    //if (jsonDic.ContainsKey(key))
+                    //{
+                    //    result = jsonDic[key];
+                    //}
+                    //else
+                    //{
+
+                    //    if (fi > -1)
+                    //    {
+                    //        string fKey = key.Substring(0, fi);//0.abc
+                    //        if (jsonDic.ContainsKey(fKey))//0
+                    //        {
+                    //            return GetValue(jsonDic[fKey], key.Substring(fi + 1));
+                    //        }
+                    //        else
+                    //        {
+                    //            int index = -1;
+                    //            if (int.TryParse(fKey, out index))//数字,走索引
+                    //            {
+
+                    //            }
+                    //        }
+                    //    }
+                    //}
+                    //jsonDic = null;
+                    //jsonList = null;
                 }
-                jsonDic = null;
             }
             return result;
         }
@@ -751,6 +766,14 @@ namespace CYQ.Data.Tool
                 if (obj is String)
                 {
                     Fill(obj as String);
+                }
+                else if (obj is MDataTable)
+                {
+                    Fill(obj as MDataTable);
+                }
+                else if (obj is MDataRow)
+                {
+                    Fill(obj as MDataRow);
                 }
                 else if (obj is IEnumerable)
                 {

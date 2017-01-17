@@ -13,24 +13,25 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 列结构修选项
     /// </summary>
+    [Flags]
     public enum AlterOp
     {
         /// <summary>
         /// 默认不修改状态
         /// </summary>
-        None,
+        None = 0,
         /// <summary>
         /// 添加或修改状态
         /// </summary>
-        AddOrModify,
+        AddOrModify = 1,
         /// <summary>
         /// 删除列状态
         /// </summary>
-        Drop,
+        Drop = 2,
         /// <summary>
         /// 重命名列状态
         /// </summary>
-        Rename
+        Rename = 4
     }
     /// <summary>
     /// 单元结构的值

@@ -305,7 +305,36 @@ namespace CYQ.Data.SQL
                 if (ms.AlterOp != AlterOp.None)
                 {
                     bool isContains = dbColumn.Contains(ms.ColumnName);
-                    if (ms.AlterOp == AlterOp.Drop)
+                    AlterOp op = ms.AlterOp;
+                    if ((op & AlterOp.Rename) != 0)
+                    {
+                        op = (AlterOp)(op - AlterOp.Rename);
+                        #region MyRegion Rename
+                        if (!string.IsNullOrEmpty(ms.OldName) && ms.OldName != ms.ColumnName && !isContains)
+                        {
+                            string oName = SqlFormat.Keyword(ms.OldName, dalType);
+                            switch (dalType)
+                            {
+                                case DalType.MsSql:
+                                    sql.Add("exec sp_rename '" + tbName + "." + oName + "', '" + ms.ColumnName + "', 'column'");
+                                    break;
+                                case DalType.Sybase:
+                                    sql.Add("exec sp_rename \"" + tableName + "." + ms.OldName + "\", " + ms.ColumnName);
+                                    break;
+                                case DalType.MySql:
+                                    sql.Add(alterTable + " change " + oName + " " + GetKey(ms, dalType, ref primaryKeyList, version).TrimEnd(','));
+                                    break;
+                                case DalType.Oracle:
+
+                                    sql.Add(alterTable + " rename column " + oName + " to " + cName);
+                                    break;
+                            }
+                            isContains = isContains || dbColumn.Contains(ms.OldName);
+                        }
+                        #endregion
+                    }
+
+                    if (op == AlterOp.Drop)
                     {
                         #region MyRegion
                         if (isContains)
@@ -330,39 +359,18 @@ where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'i
                         }
                         #endregion
                     }
-                    else if (ms.AlterOp == AlterOp.Rename)
-                    {
-                        #region MyRegion
-                        if (!string.IsNullOrEmpty(ms.OldName) && ms.OldName != ms.ColumnName && !isContains)
-                        {
-                            string oName = SqlFormat.Keyword(ms.OldName, dalType);
-                            switch (dalType)
-                            {
-                                case DalType.MsSql:
-                                    sql.Add("exec sp_rename '" + tbName + "." + oName + "', '" + ms.ColumnName + "', 'column'");
-                                    break;
-                                case DalType.Sybase:
-                                    sql.Add("exec sp_rename \"" + tableName + "." + ms.OldName + "\", " + ms.ColumnName);
-                                    break;
-                                case DalType.MySql:
-                                    sql.Add(alterTable + " change " + oName + " " + GetKey(ms, dalType, ref primaryKeyList, version).TrimEnd(','));
-                                    break;
-                                case DalType.Oracle:
+                    //else if (ms.AlterOp == AlterOp.Rename)
+                    //{
 
-                                    sql.Add(alterTable + " rename column " + oName + " to " + cName);
-                                    break;
-                            }
-                        }
-                        #endregion
-                    }
-                    else if (ms.AlterOp == AlterOp.AddOrModify)
+                    //}
+                    else if (op == AlterOp.AddOrModify)
                     {
                         string alterSql = SqlFormat.Keyword(ms.ColumnName, dalType) + " " + DataType.GetDataType(ms, dalType, version);
                         //智能判断
                         if (isContains) // 存在，则修改
                         {
                             //检测是否相同
-                            MCellStruct dbStruct = dbColumn[ms.ColumnName];
+                            MCellStruct dbStruct = dbColumn[ms.ColumnName] ?? dbColumn[ms.OldName];
                             if (dbStruct.IsCanNull != ms.IsCanNull || dbStruct.SqlType != ms.SqlType || dbStruct.MaxSize != ms.MaxSize || dbStruct.Scale != ms.Scale)
                             {
                                 string modify = "";

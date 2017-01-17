@@ -14,6 +14,29 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static class DBTool
     {
+
+        private static StringBuilder _ErrorMsg = new StringBuilder();
+
+        /// <summary>
+        /// 获取异常的信息
+        /// </summary>
+        public static string ErrorMsg
+        {
+            get
+            {
+                return _ErrorMsg.ToString();
+            }
+            set
+            {
+                _ErrorMsg.Length = 0;
+                if (value != null)
+                {
+                    _ErrorMsg.Append(value);
+                }
+            }
+        }
+
+
         #region 库层面操作
         /// <summary>
         /// 获取数据库链接的数据库类型
@@ -249,6 +272,13 @@ namespace CYQ.Data.Tool
                         {
                             Log.WriteLogToTxt(err);
                         }
+                        finally
+                        {
+                            if (proc.RecordsAffected == -2)
+                            {
+                                _ErrorMsg.AppendLine("CreateTable:" + proc.DebugInfo);
+                            }
+                        }
                     }
                     break;
 
@@ -289,22 +319,29 @@ namespace CYQ.Data.Tool
             using (DbBase db = DalCreate.CreateDal(conn))
             {
                 object o = db.ExeScalar(string.Format(TableSchema.ExistOracleSequence, seqName), false);
-                if (o == null || Convert.ToString(o) == "0")
+                if (db.recordsAffected != -2 && (o == null || Convert.ToString(o) == "0"))
                 {
                     int startWith = 1;
                     if (!string.IsNullOrEmpty(primaryKey))
                     {
                         o = db.ExeScalar(string.Format(TableSchema.GetOracleMaxID, primaryKey, tableName), false);
-                        if (!int.TryParse(Convert.ToString(o), out startWith) || startWith < 1)
+                        if (db.recordsAffected != -2)
                         {
-                            startWith = 1;
-                        }
-                        else
-                        {
-                            startWith++;
+                            if (!int.TryParse(Convert.ToString(o), out startWith) || startWith < 1)
+                            {
+                                startWith = 1;
+                            }
+                            else
+                            {
+                                startWith++;
+                            }
                         }
                     }
                     db.ExeNonQuery(string.Format(TableSchema.CreateOracleSequence, seqName, startWith), false);
+                }
+                if (db.recordsAffected == -2)
+                {
+                    _ErrorMsg.AppendLine("CheckAndCreateOracleSequence:" + db.debugInfo.ToString());
                 }
             }
 
@@ -353,6 +390,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static bool AlterTable(string tableName, MDataColumn columns, string conn)
         {
+            if (columns == null) { return false; }
             List<string> sqls = SqlCreateForSchema.AlterTableSql(tableName, columns, conn);
             if (sqls.Count > 0)
             {
@@ -374,7 +412,9 @@ namespace CYQ.Data.Tool
                         if (proc.ExeNonQuery() == -2)
                         {
                             proc.RollBack();
+                            _ErrorMsg.AppendLine("AlterTable:" + proc.DebugInfo);
                             Log.WriteLogToTxt(proc.DebugInfo);
+
                             return false;
                         }
                     }
@@ -439,6 +479,10 @@ namespace CYQ.Data.Tool
                             RemoveCache(tableName, helper.DataBase, dalType);
                         }
                         break;
+                }
+                if (helper.recordsAffected == -2)
+                {
+                    _ErrorMsg.AppendLine(helper.debugInfo.ToString());
                 }
             }
             if (result)
