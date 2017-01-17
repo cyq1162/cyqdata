@@ -369,6 +369,26 @@ namespace CYQ.Data.Table
             }
             return dt;
         }
+
+        /// <summary>
+        /// 为列的所有行设置值
+        /// </summary>
+        public MDataColumn Set(object key, object value)
+        {
+            Set(key, value, -1);
+            return this;
+        }
+        public MDataColumn Set(object key, object value, int state)
+        {
+            if (_Table != null && _Table.Rows.Count > 0)
+            {
+                for (int i = 0; i < _Table.Rows.Count; i++)
+                {
+                    _Table.Rows[i].Set(key, value, state);
+                }
+            }
+            return this;
+        }
     }
     public partial class MDataColumn
     {

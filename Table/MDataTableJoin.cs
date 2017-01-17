@@ -92,6 +92,8 @@ namespace CYQ.Data.Table
         }
         internal static MDataTable Join(MDataTable dtA, MDataTable dtB, params string[] columns)
         {
+            //记录 ID as PID 映射的列名，中间记录，修改dtB的列名，后面还原
+            Dictionary<string, string> mapName = new Dictionary<string, string>();
             #region 判断条件
             int aIndex = dtA.joinOnIndex;
             if (aIndex == -1 && dtA.Columns.FirstPrimary != null)
@@ -140,6 +142,8 @@ namespace CYQ.Data.Table
                     {
                         if (ms.ColumnName != name)
                         {
+                            dtB.Columns[ms.ColumnName].ColumnName = name;//修改DtB的列名，结尾再还原。
+                            mapName.Add(name, ms.ColumnName);
                             ms.ColumnName = name;
                         }
                         joinTable.Columns.Add(ms);
@@ -207,14 +211,22 @@ namespace CYQ.Data.Table
 
 
             }
-
+            //还原DtB的列
+            if (mapName.Count > 0)
+            {
+                foreach (KeyValuePair<string,string> item in mapName)
+                {
+                    dtB.Columns[item.Key].ColumnName = item.Value;
+                }
+            }
             #region 注销临时变量
             noFind.Clear();
             noFind = null;
             yesFind.Clear();
             yesFind = null;
+            mapName = null;
             #endregion
-
+          
             return joinTable;
         }
         #region 匹配单条数据 已注释

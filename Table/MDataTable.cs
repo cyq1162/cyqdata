@@ -241,7 +241,7 @@ namespace CYQ.Data.Table
             MDataRow mdr = new MDataRow(this);
             if (isAddToTable)
             {
-                Rows.Add(mdr,false);
+                Rows.Add(mdr, false);
             }
             return mdr;
         }
@@ -1115,7 +1115,6 @@ namespace CYQ.Data.Table
 
         #endregion
 
-
     }
 
     public partial class MDataTable
@@ -1497,18 +1496,18 @@ namespace CYQ.Data.Table
         #endregion
 
         #region 列的取值：Min、Max、Sum、Avg
-        private T GetMinMaxValue<T>(string columnName, string ascOrDesc)
+        private T GetMinMaxValue<T>(int index, bool isMin)
         {
-            if (Columns != null && Columns.GetIndex(columnName) != -1 && Rows != null && Rows.Count > 0)
+            if (Columns != null && index < Columns.Count && Rows != null && Rows.Count > 0)
             {
-                MDataRowCollection sortRows = new MDataRowCollection();
-                foreach (MDataRow row in Rows)
+                List<T> itemList = GetColumnItems<T>(index, BreakOp.NullOrEmpty);
+                if (itemList.Count > 0)
                 {
-                    sortRows.Add(row);
+                    itemList.Sort();
+                    return isMin ? itemList[0] : itemList[itemList.Count - 1];
                 }
-                sortRows.Sort("order by " + columnName + " " + ascOrDesc);
-                return sortRows[0].Get<T>(columnName);
             }
+
             return default(T);
         }
         /// <summary>
@@ -1519,7 +1518,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Min<T>(string columnName)
         {
-            return GetMinMaxValue<T>(columnName, "asc");
+            return GetMinMaxValue<T>(Columns.GetIndex(columnName), true);
         }
         /// <summary>
         /// 获取列的最小值
@@ -1529,11 +1528,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Min<T>(int index)
         {
-            if (Columns != null && index < Columns.Count)
-            {
-                return Min<T>(Columns[index].ColumnName);
-            }
-            return default(T);
+            return GetMinMaxValue<T>(index, true);
         }
 
         /// <summary>
@@ -1544,7 +1539,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Max<T>(string columnName)
         {
-            return GetMinMaxValue<T>(columnName, "desc");
+            return GetMinMaxValue<T>(Columns.GetIndex(columnName), false);
         }
         /// <summary>
         /// 获取列的最大值
@@ -1554,11 +1549,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Max<T>(int index)
         {
-            if (Columns != null && index < Columns.Count)
-            {
-                return Max<T>(Columns[index].ColumnName);
-            }
-            return default(T);
+            return GetMinMaxValue<T>(index, false);
         }
         /// <summary>
         /// 汇总某列的值
@@ -1568,24 +1559,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Sum<T>(string columnName)
         {
-            if (Columns != null && Rows != null && Rows.Count > 0)
-            {
-                MCellStruct mcs = Columns[columnName];
-                if (mcs != null && DataType.GetGroup(mcs.SqlType) == 1)//数字
-                {
-                    int index = Columns.GetIndex(columnName);
-                    Decimal sum = 0;
-                    foreach (MDataRow row in Rows)
-                    {
-                        sum += row.Get<Decimal>(index, 0);
-                    }
-                    MCellStruct newMcs = mcs.Clone();
-                    MDataCell cell = new MDataCell(ref newMcs, sum);
-                    return cell.Get<T>();
-                }
-
-            }
-            return default(T);
+            return Sum<T>(Columns.GetIndex(columnName));
         }
 
         /// <summary>
@@ -1596,9 +1570,18 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Sum<T>(int index)
         {
-            if (Columns != null && index < Columns.Count)
+            if (Columns != null && index < Columns.Count && Rows != null && Rows.Count > 0)
             {
-                return Sum<T>(Columns[index].ColumnName);
+                List<Decimal> itemList = GetColumnItems<Decimal>(index, BreakOp.NullOrEmpty);
+                if (itemList.Count > 0)
+                {
+                    Decimal sum = 0;
+                    for (int i = 0; i < itemList.Count; i++)
+                    {
+                        sum += itemList[i];
+                    }
+                    return (T)StaticTool.ChangeType(sum,typeof(T));
+                }
             }
             return default(T);
         }
@@ -1610,24 +1593,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Avg<T>(string columnName)
         {
-            if (Columns != null && Rows != null && Rows.Count > 0)
-            {
-                MCellStruct mcs = Columns[columnName];
-                if (mcs != null && DataType.GetGroup(mcs.SqlType) == 1)//数字
-                {
-                    int index = Columns.GetIndex(columnName);
-                    Decimal sum = 0;
-                    foreach (MDataRow row in Rows)
-                    {
-                        sum += row.Get<Decimal>(index, 0);
-                    }
-                    MCellStruct newMcs = mcs.Clone();
-                    MDataCell cell = new MDataCell(ref newMcs, sum / Rows.Count);
-                    return cell.Get<T>();
-                }
-
-            }
-            return default(T);
+             return Avg<T>(Columns.GetIndex(columnName));
         }
 
         /// <summary>
@@ -1638,9 +1604,10 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Avg<T>(int index)
         {
-            if (Columns != null && index < Columns.Count)
+            Decimal sum = Sum<Decimal>(index);
+            if (sum > 0)
             {
-                return Avg<T>(Columns[index].ColumnName);
+                return (T)StaticTool.ChangeType(sum / Rows.Count, typeof(T));
             }
             return default(T);
         }

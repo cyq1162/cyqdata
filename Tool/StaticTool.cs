@@ -260,6 +260,10 @@ namespace CYQ.Data.Tool
                 {
                     return new Guid(strValue);
                 }
+                else if (t.Name.StartsWith("Int") && strValue.IndexOf('.') > -1)
+                {
+                    strValue = strValue.Split('.')[0];
+                }
                 return Convert.ChangeType(strValue, t);
             }
             else
