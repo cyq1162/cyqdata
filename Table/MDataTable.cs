@@ -1240,7 +1240,7 @@ namespace CYQ.Data.Table
         /// </summary>
         /// <param name="entityList">实体列表对象</param>
         /// <returns></returns>
-        public static MDataTable CreateFrom(object entityList)
+        public static MDataTable CreateFrom(object entityList, BreakOp op)
         {
             MDataTable dt = new MDataTable("SysDefault");
             if (entityList != null)
@@ -1296,7 +1296,7 @@ namespace CYQ.Data.Table
                         MDataRow row = dt.NewRow();
                         if (isObj)
                         {
-                            row.LoadFrom(o);//初始值状态为1
+                            row.LoadFrom(o, op);//初始值状态为1
                         }
                         else
                         {
@@ -1312,7 +1312,10 @@ namespace CYQ.Data.Table
             }
             return dt;
         }
-
+        public static MDataTable CreateFrom(object entityList)
+        {
+            return CreateFrom(entityList, BreakOp.None);
+        }
         public static MDataTable CreateFrom(NameObjectCollectionBase noc)
         {
             MDataTable dt = new MDataTable("SysDefault");
@@ -1580,7 +1583,7 @@ namespace CYQ.Data.Table
                     {
                         sum += itemList[i];
                     }
-                    return (T)StaticTool.ChangeType(sum,typeof(T));
+                    return (T)StaticTool.ChangeType(sum, typeof(T));
                 }
             }
             return default(T);
@@ -1593,7 +1596,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public T Avg<T>(string columnName)
         {
-             return Avg<T>(Columns.GetIndex(columnName));
+            return Avg<T>(Columns.GetIndex(columnName));
         }
 
         /// <summary>

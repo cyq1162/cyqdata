@@ -678,3 +678,5 @@
 463：MDataTable Join 方法，增加对as的支持dt.Join(dt2, "ID  as PID", "Name as PName");(2017-01-18）
 464：MDataTable 重写（简化）方法Avg、Sum、Max、Min(2017-01-18）
 465：MDataColumn 增加Set方法（为所有行赋值）(2017-01-18）
+466：DBFast的Insert、Update，默认对实体的加载忽略Null值(2017-01-19）
+467：MDataTable.CreateFrom(object o,BreakOp op)、MDataRow.CreateFrom(object anyObj, Type valueType, BreakOp op) 增加此重载方法（2017-01-19）

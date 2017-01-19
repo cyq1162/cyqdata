@@ -708,7 +708,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
         /// </summary>
-        public static MDataRow CreateFrom(object anyObj, Type valueType)
+        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
         {
             MDataRow row = new MDataRow();
             if (anyObj is string)
@@ -721,16 +721,19 @@ namespace CYQ.Data.Table
             }
             else if (anyObj is MDataRow)
             {
-                row.LoadFrom(row);
+                row.LoadFrom(row as MDataRow);
             }
             else
             {
-                row.LoadFrom(anyObj);
+                row.LoadFrom(anyObj, op);
             }
             row.SetState(1);//外部创建的状态默认置为1.
             return row;
         }
-
+        public static MDataRow CreateFrom(object anyObj, Type valueType)
+        {
+            return CreateFrom(anyObj, valueType, BreakOp.None);
+        }
         /// <summary>
         /// 输出行的数据Json
         /// </summary>

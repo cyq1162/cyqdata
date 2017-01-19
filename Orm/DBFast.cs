@@ -133,7 +133,7 @@ namespace CYQ.Data.Orm
             using (MAction action = GetMAction<T>())
             {
                 action.AllowInsertID = insertID;
-                action.Data.LoadFrom(t);
+                action.Data.LoadFrom(t, BreakOp.Null);
                 result = action.Insert(op);
                 if (result && op != InsertOp.None)
                 {
@@ -161,7 +161,7 @@ namespace CYQ.Data.Orm
         {
             using (MAction action = GetMAction<T>())
             {
-                action.Data.LoadFrom(t);
+                action.Data.LoadFrom(t, BreakOp.Null);
                 return action.Update(where);
             }
         }
