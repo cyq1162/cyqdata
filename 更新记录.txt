@@ -680,3 +680,5 @@
 465：MDataColumn 增加Set方法（为所有行赋值）(2017-01-18）
 466：DBFast的Insert、Update，默认对实体的加载忽略Null值(2017-01-19）
 467：MDataTable.CreateFrom(object o,BreakOp op)、MDataRow.CreateFrom(object anyObj, Type valueType, BreakOp op) 增加此重载方法（2017-01-19）
+468：SqlFormatter增加对Oracle的日期格式化（如支持直接写成：CreateTime>'yyyy-MM-dd hh:mm:ss')（2017-01-23）
+469：MutilLanguage小调整支持Winform的多语言、XHtmlAction小调整（2017-01-23）

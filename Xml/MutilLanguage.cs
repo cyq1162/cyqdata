@@ -33,6 +33,10 @@ namespace CYQ.Data.Xml
         {
             get
             {
+                if (_LanKey == LanguageKey.None)
+                {
+                    _LanKey = DefaultLanKey;
+                }
                 return _LanKey;
             }
             set

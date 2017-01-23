@@ -567,6 +567,10 @@ namespace CYQ.Data.SQL
             {
                 where = SqlFormat.FormatMySqlBit(where, mdc);
             }
+            else if (dalType == DalType.Oracle)
+            {
+                where = SqlFormat.FormatOracleDateTime(where, mdc);
+            }
             string lowerWhere = where.ToLower().TrimStart();
             if (lowerWhere.StartsWith("order by"))
             {

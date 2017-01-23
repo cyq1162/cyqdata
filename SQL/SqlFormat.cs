@@ -181,7 +181,7 @@ namespace CYQ.Data.SQL
                     {
                         if (where.IndexOf(item.ColumnName, StringComparison.OrdinalIgnoreCase) > -1)
                         {
-                            string pattern = " " + item.ColumnName + @"\s*=\s*'0'";
+                            string pattern = @"\s?" + item.ColumnName + @"\s*=\s*'0'";
                             where = Regex.Replace(where, pattern, " " + item.ColumnName + "=0", RegexOptions.IgnoreCase);
                         }
                     }
@@ -189,7 +189,37 @@ namespace CYQ.Data.SQL
             }
             return where;
         }
+        internal static string FormatOracleDateTime(string where, MDataColumn mdc)
+        {
+            if (where.IndexOf(':') > -1 && where.IndexOfAny(new char[] { '>', '<', '-', '/' }) > -1)//判断是否存在日期的判断
+            {
 
+                foreach (MCellStruct item in mdc)
+                {
+                    if (DataType.GetGroup(item.SqlType) == 2 && where.IndexOf(item.ColumnName, StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        string pattern = @"(\s?" + item.ColumnName + @"\s*[><]{1}[=]?\s*)('.{19,23}')";
+                        Regex reg = new Regex(pattern, RegexOptions.IgnoreCase);
+                        if (reg.IsMatch(where))
+                        {
+                            where = reg.Replace(where, delegate(Match match)
+                            {
+                                if (item.SqlType == SqlDbType.Timestamp)
+                                {
+                                    return match.Groups[1].Value + "to_timestamp(" + match.Groups[2].Value + ",'yyyy-MM-dd HH24:MI:ss.ff')";
+                                }
+                                else
+                                {
+                                    return match.Groups[1].Value + "to_date(" + match.Groups[2].Value + ",'yyyy-mm-dd hh24:mi:ss')";
+                                }
+                            });
+                        }
+
+                    }
+                }
+            }
+            return where;
+        }
         internal static List<string> GetTableNamesFromSql(string sql)
         {
             List<string> nameList = new List<string>();

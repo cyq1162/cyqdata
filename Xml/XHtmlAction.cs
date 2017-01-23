@@ -760,7 +760,7 @@ namespace CYQ.Data.Xml
                 }
                 //try
                 //{
-                    Set(node, setType, value);
+                Set(node, setType, value);
                 //}
                 //catch (Exception err)
                 //{
@@ -889,7 +889,7 @@ namespace CYQ.Data.Xml
                 _Row = _Table.Rows[0];
             }
         }
-        public delegate string SetForeachEventHandler(string text, MDictionary<string,string> values, int rowIndex);
+        public delegate string SetForeachEventHandler(string text, MDictionary<string, string> values, int rowIndex);
         /// <summary>
         /// 对于SetForeach函数调用的格式化事件
         /// </summary>
@@ -1008,7 +1008,7 @@ namespace CYQ.Data.Xml
                     formatValues = new object[colLen];
                 }
                 MDictionary<string, string> values = new MDictionary<string, string>(formatValues.Length, StringComparer.OrdinalIgnoreCase);
-               // object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
+                // object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
 
                 //foreach (MDataRow row in _Table.Rows)
                 string newText = text;
@@ -1196,14 +1196,14 @@ namespace CYQ.Data.Xml
             string rowValue = "";
             if (_Row != null)
             {
-                MDataCell cell = _Row[idOrName.Substring(3)];
-                if (cell == null)
+                MDataCell cell = _Row[idOrName];
+                if (cell == null && idOrName.Length > 3)
                 {
-                    cell = _Row[idOrName];
+                    cell = _Row[idOrName.Substring(3)];
                 }
                 if (cell != null)
                 {
-                    rowValue = Convert.ToString(cell.Value);
+                    rowValue = cell.strValue;
                 }
             }
             return rowValue;

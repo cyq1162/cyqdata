@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using System.Text;
 
 
 
@@ -174,7 +175,7 @@ namespace CYQ.Data.SQL
                     return text.Replace("=:?", "=@");
             }
         }
-
+       
         private static string FormatTrueFalseAscDesc(string text, DalType dalType)
         {
             switch (dalType)
