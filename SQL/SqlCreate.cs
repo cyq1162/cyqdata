@@ -412,76 +412,6 @@ namespace CYQ.Data.SQL
         {
             string where = GetWhereFromObj(whereObj);
             return FormatWhere(where, _action.Data.Columns, _action.DalType, _action.dalHelper.Com);
-            /*
-           
-            if (string.IsNullOrEmpty(where))
-            {
-                return string.Empty;
-            }
-            where = SqlFormat.Compatible(where.TrimEnd(), _action.dalHelper.dalType, _action.dalHelper.Com == null || _action.dalHelper.Com.Parameters.Count == 0);
-            if (_action.DalType == DalType.MySql)
-            {
-                where = SqlFormat.FormatMySqlBit(where, _action.Data.Columns);
-            }
-            string lowerWhere = where.ToLower().TrimStart();
-            if (lowerWhere.StartsWith("order by"))
-            {
-                where = "1=1 " + where;
-            }
-            else if (lowerWhere.IndexOfAny(new char[] { '=', '>', '<' }) == -1 && !lowerWhere.Contains(" like ") && !lowerWhere.Contains(" between ")
-                && !lowerWhere.Contains(" in ") && !lowerWhere.Contains(" in(") && !lowerWhere.Contains(" is "))
-            {
-                int valueGroupID = DataType.GetGroup(DataType.GetSqlType(whereObj.GetType()));
-                MCellStruct ms = _action.Data.Columns.FirstPrimary;
-
-                string[] items = where.Split(',');
-                if (items.Length == 1)
-                {
-                    //只处理单个值的情况
-                    int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                    int uniqueGroupID = DataType.GetGroup(_action.Data.Columns.FirstUnique.SqlType);
-                    switch (primaryGroupID)
-                    {
-                        case 4:
-                            bool isOK = false;
-                            if (where.Length == 36)
-                            {
-                                try
-                                {
-                                    new Guid(where);
-                                    isOK = true;
-                                }
-                                catch
-                                {
-                                }
-                            }
-                            if (!isOK)
-                            {
-                                ms = _action.Data.Columns.FirstUnique;
-                            }
-                            break;
-                        case 1:
-                            long v;
-                            if (!long.TryParse(where.Trim('\''), out v))
-                            {
-                                ms = _action.Data.Columns.FirstUnique;
-                            }
-                            break;
-                    }
-
-                    string columnName = SqlFormat.Keyword(ms.ColumnName, _action.DalType);
-                    where = GetWhereEqual(DataType.GetGroup(ms.SqlType), columnName, where);
-                }
-                else
-                {
-                    List<string> lists = new List<string>(items.Length);
-                    lists.AddRange(items);
-                    where = GetWhereIn(ms, lists, _action.DalType);
-                }
-            }
-
-            return where;
-             */
         }
         private string GetWhereFromObj(object whereObj)
         {
@@ -543,7 +473,7 @@ namespace CYQ.Data.SQL
                         break;
                     default:
                         where = cell.ColumnName + "=" + _action.dalHelper.Pre + cell.ColumnName;
-                        _action.dalHelper.AddParameters(cell.ColumnName, cell.Value, DataType.GetDbType(cell.Struct.ValueType), cell.Struct.MaxSize, System.Data.ParameterDirection.Input);
+                        _action.dalHelper.AddParameters(cell.ColumnName, cell.Value, DataType.GetDbType(cell.Struct.ValueType), cell.Struct.MaxSize, ParameterDirection.Input);
                         break;
                 }
                 #endregion
@@ -579,52 +509,90 @@ namespace CYQ.Data.SQL
             else if (lowerWhere.IndexOfAny(new char[] { '=', '>', '<' }) == -1 && !lowerWhere.Contains(" like ") && !lowerWhere.Contains(" between ")
                 && !lowerWhere.Contains(" in ") && !lowerWhere.Contains(" in(") && !lowerWhere.Contains(" is "))
             {
-                //int valueGroupID = DataType.GetGroup(DataType.GetSqlType(whereObj.GetType()));
-                MCellStruct ms = mdc.FirstPrimary;
-
-                string[] items = where.Split(',');
-                if (items.Length == 1)
+                if (mdc.JointPrimary.Count > 1 && where.Contains(";"))
                 {
-                    //只处理单个值的情况
-                    int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                    // int uniqueGroupID = DataType.GetGroup(mdc.FirstUnique.SqlType);
-                    switch (primaryGroupID)
+                    #region 多个主键
+                    StringBuilder sb = new StringBuilder();
+                    string[] items = where.Split(',');
+                    MDataRow row = mdc.ToRow("row");
+                    for (int i = 0; i < items.Length; i++)
                     {
-                        case 4:
-                            bool isOK = false;
-                            if (where.Length == 36)
+                        string item = items[i];
+                        if (!string.IsNullOrEmpty(item))
+                        {
+                            string[] values = item.Split(';');
+                            for (int j = 0; j < row.JointPrimaryCell.Count; j++)
                             {
-                                try
+                                if (j < values.Length)
                                 {
-                                    new Guid(where);
-                                    isOK = true;
-                                }
-                                catch
-                                {
+                                    row.JointPrimaryCell[j].Value = values[j];
                                 }
                             }
-                            if (!isOK)
+                            if (i != 0)
                             {
-                                ms = mdc.FirstUnique;
+                                sb.Append(" or ");
                             }
-                            break;
-                        case 1:
-                            long v;
-                            if (!long.TryParse(where.Trim('\''), out v))
-                            {
-                                ms = mdc.FirstUnique;
-                            }
-                            break;
+                            sb.Append("(" + GetWhere(dalType, row.JointPrimaryCell) + ")");
+                        }
                     }
-
-                    string columnName = SqlFormat.Keyword(ms.ColumnName, dalType);
-                    where = GetWhereEqual(DataType.GetGroup(ms.SqlType), columnName, where, dalType);
+                    where = sb.ToString();
+                    if (items.Length == 1)
+                    {
+                        where = where.Trim('(', ')');
+                    }
+                    items = null;
+                    #endregion
                 }
                 else
                 {
-                    List<string> lists = new List<string>(items.Length);
-                    lists.AddRange(items);
-                    where = GetWhereIn(ms, lists, dalType);
+                    #region 单个主键
+
+                    MCellStruct ms = mdc.FirstPrimary;
+
+                    string[] items = where.Split(',');
+                    if (items.Length == 1)
+                    {
+                        //只处理单个值的情况
+                        int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
+                        switch (primaryGroupID)
+                        {
+                            case 4:
+                                bool isOK = false;
+                                if (where.Length == 36)
+                                {
+                                    try
+                                    {
+                                        new Guid(where);
+                                        isOK = true;
+                                    }
+                                    catch
+                                    {
+                                    }
+                                }
+                                if (!isOK)
+                                {
+                                    ms = mdc.FirstUnique;
+                                }
+                                break;
+                            case 1:
+                                long v;
+                                if (!long.TryParse(where.Trim('\''), out v))
+                                {
+                                    ms = mdc.FirstUnique;
+                                }
+                                break;
+                        }
+
+                        string columnName = SqlFormat.Keyword(ms.ColumnName, dalType);
+                        where = GetWhereEqual(DataType.GetGroup(ms.SqlType), columnName, where, dalType);
+                    }
+                    else
+                    {
+                        List<string> lists = new List<string>(items.Length);
+                        lists.AddRange(items);
+                        where = GetWhereIn(ms, lists, dalType);
+                    }
+                    #endregion
                 }
             }
 
