@@ -362,7 +362,8 @@ namespace CYQ.Data.Cache
                 {
                     cmd.WriteKey(keyPrefix + key);
                 }
-                return !socket.ReadResponse().StartsWith("-");
+                string result = socket.ReadResponse();
+                return !result.StartsWith(":0") && !result.StartsWith("-");
             });
         }
 

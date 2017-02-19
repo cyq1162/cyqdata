@@ -231,7 +231,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 联合主键
         /// </summary>
-        internal List<MCellStruct> JointPrimary
+        public List<MCellStruct> JointPrimary
         {
             get
             {
@@ -268,7 +268,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 第一个主键
         /// </summary>
-        internal MCellStruct FirstPrimary
+        public MCellStruct FirstPrimary
         {
             get
             {
@@ -282,7 +282,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 首个唯一键
         /// </summary>
-        internal MCellStruct FirstUnique
+        public MCellStruct FirstUnique
         {
             get
             {

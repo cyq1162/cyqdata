@@ -683,3 +683,5 @@
 468：SqlFormatter增加对Oracle的日期格式化（如支持直接写成：CreateTime>'yyyy-MM-dd hh:mm:ss')（2017-01-23）
 469：MutilLanguage小调整支持Winform的多语言、XHtmlAction小调整（2017-01-23）
 470：SqlCreate.FormatWhere 支持对联合主键（因Aries而增加）的解析（如：action.Fill("a;b"))（2017-01-30）
+471：MDataColumn 开放三个属性JointPrimary、FirstPrimary、FirstUnique（2017-01-08）
+472：CacheManage的Redis修正对Contains的返回判断（2017-02-20）
