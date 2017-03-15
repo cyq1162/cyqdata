@@ -13,13 +13,13 @@ using CYQ.Data.UI;
 namespace CYQ.Data.SQL
 {
     /// <summary>
-    /// Êı¾İ²Ù×÷Óï¾äÀà
+    /// æ•°æ®æ“ä½œè¯­å¥ç±»
     /// </summary>
     internal partial class SqlCreate
     {
         private static List<string> _autoIDItems = new List<string>();
         /// <summary>
-        /// oracleĞòÁĞÃû³Æ
+        /// oracleåºåˆ—åç§°
         /// </summary>
         public string AutoID
         {
@@ -28,7 +28,7 @@ namespace CYQ.Data.SQL
                 string key = string.Format(AppConfig.DB.AutoID, TableName);
                 if (!_autoIDItems.Contains(key))
                 {
-                    //¼ì²â²¢×Ô¶¯´´½¨¡£
+                    //æ£€æµ‹å¹¶è‡ªåŠ¨åˆ›å»ºã€‚
                     Tool.DBTool.CheckAndCreateOracleSequence(key, _action.dalHelper.conn, _action.Data.PrimaryCell.ColumnName, TableName);
                     _autoIDItems.Add(key);
                 }
@@ -36,15 +36,15 @@ namespace CYQ.Data.SQL
             }
         }
         /// <summary>
-        /// ÊÇ·ñÔÊĞíÖ´ĞĞSQL²Ù×÷£¨½ö¶ÔInsertºÍUpdateÓĞĞ§£»Èç¹ûSQLÓï·¨´íÎó£¬Ôò¾Ü¾øÖ´ĞĞ£©
+        /// æ˜¯å¦å…è®¸æ‰§è¡ŒSQLæ“ä½œï¼ˆä»…å¯¹Insertå’ŒUpdateæœ‰æ•ˆï¼›å¦‚æœSQLè¯­æ³•é”™è¯¯ï¼Œåˆ™æ‹’ç»æ‰§è¡Œï¼‰
         /// </summary>
         internal bool isCanDo = true;
         /// <summary>
-        /// ¸üĞÂ²Ù×÷µÄ¸½¼Ó±í´ïÊ½¡£
+        /// æ›´æ–°æ“ä½œçš„é™„åŠ è¡¨è¾¾å¼ã€‚
         /// </summary>
         internal string updateExpression = null;
         /// <summary>
-        /// Ö¸¶¨²éÑ¯µÄÁĞ¡£
+        /// æŒ‡å®šæŸ¥è¯¢çš„åˆ—ã€‚
         /// </summary>
         internal object[] selectColumns = null;
         private string TableName
@@ -60,8 +60,8 @@ namespace CYQ.Data.SQL
             _action = action;
         }
 
-        #region ×éºÏSqlÓï¾ä
-        #region SQLÓï¾ä´¦Àí
+        #region ç»„åˆSqlè¯­å¥
+        #region SQLè¯­å¥å¤„ç†
         internal string GetDeleteToUpdateSql(object whereObj)
         {
             string editTime = GetEditTimeSql();
@@ -78,7 +78,7 @@ namespace CYQ.Data.SQL
                     {
                         if (_action.Data.Columns.Contains(item) && (_action.Data[item].IsNullOrEmpty || _action.Data[item].State < 2))
                         {
-                            return item + "='" + DateTime.Now + "',";//Èç¹û´æÔÚ¸üĞÂÁĞ
+                            return item + "='" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "',";//å¦‚æœå­˜åœ¨æ›´æ–°åˆ—
                         }
                     }
                 }
@@ -90,9 +90,9 @@ namespace CYQ.Data.SQL
             return "delete from " + TableName + " where " + FormatWhere(whereObj);
         }
         /// <summary>
-        /// ·µ»Ø²åÈëµÄ×Ö·û´®
+        /// è¿”å›æ’å…¥çš„å­—ç¬¦ä¸²
         /// </summary>
-        /// <returns>½á¹ûÈç:insert into tableName(ID,Name,Value) values(@ID,@Name,@Value)</returns>
+        /// <returns>ç»“æœå¦‚:insert into tableName(ID,Name,Value) values(@ID,@Name,@Value)</returns>
         internal string GetInsertSql()
         {
             isCanDo = false;
@@ -104,7 +104,7 @@ namespace CYQ.Data.SQL
             int groupID = DataType.GetGroup(primaryCell.Struct.SqlType);
             string defaultValue = Convert.ToString(primaryCell.Struct.DefaultValue);
             if (primaryCell.IsNullOrEmpty && (groupID == 4 || (groupID == 0 && (primaryCell.Struct.MaxSize <= 0 || primaryCell.Struct.MaxSize >= 36) &&
-                (defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid))))//guidÀàĞÍ
+                (defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid))))//guidç±»å‹
             {
                 primaryCell.Value = Guid.NewGuid();
             }
@@ -114,7 +114,7 @@ namespace CYQ.Data.SQL
                 cell = _action.Data[i];
                 if (cell.Struct.IsAutoIncrement && !_action.AllowInsertID)
                 {
-                    continue;//Ìø¹ı×ÔÔöÁĞ¡£
+                    continue;//è·³è¿‡è‡ªå¢åˆ—ã€‚
                 }
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
@@ -168,12 +168,12 @@ namespace CYQ.Data.SQL
                     {
                         sql += string.Format(" select '{0}' as OutPutValue", primaryCell.Value);
                     }
-                    if (_action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//·ÇÅúÁ¿²Ù×÷Ê±
+                    if (_action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//éæ‰¹é‡æ“ä½œæ—¶
                     {
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // ¶ÔÓÚ×ÔĞĞ²åÈëIDµÄ£¬Ìø¹ı£¬Ö÷²Ù×÷»á×Ô¶¯·µ»ØID¡£
+                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // å¯¹äºè‡ªè¡Œæ’å…¥IDçš„ï¼Œè·³è¿‡ï¼Œä¸»æ“ä½œä¼šè‡ªåŠ¨è¿”å›IDã€‚
                 //{
                 //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
                 //}
@@ -184,9 +184,9 @@ namespace CYQ.Data.SQL
             return sql;
         }
         /// <summary>
-        /// ·µ»Ø²»°üÀ¨WhereÌõ¼şµÄ×Ö·û´®
+        /// è¿”å›ä¸åŒ…æ‹¬Whereæ¡ä»¶çš„å­—ç¬¦ä¸²
         /// </summary>
-        /// <returns>½á¹ûÈç:Update tableName set Name=@Name,Value=@Value</returns>
+        /// <returns>ç»“æœå¦‚:Update tableName set Name=@Name,Value=@Value</returns>
         internal string GetUpdateSql(object whereObj)
         {
             isCanDo = false;
@@ -195,13 +195,13 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(updateExpression))
             {
                 _TempSql.Append(SqlCompatible.Format(updateExpression, _action.DalType) + ",");
-                updateExpression = null;//È¡ÍêÖµºóÇå³ıÖµ¡£
+                updateExpression = null;//å–å®Œå€¼åæ¸…é™¤å€¼ã€‚
                 isCanDo = true;
             }
-            string editTime = GetEditTimeSql();//ÄÚ²¿ÅĞ¶Ï¸Ã×Ö¶ÎÃ»ÓĞÖµ²Å»á¸üĞÂ¡£
+            string editTime = GetEditTimeSql();//å†…éƒ¨åˆ¤æ–­è¯¥å­—æ®µæ²¡æœ‰å€¼æ‰ä¼šæ›´æ–°ã€‚
             if (!string.IsNullOrEmpty(editTime))
             {
-                _TempSql.Append(editTime);//×Ô´øÎ²,ºÅ
+                _TempSql.Append(editTime);//è‡ªå¸¦å°¾,å·
             }
             MDataCell cell = null;
             for (int i = 0; i < _action.Data.Count; i++)
@@ -209,21 +209,21 @@ namespace CYQ.Data.SQL
                 cell = _action.Data[i];
                 if (cell.Struct.IsPrimaryKey || cell.Struct.IsAutoIncrement)
                 {
-                    continue;//Ìø¹ı×ÔÔö»òÖ÷¼üÁĞ¡£
+                    continue;//è·³è¿‡è‡ªå¢æˆ–ä¸»é”®åˆ—ã€‚
                 }
 
                 if (cell.CellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
                 {
                     if (cell.Struct.SqlType == SqlDbType.Timestamp && (_action.DalType == DalType.MsSql || _action.DalType == DalType.Sybase))
                     {
-                        //¸üĞÂÊ±¼ä´Á²»ÔÊĞí¸üĞÂ¡£
+                        //æ›´æ–°æ—¶é—´æˆ³ä¸å…è®¸æ›´æ–°ã€‚
                         continue;
                     }
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
                     if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.strValue == "" && !cell.Struct.IsCanNull)
                     {
-                        value = " ";//Oracle not null ×Ö¶Î£¬²»ÔÊĞíÉèÖÃ¿ÕÖµ¡£
+                        value = " ";//Oracle not null å­—æ®µï¼Œä¸å…è®¸è®¾ç½®ç©ºå€¼ã€‚
                     }
 
                     _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
@@ -322,7 +322,7 @@ namespace CYQ.Data.SQL
             {
                 tName = tName.Substring(0, i + 1);
             }
-            if (selectColumns == null || selectColumns.Length == 0)//Ã»ÓĞÖ¸¶¨Òª×éºÏ²éÑ¯¡£
+            if (selectColumns == null || selectColumns.Length == 0)//æ²¡æœ‰æŒ‡å®šè¦ç»„åˆæŸ¥è¯¢ã€‚
             {
                 return SqlFormat.Keyword(tName, _action.DalType);
             }
@@ -332,7 +332,7 @@ namespace CYQ.Data.SQL
                 int orderbyIndex = where.ToLower().IndexOf("order by");
                 if (orderbyIndex > -1)
                 {
-                    whereOnly = " where " + where.Substring(0, orderbyIndex - 1);//-1ÊÇÈ¥µô¿Õ¸ñ
+                    whereOnly = " where " + where.Substring(0, orderbyIndex - 1);//-1æ˜¯å»æ‰ç©ºæ ¼
                     where = "1=1 " + where.Substring(orderbyIndex);
                 }
                 else
@@ -343,7 +343,7 @@ namespace CYQ.Data.SQL
                 whereOnly = SqlFormat.RemoveWhereOneEqualsOne(whereOnly);
             }
             string sql = "(select " + GetColumnsSql() + " from " + TableName + " " + whereOnly + ") v";
-            //if (_action.DalType != DalType.Oracle) // Oracle È¡ÏûÁË´æ´¢¹ı³Ì¡£
+            //if (_action.DalType != DalType.Oracle) // Oracle å–æ¶ˆäº†å­˜å‚¨è¿‡ç¨‹ã€‚
             //{
             //    sql += "v";
             //}
@@ -368,7 +368,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    int i = _action.Data.Columns.GetIndex(columnName);//¼æÈİ×Ö¶ÎÓ³Éä
+                    int i = _action.Data.Columns.GetIndex(columnName);//å…¼å®¹å­—æ®µæ˜ å°„
                     if (i > -1)
                     {
                         v_Columns += SqlFormat.Keyword(_action.Data.Columns[i].ColumnName, _action.dalHelper.dalType) + ",";
@@ -386,7 +386,7 @@ namespace CYQ.Data.SQL
             return v_Columns.TrimEnd(',');
         }
         /// <summary>
-        /// »ñÈ¡Ö÷¼ü×éºÏµÄWhereÌõ¼ş¡£
+        /// è·å–ä¸»é”®ç»„åˆçš„Whereæ¡ä»¶ã€‚
         /// </summary>
         /// <returns></returns>
         internal string GetPrimaryWhere()
@@ -394,7 +394,7 @@ namespace CYQ.Data.SQL
             return GetWhere(_action.DalType, _action.Data.JointPrimaryCell);
         }
         #endregion
-        #region ¹²ÓÃº¯Êı
+        #region å…±ç”¨å‡½æ•°
 
         internal string AddOrderByWithCheck(string where, string primaryKey)
         {
@@ -448,7 +448,7 @@ namespace CYQ.Data.SQL
             string where = string.Empty;
             if (cell != null)
             {
-                #region ´Óµ¥Ôª¸ñÀïÈ¡Öµ¡£
+                #region ä»å•å…ƒæ ¼é‡Œå–å€¼ã€‚
                 if (cell.IsNullOrEmpty)
                 {
                     isCanDo = false;
@@ -511,7 +511,7 @@ namespace CYQ.Data.SQL
             {
                 if (mdc.JointPrimary.Count > 1 && where.Contains(";"))
                 {
-                    #region ¶à¸öÖ÷¼ü
+                    #region å¤šä¸ªä¸»é”®
                     StringBuilder sb = new StringBuilder();
                     string[] items = where.Split(',');
                     MDataRow row = mdc.ToRow("row");
@@ -545,15 +545,15 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    #region µ¥¸öÖ÷¼ü
+                    #region å•ä¸ªä¸»é”®
 
                     MCellStruct ms = mdc.FirstPrimary;
 
                     string[] items = where.Split(',');
                     if (items.Length == 1)
                     {
-                        //Ö»´¦Àíµ¥¸öÖµµÄÇé¿ö
-                        int primaryGroupID = DataType.GetGroup(ms.SqlType);//ÓÅÏÈÆ¥ÅäÖ÷¼ü
+                        //åªå¤„ç†å•ä¸ªå€¼çš„æƒ…å†µ
+                        int primaryGroupID = DataType.GetGroup(ms.SqlType);//ä¼˜å…ˆåŒ¹é…ä¸»é”®
                         switch (primaryGroupID)
                         {
                             case 4:
@@ -608,7 +608,7 @@ namespace CYQ.Data.SQL
             {
                 where = where.Trim('\'');
             }
-            if (groupID == 1)//int ÀàĞÍµÄ£¬Ö÷¼ü²»ÎªbitĞÍ¡£
+            if (groupID == 1)//int ç±»å‹çš„ï¼Œä¸»é”®ä¸ä¸ºbitå‹ã€‚
             {
                 where = columnName + "=" + where;
             }
@@ -619,10 +619,10 @@ namespace CYQ.Data.SQL
 
                     switch (dalType)
                     {
-                        case DalType.Access:// AccessµÄGUIDÀàĞÍµÄ¸üĞÂ£¬±ØĞë´ø£û£ı°üº¬¡£
+                        case DalType.Access:// Accessçš„GUIDç±»å‹çš„æ›´æ–°ï¼Œå¿…é¡»å¸¦ï½›ï½åŒ…å«ã€‚
                             where = "{" + where.Trim('{', '}') + "}";
                             break;
-                        case DalType.SQLite://SQLite ÒÔ16×Ö½Ú´æ´¢£¬ĞèÒª×ª»»²ÅÄÜ²éÑ¯¡£
+                        case DalType.SQLite://SQLite ä»¥16å­—èŠ‚å­˜å‚¨ï¼Œéœ€è¦è½¬æ¢æ‰èƒ½æŸ¥è¯¢ã€‚
                             return columnName + "=x'" + StaticTool.ToGuidByteString(where) + "'";
                     }
                 }
@@ -652,7 +652,7 @@ namespace CYQ.Data.SQL
             }
             else if (where.IndexOf(" asc", StringComparison.OrdinalIgnoreCase) == -1 && where.IndexOf(" desc", StringComparison.OrdinalIgnoreCase) == -1)
             {
-                //ÓĞorder by µ«Ã» asc
+                //æœ‰order by ä½†æ²¡ asc
                 where += " asc";
             }
             return where;
@@ -662,7 +662,7 @@ namespace CYQ.Data.SQL
             return GetWhere(dalType, true, cells);
         }
         /// <summary>
-        /// ¸ù¾İÔªÊı¾İÁĞ×éºÏwhereÌõ¼ş¡£
+        /// æ ¹æ®å…ƒæ•°æ®åˆ—ç»„åˆwhereæ¡ä»¶ã€‚
         /// </summary>
         /// <returns></returns>
         internal static string GetWhere(DalType dalType, bool isAnd, List<MDataCell> cells)
@@ -708,7 +708,7 @@ namespace CYQ.Data.SQL
                                 where += columnName + "='" + guid + "'";
                             }
                         }
-                        else if (groupID == 2 && dalType == DalType.Oracle) // OracleµÄÈÕÆÚÊ±¼äÒª×ªÀàĞÍ
+                        else if (groupID == 2 && dalType == DalType.Oracle) // Oracleçš„æ—¥æœŸæ—¶é—´è¦è½¬ç±»å‹
                         {
                             if (cell.Struct.SqlType == SqlDbType.Timestamp)
                             {
@@ -747,11 +747,11 @@ namespace CYQ.Data.SQL
                 item = items[i];
                 if (groupID != 0)
                 {
-                    item = item.Trim('\'');//²»ÊÇ×ÖÄ¸¶¼³¢ÊÔÈ¥µô·ÖºÅ
+                    item = item.Trim('\'');//ä¸æ˜¯å­—æ¯éƒ½å°è¯•å»æ‰åˆ†å·
                 }
-                if (dalType == DalType.Oracle && i > 999 && i % 1000 == 0)//oracle ÁĞ±íÖĞµÄ×î´ó±í´ïÊıÎª1000
+                if (dalType == DalType.Oracle && i > 999 && i % 1000 == 0)//oracle åˆ—è¡¨ä¸­çš„æœ€å¤§è¡¨è¾¾æ•°ä¸º1000
                 {
-                    sb.Remove(sb.Length - 1, 1);//ÒÆ³ı×îºóÒ»¸ö,ºÅ¡£
+                    sb.Remove(sb.Length - 1, 1);//ç§»é™¤æœ€åä¸€ä¸ª,å·ã€‚
                     sb.Append(") or " + SqlFormat.Keyword(ms.ColumnName, dalType) + " In (");
                 }
                 if (!string.IsNullOrEmpty(item))
@@ -792,7 +792,7 @@ namespace CYQ.Data.SQL
         internal static string OracleSqlIDR = " userid={0} control='{1}'";//sqlldr   
         internal static string TruncateTable = "truncate table {0}";
         /// <summary>
-        /// »ñµÃÅúÁ¿µ¼ÈëµÄÁĞÃû¡£
+        /// è·å¾—æ‰¹é‡å¯¼å…¥çš„åˆ—åã€‚
         /// </summary>
         /// <param name="mdc"></param>
         /// <param name="keepID"></param>
@@ -811,7 +811,7 @@ namespace CYQ.Data.SQL
                 sb.Append(SqlFormat.Keyword(ms.ColumnName, dalType));
                 if (dalType == DalType.Oracle && DataType.GetGroup(ms.SqlType) == 2)
                 {
-                    //ÈÕÆÚ
+                    //æ—¥æœŸ
                     sb.Append(" DATE \"YYYY-MM-DD HH24:MI:SS\" NULLIF (" + ms.ColumnName + "=\"NULL\")");
                 }
                 sb.Append(",");
