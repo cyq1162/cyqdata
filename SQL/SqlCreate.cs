@@ -78,7 +78,7 @@ namespace CYQ.Data.SQL
                     {
                         if (_action.Data.Columns.Contains(item) && (_action.Data[item].IsNullOrEmpty || _action.Data[item].State < 2))
                         {
-                            return item + "='" + DateTime.Now + "',";//如果存在更新列
+                            return item + "='" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "',";//如果存在更新列
                         }
                     }
                 }
