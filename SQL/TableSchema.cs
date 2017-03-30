@@ -460,7 +460,7 @@ namespace CYQ.Data.SQL
                     {
                         continue;//后面那个会多出关联字段。
                     }
-                    columnName = row["ColumnName"].ToString();
+                    columnName = row["ColumnName"].ToString().Trim('"');//sqlite视图时会带引号
                     if (string.IsNullOrEmpty(columnName))
                     {
                         columnName = "Empty_" + i;

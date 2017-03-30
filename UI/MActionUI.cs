@@ -315,6 +315,7 @@ namespace CYQ.Data.UI
                                 t.GetProperty("Text").SetValue(ct, strValue, null);
                                 break;
                             case "HiddenField"://web
+                            case "HtmlTextArea"://web
                             case "HtmlInputText"://web html runat=server
                             case "HtmlInputHidden":
                                 t.GetProperty("Value").SetValue(ct, strValue, null);
@@ -453,6 +454,7 @@ namespace CYQ.Data.UI
                                 value = t.GetProperty("Text").GetValue(ct, null);
                                 break;
                             case "HiddenField"://web
+                            case "HtmlTextArea"://web
                             case "DateTimePicker"://win
                             case "NumericUpDown"://win
                                 value = t.GetProperty("Value").GetValue(ct, null);

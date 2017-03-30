@@ -685,3 +685,5 @@
 470：SqlCreate.FormatWhere 支持对联合主键（因Aries而增加）的解析（如：action.Fill("a;b"))（2017-01-30）
 471：MDataColumn 开放三个属性JointPrimary、FirstPrimary、FirstUnique（2017-01-08）
 472：CacheManage的Redis修正对Contains的返回判断（2017-02-20）
+473：MActionUI 增加对HtmlTextArea标签支持（2017-03-24）
+474：MAction SetSelectColumns 处理对Sqlite视图字段带双引号问题（2017-03-27）
