@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyDescription("论坛：http://www.cyqdata.com/cyqdata")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("路过秋天 （2017-03-27）")]
+[assembly: AssemblyCompany("路过秋天 （2017-04-08）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2020")]
 [assembly: AssemblyTrademark("CYQ.Data")]

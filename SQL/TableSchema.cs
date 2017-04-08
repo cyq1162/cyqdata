@@ -33,12 +33,12 @@ namespace CYQ.Data.SQL
         }
         internal static string GetTableCacheKey(DalType dalType, string dataBase, string conn)
         {
-            return "TableCache:" + dalType + "." + dataBase + conn.GetHashCode();
+            return "TableCache_" + dalType + "." + dataBase + Math.Abs(conn.GetHashCode());
         }
 
         public static MDataColumn GetColumns(Type typeInfo)
         {
-            string key = "ColumnCache:" + typeInfo.FullName;
+            string key = "ColumnCache_" + typeInfo.FullName;
             if (columnCache.ContainsKey(key))
             {
                 return columnCache[key].Clone();
@@ -555,91 +555,108 @@ namespace CYQ.Data.SQL
                 {
                     if (!tableCache.ContainsKey(key))
                     {
-                        helper.IsAllowRecordSql = false;
-                        string sql = string.Empty;
                         Dictionary<string, string> tables = null;
-                        switch (helper.dalType)
+                        if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                         {
-                            case DalType.MsSql:
-                                sql = GetMSSQLTables(helper.Version.StartsWith("08"));
-                                break;
-                            case DalType.Oracle:
-                                sql = GetOracleTables();
-                                break;
-                            case DalType.MySql:
-                                sql = GetMySqlTables(helper.DataBase);
-                                break;
-                            case DalType.Txt:
-                            case DalType.Xml:
+                            string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                            if (System.IO.File.Exists(fullPath))
+                            {
+                                tables = JsonHelper.Split(IOHelper.ReadAllText(fullPath));
+                            }
+                        }
+                        if (tables == null)
+                        {
+                            helper.IsAllowRecordSql = false;
+                            string sql = string.Empty;
+                            switch (helper.dalType)
+                            {
+                                case DalType.MsSql:
+                                    sql = GetMSSQLTables(helper.Version.StartsWith("08"));
+                                    break;
+                                case DalType.Oracle:
+                                    sql = GetOracleTables();
+                                    break;
+                                case DalType.MySql:
+                                    sql = GetMySqlTables(helper.DataBase);
+                                    break;
+                                case DalType.Txt:
+                                case DalType.Xml:
+                                    tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                                    string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1] + "\\");
+                                    string[] files = Directory.GetFiles(folder, "*.ts");
+                                    foreach (string file in files)
+                                    {
+                                        tables.Add(Path.GetFileNameWithoutExtension(file), "");
+                                    }
+                                    files = null;
+                                    break;
+                                case DalType.Access:
+                                case DalType.SQLite:
+                                case DalType.Sybase:
+                                    #region 用ADO.NET属性拿数据
+                                    string restrict = "TABLE";
+                                    if (helper.dalType == DalType.Sybase)
+                                    {
+                                        restrict = "BASE " + restrict;
+                                    }
+                                    tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                                    helper.Con.Open();
+                                    DataTable dt = helper.Con.GetSchema("Tables", new string[] { null, null, null, restrict });
+                                    helper.Con.Close();
+                                    if (dt != null && dt.Rows.Count > 0)
+                                    {
+                                        string tableName = string.Empty;
+                                        foreach (DataRow row in dt.Rows)
+                                        {
+                                            tableName = Convert.ToString(row["TABLE_NAME"]);
+                                            if (!tables.ContainsKey(tableName))
+                                            {
+                                                tables.Add(tableName, string.Empty);
+                                            }
+                                            else
+                                            {
+                                                Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
+                                            }
+                                        }
+                                        dt = null;
+                                    }
+                                    #endregion
+                                    break;
+                            }
+                            if (tables == null)
+                            {
+                                #region 读表到字典中
                                 tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                                string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1] + "\\");
-                                string[] files = Directory.GetFiles(folder, "*.ts");
-                                foreach (string file in files)
-                                {
-                                    tables.Add(Path.GetFileNameWithoutExtension(file), "");
-                                }
-                                files = null;
-                                break;
-                            case DalType.Access:
-                            case DalType.SQLite:
-                            case DalType.Sybase:
-                                #region 用ADO.NET属性拿数据
-                                string restrict = "TABLE";
-                                if (helper.dalType == DalType.Sybase)
-                                {
-                                    restrict = "BASE " + restrict;
-                                }
-                                tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                                helper.Con.Open();
-                                DataTable dt = helper.Con.GetSchema("Tables", new string[] { null, null, null, restrict });
-                                helper.Con.Close();
-                                if (dt != null && dt.Rows.Count > 0)
+                                DbDataReader sdr = helper.ExeDataReader(sql, false);
+                                if (sdr != null)
                                 {
                                     string tableName = string.Empty;
-                                    foreach (DataRow row in dt.Rows)
+                                    while (sdr.Read())
                                     {
-                                        tableName = Convert.ToString(row["TABLE_NAME"]);
+                                        tableName = Convert.ToString(sdr["TableName"]);
                                         if (!tables.ContainsKey(tableName))
                                         {
-                                            tables.Add(tableName, string.Empty);
+                                            if (!tableName.StartsWith("BIN$"))//Oracle的已删除的表。
+                                            {
+                                                tables.Add(tableName, Convert.ToString(sdr["Description"]));
+                                            }
                                         }
                                         else
                                         {
                                             Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
                                         }
                                     }
-                                    dt = null;
+                                    sdr.Close();
+                                    sdr = null;
                                 }
                                 #endregion
-                                break;
-                        }
-                        if (tables == null)
-                        {
-                            #region 读表到字典中
-                            tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                            DbDataReader sdr = helper.ExeDataReader(sql, false);
-                            if (sdr != null)
-                            {
-                                string tableName = string.Empty;
-                                while (sdr.Read())
+
+                                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                                 {
-                                    tableName = Convert.ToString(sdr["TableName"]);
-                                    if (!tables.ContainsKey(tableName))
-                                    {
-                                        if (!tableName.StartsWith("BIN$"))//Oracle的已删除的表。
-                                        {
-                                            tables.Add(tableName, Convert.ToString(sdr["Description"]));
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
-                                    }
+                                    string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                                    IOHelper.Save(fullPath, JsonHelper.ToJson(tables), false, true);
                                 }
-                                sdr.Close();
-                                sdr = null;
                             }
-                            #endregion
                         }
                         if (!tableCache.ContainsKey(key) && tables.Count > 0)//读不到表不缓存。
                         {

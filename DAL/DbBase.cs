@@ -385,7 +385,12 @@ namespace CYQ.Data
             {
                 try
                 {
-                    sdr = _com.ExecuteReader(isOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo);
+                    CommandBehavior cb = CommandBehavior.CloseConnection;
+                    if (_IsAllowRecordSql)//外部SQL，带表结构返回
+                    {
+                        cb = isOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo;
+                    }
+                    sdr = _com.ExecuteReader(cb);
                     if (sdr != null)
                     {
                         recordsAffected = sdr.RecordsAffected;

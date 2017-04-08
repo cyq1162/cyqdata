@@ -687,3 +687,5 @@
 472：CacheManage的Redis修正对Contains的返回判断（2017-02-20）
 473：MActionUI 增加对HtmlTextArea标签支持（2017-03-24）
 474：MAction SetSelectColumns 处理对Sqlite视图字段带双引号问题（2017-03-27）
+475：DbBase对GetDataReader的参数进行一下小优化（2017-04-08）
+476：SchemaMapPath配置项增加对DBTool.GetTables方法的支持（加快第一次表结构预热问题）（2017-04-08）
