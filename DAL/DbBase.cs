@@ -306,7 +306,15 @@ namespace CYQ.Data
             {
                 if (returnValue == -1 && _com != null && _com.Parameters != null && _com.Parameters.Count > 0)
                 {
-                    int.TryParse(Convert.ToString(_com.Parameters[_com.Parameters.Count - 1].Value), out returnValue);
+                    for (int i = _com.Parameters.Count - 1; i >= 0; i--)
+                    {
+                        if (_com.Parameters[i].Direction == ParameterDirection.ReturnValue)
+                        {
+                            int.TryParse(Convert.ToString(_com.Parameters[i].Value), out returnValue);
+                            break;
+                        }
+                    }
+
                 }
                 return returnValue;
             }
