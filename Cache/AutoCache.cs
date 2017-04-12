@@ -27,7 +27,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.Delete:
                     return false;
             }
-            if (!IsCanOperateCache(aopInfo))
+            if (!IsCanOperateCache(action,aopInfo))
             {
                 return false;
             }
@@ -96,7 +96,7 @@ namespace CYQ.Data.Cache
 
         internal static void SetCache(AopEnum action, AopInfo aopInfo)//End
         {
-            if (!IsCanOperateCache(aopInfo))
+            if (!IsCanOperateCache(action,aopInfo))
             {
                 return;
             }
@@ -417,8 +417,32 @@ namespace CYQ.Data.Cache
                 _NoCacheTables = value;
             }
         }
-        private static bool IsCanOperateCache(AopInfo para)
+        private static bool IsCanOperateCache(AopEnum action,AopInfo para)
         {
+            if (para.IsTransaction) // 事务中，读数据时，处理读缓存是无法放置共享锁的情况
+            {
+                //判断事务等级，如果不是最低等级，则事务的查询不处理缓存
+                switch (action)//处理查询 动作
+                {
+                    case AopEnum.Exists:
+                    case AopEnum.Fill:
+                    case AopEnum.GetCount:
+                    case AopEnum.Select:
+                        if(para.MAction.dalHelper.TranLevel!= System.Data.IsolationLevel.ReadUncommitted)
+                        {
+                            return false;
+                        }
+                        break;
+                    case AopEnum.ExeMDataTable:
+                    case AopEnum.ExeMDataTableList:
+                    case AopEnum.ExeScalar:
+                        if (para.MProc.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
+                        {
+                            return false;
+                        }
+                        break;
+                }
+            }
             List<string> tables = GetRelationTables(para);
             if (tables != null && tables.Count > 0)
             {

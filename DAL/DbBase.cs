@@ -44,7 +44,29 @@ namespace CYQ.Data
         /// </summary>
         internal ConnObject connObject;
 
-        internal IsolationLevel tranLevel = IsolationLevel.ReadCommitted;
+        private IsolationLevel _TranLevel = IsolationLevel.ReadCommitted;
+        internal IsolationLevel TranLevel
+        {
+            get
+            {
+                if (_tran!=null && _com != null && _com.Transaction != null)
+                {
+                    return _com.Transaction.IsolationLevel;
+                }
+                return _TranLevel;
+            }
+            set
+            {
+                if (_tran != null && _com != null && _com.Transaction != null)
+                {
+                    Error.Throw("IsolationLevel is readonly when transaction is begining!");
+                }
+                else
+                {
+                    _TranLevel = value;
+                }
+            }
+        }
         protected DbProviderFactory _fac = null;
         protected DbConnection _con = null;
         protected DbCommand _com;
@@ -931,7 +953,7 @@ namespace CYQ.Data
             {
                 if (_tran == null)
                 {
-                    _tran = _con.BeginTransaction(tranLevel);
+                    _tran = _con.BeginTransaction(TranLevel);
                     _com.Transaction = _tran;
                 }
                 else if (_tran.Connection == null)

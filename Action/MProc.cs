@@ -569,7 +569,7 @@ namespace CYQ.Data
         /// <param name="level">IsolationLevel</param>
         public MProc SetTransLevel(IsolationLevel level)
         {
-            dalHelper.tranLevel = level; return this;
+            dalHelper.TranLevel = level; return this;
         }
 
         /// <summary>
