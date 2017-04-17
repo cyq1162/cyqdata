@@ -1193,7 +1193,7 @@ namespace CYQ.Data
             if (cell != null)
             {
                 cell.Value = value;
-                if (state > 0 && state < 3)
+                if (state >= 0 && state < 3)
                 {
                     cell.State = state;
                 }
