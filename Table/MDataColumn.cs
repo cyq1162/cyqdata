@@ -420,10 +420,14 @@ namespace CYQ.Data.Table
         /// <param name="defaultValue">默认值[日期类型请传入SqlValue.GetDate]</param>
         public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize, bool isPrimaryKey, object defaultValue)
         {
-            MCellStruct mdcStruct = new MCellStruct(columnName, sqlType, isAutoIncrement, isCanNull, maxSize);
-            mdcStruct.IsPrimaryKey = isPrimaryKey;
-            mdcStruct.DefaultValue = defaultValue;
-            Add(mdcStruct);
+            string[] items = columnName.Split(',');
+            foreach (string item in items)
+            {
+                MCellStruct mdcStruct = new MCellStruct(item, sqlType, isAutoIncrement, isCanNull, maxSize);
+                mdcStruct.IsPrimaryKey = isPrimaryKey;
+                mdcStruct.DefaultValue = defaultValue;
+                Add(mdcStruct);
+            }
         }
 
         #endregion

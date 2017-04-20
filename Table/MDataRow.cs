@@ -404,7 +404,7 @@ namespace CYQ.Data.Table
         /// <param name="state">状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</param>
         public MDataRow SetState(int state)
         {
-            SetState(state, BreakOp.None); return this;
+            return SetState(state, BreakOp.None);
         }
         /// <summary>
         /// 将行的数据行的状态全部重置
@@ -413,34 +413,58 @@ namespace CYQ.Data.Table
         /// <param name="op">状态设置选项</param>
         public MDataRow SetState(int state, BreakOp op)
         {
-            for (int i = 0; i < this.Count; i++)
+            return SetState(state, op, string.Empty);
+        }
+        /// <param name="columns"><para>批量指定某些列</para></param>
+        /// <returns></returns>
+        public MDataRow SetState(int state, BreakOp op, string columns)
+        {
+            if (!string.IsNullOrEmpty(columns))
             {
-                switch (op)
+                string[] items = columns.Trim(',', ' ').Split(',');
+                for (int i = 0; i < items.Length; i++)
                 {
-                    case BreakOp.Null:
-                        if (this[i].IsNull)
-                        {
-                            continue;
-                        }
-                        break;
-                    case BreakOp.Empty:
-                        if (this[i].strValue == "")
-                        {
-                            continue;
-                        }
-                        break;
-                    case BreakOp.NullOrEmpty:
-                        if (this[i].IsNullOrEmpty)
-                        {
-                            continue;
-                        }
-                        break;
+                    MDataCell cell = this[items[i]];
+                    if (cell != null)
+                    {
+                        SetState(state, op, cell);
+                    }
                 }
-                this[i].CellValue.State = state;
+            }
+            else
+            {
+                for (int i = 0; i < this.Count; i++)
+                {
+                    SetState(state, op, this[i]);
+                }
             }
             return this;
         }
-
+        private void SetState(int state, BreakOp op, MDataCell cell)
+        {
+            switch (op)
+            {
+                case BreakOp.Null:
+                    if (cell.IsNull)
+                    {
+                        return;
+                    }
+                    break;
+                case BreakOp.Empty:
+                    if (cell.strValue == "")
+                    {
+                        return;
+                    }
+                    break;
+                case BreakOp.NullOrEmpty:
+                    if (cell.IsNullOrEmpty)
+                    {
+                        return;
+                    }
+                    break;
+            }
+            cell.CellValue.State = state;
+        }
         public void Add(string columnName, object value)
         {
             Add(columnName, SqlDbType.NVarChar, value);
