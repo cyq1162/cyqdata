@@ -1331,7 +1331,24 @@ namespace CYQ.Data
         /// <param name="columnNames">as£º"columnA","columnB as B"</param>
         public MAction SetSelectColumns(params object[] columnNames)
         {
-            _sqlCreate.selectColumns = columnNames;
+            bool isSplit = false;
+            if (columnNames.Length == 1)
+            {
+                string column = Convert.ToString(columnNames[0]);
+                if (column.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) == -1)//±Ü¿ª"'xx,xx' as A
+                {
+                    string[] items = Convert.ToString(columnNames[0]).Split(',');
+                    if (items.Length > 1)
+                    {
+                        isSplit = true;
+                        _sqlCreate.selectColumns = items;
+                    }
+                }
+            }
+            if (!isSplit)
+            {
+                _sqlCreate.selectColumns = columnNames;
+            }
             return this;
         }
 
