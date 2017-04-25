@@ -87,7 +87,7 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    if (t.Name.EndsWith("[]"))
+                    if (t.Name.EndsWith("[]") || t.Name=="MDataRowCollection")
                     {
                         len = 1;
                     }

@@ -96,6 +96,14 @@ namespace CYQ.Data.Table
             mTable.LoadRow(row);
             return mTable;
         }
+        /// <summary>
+        /// 将一行数据装载成一个表。
+        /// </summary>
+        /// <returns></returns>
+        public static implicit operator MDataTable(MDataRowCollection rows)
+        {
+            return (List<MDataRow>)rows;
+        }
         #endregion
 
         #region 属性

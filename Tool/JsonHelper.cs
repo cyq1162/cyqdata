@@ -457,7 +457,7 @@ namespace CYQ.Data.Tool
                         }
                         else  // 取子集
                         {
-                            
+
                             return GetValue(jsonDic[fKey], key.Substring(fi + 1));
                         }
                     }
@@ -664,13 +664,21 @@ namespace CYQ.Data.Tool
                                 if (cell.Value is IEnumerable)
                                 {
                                     int len = StaticTool.GetArgumentLength(ref t);
-                                    if (len == 1)
+                                    if (len <= 1)
                                     {
                                         JsonHelper js = new JsonHelper(false, false);
                                         js._RowOp = _RowOp;
                                         js.DateTimeFormatter = DateTimeFormatter;
                                         js.IsConvertNameToLower = IsConvertNameToLower;
-                                        js.Fill(cell.Value);
+                                        if (cell.Value is MDataRowCollection)
+                                        {
+                                            MDataTable dtx = (MDataRowCollection)cell.Value;
+                                            js.Fill(dtx);
+                                        }
+                                        else
+                                        {
+                                            js.Fill(cell.Value);
+                                        }
                                         value = js.ToString(true);
                                         noQuot = true;
                                     }
