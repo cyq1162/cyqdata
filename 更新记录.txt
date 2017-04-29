@@ -694,3 +694,4 @@
 479：对MDataRow的SetState增加重载方法 MDataColumn的Add增加批量方法（2017-04-20）
 480：MAction的SetSelectColumn增加细节兼容（2017-04-20）
 481：MDataTable.ToJson增加对自身嵌套循环的支持（2017-04-25）
+482：LocalCache 修正文件缓存依赖路径的大小写比较问题（2017-04-29）

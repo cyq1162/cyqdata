@@ -423,7 +423,7 @@ namespace CYQ.Data.Cache
                     {
                         if (i < keys.Count)
                         {
-                            if (theFileName[keys[i]] == fileName)
+                            if (string.Compare(theFileName[keys[i]], fileName, StringComparison.OrdinalIgnoreCase) == 0)
                             {
                                 Remove(keys[i]);
                                 keys.Remove(keys[i]);

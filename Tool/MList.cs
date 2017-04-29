@@ -89,8 +89,8 @@ namespace CYQ.Data.Tool
         }
         public void Add(T key)
         {
-            dic.Add(key, 0);
             list.Add(key);
+            dic.Add(key, 0);
         }
         public bool Contains(T key)
         {
@@ -98,14 +98,13 @@ namespace CYQ.Data.Tool
         }
         public void Remove(T key)
         {
-            dic.Remove(key);
             list.Remove(key);
+            dic.Remove(key);
         }
         public void Clear()
         {
-            dic.Clear();
             list.Clear();
-
+            dic.Clear();
         }
         public int Count
         {
@@ -116,6 +115,10 @@ namespace CYQ.Data.Tool
         }
         public List<T> GetList()
         {
+            if (list.Count == 0 && dic.Count > 0)
+            {
+                dic.Clear();
+            }
             return list;
         }
     }
