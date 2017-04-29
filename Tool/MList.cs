@@ -121,5 +121,12 @@ namespace CYQ.Data.Tool
             }
             return list;
         }
+        public T this[int index]
+        {
+            get
+            {
+                return list[index];
+            }
+        }
     }
 }
