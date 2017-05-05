@@ -161,7 +161,7 @@ namespace CYQ.Data.SQL
                         }
                         else
                         {
-                            sql += " select cast(scope_Identity() as int) as OutPutValue";
+                            sql += " select cast(scope_Identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
                         }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
