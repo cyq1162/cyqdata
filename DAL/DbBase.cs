@@ -420,6 +420,10 @@ namespace CYQ.Data
                     {
                         cb = isOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo;
                     }
+                    else if (isOpenTrans)
+                    {
+                        cb = CommandBehavior.Default;//避免事务时第一次拿表结构链接被关闭。
+                    }
                     sdr = _com.ExecuteReader(cb);
                     if (sdr != null)
                     {
