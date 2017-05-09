@@ -479,11 +479,15 @@ namespace CYQ.Data.Table
         }
         public void Remove(string columnName)
         {
-            int index = GetIndex(columnName);
-            if (index > -1)
+            string[] items = columnName.Split(',');
+            foreach (string item in items)
             {
-                RemoveAt(index);
-                columnIndex.Clear();
+                int index = GetIndex(item);
+                if (index > -1)
+                {
+                    RemoveAt(index);
+                    columnIndex.Clear();
+                }
             }
         }
         public new void RemoveAll(Predicate<MCellStruct> match)
