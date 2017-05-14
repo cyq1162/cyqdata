@@ -136,6 +136,7 @@
     <Compile Include="Table\Extension\MDataRowCollection.cs" />
     <Compile Include="Table\Extension\Serializable.cs" />
     <Compile Include="Table\FastToT.cs" />
+    <Compile Include="Table\MCellStruct.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
