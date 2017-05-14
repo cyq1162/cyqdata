@@ -102,7 +102,7 @@ namespace CYQ.Data.Cache
                 {
                     for (int i = 1; i < row.Columns.Count; i++)
                     {
-                        count += int.Parse(row[i].strValue);
+                        count += int.Parse(row[i].StringValue);
                     }
                 }
                 return count;

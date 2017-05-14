@@ -75,15 +75,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static implicit operator MDataTable(List<MDataRow> rows)
         {
-            if (rows == null || rows.Count == 0)
-            {
-                return null;
-            }
-            MDataTable mdt = new MDataTable(rows[0].TableName);
-            mdt.Conn = rows[0].Conn;
-            mdt.Columns = rows[0].Columns;
-            mdt.Rows.AddRange(rows);
-            return mdt;
+            return (MDataRowCollection)rows;
         }
         /// <summary>
         /// 将一行数据装载成一个表。
@@ -102,7 +94,16 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static implicit operator MDataTable(MDataRowCollection rows)
         {
-            return (List<MDataRow>)rows;
+            if (rows == null || rows.Count == 0)
+            {
+                return null;
+            }
+            MDataTable mdt = new MDataTable(rows[0].TableName);
+            mdt.Conn = rows[0].Conn;
+            mdt.Columns = rows[0].Columns;
+            mdt.Rows.AddRange(rows);
+            return mdt;
+           
         }
         #endregion
 
@@ -286,7 +287,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 使用本查询，得到原数据的引用。
         /// </summary>
-        public List<MDataRow> FindAll(object where)
+        public MDataRowCollection FindAll(object where)
         {
             return MDataTableFilter.FindAll(this, where);
         }
@@ -744,7 +745,7 @@ namespace CYQ.Data.Table
                                 }
                                 break;
                             case BreakOp.Empty:
-                                if (cell.strValue == "")
+                                if (cell.StringValue == "")
                                 {
                                     continue;
                                 }
@@ -824,7 +825,7 @@ namespace CYQ.Data.Table
                         int eqCount = 0;
                         for (int k = 0; k < cCount; k++)//比较列
                         {
-                            if (Rows[i][k].strValue == Rows[j][k].strValue)
+                            if (Rows[i][k].StringValue == Rows[j][k].StringValue)
                             {
                                 eqCount++;
                             }
@@ -1222,13 +1223,14 @@ namespace CYQ.Data.Table
 
                             if (value == null || value == DBNull.Value)
                             {
-                                mRecord[i].CellValue.Value = DBNull.Value;
+                                mRecord[i].Value = DBNull.Value;
+                                mRecord[i].State = 0;
                             }
                             else if (Convert.ToString(value) == string.Empty)
                             {
-                                mRecord[i].CellValue.Value = string.Empty;
-                                mRecord[i].CellValue.IsNull = false;
-                                mRecord[i].CellValue.State = 1;
+                                mRecord[i].Value = string.Empty;
+                                mRecord[i].IsNull = false;
+                                mRecord[i].State = 1;
                             }
                             else
                             {
@@ -1696,7 +1698,7 @@ namespace CYQ.Data.Table
             for (int i = 0; i < Rows.Count; i++)
             {
                 rowA = Rows[i];
-                rowB = dt.FindRow(pkName + "='" + rowA[i1].strValue + "'");
+                rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
                 if (rowB != null)
                 {
                     rowA.LoadFrom(rowB, RowOp.IgnoreNull, false);

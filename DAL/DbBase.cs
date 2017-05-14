@@ -1085,7 +1085,11 @@ namespace CYQ.Data
                 return OnExceptionEvent == null;
             }
         }
-        private void WriteError(string err)
+        /// <summary>
+        /// 输出错误（若事务中，回滚事务）
+        /// </summary>
+        /// <param name="err"></param>
+        internal void WriteError(string err)
         {
             err = dalType + " Call Function::" + err;
             if (_watch != null && _watch.IsRunning)

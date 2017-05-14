@@ -133,7 +133,7 @@ namespace CYQ.Data.Table
 
         int System.Collections.IList.IndexOf(object value)
         {
-            return this.IndexOf(value as MDataRow);
+            return RowList.IndexOf(value as MDataRow);
         }
 
         void System.Collections.IList.Insert(int index, object value)
@@ -197,7 +197,7 @@ namespace CYQ.Data.Table
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return RowList.GetEnumerator();
         }
     }
 

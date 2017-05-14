@@ -417,7 +417,7 @@ namespace CYQ.Data.Cache
                 string folder = Path.GetDirectoryName(fileName);
                 if (theFolderKeys.ContainsKey(folder))
                 {
-                    List<string> keys = theFolderKeys[folder].GetList();
+                    MList<string> keys = theFolderKeys[folder];//.GetList();
                     int count = keys.Count;
                     for (int i = 0; i < count; i++)
                     {

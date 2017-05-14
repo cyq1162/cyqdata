@@ -280,7 +280,7 @@ namespace CYQ.Data
             {
                 //lock (lockOperatorObj) // 删除条件会影响到Insert。
                 //{
-                List<MDataRow> rowList = Table.FindAll(where);
+                IList<MDataRow> rowList = Table.FindAll(where);
                 if (rowList != null)
                 {
                     count = rowList.Count;
@@ -339,7 +339,7 @@ namespace CYQ.Data
                     #region 给主键赋值
                     int groupID = DataType.GetGroup(cell.Struct.SqlType);
                     string existWhere = cell.ColumnName + (groupID == 1 ? "={0}" : "='{0}'");
-                    if (cell.IsNull || cell.CellValue.State == 0 || cell.strValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
+                    if (cell.IsNull || cell.State == 0 || cell.StringValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
                     {
                         switch (groupID)
                         {
@@ -389,7 +389,7 @@ namespace CYQ.Data
         {
             count = -1;
             CheckFileChanged(true);
-            List<MDataRow> rowList = Table.FindAll(where);
+            IList<MDataRow> rowList = Table.FindAll(where);
             if (rowList != null)
             {
                 count = rowList.Count;
@@ -443,7 +443,7 @@ namespace CYQ.Data
             bool isCanDo = false;
             for (int i = start; i < _Row.Count; i++)
             {
-                if (_Row[i].CellValue.State == 0 && !_Row[i].IsNull)
+                if (_Row[i].State == 0 && !_Row[i].IsNull)
                 {
                     _Row[i].Value = null;
                 }
@@ -493,7 +493,7 @@ namespace CYQ.Data
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < _insertRows.Count; i++)
                     {
-                        sb.Append(",\r\n" + _insertRows[i].ToJson());
+                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson());
                     }
                     _insertRows.Clear();//重置
                     if (!Tool.IOHelper.Append(_FileFullName, sb.ToString()))

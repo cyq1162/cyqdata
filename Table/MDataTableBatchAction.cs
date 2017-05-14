@@ -739,11 +739,11 @@ namespace CYQ.Data.Table
                 {
                     for (int j = 0; j < mdt.Rows.Count; j++)
                     {
-                        if (dal == DalType.MsSql && mdt.Rows[j][i].strValue == DateTime.MinValue.ToString())
+                        if (dal == DalType.MsSql && mdt.Rows[j][i].StringValue == DateTime.MinValue.ToString())
                         {
                             mdt.Rows[j][i].Value = SqlDateTime.MinValue;
                         }
-                        else if (dal == DalType.Oracle && mdt.Rows[j][i].strValue == SqlDateTime.MinValue.ToString())
+                        else if (dal == DalType.Oracle && mdt.Rows[j][i].StringValue == SqlDateTime.MinValue.ToString())
                         {
                             mdt.Rows[j][i].Value = SqlDateTime.MinValue;
                         }

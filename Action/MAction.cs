@@ -384,9 +384,9 @@ namespace CYQ.Data
                 {
                     if (!dalHelper.TestConn())
                     {
-                        Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!\r\nerror:" + dalHelper.debugInfo.ToString());
+                        Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.debugInfo.ToString());
                     }
-                    Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":check the tablename  \"" + _TableName + "\" is exist?\r\nerror:" + dalHelper.debugInfo.ToString());
+                    Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":check the tablename  \"" + _TableName + "\" is exist?" + AppConst.NewLine + "error:" + dalHelper.debugInfo.ToString());
                 }
             }
             else if (resetState)
@@ -471,6 +471,7 @@ namespace CYQ.Data
             bool returnResult = false;
             if (_sqlCreate.isCanDo)
             {
+                #region 执行Insert或Update命令
                 if (_isInsertCommand) //插入
                 {
                     _isInsertCommand = false;
@@ -534,11 +535,16 @@ namespace CYQ.Data
                 {
                     returnResult = dalHelper.ExeNonQuery(sqlCommandText, false) > 0;
                 }
+                #endregion
             }
             else if (!_isInsertCommand && _Data.GetState() == 1 && dalHelper.recordsAffected != -2) // 更新操作。
             {
                 //输出警告信息
                 return true;
+            }
+            else if (dalHelper.isOpenTrans && dalHelper.recordsAffected == -2) // 若事务中，则回滚
+            {
+                dalHelper.WriteError(_isInsertCommand ? "Insert" : "Update" + "():");
             }
             return returnResult;
         }
@@ -1432,7 +1438,7 @@ namespace CYQ.Data
         /// Dispose
         /// <para>释放资源</para>
         /// </summary>
-        internal void Dispose(bool isonError)
+        internal void Dispose(bool isOnError)
         {
             hasDisposed = true;
             if (dalHelper != null)
@@ -1443,7 +1449,7 @@ namespace CYQ.Data
                 }
                 _debugInfo = dalHelper.debugInfo.ToString();
                 dalHelper.Dispose();
-                if (!isonError)
+                if (!isOnError)
                 {
                     dalHelper = null;
 
@@ -1453,7 +1459,7 @@ namespace CYQ.Data
                     }
                 }
             }
-            if (!isonError)
+            if (!isOnError)
             {
                 if (_noSqlAction != null)
                 {

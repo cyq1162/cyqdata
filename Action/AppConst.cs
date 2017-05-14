@@ -43,7 +43,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HR))
                 {
-                    _HR = AppConfig.IsWeb ? "<hr>" : "\r\n<---END--->\r\n";
+                    _HR = AppConfig.IsWeb ? "<hr>" : NewLine + "<---END--->" + NewLine;
                 }
                 return _HR;
             }
@@ -60,13 +60,20 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_BR))
                 {
-                    _BR = AppConfig.IsWeb ? "<br />" : Environment.NewLine ;
+                    _BR = AppConfig.IsWeb ? "<br />" : NewLine;
                 }
                 return _BR;
             }
             set
             {
                 _BR = value;
+            }
+        }
+        internal static string NewLine
+        {
+            get
+            {
+                return Environment.NewLine;
             }
         }
         internal static string SplitChar = "$,$";

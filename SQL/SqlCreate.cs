@@ -118,18 +118,18 @@ namespace CYQ.Data.SQL
                 }
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
-                    _action.dalHelper.debugInfo.Append(AppConst.HR + "error : " + cell.ColumnName + " can't be null" + AppConst.BR);
+                    _action.dalHelper.debugInfo.Append(AppConst.HR + string.Format("error : {0} {1} can't be null", TableName, cell.ColumnName) + AppConst.BR);
                     _action.dalHelper.recordsAffected = -2;
                     isCanDo = false;
                     break;
                 }
-                if (cell.CellValue.State > 0)
+                if (cell.State > 0)
                 {
                     _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DalType) + ",");
                     _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
-                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.strValue == "" && !cell.Struct.IsCanNull)
+                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.StringValue == "" && !cell.Struct.IsCanNull)
                     {
                         value = " ";
                     }
@@ -212,7 +212,7 @@ namespace CYQ.Data.SQL
                     continue;//跳过自增或主键列。
                 }
 
-                if (cell.CellValue.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
+                if (cell.State > 1 && (cell.Struct.IsCanNull || !cell.IsNull))
                 {
                     if (cell.Struct.SqlType == SqlDbType.Timestamp && (_action.DalType == DalType.MsSql || _action.DalType == DalType.Sybase))
                     {
@@ -221,7 +221,7 @@ namespace CYQ.Data.SQL
                     }
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
-                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.strValue == "" && !cell.Struct.IsCanNull)
+                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.StringValue == "" && !cell.Struct.IsCanNull)
                     {
                         value = " ";//Oracle not null 字段，不允许设置空值。
                     }
@@ -233,7 +233,7 @@ namespace CYQ.Data.SQL
             }
             if (!isCanDo)
             {
-                _action.dalHelper.debugInfo.Append(AppConst.HR + "Tip : Can not find the data can be updated!");
+                _action.dalHelper.debugInfo.Append(AppConst.HR + "warn : " + TableName + " can't find the data can be updated!");
             }
             //switch (_action.dalHelper.dalType)
             //{
@@ -690,7 +690,7 @@ namespace CYQ.Data.SQL
 
                         if (groupID == 4)
                         {
-                            string guid = cell.strValue;
+                            string guid = cell.StringValue;
                             if (string.IsNullOrEmpty(guid) || guid.Length != 36)
                             {
                                 return "1=2--('" + guid + "' is not guid)";
@@ -712,11 +712,11 @@ namespace CYQ.Data.SQL
                         {
                             if (cell.Struct.SqlType == SqlDbType.Timestamp)
                             {
-                                where += columnName + "=to_timestamp('" + cell.strValue + "','yyyy-MM-dd HH24:MI:ss.ff')";
+                                where += columnName + "=to_timestamp('" + cell.StringValue + "','yyyy-MM-dd HH24:MI:ss.ff')";
                             }
                             else
                             {
-                                where += columnName + "=to_date('" + cell.strValue + "','yyyy-mm-dd hh24:mi:ss')";
+                                where += columnName + "=to_date('" + cell.StringValue + "','yyyy-mm-dd hh24:mi:ss')";
                             }
                         }
                         else

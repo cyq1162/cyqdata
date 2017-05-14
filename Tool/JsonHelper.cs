@@ -616,7 +616,7 @@ namespace CYQ.Data.Tool
                 //{
                 //    continue;
                 //}
-                if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.CellValue.State >= (int)_RowOp)))
+                if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.State >= (int)_RowOp)))
                 {
                     #region MyRegion
                     string name = row[i].ColumnName;

@@ -13,8 +13,20 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 头列表集合
     /// </summary>
-    public partial class MDataColumn : List<MCellStruct>
+    public partial class MDataColumn
     {
+        List<MCellStruct> structList;
+        internal MDataTable _Table;
+        internal MDataColumn(MDataTable table)
+        {
+            structList = new List<MCellStruct>();
+            _Table = table;
+        }
+
+        public MDataColumn()
+        {
+            structList = new List<MCellStruct>();
+        }
         /// <summary>
         /// 列名是否变更
         /// </summary>
@@ -51,7 +63,7 @@ namespace CYQ.Data.Table
             return mColumns;
         }
 
-        public MCellStruct this[string key]
+        public new MCellStruct this[string key]
         {
             get
             {
@@ -93,16 +105,9 @@ namespace CYQ.Data.Table
             }
         }
 
-        internal MDataTable _Table;
-        public MDataColumn()
-            : base()
-        {
 
-        }
-        internal MDataColumn(MDataTable table)
-        {
-            _Table = table;
-        }
+
+
         public MDataColumn Clone()
         {
             MDataColumn mcs = new MDataColumn();
@@ -113,9 +118,9 @@ namespace CYQ.Data.Table
             {
                 mcs.AddRelateionTableName(item);
             }
-            for (int i = 0; i < base.Count; i++)
+            for (int i = 0; i < this.Count; i++)
             {
-                mcs.Add(base[i].Clone());
+                mcs.Add(this[i].Clone());
             }
             return mcs;
         }
@@ -183,12 +188,12 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    base.RemoveAt(index);//移除
-                    if (ordinal >= base.Count)
+                    structList.RemoveAt(index);//移除
+                    if (ordinal >= Count)
                     {
-                        ordinal = base.Count;
+                        ordinal = Count;
                     }
-                    base.Insert(ordinal, mstruct);
+                    structList.Insert(ordinal, mstruct);
                 }
             }
             columnIndex.Clear();
@@ -370,28 +375,15 @@ namespace CYQ.Data.Table
             return dt;
         }
 
-        /// <summary>
-        /// 为列的所有行设置值
-        /// </summary>
-        public MDataColumn Set(object key, object value)
-        {
-            Set(key, value, -1);
-            return this;
-        }
-        public MDataColumn Set(object key, object value, int state)
-        {
-            if (_Table != null && _Table.Rows.Count > 0)
-            {
-                for (int i = 0; i < _Table.Rows.Count; i++)
-                {
-                    _Table.Rows[i].Set(key, value, state);
-                }
-            }
-            return this;
-        }
+
     }
-    public partial class MDataColumn
+    public partial class MDataColumn : IList<MCellStruct>
     {
+        public int Count
+        {
+            get { return structList.Count; }
+        }
+
         #region Add重载方法
         /// <summary>
         /// 添加列
@@ -432,7 +424,7 @@ namespace CYQ.Data.Table
 
         #endregion
 
-        public new void Add(MCellStruct item)
+        public void Add(MCellStruct item)
         {
             if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
             {
@@ -441,7 +433,7 @@ namespace CYQ.Data.Table
                     dalType = item.DalType;
                 }
                 item.MDataColumn = this;
-                base.Add(item);
+                structList.Add(item);
                 if (_Table != null && _Table.Rows.Count > 0)
                 {
                     for (int i = 0; i < _Table.Rows.Count; i++)
@@ -455,10 +447,12 @@ namespace CYQ.Data.Table
                 columnIndex.Clear();
             }
         }
-        public new void AddRange(IEnumerable<MCellStruct> collection)
-        {
-            AddRange(collection as MDataColumn);
-        }
+
+
+        //public void AddRange(IEnumerable<MCellStruct> collection)
+        //{
+        //    AddRange(collection as MDataColumn);
+        //}
         public void AddRange(MDataColumn items)
         {
             if (items.Count > 0)
@@ -473,9 +467,12 @@ namespace CYQ.Data.Table
                 columnIndex.Clear();
             }
         }
-        public new void Remove(MCellStruct item)
+
+
+        public bool Remove(MCellStruct item)
         {
             Remove(item.ColumnName);
+            return true;
         }
         public void Remove(string columnName)
         {
@@ -490,20 +487,17 @@ namespace CYQ.Data.Table
                 }
             }
         }
-        public new void RemoveAll(Predicate<MCellStruct> match)
-        {
-            Error.Throw(AppConst.Global_NotImplemented);
-        }
-        public new void RemoveRange(int index, int count) // 1,4
+
+        public void RemoveRange(int index, int count) // 1,4
         {
             for (int i = index; i < index + count; i++)
             {
                 RemoveAt(i);
             }
         }
-        public new void RemoveAt(int index)
+        public void RemoveAt(int index)
         {
-            base.RemoveAt(index);
+            structList.RemoveAt(index);
             if (_Table != null)
             {
                 foreach (MDataRow row in _Table.Rows)
@@ -517,12 +511,14 @@ namespace CYQ.Data.Table
             columnIndex.Clear();
 
         }
-        public new void Insert(int index, MCellStruct item)
+
+
+        public void Insert(int index, MCellStruct item)
         {
             if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
             {
                 item.MDataColumn = this;
-                base.Insert(index, item);
+                structList.Insert(index, item);
                 if (_Table != null && _Table.Rows.Count > 0)
                 {
                     for (int i = 0; i < _Table.Rows.Count; i++)
@@ -544,6 +540,82 @@ namespace CYQ.Data.Table
                 Insert(index, mdc[i]);//反插
             }
         }
+
+        #region IList<MCellStruct> 成员
+
+        int IList<MCellStruct>.IndexOf(MCellStruct item)
+        {
+            return structList.IndexOf(item);
+        }
+
+        #endregion
+
+        #region ICollection<MCellStruct> 成员
+
+        void ICollection<MCellStruct>.CopyTo(MCellStruct[] array, int arrayIndex)
+        {
+            structList.CopyTo(array, arrayIndex);
+        }
+
+
+        bool ICollection<MCellStruct>.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        #endregion
+
+        #region IEnumerable<MCellStruct> 成员
+
+        IEnumerator<MCellStruct> IEnumerable<MCellStruct>.GetEnumerator()
+        {
+            return structList.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable 成员
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return structList.GetEnumerator();
+        }
+
+        #endregion
+
+        #region ICollection<MCellStruct> 成员
+
+
+        public void Clear()
+        {
+            structList.Clear();
+        }
+
+        public bool Contains(MCellStruct item)
+        {
+            return structList.Contains(item);
+        }
+
+        #endregion
+
+        #region IList<MCellStruct> 成员
+
+        /// <summary>
+        /// ReadOnly
+        /// </summary>
+        public MCellStruct this[int index]
+        {
+            get
+            {
+                return structList[index];
+            }
+            set
+            {
+                Error.Throw(AppConst.Global_NotImplemented);
+            }
+        }
+
+        #endregion
     }
     public partial class MDataColumn
     {

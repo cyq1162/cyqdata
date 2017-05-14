@@ -92,6 +92,14 @@ namespace CYQ.Data.Tool
             list.Add(key);
             dic.Add(key, 0);
         }
+        internal void Insert(int index, T key)
+        {
+            list.Insert(index, key);
+            if (!dic.ContainsKey(key))
+            {
+                dic.Add(key, 0);
+            }
+        }
         public bool Contains(T key)
         {
             return dic.ContainsKey(key);
@@ -100,6 +108,12 @@ namespace CYQ.Data.Tool
         {
             list.Remove(key);
             dic.Remove(key);
+        }
+        public void RemoveAt(int index)
+        {
+            T key = list[index];
+            dic.Remove(key);
+            list.RemoveAt(index);
         }
         public void Clear()
         {
@@ -111,6 +125,13 @@ namespace CYQ.Data.Tool
             get
             {
                 return list.Count;
+            }
+        }
+        public IList<T> List
+        {
+            get
+            {
+                return list;
             }
         }
         public List<T> GetList()

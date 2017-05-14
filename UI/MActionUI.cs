@@ -569,7 +569,7 @@ namespace CYQ.Data.UI
             for (int i = 0; i < _Data.Count; i++)
             {
                 cell = _Data[i];
-                if (cell.CellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
+                if (cell.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
                 {
                     continue;
                 }
@@ -652,7 +652,7 @@ namespace CYQ.Data.UI
             for (int i = 0; i < _Data.Columns.Count; i++)
             {
                 cell = _Data[i];
-                if (cell.CellValue.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
+                if (cell.State > 1 || (isInsert && cell.Struct.IsAutoIncrement))//由于Fill完的状态更改为1，所以这里的判断从0变更为1
                 {
                     continue;
                 }
@@ -761,7 +761,7 @@ namespace CYQ.Data.UI
                             else if (parentControl is XHtmlAction) // Html
                             {
                                 XHtmlAction doc = parentControl as XHtmlAction;
-                                doc.Set(fix + columnName, cell.strValue);
+                                doc.Set(fix + columnName, cell.StringValue);
                             }
                             else // wpf
                             {

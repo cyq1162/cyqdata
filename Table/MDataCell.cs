@@ -11,262 +11,25 @@ using CYQ.Data.Tool;
 namespace CYQ.Data.Table
 {
     /// <summary>
-    /// 列结构修选项
-    /// </summary>
-    [Flags]
-    public enum AlterOp
-    {
-        /// <summary>
-        /// 默认不修改状态
-        /// </summary>
-        None = 0,
-        /// <summary>
-        /// 添加或修改状态
-        /// </summary>
-        AddOrModify = 1,
-        /// <summary>
-        /// 删除列状态
-        /// </summary>
-        Drop = 2,
-        /// <summary>
-        /// 重命名列状态
-        /// </summary>
-        Rename = 4
-    }
-    /// <summary>
-    /// 单元结构的值
-    /// </summary>
-    internal partial class MCellValue
-    {
-        internal bool IsNull = true;
-        /// <summary>
-        /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
-        /// </summary>
-        internal int State = 0;
-        internal object Value = null;
-    }
-
-    /// <summary>
-    /// 单元结构属性
-    /// </summary>
-    public partial class MCellStruct
-    {
-        private MDataColumn _MDataColumn = null;
-        /// <summary>
-        /// 结构集合
-        /// </summary>
-        public MDataColumn MDataColumn
-        {
-            get
-            {
-                return _MDataColumn;
-            }
-            internal set
-            {
-                _MDataColumn = value;
-            }
-        }
-        /// <summary>
-        /// 是否对值进行格式校验
-        /// </summary>
-        //public bool IsCheckValue = true;
-        /// <summary>
-        /// 是否关键字
-        /// </summary>
-        public bool IsPrimaryKey = false;
-
-        /// <summary>
-        /// 是否唯一索引
-        /// </summary>
-        public bool IsUniqueKey = false;
-
-        /// <summary>
-        /// 是否外键
-        /// </summary>
-        public bool IsForeignKey = false;
-        /// <summary>
-        /// 外键表名
-        /// </summary>
-        public string FKTableName;
-
-        /// <summary>
-        /// 字段描述
-        /// </summary>
-        public string Description;
-        /// <summary>
-        /// 默认值
-        /// </summary>
-        public object DefaultValue;
-        /// <summary>
-        /// 是否允许为Null
-        /// </summary>
-        public bool IsCanNull;
-        /// <summary>
-        /// 是否自增加
-        /// </summary>
-        public bool IsAutoIncrement;
-        /// <summary>
-        /// 旧的列名（AlterOp为Rename时可用）
-        /// </summary>
-        public string OldName;
-        private string _ColumnName = string.Empty;
-        /// <summary>
-        /// 列名
-        /// </summary>
-        public string ColumnName
-        {
-            get
-            {
-                return _ColumnName;
-            }
-            set
-            {
-                _ColumnName = value;
-                if (_MDataColumn != null)
-                {
-                    _MDataColumn.IsColumnNameChanged = true;//列名已变更，存储索引也需要变更
-                }
-            }
-        }
-        /// <summary>
-        /// 表名
-        /// </summary>
-        public string TableName;
-        private SqlDbType _SqlType;
-        /// <summary>
-        /// SqlDbType类型
-        /// </summary>
-        public SqlDbType SqlType
-        {
-            get
-            {
-                return _SqlType;
-            }
-            set
-            {
-                _SqlType = value;
-                ValueType = DataType.GetType(_SqlType, DalType);
-            }
-        }
-        /// <summary>
-        /// 最大字节
-        /// </summary>
-        public int MaxSize;
-
-        /// <summary>
-        /// 精度（小数位）
-        /// </summary>
-        public short Scale;
-        /// <summary>
-        /// 原始的数据库字段类型名称
-        /// </summary>
-        internal string SqlTypeName;
-        internal Type ValueType;
-        private DalType dalType = DalType.None;
-        internal DalType DalType
-        {
-            get
-            {
-                if (_MDataColumn != null)
-                {
-                    return _MDataColumn.dalType;
-                }
-                return dalType;
-            }
-        }
-        private AlterOp _AlterOp = AlterOp.None;
-        /// <summary>
-        /// 列结构改变状态
-        /// </summary>
-        public AlterOp AlterOp
-        {
-            get { return _AlterOp; }
-            set { _AlterOp = value; }
-        }
-        //内部使用的索引，在字段名为空时使用
-        internal int ReaderIndex = -1;
-
-        #region 构造函数
-        internal MCellStruct(DalType dalType)
-        {
-            this.dalType = dalType;
-        }
-        public MCellStruct(string columnName, SqlDbType sqlType)
-        {
-            Init(columnName, sqlType, false, true, false, -1, null);
-        }
-        public MCellStruct(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize)
-        {
-            Init(columnName, sqlType, isAutoIncrement, isCanNull, false, maxSize, null);
-        }
-        internal void Init(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, bool isPrimaryKey, int maxSize, object defaultValue)
-        {
-            ColumnName = columnName.Trim();
-            SqlType = sqlType;
-            IsAutoIncrement = isAutoIncrement;
-            IsCanNull = isCanNull;
-            MaxSize = maxSize;
-            IsPrimaryKey = isPrimaryKey;
-            DefaultValue = defaultValue;
-        }
-        internal void Load(MCellStruct ms)
-        {
-            ColumnName = ms.ColumnName;
-            SqlType = ms.SqlType;
-            IsAutoIncrement = ms.IsAutoIncrement;
-            IsCanNull = ms.IsCanNull;
-            MaxSize = ms.MaxSize;
-            Scale = ms.Scale;
-            IsPrimaryKey = ms.IsPrimaryKey;
-            IsUniqueKey = ms.IsUniqueKey;
-            IsForeignKey = ms.IsForeignKey;
-            FKTableName = ms.FKTableName;
-            SqlTypeName = ms.SqlTypeName;
-            AlterOp = ms.AlterOp;
-
-            if (ms.DefaultValue != null)
-            {
-                DefaultValue = ms.DefaultValue;
-            }
-            if (!string.IsNullOrEmpty(ms.Description))
-            {
-                Description = ms.Description;
-            }
-        }
-        /// <summary>
-        /// 克隆一个对象。
-        /// </summary>
-        /// <returns></returns>
-        public MCellStruct Clone()
-        {
-            MCellStruct ms = new MCellStruct(dalType);
-            ms.ColumnName = ColumnName;
-            ms.SqlType = SqlType;
-            ms.IsAutoIncrement = IsAutoIncrement;
-            ms.IsCanNull = IsCanNull;
-            ms.MaxSize = MaxSize;
-            ms.Scale = Scale;
-            ms.IsPrimaryKey = IsPrimaryKey;
-            ms.IsUniqueKey = IsUniqueKey;
-            ms.IsForeignKey = IsForeignKey;
-            ms.FKTableName = FKTableName;
-            ms.SqlTypeName = SqlTypeName;
-            ms.DefaultValue = DefaultValue;
-            ms.Description = Description;
-            ms.MDataColumn = MDataColumn;
-            ms.AlterOp = AlterOp;
-            ms.TableName = TableName;
-            return ms;
-        }
-        #endregion
-    }
-    /// <summary>
     /// 单元格
     /// </summary>
     public partial class MDataCell
     {
-        internal MCellValue _CellValue;
-        internal MCellValue CellValue
+        /// <summary>
+        /// 单元结构的值
+        /// </summary>
+        private class MCellValue
+        {
+            internal bool IsNull = true;
+            /// <summary>
+            /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
+            /// </summary>
+            internal int State = 0;
+            internal object Value = null;
+        }
+
+        private MCellValue _CellValue;
+        private MCellValue CellValue
         {
             get
             {
@@ -311,7 +74,24 @@ namespace CYQ.Data.Table
         #endregion
 
         #region 属性
-        internal string strValue = string.Empty;
+        private string _StringValue = null;
+        /// <summary>
+        /// 字符串值
+        /// </summary>
+        public string StringValue
+        {
+            get
+            {
+                CheckNewValue();
+                return _StringValue;
+            }
+            internal set
+            {
+                _StringValue = value;
+            }
+        }
+        private object newValue = null;
+        private bool isNewValue = false;
         /// <summary>
         /// 值
         /// </summary>
@@ -319,63 +99,96 @@ namespace CYQ.Data.Table
         {
             get
             {
+                CheckNewValue();
                 return CellValue.Value;
             }
             set
             {
-                //if (!_CellStruct.IsCheckValue)
-                //{
-                //    cellValue.Value = value;
-                //    return;
-                //}
-
-                bool valueIsNull = value == null || value == DBNull.Value;
-                if (valueIsNull)
+                //只是赋值，值的检测延时到获取属性时触发
+                newValue = value;
+                isNewValue = true;
+                isAllowChangeState = true;
+            }
+        }
+        internal object SourceValue
+        {
+            set
+            {
+                CellValue.Value = value;
+            }
+        }
+        /// <summary>
+        /// 延时检测值的类型
+        /// </summary>
+        private void CheckNewValue()
+        {
+            if (isNewValue)
+            {
+                isNewValue = false;
+                FixValue(newValue);
+                newValue = null;
+                isAllowChangeState = true;//恢复可设置状态。
+            }
+        }
+        private void FixValue(object value)
+        {
+            #region CheckValue
+            bool valueIsNull = value == null || value == DBNull.Value;
+            if (valueIsNull)
+            {
+                if (CellValue.IsNull)
                 {
-                    if (CellValue.IsNull)
-                    {
-                        CellValue.State = (value == DBNull.Value) ? 2 : 1;
-                    }
-                    else
+                    CellValue.State = (value == DBNull.Value) ? 2 : 1;
+                }
+                else
+                {
+                    if (isAllowChangeState)
                     {
                         CellValue.State = 2;
+                    }
+                    CellValue.Value = null;
+                    CellValue.IsNull = true;
+                    StringValue = string.Empty;
+                }
+            }
+            else
+            {
+                StringValue = value.ToString();
+                int groupID = DataType.GetGroup(_CellStruct.SqlType);
+                if (_CellStruct.SqlType != SqlDbType.Variant)
+                {
+                    if (StringValue == "" && groupID > 0)
+                    {
                         CellValue.Value = null;
                         CellValue.IsNull = true;
-                        strValue = string.Empty;
+                        return;
+                    }
+                    value = ChangeValue(value, _CellStruct.ValueType, groupID);
+                    if (value == null)
+                    {
+                        return;
+                    }
+                }
+
+                if (!CellValue.IsNull && (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == StringValue)))//对象的比较值，用==号则比例引用地址。
+                {
+                    if (isAllowChangeState)
+                    {
+                        CellValue.State = 1;
                     }
                 }
                 else
                 {
-                    strValue = value.ToString();
-                    int groupID = DataType.GetGroup(_CellStruct.SqlType);
-                    if (_CellStruct.SqlType != SqlDbType.Variant)
+                    CellValue.Value = value;
+                    CellValue.IsNull = false;
+                    if (isAllowChangeState)
                     {
-                        if (strValue == "" && groupID > 0)
-                        {
-                            CellValue.Value = null;
-                            CellValue.IsNull = true;
-                            return;
-                        }
-                        value = ChangeValue(value, _CellStruct.ValueType, groupID);
-                        if (value == null)
-                        {
-                            return;
-                        }
-                    }
-
-                    if (!CellValue.IsNull && (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == strValue)))//对象的比较值，用==号则比例引用地址。
-                    {
-                        CellValue.State = 1;
-                    }
-                    else
-                    {
-                        CellValue.Value = value;
                         CellValue.State = 2;
-                        CellValue.IsNull = false;
                     }
-
                 }
+
             }
+            #endregion
         }
         /// <summary>
         /// 数据类型被切换，重新修正值的类型。
@@ -412,13 +225,13 @@ namespace CYQ.Data.Table
         internal object ChangeValue(object value, Type convertionType, int groupID, out Exception ex)
         {
             ex = null;
-            strValue = Convert.ToString(value);
+            StringValue = Convert.ToString(value);
             if (value == null)
             {
                 CellValue.IsNull = true;
                 return value;
             }
-            if (groupID > 0 && strValue == "")
+            if (groupID > 0 && StringValue == "")
             {
                 CellValue.IsNull = true;
                 return null;
@@ -428,13 +241,13 @@ namespace CYQ.Data.Table
                 #region 类型转换
                 if (groupID == 1)
                 {
-                    switch (strValue)
+                    switch (StringValue)
                     {
                         case "正无穷大":
-                            strValue = "Infinity";
+                            StringValue = "Infinity";
                             break;
                         case "负无穷大":
-                            strValue = "-Infinity";
+                            StringValue = "-Infinity";
                             break;
                     }
                 }
@@ -446,16 +259,16 @@ namespace CYQ.Data.Table
                         case 0:
                             if (_CellStruct.SqlType == SqlDbType.Time)//time类型的特殊处理。
                             {
-                                string[] items = strValue.Split(' ');
+                                string[] items = StringValue.Split(' ');
                                 if (items.Length > 1)
                                 {
-                                    strValue = items[1];
+                                    StringValue = items[1];
                                 }
                             }
-                            value = strValue;
+                            value = StringValue;
                             break;
                         case 1:
-                            switch (strValue.ToLower())
+                            switch (StringValue.ToLower())
                             {
                                 case "true":
                                     value = 1;
@@ -474,7 +287,7 @@ namespace CYQ.Data.Table
                             }
                             break;
                         case 2:
-                            switch (strValue.ToLower().TrimEnd(')', '('))
+                            switch (StringValue.ToLower().TrimEnd(')', '('))
                             {
                                 case "now":
                                 case "getdate":
@@ -482,13 +295,13 @@ namespace CYQ.Data.Table
                                     value = DateTime.Now;
                                     break;
                                 default:
-                                    DateTime dt = DateTime.Parse(strValue);
+                                    DateTime dt = DateTime.Parse(StringValue);
                                     value = dt == DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : dt;
                                     break;
                             }
                             break;
                         case 3:
-                            switch (strValue.ToLower())
+                            switch (StringValue.ToLower())
                             {
                                 case "yes":
                                 case "true":
@@ -508,21 +321,21 @@ namespace CYQ.Data.Table
                             }
                             break;
                         case 4:
-                            if (strValue == SqlValue.Guid || strValue.StartsWith("newid"))
+                            if (StringValue == SqlValue.Guid || StringValue.StartsWith("newid"))
                             {
                                 value = Guid.NewGuid();
                             }
                             else
                             {
-                                value = new Guid(strValue);
+                                value = new Guid(StringValue);
                             }
                             break;
                         default:
                         err:
                             if (convertionType.Name.EndsWith("[]"))
                             {
-                                value = Convert.FromBase64String(strValue);
-                                strValue = "System.Byte[]";
+                                value = Convert.FromBase64String(StringValue);
+                                StringValue = "System.Byte[]";
                             }
                             else
                             {
@@ -544,8 +357,8 @@ namespace CYQ.Data.Table
                 CellValue.Value = null;
                 CellValue.IsNull = true;
                 ex = err;
-                string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, strValue);
-                strValue = null;
+                string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
+                StringValue = null;
                 if (AppConfig.Log.IsWriteLog)
                 {
                     Log.WriteLog(true, msg);
@@ -572,7 +385,12 @@ namespace CYQ.Data.Table
         {
             get
             {
+                CheckNewValue();
                 return CellValue.IsNull;
+            }
+            internal set
+            {
+                CellValue.IsNull = value;
             }
         }
         /// <summary>
@@ -582,7 +400,8 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return CellValue.IsNull || strValue.Length == 0;
+                CheckNewValue();
+                return CellValue.IsNull || StringValue.Length == 0;
             }
         }
         /// <summary>
@@ -605,6 +424,7 @@ namespace CYQ.Data.Table
                 return _CellStruct;
             }
         }
+        private bool isAllowChangeState = true;
         /// <summary>
         /// Value的状态:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
         /// </summary>
@@ -612,16 +432,36 @@ namespace CYQ.Data.Table
         {
             get
             {
+                CheckNewValue();
                 return CellValue.State;
             }
             set
             {
+                //如果设值（延时加载），又设置状态（在获取时设置的状态会失效）
+                if (isNewValue) { isAllowChangeState = false; }
                 CellValue.State = value;
             }
         }
         #endregion
 
         #region 方法
+        /// <summary>
+        /// 将值重置为空
+        /// </summary>
+        public void Clear()
+        {
+            CellValue.Value = null;
+            CellValue.State = 0;
+            CellValue.IsNull = true;
+            StringValue = null;
+        }
+        internal void LoadValue(MDataCell cell)
+        {
+            StringValue = cell.StringValue;
+            CellValue.Value = cell.Value;
+            CellValue.State = cell.State;
+            CellValue.IsNull = cell.IsNull;
+        }
         /// <summary>
         /// 设置默认值。
         /// </summary>
@@ -656,7 +496,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public override string ToString()
         {
-            return strValue ?? "";
+            return StringValue ?? "";
         }
         /// <summary>
         /// 是否值相同[已重写该方法]
@@ -672,7 +512,7 @@ namespace CYQ.Data.Table
             {
                 return CellValue.IsNull;
             }
-            return strValue.ToLower() == Convert.ToString(value).ToLower();
+            return StringValue.ToLower() == Convert.ToString(value).ToLower();
         }
         /// <summary>
         /// 转成行
@@ -691,7 +531,7 @@ namespace CYQ.Data.Table
     {
         internal string ToXml(bool isConvertNameToLower)
         {
-            string text = strValue;
+            string text = StringValue;
             switch (DataType.GetGroup(_CellStruct.SqlType))
             {
                 case 999:

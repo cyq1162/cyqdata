@@ -52,16 +52,16 @@ namespace CYQ.Data
                     {
                         //混合模式程序集是针对“v2.0.50727”版的运行时生成的，在没有配置其他信息的情况下，无法在 4.0 运行时中加载该程序集。
                         //提示用户要增加配置文件
-                        errMsg = "You need to add web.config or app.config : <startup useLegacyV2RuntimeActivationPolicy=\"true\"></startup> more info : \r\n" + errMsg;
+                        errMsg = "You need to add web.config or app.config : <startup useLegacyV2RuntimeActivationPolicy=\"true\"></startup> more info : " + AppConst.NewLine + errMsg;
 
                     }
                     else if (!System.IO.File.Exists(AppConst.RunFolderPath + "System.Data.SQLite.DLL"))
                     {
-                        errMsg = "Can't find the System.Data.SQLite.dll more info : \r\n" + errMsg;
+                        errMsg = "Can't find the System.Data.SQLite.dll more info : " + AppConst.NewLine + errMsg;
                     }
                     else
                     {
-                        errMsg = "You need to choose the right version : x86 or x64. more info : \r\n" + errMsg;
+                        errMsg = "You need to choose the right version : x86 or x64. more info : " + AppConst.NewLine + errMsg;
                     }
                     Error.Throw(errMsg);
                 }

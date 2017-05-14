@@ -160,14 +160,14 @@ namespace CYQ.Data.Table
             for (int i = 0; i < dtA.Rows.Count; i++)
             {
                 row = dtA.Rows[i];
-                if (count == 0 || row[aIndex].IsNullOrEmpty || noFind.Contains(row[aIndex].strValue))
+                if (count == 0 || row[aIndex].IsNullOrEmpty || noFind.Contains(row[aIndex].StringValue))
                 {
                     joinRow = joinTable.NewRow(true);
                     joinRow.LoadFrom(row);//后载加A表（同名则复盖）
                 }
                 else
                 {
-                    v1 = row[aIndex].strValue;
+                    v1 = row[aIndex].StringValue;
                     if (yesFind.ContainsKey(v1)) // 找到已匹配的数据
                     {
                         string[] items = yesFind[v1].Split(',');
@@ -183,7 +183,7 @@ namespace CYQ.Data.Table
                         bool isFind = false;
                         for (int j = 0; j < dtB.Rows.Count; j++)
                         {
-                            if (v1 == dtB.Rows[j][bIndex].strValue)//找到
+                            if (v1 == dtB.Rows[j][bIndex].StringValue)//找到
                             {
                                 joinRow = joinTable.NewRow(true);
                                 joinRow.LoadFrom(dtB.Rows[j]);//先加载B表

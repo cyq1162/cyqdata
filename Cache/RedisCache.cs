@@ -99,14 +99,14 @@ namespace CYQ.Data.Cache
             get
             {
                 int count = 0;
-                List<MDataRow> rows = CacheInfo.FindAll("Key like 'db%'");
+                IList<MDataRow> rows = CacheInfo.FindAll("Key like 'db%'");
                 if (rows != null && rows.Count > 0)
                 {
                     foreach (MDataRow row in rows)
                     {
                         for (int i = 1; i < row.Columns.Count; i++)
                         {
-                            count += int.Parse(row[i].strValue.Split(',')[0].Split('=')[1]);
+                            count += int.Parse(row[i].StringValue.Split(',')[0].Split('=')[1]);
                         }
                     }
 

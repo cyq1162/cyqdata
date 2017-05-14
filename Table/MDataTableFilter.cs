@@ -185,7 +185,7 @@ namespace CYQ.Data.Table
             }
             return count;
         }
-        public static List<MDataRow> FindAll(MDataTable table, object whereObj)
+        public static MDataRowCollection FindAll(MDataTable table, object whereObj)
         {
             if (table != null && table.Rows.Count > 0)
             {
@@ -200,7 +200,7 @@ namespace CYQ.Data.Table
                 string orderby;
                 SplitWhereOrderby(ref whereStr, out orderby);
                 List<TFilter> filters = GetTFilter(whereStr, table.Columns);
-                List<MDataRow> rows = table.Rows;
+                IList<MDataRow> rows = table.Rows;
                 if (filters.Count > 0)
                 {
                     rows = table.Rows.FindAll(delegate(MDataRow row)
@@ -278,7 +278,7 @@ namespace CYQ.Data.Table
                 FilterColumns(ref sTable, selectColumns);//列查询过滤
                 return sTable;
             }
-            List<MDataRow> findRows = FindAll(table, whereObj);
+            MDataRowCollection findRows = FindAll(table, whereObj);
             if (findRows != null)
             {
                 sTable.RecordsAffected = findRows.Count;//设置记录总数
@@ -763,7 +763,7 @@ namespace CYQ.Data.Table
             }
         }
 
-        private static void FilterPager(List<MDataRow> rows, int pageIndex, int pageSize)
+        private static void FilterPager(MDataRowCollection rows, int pageIndex, int pageSize)
         {
             if (pageIndex > -1 && pageSize > 0) //分页处理返回
             {
@@ -773,6 +773,7 @@ namespace CYQ.Data.Table
                 int rowCount = rows.Count;
                 if (rowCount > end)//总数>N
                 {
+                    //rows.re
                     rows.RemoveRange(end, rowCount - end);//移除尾数
                 }
                 if (start > 0)//总数>起即

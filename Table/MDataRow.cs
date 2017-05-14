@@ -17,33 +17,46 @@ namespace CYQ.Data.Table
     /// <summary>
     /// 一行记录
     /// </summary>
-    public partial class MDataRow : List<MDataCell>, IDataRecord
+    public partial class MDataRow : IDataRecord
     {
+        List<MDataCell> _CellList;
+        List<MDataCell> CellList
+        {
+            get
+            {
+                if (_CellList.Count == 0 && _Table != null && _Table.Columns.Count > 0)
+                {
+                    MCellStruct cellStruct;
+                    foreach (MCellStruct item in _Table.Columns)
+                    {
+                        cellStruct = item;
+                        MDataCell cell = new MDataCell(ref cellStruct, null);
+                        _CellList.Add(cell);
+                    }
+                }
+                return _CellList;
+            }
+            set
+            {
+                _CellList = value;
+            }
+        }
+        public MDataRow()
+        {
+            CellList = new List<MDataCell>();
+        }
         public MDataRow(MDataTable dt)
         {
             if (dt != null)
             {
-                base.Capacity = dt.Columns.Count;
-                Table = dt;
-                MCellStruct cellStruct;
-                foreach (MCellStruct item in dt.Columns)
-                {
-                    cellStruct = item;
-                    MDataCell cell = new MDataCell(ref cellStruct, null);
-                    base.Add(cell);
-                }
-
+                _Table = dt;
+                CellList = new List<MDataCell>(dt.Columns.Count);
             }
         }
         public MDataRow(MDataColumn mdc)
         {
-            base.Capacity = mdc.Count;
+            CellList = new List<MDataCell>(mdc.Count);
             Table.Columns.AddRange(mdc);
-        }
-        public MDataRow()
-            : base()
-        {
-
         }
         /// <summary>
         /// 获取列头
@@ -143,9 +156,9 @@ namespace CYQ.Data.Table
                 if (field is int || (field is Enum && AppConfig.IsEnumToInt))
                 {
                     int index = (int)field;
-                    if (base.Count > index)
+                    if (Count > index)
                     {
-                        return base[index];
+                        return this[index];
                     }
                 }
                 else if (field is string)
@@ -157,7 +170,7 @@ namespace CYQ.Data.Table
                     IField iFiled = field as IField;
                     if (iFiled.ColID > -1)
                     {
-                        return base[iFiled.ColID];
+                        return this[iFiled.ColID];
                     }
                     return this[iFiled.Name];
                 }
@@ -183,7 +196,7 @@ namespace CYQ.Data.Table
                 }
                 if (index > -1)
                 {
-                    return base[index];
+                    return this[index];
                 }
                 return null;
             }
@@ -323,11 +336,14 @@ namespace CYQ.Data.Table
         public MDataTable ToTable()
         {
             MDataTable dt = this.Columns.ToTable();
-            MCellStruct ms = new MCellStruct("Value", SqlDbType.NVarChar);
-            dt.Columns.Insert(1, ms);
+            MCellStruct msValue = new MCellStruct("Value", SqlDbType.NVarChar);
+            MCellStruct msState = new MCellStruct("State", SqlDbType.Int);
+            dt.Columns.Insert(1, msValue);
+            dt.Columns.Insert(2, msState);
             for (int i = 0; i < Count; i++)
             {
                 dt.Rows[i][1].Value = this[i].Value;
+                dt.Rows[i][2].Value = this[i].State;
             }
             return dt;
         }
@@ -336,14 +352,11 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 将行的数据行的值全重置为Null
         /// </summary>
-        public new void Clear()
+        public void Clear()
         {
             for (int i = 0; i < this.Count; i++)
             {
-                this[i].CellValue.Value = null;
-                this[i].CellValue.State = 0;
-                this[i].CellValue.IsNull = true;
-                this[i].strValue = null;
+                this[i].Clear();
             }
         }
 
@@ -368,7 +381,7 @@ namespace CYQ.Data.Table
                 {
                     continue;
                 }
-                state = cell.CellValue.State > state ? cell.CellValue.State : state;
+                state = cell.State > state ? cell.State : state;
             }
             return state;
         }
@@ -451,7 +464,7 @@ namespace CYQ.Data.Table
                     }
                     break;
                 case BreakOp.Empty:
-                    if (cell.strValue == "")
+                    if (cell.StringValue == "")
                     {
                         return;
                     }
@@ -463,83 +476,9 @@ namespace CYQ.Data.Table
                     }
                     break;
             }
-            cell.CellValue.State = state;
-        }
-        public void Add(string columnName, object value)
-        {
-            Add(columnName, SqlDbType.NVarChar, value);
-        }
-        public void Add(string columnName, SqlDbType sqlType, object value)
-        {
-            MCellStruct cs = new MCellStruct(columnName, sqlType, false, true, -1);
-            Add(new MDataCell(ref cs, value));
-        }
-        public new void Add(MDataCell cell)
-        {
-            base.Add(cell);
-            Columns.Add(cell.Struct);
-        }
-        public new void Insert(int index, MDataCell cell)
-        {
-            base.Insert(index, cell);
-            Columns.Insert(index, cell.Struct);
-            //MDataCell c = this[cell.ColumnName];
-            //c = cell;
-        }
-        public new void Insert(int index, MDataRow row)
-        {
-            base.InsertRange(index, row);
-            Columns.InsertRange(index, row.Columns);
-        }
-        public new void Remove(string columnName)
-        {
-            int index = Columns.GetIndex(columnName);
-            if (index > -1)
-            {
-                RemoveAt(index);
-            }
-        }
-        public new void Remove(MDataCell item)
-        {
-            if (Columns.Count == Count)
-            {
-                Columns.Remove(item.Struct);
-            }
-            else
-            {
-                base.Remove(item);
-            }
+            cell.State = state;
         }
 
-        public new void RemoveAt(int index)
-        {
-            if (Columns.Count == Count)
-            {
-                Columns.RemoveAt(index);
-            }
-            else
-            {
-                base.RemoveAt(index);
-            }
-        }
-
-        public new void RemoveRange(int index, int count)
-        {
-            if (Columns.Count == Count)
-            {
-                Columns.RemoveRange(index, count);
-            }
-            else
-            {
-                base.RemoveRange(index, count);
-            }
-
-        }
-
-        public new void RemoveAll(Predicate<MDataCell> match)
-        {
-            Error.Throw(AppConst.Global_NotImplemented);
-        }
 
         #region ICloneable 成员
         /// <summary>
@@ -550,14 +489,11 @@ namespace CYQ.Data.Table
         {
             MDataRow row = new MDataRow();
 
-            for (int i = 0; i < base.Count; i++)
+            for (int i = 0; i < Count; i++)
             {
-                MCellStruct mcb = base[i].Struct;
+                MCellStruct mcb = this[i].Struct;
                 MDataCell mdc = new MDataCell(ref mcb);
-                mdc.strValue = base[i].strValue;
-                mdc.CellValue.Value = base[i].CellValue.Value;
-                mdc.CellValue.State = base[i].CellValue.State;
-                mdc.CellValue.IsNull = base[i].CellValue.IsNull;
+                mdc.LoadValue(this[i]);
                 row.Add(mdc);
             }
             //row._Table = _Table;//不能带，会造成单行移除列时，移除的是原引用的行，而不是自身
@@ -575,7 +511,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return base.Count;
+                return Count;
             }
         }
 
@@ -718,6 +654,121 @@ namespace CYQ.Data.Table
 
     }
 
+    public partial class MDataRow : IList<MDataCell>
+    {
+        public int Count
+        {
+            get { return CellList.Count; }
+        }
+        public MDataCell this[int index]
+        {
+            get
+            {
+                return CellList[index];
+            }
+            set
+            {
+                Error.Throw(AppConst.Global_NotImplemented);
+            }
+        }
+        public void Add(string columnName, object value)
+        {
+            Add(columnName, SqlDbType.NVarChar, value);
+        }
+        public void Add(string columnName, SqlDbType sqlType, object value)
+        {
+            MCellStruct cs = new MCellStruct(columnName, sqlType, false, true, -1);
+            Add(new MDataCell(ref cs, value));
+        }
+        public void Add(MDataCell cell)
+        {
+            CellList.Add(cell);
+            Columns.Add(cell.Struct);
+        }
+        public void Insert(int index, MDataCell cell)
+        {
+            CellList.Insert(index, cell);
+            Columns.Insert(index, cell.Struct);
+        }
+        public void Remove(string columnName)
+        {
+            int index = Columns.GetIndex(columnName);
+            if (index > -1)
+            {
+                RemoveAt(index);
+            }
+        }
+        public bool Remove(MDataCell item)
+        {
+            if (Columns.Count == Count)
+            {
+                Columns.Remove(item.Struct);
+            }
+            else
+            {
+                CellList.Remove(item);
+            }
+            return true;
+        }
+
+        public void RemoveAt(int index)
+        {
+            if (Columns.Count == Count)
+            {
+                Columns.RemoveAt(index);
+            }
+            else
+            {
+                CellList.RemoveAt(index);
+            }
+        }
+
+        #region IList<MDataCell> 成员
+
+        int IList<MDataCell>.IndexOf(MDataCell item)
+        {
+            return CellList.IndexOf(item);
+        }
+
+        #endregion
+
+        #region ICollection<MDataCell> 成员
+
+        public bool Contains(MDataCell item)
+        {
+            return CellList.Contains(item);
+        }
+
+        void ICollection<MDataCell>.CopyTo(MDataCell[] array, int arrayIndex)
+        {
+            CellList.CopyTo(array, arrayIndex);
+        }
+
+        bool ICollection<MDataCell>.IsReadOnly
+        {
+            get { return false; }
+        }
+
+        #endregion
+
+        #region IEnumerable<MDataCell> 成员
+
+        IEnumerator<MDataCell> IEnumerable<MDataCell>.GetEnumerator()
+        {
+            return CellList.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable 成员
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return CellList.GetEnumerator();
+        }
+
+        #endregion
+    }
     //扩展交互部分
     public partial class MDataRow
     {
@@ -951,13 +1002,13 @@ namespace CYQ.Data.Table
                     {
                         continue;
                     }
-                    if (rowOp == RowOp.None || (!rowCell.IsNull && rowCell.CellValue.State >= (int)rowOp))
+                    if (rowOp == RowOp.None || (!rowCell.IsNull && rowCell.State >= (int)rowOp))
                     {
-                        cell.Value = rowCell.CellValue.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
+                        cell.Value = rowCell.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
                         //cell._CellValue.IsNull = rowCell._CellValue.IsNull;//
                         if (isWithValueState)
                         {
-                            cell.CellValue.State = rowCell.CellValue.State;
+                            cell.State = rowCell.State;
                         }
                     }
                 }
@@ -1218,13 +1269,13 @@ namespace CYQ.Data.Table
                             if (propType.Name == "String")
                             {
                                 //去掉转义符号
-                                if (cell.strValue.IndexOf("\\\"") > -1)
+                                if (cell.StringValue.IndexOf("\\\"") > -1)
                                 {
-                                    p.SetValue(obj, cell.strValue.Replace("\\\"", "\""), null);
+                                    p.SetValue(obj, cell.StringValue.Replace("\\\"", "\""), null);
                                 }
                                 else
                                 {
-                                    p.SetValue(obj, cell.strValue, null);
+                                    p.SetValue(obj, cell.StringValue, null);
                                 }
                             }
                             else
@@ -1247,10 +1298,10 @@ namespace CYQ.Data.Table
                                 if (len == 1) // Table
                                 {
 
-                                    if (JsonSplit.IsJson(cell.strValue) && cell.strValue.Contains(":") && cell.strValue.Contains("{"))
+                                    if (JsonSplit.IsJson(cell.StringValue) && cell.StringValue.Contains(":") && cell.StringValue.Contains("{"))
                                     {
                                         #region Json嵌套处理。
-                                        MDataTable dt = MDataTable.CreateFrom(cell.strValue);//, SchemaCreate.GetColumns(argTypes[0])
+                                        MDataTable dt = MDataTable.CreateFrom(cell.StringValue);//, SchemaCreate.GetColumns(argTypes[0])
                                         objValue = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
                                         Type objListType = objValue.GetType();
                                         foreach (MDataRow rowItem in dt.Rows)
@@ -1272,7 +1323,7 @@ namespace CYQ.Data.Table
                                     else
                                     {
                                         #region 数组处理
-                                        List<string> items = JsonSplit.SplitEscapeArray(cell.strValue);//内部去掉转义符号
+                                        List<string> items = JsonSplit.SplitEscapeArray(cell.StringValue);//内部去掉转义符号
                                         if (items == null) { continue; }
                                         objValue = Activator.CreateInstance(propType, items.Count);//创建实例
                                         Type objListType = objValue.GetType();

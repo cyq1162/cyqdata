@@ -17,11 +17,11 @@ namespace CYQ.Data
         /// <param name="msg"></param>
         internal static object Throw(string msg)
         {
-//#if DEBUG
-//            return "";
-//#else
+            //#if DEBUG
+            //            return "";
+            //#else
             throw new Exception("V" + AppConfig.Version + " " + msg);
-//#endif
+            //#endif
         }
     }
     /// <summary>
@@ -197,9 +197,9 @@ namespace CYQ.Data
                 }
                 string pageUrl = Log.Url;
                 string filePath = folder + todayKey;
-                pageUrl += "\r\n------------------------\r\n";
+                pageUrl += AppConst.NewLine + "---------------------------------------" + AppConst.NewLine;
                 pageUrl += "V" + AppConfig.Version + " Record On : " + DateTime.Now.ToString() + " " + pageUrl;
-                message = pageUrl + "\r\n" + message;
+                message = pageUrl + AppConst.NewLine + message;
                 IOHelper.Save(filePath, message, true, false);
 
             }
@@ -216,7 +216,7 @@ namespace CYQ.Data
                 return;
             }
             string message = GetExceptionMessage(err);
-            WriteLogToTxt("[Exception]:" + message + "\r\n" + err.StackTrace);
+            WriteLogToTxt("[Exception]:" + message + AppConst.NewLine + err.StackTrace);
         }
         #endregion
 
@@ -231,7 +231,7 @@ namespace CYQ.Data
                     pageUrl = request.Url.Scheme + "://" + request.Url.Authority + request.RawUrl;
                     if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
                     {
-                        pageUrl += "\r\nReferer:" + request.UrlReferrer.ToString();
+                        pageUrl += AppConst.NewLine + "Referer:" + request.UrlReferrer.ToString();
                     }
                 }
                 return pageUrl;
@@ -247,11 +247,11 @@ namespace CYQ.Data
             string message = err.Message;
             if (err.InnerException != null)
             {
-                message += ":" + err.InnerException.Message + "\r\n" + err.InnerException.StackTrace;
+                message += ":" + err.InnerException.Message + AppConst.NewLine + err.InnerException.StackTrace;
             }
             else
             {
-                message += ":\r\n" + err.StackTrace;
+                message += ":" + AppConst.NewLine + err.StackTrace;
             }
             return message;
         }

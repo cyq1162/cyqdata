@@ -1030,7 +1030,7 @@ namespace CYQ.Data.Xml
                         }
                         else if (cell != null)
                         {
-                            values.Add(cell.ColumnName, cell.strValue);
+                            values.Add(cell.ColumnName, cell.StringValue);
                             //values[i] = cell.Value;
                         }
                         #endregion
@@ -1203,7 +1203,7 @@ namespace CYQ.Data.Xml
                 }
                 if (cell != null)
                 {
-                    rowValue = cell.strValue;
+                    rowValue = cell.StringValue;
                 }
             }
             return rowValue;
