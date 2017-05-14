@@ -1229,7 +1229,6 @@ namespace CYQ.Data.Table
                             else if (Convert.ToString(value) == string.Empty)
                             {
                                 mRecord[i].Value = string.Empty;
-                                mRecord[i].IsNull = false;
                                 mRecord[i].State = 1;
                             }
                             else
