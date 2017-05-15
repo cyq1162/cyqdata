@@ -506,7 +506,7 @@ namespace CYQ.Data.Tool
         }
 
         /// <param name="noQuates">no ""</param>
-        private static string OutResult(bool result, string msg, bool noQuates)
+        public static string OutResult(bool result, string msg, bool noQuates)
         {
             JsonHelper js = new JsonHelper(false, false);
             js.Add("success", result.ToString().ToLower(), true);
