@@ -432,7 +432,7 @@ namespace CYQ.Data.SQL
             {
                 dalFrom = ms.MDataColumn.dalType;
             }
-            bool isSameDalType = dalFrom == DalType.None || dalFrom == dalTo;
+            bool isSameDalType = dalFrom == dalTo;//dalFrom == DalType.None || 从实体转列结构时DalType为None，不适合这种情况
 
             SqlDbType sqlType = ms.SqlType;
             int maxSize = ms.MaxSize == 0 ? 255 : ms.MaxSize;

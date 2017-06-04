@@ -10,6 +10,7 @@ using System.Data.OleDb;
 using CYQ.Data.Cache;
 using System.Reflection;
 using CYQ.Data.Tool;
+using CYQ.Data.Orm;
 
 
 namespace CYQ.Data.SQL
@@ -74,20 +75,61 @@ namespace CYQ.Data.SQL
                     sqlType = SQL.DataType.GetSqlType(pis[i].PropertyType);
                     mdc.Add(pis[i].Name, sqlType);
                     MCellStruct column = mdc[i];
-                    column.MaxSize = DataType.GetMaxSize(sqlType);
-                    if (i == 0)
+                    LengthAttribute la = GetAttr<LengthAttribute>(pis[i]);//获取长度设置
+                    if (la != null)
+                    {
+                        column.MaxSize = la.MaxSize;
+                        column.Scale = la.Scale;
+                    }
+                    if (column.MaxSize <= 0)
+                    {
+                        column.MaxSize = DataType.GetMaxSize(sqlType);
+                    }
+                    KeyAttribute ka = GetAttr<KeyAttribute>(pis[i]);//获取关键字判断
+                    if (ka != null)
+                    {
+                        column.IsPrimaryKey = ka.IsPrimaryKey;
+                        column.IsAutoIncrement = ka.IsAutoIncrement;
+                        column.IsCanNull = ka.IsCanNull;
+                    }
+                    else if (i == 0)
                     {
                         column.IsPrimaryKey = true;
                         column.IsCanNull = false;
-
                         if (column.ColumnName.ToLower().Contains("id") && (column.SqlType == System.Data.SqlDbType.Int || column.SqlType == SqlDbType.BigInt))
                         {
                             column.IsAutoIncrement = true;
                         }
                     }
+                    DefaultValueAttribute dva=GetAttr<DefaultValueAttribute>(pis[i]);
+                    if (dva != null && dva.DefaultValue!=null)
+                    {
+                        if (column.SqlType == SqlDbType.Bit)
+                        {
+                            column.DefaultValue = (dva.DefaultValue.ToString() == "True" || dva.DefaultValue.ToString() == "1") ? 1 : 0;
+                        }
+                        else
+                        {
+                            column.DefaultValue = dva.DefaultValue;
+                        }
+                    }
                     else if (i > pis.Count - 3 && sqlType == SqlDbType.DateTime && pis[i].Name.EndsWith("Time"))
                     {
                         column.DefaultValue = SqlValue.GetDate;
+                    }
+                    DescriptionAttribute da = GetAttr<DescriptionAttribute>(pis[i]);//看是否有字段描述属性。
+                    if (da != null)
+                    {
+                        column.Description = da.Description;
+                    }
+                }
+                object[] tableAttr = typeInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
+                if (tableAttr != null && tableAttr.Length == 1)
+                {
+                    DescriptionAttribute attr = tableAttr[0] as DescriptionAttribute;
+                    if (attr != null && !string.IsNullOrEmpty(attr.Description))
+                    {
+                        mdc.Description = attr.Description;
                     }
                 }
                 pis = null;
@@ -101,6 +143,52 @@ namespace CYQ.Data.SQL
                 return mdc;
             }
 
+        }
+        private static T GetAttr<T>(PropertyInfo pi)
+        {
+            object[] attr = pi.GetCustomAttributes(typeof(T), false);//看是否设置了特性
+            if (attr != null && attr.Length == 1)
+            {
+                return (T)attr[0];
+            }
+            return default(T);
+        }
+
+        //private static KeyAttribute GetKeyAttr(PropertyInfo pi)
+        //{
+        //    object[] attr = pi.GetCustomAttributes(typeof(KeyAttribute), false);//看是否设置了表特性，获取表名和表描述
+        //    if (attr != null && attr.Length == 1)
+        //    {
+        //        return attr[0] as KeyAttribute;
+        //    }
+        //    return null;
+        //}
+        //private static LengthAttribute GetLengthAttr(PropertyInfo pi)
+        //{
+        //    object[] attr = pi.GetCustomAttributes(typeof(LengthAttribute), false);//看是否设置了表特性，获取表名和表描述
+        //    if (attr != null && attr.Length == 1)
+        //    {
+        //        return attr[0] as LengthAttribute;
+        //    }
+        //    return null;
+        //}
+        //private static DefaultValueAttribute GetDefaultValueAttr(PropertyInfo pi)
+        //{
+        //    object[] attr = pi.GetCustomAttributes(typeof(DefaultValueAttribute), false);//看是否设置了表特性，获取表名和表描述
+        //    if (attr != null && attr.Length == 1)
+        //    {
+        //        return attr[0] as DefaultValueAttribute;
+        //    }
+        //    return null;
+        //}
+        private static DescriptionAttribute GetDescriptionAttr(PropertyInfo pi)
+        {
+            object[] attr = pi.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
+            if (attr != null && attr.Length == 1)
+            {
+                return attr[0] as DescriptionAttribute;
+            }
+            return null;
         }
         public static MDataColumn GetColumns(string tableName, ref DbBase dbHelper)
         {

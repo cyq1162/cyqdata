@@ -855,6 +855,41 @@ namespace CYQ.Data
                     CYQ.Data.Cache.AutoCache.IngoreCacheColumns = null;
                 }
             }
+            private static string _AutoCacheConn = null;
+            /// <summary>
+            /// CYQ.Data.Cache 自动缓存 - 数据库链接配置
+            /// 在多个不同的应用项目里操作同一个数据库时（又不想使用分布式缓存MemCache或Redis），可以开启此项，达到缓存智能清除的效果。
+            /// </summary>
+            public static string AutoCacheConn
+            {
+                get
+                {
+                    if (_AutoCacheConn == null)
+                    {
+                        _AutoCacheConn = AppConfig.GetConn("AutoCacheConn");
+                    }
+                    return _AutoCacheConn;
+                }
+                set
+                {
+                    _AutoCacheConn = value;
+                }
+            }
+            /// <summary>
+            /// 当AutoCacheConn开启后，定时扫描数据库的任务时间（毫秒）,默认1000
+            /// </summary>
+            public static int AutoCacheTaskTime
+            {
+                get
+                {
+                    return GetAppInt("AutoCacheTaskTime", 1000);
+                }
+                set
+                {
+                    SetApp("AutoCacheTaskTime", value.ToString());
+                }
+
+            }
             /*
             /// <summary>
             ///  Cache.CacheManage 内置线程-缓存的同步时间[(默认5)分钟同步一次]

@@ -697,3 +697,8 @@
 482：LocalCache 修正文件缓存依赖路径的大小写比较问题（2017-04-29）
 483：修正事务的回滚（2017-05-07、2017-05-14）
 484：MDataTable系列结构大优化【改变结构，延时加载，提升性能】（2017-05-14）
+485：修正Oracle下时用Log.WriteLogToDB生成的表结构日期问题（2017-06-04）
+486：对于实体的CodeFirst，增加LengthAttribute、KeyAttribute、DefaultValueAttribute、DescriptionAttribute四个特性配置（2017-06-04）
+487：增强自动缓存功能：不同的程序使用框架时，要让缓存智能共享清除，只要配置AutoCacheConn的数据库链接项即可（2017-06-04）
+488：因487增加的选项：AppConfig.Cache下增加AutoCacheConn、AutoCacheTaskTime两个配置项（2017-06-04）
+

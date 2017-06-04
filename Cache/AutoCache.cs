@@ -27,7 +27,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.Delete:
                     return false;
             }
-            if (!IsCanOperateCache(action,aopInfo))
+            if (!IsCanOperateCache(action, aopInfo))
             {
                 return false;
             }
@@ -96,7 +96,7 @@ namespace CYQ.Data.Cache
 
         internal static void SetCache(AopEnum action, AopInfo aopInfo)//End
         {
-            if (!IsCanOperateCache(action,aopInfo))
+            if (!IsCanOperateCache(action, aopInfo))
             {
                 return;
             }
@@ -417,7 +417,7 @@ namespace CYQ.Data.Cache
                 _NoCacheTables = value;
             }
         }
-        private static bool IsCanOperateCache(AopEnum action,AopInfo para)
+        private static bool IsCanOperateCache(AopEnum action, AopInfo para)
         {
             if (para.IsTransaction) // 事务中，读数据时，处理读缓存是无法放置共享锁的情况
             {
@@ -428,7 +428,7 @@ namespace CYQ.Data.Cache
                     case AopEnum.Fill:
                     case AopEnum.GetCount:
                     case AopEnum.Select:
-                        if(para.MAction.dalHelper.TranLevel!= System.Data.IsolationLevel.ReadUncommitted)
+                        if (para.MAction.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
                         {
                             return false;
                         }
@@ -509,7 +509,7 @@ namespace CYQ.Data.Cache
                 {
                     foreach (MCellStruct ms in para.MAction.Data.Columns)
                     {
-                        if(!string.IsNullOrEmpty(ms.TableName))
+                        if (!string.IsNullOrEmpty(ms.TableName))
                         {
                             tableName = ms.TableName;
                             break;
@@ -529,7 +529,7 @@ namespace CYQ.Data.Cache
                         //{
                         //    tableName = "ActionV" + Math.Abs(para.TableName.GetHashCode());
                         //}
-                       
+
                     }
                 }
                 else
@@ -652,6 +652,7 @@ namespace CYQ.Data.Cache
         //根据移除的频率，控制该项缓存的存在。
         //此缓存算法，后续增加
         private static Queue<string> removeList = new Queue<string>();
+        private static Queue<string> removeListForKeyTask = new Queue<string>();
         public static void ReadyForRemove(string baseKey)
         {
             string delKey = "DeleteAutoCache:" + baseKey;
@@ -672,27 +673,60 @@ namespace CYQ.Data.Cache
             }
             _MemCache.Set(delKey, 0, 0.1);//设置6秒时间
         }
-
         public static void ClearCache(object threadID)
         {
             try
             {
+
                 while (true)
                 {
                     Thread.Sleep(5);
+                    if (!KeyTable.HasAutoCacheTable && KeyTable.CheckSysAutoCacheTable())//检测并创建表，放在循环中，是因为可能在代码中延后会AppConifg.Cache.AutoCacheConn赋值;
+                    {
+                        ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCacheKeyTask));//将数据库检测独立一个线程，不影响此内存操作。
+                    }
                     if (removeList.Count > 0)
                     {
                         string baseKey = removeList.Dequeue();
                         if (!string.IsNullOrEmpty(baseKey))
                         {
                             RemoveCache(baseKey);
+                            if (KeyTable.HasAutoCacheTable)//检测是否开启AutoCacheConn数据库链接
+                            {
+                                removeListForKeyTask.Enqueue(baseKey);
+                            }
                         }
                     }
+                    
                 }
             }
             catch
             {
-                ;
+            }
+        }
+        public static void AutoCacheKeyTask(object threadID)
+        {
+           
+            while (true)//定时扫描数据库
+            {
+                int time = AppConfig.Cache.AutoCacheTaskTime;
+                if (time <= 0)
+                {
+                    time = 1000;
+                }
+                Thread.Sleep(time);
+                if (removeListForKeyTask.Count > 0)
+                {
+                    string baseKey = removeListForKeyTask.Dequeue();
+                    if (!string.IsNullOrEmpty(baseKey))
+                    {
+                        KeyTable.SetKey(baseKey);
+                    }
+                }
+                if (KeyTable.HasAutoCacheTable) //读取看有没有需要移除的键。
+                {
+                    KeyTable.ReadAndRemoveKey();
+                }
             }
         }
         private static readonly object lockObj = new object();
@@ -741,6 +775,86 @@ namespace CYQ.Data.Cache
         }
         #endregion
 
+        class KeyTable
+        {
+            public const string KeyTableName = "SysAutoCache";
+            public static bool HasAutoCacheTable = false;
+            public static bool CheckSysAutoCacheTable()
+            {
+                if (!HasAutoCacheTable && !string.IsNullOrEmpty(AppConfig.Cache.AutoCacheConn))
+                {
+                    string AutoCacheConn = AppConfig.Cache.AutoCacheConn;
+                    if (DBTool.TestConn(AutoCacheConn))
+                    {
+                        HasAutoCacheTable = DBTool.ExistsTable(KeyTableName, AutoCacheConn);
+                        //检测数据是否存在表
+                        if (!HasAutoCacheTable)
+                        {
+                            MDataColumn mdc = new MDataColumn();
+                            mdc.Add("CacheKey", System.Data.SqlDbType.NVarChar, false, false, 200, true, null);
+                            mdc.Add("CacheTime", System.Data.SqlDbType.BigInt, false, false, -1);
+                            HasAutoCacheTable = DBTool.CreateTable(KeyTableName, mdc, AutoCacheConn);
+                            if (!HasAutoCacheTable)//若创建失败，可能并发下其它进程创建了。
+                            {
+                                HasAutoCacheTable = DBTool.ExistsTable(KeyTableName, AutoCacheConn);//重新检测表是否存在。
+                            }
+                        }
+                    }
+                }
+                return HasAutoCacheTable;
+            }
+            private static MAction _ActionInstance;
+            /// <summary>
+            /// 使用同一个链接，并且不关闭。
+            /// </summary>
+            public static MAction ActionInstance
+            {
+                get
+                {
+                    if (_ActionInstance == null)
+                    {
+                        _ActionInstance = new MAction(KeyTableName, AppConfig.Cache.AutoCacheConn);
+                        _ActionInstance.SetAopState(AopOp.CloseAll);//关掉自动缓存和Aop
+                        _ActionInstance.dalHelper.isAllowInterWriteLog = false;
+                    }
+                    return _ActionInstance;
+                }
+
+            }
+            public static void SetKey(string key)
+            {
+                MAction action = ActionInstance;//
+                if (action.Exists(key))//更新时间
+                {
+                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    action.Update(key);
+                }
+                else
+                {
+                    action.Set(0, key);
+                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    action.AllowInsertID = true;
+                    action.Insert(InsertOp.None);
+
+                }
+
+            }
+            public static string keyTime = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+            public static void ReadAndRemoveKey()
+            {
+                MAction action = ActionInstance;//
+                string cacheTime = DBTool.Keyword("CacheTime", action.DalType);
+                MDataTable dt = action.Select(cacheTime + ">" + keyTime + " order by " + cacheTime + " asc");
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (MDataRow row in dt.Rows)
+                    {
+                        RemoveCache(row.Get<string>(0));//移除。
+                    }
+                    keyTime = dt.Rows[dt.Rows.Count - 1].Get<string>(1);//将时间重置为为最后一次最大的时间。
+                }
+            }
+        }
         /*
         #region 实例对象
         /// <summary>
