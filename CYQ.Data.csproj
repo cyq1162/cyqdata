@@ -33,7 +33,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <AssemblyOriginatorKeyFile>cyqdata.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -113,6 +114,7 @@
     <Compile Include="DAL\NoSqlDal.cs" />
     <Compile Include="Action\ActionEnum.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
+    <Compile Include="Orm\Attribute\ColumnAttribute.cs" />
     <Compile Include="Orm\DBFast.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -240,8 +242,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
-    <None Include="cyqdata.pfx" />
     <None Include="Resources\xhtml-lat1.ent" />
     <None Include="Resources\xhtml-special.ent" />
     <None Include="Resources\xhtml-symbol.ent" />
