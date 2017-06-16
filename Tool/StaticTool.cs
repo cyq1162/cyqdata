@@ -10,6 +10,56 @@ using CYQ.Data.SQL;
 namespace CYQ.Data.Tool
 {
     /// <summary>
+    /// 类型转换（支持json转实体）
+    /// </summary>
+    public static class ConvertTool
+    {
+        /// <summary>
+        /// 类型转换(精准强大)
+        /// </summary>
+        /// <param name="value">值处理</param>
+        /// <param name="t">类型</param>
+        /// <returns></returns>
+        public static object ChangeType(object value, Type t)
+        {
+            return StaticTool.ChangeType(value, t);
+        }
+    }
+    /// <summary>
+    /// 反射工具（带缓存）
+    /// </summary>
+    public static class ReflectTool
+    {
+        /// <summary>
+        /// 获取泛型参数的长度
+        /// </summary>
+        public static int GetGenericArgumentLength(ref Type t)
+        {
+            return StaticTool.GetArgumentLength(ref t);
+        }
+        /// <summary>
+        /// 获取泛型参数的长度（和类型）
+        /// </summary>
+        public static int GetGenericArgumentLength(ref Type t, out Type[] argTypes)
+        {
+            return StaticTool.GetArgumentLength(ref t,out argTypes);
+        }
+        /// <summary>
+        /// 获得反射属性（内部有缓存）
+        /// </summary>
+        public static List<PropertyInfo> GetPropertys(Type t)
+        {
+            return StaticTool.GetPropertyInfo(t);
+        }
+        /// <summary>
+        /// 获取系统类型，若是Nullable类型，则转为基础类型。
+        ///  </summary>
+        public static SysType GetSystemType(ref Type t)
+        {
+            return StaticTool.GetSystemType(ref t);
+        }
+    }
+    /// <summary>
     /// 静态方法工具类
     /// </summary>
     internal static class StaticTool
@@ -23,7 +73,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        internal static List<PropertyInfo> GetPropertyInfo(Type t)
+        public static List<PropertyInfo> GetPropertyInfo(Type t)
         {
             string key = t.GUID.ToString();
             if (propCache.ContainsKey(key))
@@ -50,8 +100,10 @@ namespace CYQ.Data.Tool
         }
 
         static Dictionary<string, Type[]> argumentCache = new Dictionary<string, Type[]>();
-
-        internal static int GetArgumentLength(ref Type t)
+        /// <summary>
+        ///  获取泛型的参数长度（非泛型按默认方法计算）
+        /// </summary>
+        public static int GetArgumentLength(ref Type t)
         {
             Type[] argTypes;
             return GetArgumentLength(ref t, out argTypes);
@@ -59,7 +111,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取泛型的参数长度（非泛型按默认方法计算）
         /// </summary>
-        internal static int GetArgumentLength(ref Type t, out Type[] argTypes)
+        public static int GetArgumentLength(ref Type t, out Type[] argTypes)
         {
             if (argumentCache.ContainsKey(t.FullName))
             {
@@ -124,7 +176,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取系统类型，若是Nullable类型，则转为基础类型。
         ///  </summary>
-        internal static SysType GetSystemType(ref Type t)
+        public static SysType GetSystemType(ref Type t)
         {
             if (t.IsEnum)
             {
@@ -134,7 +186,7 @@ namespace CYQ.Data.Tool
             {
                 if (t.IsGenericType)
                 {
-                    if (t.Name.StartsWith("Nullable"))
+                    if (t.Name.StartsWith("Nullable"))//int? id
                     {
                         t = Nullable.GetUnderlyingType(t);
                         return SysType.Base;
@@ -226,12 +278,12 @@ namespace CYQ.Data.Tool
         }
 
         /// <summary>
-        /// 类型转换
+        /// 类型转换(精准强大)
         /// </summary>
         /// <param name="value">值处理</param>
         /// <param name="t">类型</param>
         /// <returns></returns>
-        internal static object ChangeType(object value, Type t)
+        public static object ChangeType(object value, Type t)
         {
             if (t == null)
             {
@@ -268,6 +320,13 @@ namespace CYQ.Data.Tool
             }
             else
             {
+                switch(GetSystemType(ref t))
+                {
+                    case SysType.Custom:
+                        return MDataRow.CreateFrom(strValue).ToEntity(t);
+                    case SysType.Generic:
+                        return MDataTable.CreateFrom(strValue).ToList(t);
+                }
                 return Convert.ChangeType(value, t);
             }
         }

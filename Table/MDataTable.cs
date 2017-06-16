@@ -103,7 +103,7 @@ namespace CYQ.Data.Table
             mdt.Columns = rows[0].Columns;
             mdt.Rows.AddRange(rows);
             return mdt;
-           
+
         }
         #endregion
 
@@ -574,7 +574,22 @@ namespace CYQ.Data.Table
             }
             return list;
         }
-
+        internal object ToList(Type t)
+        {
+            object listObj = Activator.CreateInstance(t);//创建实例
+            if (Rows != null && Rows.Count > 0)
+            {
+                Type[] paraTypeList = null;
+                Type listObjType=listObj.GetType();
+                StaticTool.GetArgumentLength(ref listObjType, out paraTypeList);
+                MethodInfo method = listObjType.GetMethod("Add");
+                foreach (MDataRow row in Rows)
+                {
+                    method.Invoke(listObj, new object[] { row.ToEntity(paraTypeList[0]) });
+                }
+            }
+            return listObj;
+        }
         /// <summary>
         /// 批量插入或更新 [提示：操作和当前表名有关，如当前表名不是要提交入库的表名,请给TableName属性重新赋值]
         /// </summary>

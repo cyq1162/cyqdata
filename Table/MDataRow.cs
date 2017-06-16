@@ -866,18 +866,30 @@ namespace CYQ.Data.Table
         /// <typeparam name="T">实体名称</typeparam>
         public T ToEntity<T>()
         {
-            Type t = typeof(T);
+            //Type t = typeof(T);
+            //switch (StaticTool.GetSystemType(ref t))
+            //{
+            //    case SysType.Base:
+            //        return (T)StaticTool.ChangeType(this[0].Value, t);
+
+            //}
+            //object obj = Activator.CreateInstance(t);
+            //SetToEntity(ref obj, this);
+            //return (T)obj;
+            return (T)ToEntity(typeof(T));
+        }
+        internal object ToEntity(Type t)
+        {
             switch (StaticTool.GetSystemType(ref t))
             {
                 case SysType.Base:
-                    return (T)StaticTool.ChangeType(this[0].Value, t);
+                    return StaticTool.ChangeType(this[0].Value, t);
 
             }
             object obj = Activator.CreateInstance(t);
             SetToEntity(ref obj, this);
-            return (T)obj;
+            return obj;
         }
-
 
         private object GetValue(MDataRow row, Type type)
         {
@@ -1249,7 +1261,7 @@ namespace CYQ.Data.Table
             {
                 #region 处理核心
                 List<PropertyInfo> pis = StaticTool.GetPropertyInfo(objType);
-                foreach (PropertyInfo p in pis)
+                foreach (PropertyInfo p in pis)//遍历实体
                 {
                     cellName = p.Name;
                     MDataCell cell = row[cellName];

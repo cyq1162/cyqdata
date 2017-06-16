@@ -7,7 +7,7 @@ namespace CYQ.Data.Tool
     /// <summary>
     /// 转实体所用参数
     /// </summary>
-    internal enum SysType
+    public enum SysType
     {
         /// <summary>
         /// 基础类型

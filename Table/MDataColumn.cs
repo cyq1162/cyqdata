@@ -154,6 +154,19 @@ namespace CYQ.Data.Table
                 {
                     return columnIndex[columnName];
                 }
+                else
+                {
+                    //开启默认前缀检测
+                    string[] items = new string[] { "txt", "chb", "ddl" };
+                    foreach (string item in items)
+                    {
+                        columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
+                        if (columnIndex.ContainsKey(columnName))
+                        {
+                            return columnIndex[columnName];
+                        }
+                    }
+                }
                 //for (int i = 0; i < Count; i++)
                 //{
                 //    if (string.Compare(this[i].ColumnName.Replace("_", ""), columnName, StringComparison.OrdinalIgnoreCase) == 0)//第三个参数用StringComparison.OrdinalIgnoreCase比用true快。
