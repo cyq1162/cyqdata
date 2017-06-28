@@ -329,7 +329,7 @@ namespace CYQ.Data.Tool
                     case SysType.Generic:
                         return MDataTable.CreateFrom(strValue).ToList(t);
                     case SysType.Array:
-                        if (t.Name == "Byte[]")
+                        if (t.Name == "Byte[]" && value.GetType().Name!=t.Name)
                         {
                             using (MemoryStream ms = new MemoryStream())
                             {
