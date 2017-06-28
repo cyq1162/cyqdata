@@ -11,23 +11,22 @@ using CYQ.Data.Tool;
 namespace CYQ.Data.Table
 {
     /// <summary>
+    /// 单元结构的值
+    /// </summary>
+    internal partial class MCellValue
+    {
+        internal bool IsNull = true;
+        /// <summary>
+        /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
+        /// </summary>
+        internal int State = 0;
+        internal object Value = null;
+    }
+    /// <summary>
     /// 单元格
     /// </summary>
     public partial class MDataCell
     {
-        /// <summary>
-        /// 单元结构的值
-        /// </summary>
-        private class MCellValue
-        {
-            internal bool IsNull = true;
-            /// <summary>
-            /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
-            /// </summary>
-            internal int State = 0;
-            internal object Value = null;
-        }
-
         private MCellValue _CellValue;
         private MCellValue CellValue
         {

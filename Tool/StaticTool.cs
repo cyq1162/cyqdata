@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Data;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 
 namespace CYQ.Data.Tool
@@ -326,6 +328,16 @@ namespace CYQ.Data.Tool
                         return MDataRow.CreateFrom(strValue).ToEntity(t);
                     case SysType.Generic:
                         return MDataTable.CreateFrom(strValue).ToList(t);
+                    case SysType.Array:
+                        if (t.Name == "Byte[]")
+                        {
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                new BinaryFormatter().Serialize(ms, value);
+                                return ms.ToArray();
+                            }
+                        }
+                        break;
                 }
                 return Convert.ChangeType(value, t);
             }

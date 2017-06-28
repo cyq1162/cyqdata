@@ -703,3 +703,5 @@
 488：因487增加的选项：AppConfig.Cache下增加AutoCacheConn、AutoCacheTaskTime两个配置项（2017-06-04）
 489：开放ConvertTool、ReflectTool类，为Taurus.MVC提供核心类型转换（核心为类型转换object ChangeType(object value, Type t))（2017-06-16）
 490：MDataRow和MDataTable各增加内部方法（ToEntity(Type t)和ToList(Type t)，为StaticTool所用。（2017-06-16）
+491：修正MCellValue序列化（2017-06-28）
+492：ConvertTool.ChangeType(value,typeof(byte[]));转换支持为序列化。（2017-06-28）
