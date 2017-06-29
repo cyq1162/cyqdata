@@ -1003,7 +1003,7 @@ namespace CYQ.Data.Tool
                     }
                     #endregion
                 }
-                else if (mdc.Count == 1)
+                else if (mdc!=null && mdc.Count == 1)
                 {
                     string[] items = json.Trim('[', ']').Split(',');
                     foreach (string item in items)
