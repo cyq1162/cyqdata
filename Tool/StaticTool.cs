@@ -327,7 +327,11 @@ namespace CYQ.Data.Tool
                     case SysType.Custom:
                         return MDataRow.CreateFrom(strValue).ToEntity(t);
                     case SysType.Generic:
-                        return MDataTable.CreateFrom(strValue).ToList(t);
+                        if (t.Name.StartsWith("List"))
+                        {
+                            return MDataTable.CreateFrom(strValue).ToList(t);
+                        }
+                        break;
                     case SysType.Array:
                         if (t.Name == "Byte[]" && value.GetType().Name!=t.Name)
                         {
