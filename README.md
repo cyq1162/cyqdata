@@ -4,7 +4,7 @@ Demo(入门教程)：<br />
 http Url：http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/ <br />
 svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
 <br /><br />QQ群：6033006<br />
-VIP培训课程，精通系列视频，300元/套，可群里联系作者购买！
+VIP培训课程，精通系列视频，300元/套，(共18集，每集1小时左右)，可群里联系作者购买！
 <br /><br />
 注意事项：
 <hr />
