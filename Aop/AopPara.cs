@@ -32,50 +32,68 @@ namespace CYQ.Data.Aop
         //    get { return _IsView; }
         //    set { _IsView = value; }
         //}
-        private DalType _DalType = DalType.None;
+       // private DalType _DalType = DalType.None;
         /// <summary>
-        /// 数据类型
+        /// 数据类型(只读)
         /// </summary>
         public DalType DalType
         {
             get
             {
-                if (_DalType == DalType.None)
+                if (MAction != null)
                 {
-                    if (MAction != null)
-                    {
-                        _DalType = MAction.DalType;
-                    }
-                    else if (MProc != null)
-                    {
-                        _DalType = MProc.DalType;
-                    }
+                   return MAction.DalType;
                 }
-                return _DalType;
+                else if (MProc != null)
+                {
+                    return  MProc.DalType;
+                }
+                return DalType.None;
+                //if (_DalType == DalType.None)
+                //{
+                //    if (MAction != null)
+                //    {
+                //        _DalType = MAction.DalType;
+                //    }
+                //    else if (MProc != null)
+                //    {
+                //        _DalType = MProc.DalType;
+                //    }
+                //}
+                //return _DalType;
             }
-            set { _DalType = value; }
+            //set { _DalType = value; }
         }
-        private string _DataBase;
+       // private string _DataBase;
         /// <summary>
-        /// 数据库名称
+        /// 数据库名称(只读)
         /// </summary>
         public string DataBase
         {
             get {
-                if (string.IsNullOrEmpty(_DataBase))
+                if (MAction != null)
                 {
-                    if (MAction != null)
-                    {
-                        _DataBase = MAction.dalHelper.DataBase;
-                    }
-                    else if (MProc != null)
-                    {
-                        _DataBase = MProc.dalHelper.DataBase;
-                    }
+                    return MAction.dalHelper.DataBase;
                 }
-                return _DataBase;
+                else if (MProc != null)
+                {
+                    return MProc.dalHelper.DataBase;
+                }
+                return string.Empty;
+                //if (string.IsNullOrEmpty(_DataBase))
+                //{
+                //    if (MAction != null)
+                //    {
+                //        _DataBase = MAction.dalHelper.DataBase;
+                //    }
+                //    else if (MProc != null)
+                //    {
+                //        _DataBase = MProc.dalHelper.DataBase;
+                //    }
+                //}
+                //return _DataBase;
             }
-            set { _DataBase = value; }
+           // set { _DataBase = value; }
         }
 
 

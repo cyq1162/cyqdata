@@ -706,3 +706,4 @@
 491：修正MCellValue序列化（2017-06-28）
 492：ConvertTool.ChangeType(value,typeof(byte[]));转换支持为序列化。（2017-06-28）
 493: 修正StaticTool的ChangeType的方法（在同类型转换时增加判断）（2017-07-25）
+494: AopPara参数的DalType和DataBase属性改成只读（避免ResetTable切换数据库时语句相同造成的读取相同缓存）（2017-07-25）
