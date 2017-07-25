@@ -322,26 +322,29 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                switch(GetSystemType(ref t))
+                if (strValue != t.FullName)
                 {
-                    case SysType.Custom:
-                        return MDataRow.CreateFrom(strValue).ToEntity(t);
-                    case SysType.Generic:
-                        if (t.Name.StartsWith("List"))
-                        {
-                            return MDataTable.CreateFrom(strValue).ToList(t);
-                        }
-                        break;
-                    case SysType.Array:
-                        if (t.Name == "Byte[]" && value.GetType().Name!=t.Name)
-                        {
-                            using (MemoryStream ms = new MemoryStream())
+                    switch (GetSystemType(ref t))
+                    {
+                        case SysType.Custom:
+                            return MDataRow.CreateFrom(strValue).ToEntity(t);
+                        case SysType.Generic:
+                            if (t.Name.StartsWith("List"))
                             {
-                                new BinaryFormatter().Serialize(ms, value);
-                                return ms.ToArray();
+                                return MDataTable.CreateFrom(strValue).ToList(t);
                             }
-                        }
-                        break;
+                            break;
+                        case SysType.Array:
+                            if (t.Name == "Byte[]" && value.GetType().Name != t.Name)
+                            {
+                                using (MemoryStream ms = new MemoryStream())
+                                {
+                                    new BinaryFormatter().Serialize(ms, value);
+                                    return ms.ToArray();
+                                }
+                            }
+                            break;
+                    }
                 }
                 return Convert.ChangeType(value, t);
             }

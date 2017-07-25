@@ -705,3 +705,4 @@
 490：MDataRow和MDataTable各增加内部方法（ToEntity(Type t)和ToList(Type t)，为StaticTool所用。（2017-06-16）
 491：修正MCellValue序列化（2017-06-28）
 492：ConvertTool.ChangeType(value,typeof(byte[]));转换支持为序列化。（2017-06-28）
+493: 修正StaticTool的ChangeType的方法（在同类型转换时增加判断）（2017-07-25）
