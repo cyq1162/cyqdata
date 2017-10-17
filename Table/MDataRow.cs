@@ -404,7 +404,7 @@ namespace CYQ.Data.Table
             if (cell != null)
             {
                 cell.Value = value;
-                if (state > 0 && state < 3)
+                if (state > -1 && state < 3)
                 {
                     cell.State = state;
                 }

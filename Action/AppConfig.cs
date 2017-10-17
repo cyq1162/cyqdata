@@ -179,7 +179,21 @@ namespace CYQ.Data
                 SetApp("IsEnumToInt", value.ToString());
             }
         }
-
+        /// <summary>
+        /// 是否ToJson输出时自动转义特殊符号("\ \r \t等)
+        /// 可配置项为（Default、Yes、No)
+        /// </summary>
+        public static string JsonEscape
+        {
+            get
+            {
+                return GetApp("JsonEscape", "Default");
+            }
+            set
+            {
+                SetApp("JsonEscape", value);
+            }
+        }
         /// <summary>
         /// Aop 插件配置项 示例配置：[ 完整类名,程序集(dll)名称]&lt;add key="Aop" value="Web.Aop.AopAction,Aop"/>
         /// </summary>

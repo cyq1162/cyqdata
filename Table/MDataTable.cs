@@ -464,7 +464,7 @@ namespace CYQ.Data.Table
 
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower)
         {
-            return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, EscapeOp.Default);
+            return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, JsonHelper.DefaultEscape);
         }
         /// <param name="op">符号转义选项</param>
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp op)

@@ -31,11 +31,19 @@ namespace CYQ.Data.Tool
     /// </summary>
     public partial class JsonHelper
     {
-
+     
+        internal static EscapeOp DefaultEscape
+        {
+            get
+            {
+               return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.JsonEscape);
+            }
+        }
         #region 实例属性
 
         public JsonHelper()
         {
+            
         }
         /// <param name="addHead">with easyui header ?<para>是否带输出头</para></param>
         public JsonHelper(bool addHead)
@@ -55,7 +63,7 @@ namespace CYQ.Data.Tool
         /// Escape options
         /// <para>转义符号</para>
         /// </summary>
-        public EscapeOp Escape = EscapeOp.Default;
+        public EscapeOp Escape= EscapeOp.Default;
         /// <summary>
         /// convert filed to lower
         /// <para>是否将名称转为小写</para>
@@ -240,8 +248,8 @@ namespace CYQ.Data.Tool
         }
         private void SetEscape(ref string value)
         {
-            //if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)
-            if (value.IndexOfAny(new char[] { '"' }) > -1)
+            if (Escape == EscapeOp.No) { return; }
+            if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)//easyui 输出时需要处理\\符号
             {
                 bool isInsert = false;
                 int len = value.Length;
@@ -256,20 +264,18 @@ namespace CYQ.Data.Tool
                             {
                                 isInsert = true;
                                 sb.Append("\\");
-                                //value.Insert(i, "\\");
-                                //len++;//新插入了一个字符。
-                                //i++;//索引往前一个。
                             }
                             break;
-                        //case '\\':
-                        //    if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
-                        //    {
-                        //        sb.Append("\\");
-                        //        //value.Insert(i, "\\");
-                        //        //len++;//新插入了一个字符。
-                        //        //i++;//索引往前一个。
-                        //    }
-                        //    break;
+                        case '\\':
+                            if (Escape == EscapeOp.Yes)
+                            {
+                                if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
+                                {
+                                    isInsert = true;
+                                    sb.Append("\\");
+                                }
+                            }
+                            break;
                     }
                     sb.Append(c);
                 }
@@ -365,7 +371,7 @@ namespace CYQ.Data.Tool
                 sb.Append(footText.ToString() + "}");
             }
             string json = sb.ToString();
-            if ((Escape == EscapeOp.Default && AppConfig.IsWeb) || Escape == EscapeOp.Yes) // Web应用
+            if (AppConfig.IsWeb || Escape != EscapeOp.No) // Web应用
             {
                 json = json.Replace("\n", "<br/>").Replace("\t", " ").Replace("\r", " ");
             }
@@ -1003,7 +1009,7 @@ namespace CYQ.Data.Tool
                     }
                     #endregion
                 }
-                else if (mdc!=null && mdc.Count == 1)
+                else if (mdc != null && mdc.Count == 1)
                 {
                     string[] items = json.Trim('[', ']').Split(',');
                     foreach (string item in items)

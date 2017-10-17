@@ -541,7 +541,7 @@ namespace CYQ.Data
                 string text = string.Empty;
                 if (string.IsNullOrEmpty(text))
                 {
-                    text = _DalType == DalType.Txt ? Table.ToJson(false, true).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
+                    text = _DalType == DalType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Default).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
                 }
                 int tryAgainCount = 3;
                 bool isError = false;
