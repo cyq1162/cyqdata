@@ -777,9 +777,9 @@ namespace CYQ.Data.Tool
         {
             if (obj != null)
             {
-                if (obj is String)
+                if (obj is String || obj is ValueType)
                 {
-                    Fill(obj as String);
+                    Fill(Convert.ToString(obj));
                 }
                 else if (obj is MDataTable)
                 {
