@@ -175,7 +175,7 @@ namespace CYQ.Data.SQL
                     return text.Replace("=:?", "=@");
             }
         }
-       
+
         private static string FormatTrueFalseAscDesc(string text, DalType dalType)
         {
             switch (dalType)
@@ -314,6 +314,9 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.GetDate, "current_date");
                 case DalType.SQLite:
                     return Replace(text, SqlValue.GetDate, "datetime('now','localtime')");
+                case DalType.Txt:
+                case DalType.Xml:
+                    return Replace(text, SqlValue.GetDate, "'" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "'");
             }
             return text;
         }
