@@ -61,7 +61,7 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Money:
                 case SqlDbType.Decimal:
                 case SqlDbType.SmallMoney:
-                case SqlDbType.Udt://这个是顶Numeric类型。
+                //case SqlDbType.Udt://这个是顶Numeric类型。
                     return typeof(Decimal);
                 case SqlDbType.Float:
                     return typeof(Single);
@@ -180,7 +180,7 @@ namespace CYQ.Data.SQL
                 case "date":
                     return SqlDbType.Date;
                 case "numeric":
-                    return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
+                    //return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
                 case "decimal":
                     return SqlDbType.Decimal;
                 case "real":
