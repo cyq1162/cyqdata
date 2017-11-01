@@ -44,7 +44,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static int GetGenericArgumentLength(ref Type t, out Type[] argTypes)
         {
-            return StaticTool.GetArgumentLength(ref t,out argTypes);
+            return StaticTool.GetArgumentLength(ref t, out argTypes);
         }
         /// <summary>
         /// 获得反射属性（内部有缓存）
@@ -141,7 +141,7 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    if (t.Name.EndsWith("[]") || t.Name=="MDataRowCollection")
+                    if (t.Name.EndsWith("[]") || t.Name == "MDataRowCollection")
                     {
                         len = 1;
                     }
@@ -317,6 +317,25 @@ namespace CYQ.Data.Tool
                 else if (t.Name.StartsWith("Int") && strValue.IndexOf('.') > -1)
                 {
                     strValue = strValue.Split('.')[0];
+                }
+                else if (t.Name == "Boolean")
+                {
+                    switch (strValue.ToLower())
+                    {
+                        case "yes":
+                        case "true":
+                        case "1":
+                        case "on":
+                        case "是":
+                            return true;
+                        case "no":
+                        case "false":
+                        case "0":
+                        case "":
+                        case "否":
+                        default:
+                            return false;
+                    }
                 }
                 return Convert.ChangeType(strValue, t);
             }

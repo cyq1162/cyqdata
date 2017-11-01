@@ -709,4 +709,6 @@
 494: AopPara参数的DalType和DataBase属性改成只读（避免ResetTable切换数据库时语句相同造成的读取相同缓存）（2017-07-25）
 495: 增加JsonEscape转义配置项（2017-10-18）
 496：JsonHelper只改一行代码优化输出体验（2017-10-22）
+497：DataType修正Numeric为主键自增没有返回ID的问题。（2017-10-30）
+498：SqlCreate.FormatterWhere，增强对“xxxx order by abc desc"这样的语句解析。（2017-11-01）
 --不同IP，同数据库名和表名的缓存处理问题。

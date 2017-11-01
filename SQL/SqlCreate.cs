@@ -509,6 +509,14 @@ namespace CYQ.Data.SQL
             else if (lowerWhere.IndexOfAny(new char[] { '=', '>', '<' }) == -1 && !lowerWhere.Contains(" like ") && !lowerWhere.Contains(" between ")
                 && !lowerWhere.Contains(" in ") && !lowerWhere.Contains(" in(") && !lowerWhere.Contains(" is "))
             {
+                //检测是否带order by 'xxxx order by xxx desc'
+                int index = where.Replace("\n", " ").IndexOf(" order by ", StringComparison.OrdinalIgnoreCase);//考虑可能换行的情况xxxx\r\norder by xxx
+                string orderBy = string.Empty;
+                if (index > -1)
+                {
+                    orderBy = where.Substring(index + 1, where.Length - index - 1);
+                    where = where.Substring(0, index);
+                }
                 if (mdc.JointPrimary.Count > 1 && where.Contains(";"))
                 {
                     #region 多个主键
@@ -593,6 +601,10 @@ namespace CYQ.Data.SQL
                         where = GetWhereIn(ms, lists, dalType);
                     }
                     #endregion
+                }
+                if (!string.IsNullOrEmpty(orderBy))
+                {
+                    where = where + " " + orderBy;
                 }
             }
 
