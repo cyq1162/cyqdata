@@ -31,19 +31,19 @@ namespace CYQ.Data.Tool
     /// </summary>
     public partial class JsonHelper
     {
-     
+
         internal static EscapeOp DefaultEscape
         {
             get
             {
-               return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.JsonEscape);
+                return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.JsonEscape);
             }
         }
         #region 实例属性
 
         public JsonHelper()
         {
-            
+
         }
         /// <param name="addHead">with easyui header ?<para>是否带输出头</para></param>
         public JsonHelper(bool addHead)
@@ -63,7 +63,7 @@ namespace CYQ.Data.Tool
         /// Escape options
         /// <para>转义符号</para>
         /// </summary>
-        public EscapeOp Escape= EscapeOp.Default;
+        public EscapeOp Escape = EscapeOp.Default;
         /// <summary>
         /// convert filed to lower
         /// <para>是否将名称转为小写</para>
@@ -267,13 +267,29 @@ namespace CYQ.Data.Tool
                             }
                             break;
                         case '\\':
-                            if (Escape == EscapeOp.Yes)
+                            //bool isAppend = i == len - 1;//最后一个字符，转
+                            //if (!isAppend)// && value[i + 1] != '\\'))最后一个字符，或者
+                            //{
+                            //    if (Escape == EscapeOp.Yes)
+                            //    {
+                            //        isAppend = value[i + 1] != '"';
+                            //    }
+                            //    else
+                            //    {
+ 
+                            //    }
+                            //    isAppend = (value[i + 1] != '"') && Escape != EscapeOp.Yes && (value[i + 1] != 'n');
+                            //    if (Escape != EscapeOp.Yes)
+                            //    {
+                            //        //检测是不是"\n"
+                            //        // if(value[i+1]
+                            //    }
+
+                            //}
+                            if (i == len - 1 || ((value[i + 1] != '"') && value[i + 1] != 'n'))
                             {
-                                if (i == len - 1 || (value[i + 1] != '"'))// && value[i + 1] != '\\'))
-                                {
-                                    isInsert = true;
-                                    sb.Append("\\");
-                                }
+                                isInsert = true;
+                                sb.Append("\\");
                             }
                             break;
                     }
@@ -371,9 +387,13 @@ namespace CYQ.Data.Tool
                 sb.Append(footText.ToString() + "}");
             }
             string json = sb.ToString();
-            if (AppConfig.IsWeb || Escape != EscapeOp.No) // Web应用
+            if (AppConfig.IsWeb && Escape == EscapeOp.Yes)
             {
-                json = json.Replace("\n", "<br/>").Replace("\t", " ").Replace("\r", " ");
+                json = json.Replace("\n", "<br/>");
+            }
+            if (Escape != EscapeOp.No) // Web应用
+            {
+                json = json.Replace("\t", " ").Replace("\r", " ");
             }
             return json;
 
