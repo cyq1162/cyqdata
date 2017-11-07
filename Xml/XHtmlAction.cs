@@ -1203,7 +1203,7 @@ namespace CYQ.Data.Xml
                 }
                 if (cell != null)
                 {
-                    rowValue = cell.StringValue;
+                    rowValue = cell.IsNull ? "" : cell.StringValue;
                 }
             }
             return rowValue;
