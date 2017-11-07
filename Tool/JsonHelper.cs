@@ -249,44 +249,55 @@ namespace CYQ.Data.Tool
         private void SetEscape(ref string value)
         {
             if (Escape == EscapeOp.No) { return; }
-            if (value.IndexOfAny(new char[] { '"', '\\', '\n' }) > -1)//easyui 输出时需要处理\\符号
+            //if (value.IndexOfAny(new char[] { '"', '\\', '\n' }) > -1)//easyui 输出时需要处理\\符号
+            //{
+            bool isInsert = false;
+            int len = value.Length;
+            StringBuilder sb = new StringBuilder(len + 10);
+            for (int i = 0; i < len; i++)
             {
-                bool isInsert = false;
-                int len = value.Length;
-                StringBuilder sb = new StringBuilder(len + 10);
-                for (int i = 0; i < len; i++)
+                char c = value[i];
+                if (Escape == EscapeOp.Yes && c < 32)
                 {
-                    char c = value[i];
-                    switch (c)
-                    {
-                        case '"':
-                            if (i == 0 || value[i - 1] != '\\')
-                            {
-                                isInsert = true;
-                                sb.Append("\\");
-                            }
-                            break;
-                        case '\n':
+                    isInsert = true;
+                    sb.Append(" ");//对于特殊符号，直接替换成空。
+                    continue;
+                }
+                switch (c)
+                {
+                    case '"':
+                        if (i == 0 || value[i - 1] != '\\')
+                        {
                             isInsert = true;
-                            sb.Append("\\n");//直接替换追加
-                            continue;
-                        case '\\':
-                            if (i == len - 1 || ((value[i + 1] != '"') && value[i + 1] != 'n'))
-                            {
-                                isInsert = true;
-                                sb.Append("\\");
-                            }
-                            break;
-                    }
-                    sb.Append(c);
+                            sb.Append("\\");
+                        }
+                        break;
+                    case '\n':
+                         isInsert = true;
+                        sb.Append("\\n");//直接替换追加
+                        continue;
+                    case '\t':
+                    case '\r':
+                        isInsert = true;
+                        sb.Append(" ");//直接替换追加
+                        continue;
+                    case '\\':
+                        if (i == len - 1 || ((value[i + 1] != '"') && value[i + 1] != 'n' && value[i + 1] != 't' && value[i + 1] != 'r'))
+                        {
+                            isInsert = true;
+                            sb.Append("\\");
+                        }
+                        break;
                 }
-                if (isInsert)
-                {
-                    value = null;
-                    value = sb.ToString();
-                }
-                else { sb = null; }
+                sb.Append(c);
             }
+            if (isInsert)
+            {
+                value = null;
+                value = sb.ToString();
+            }
+            else { sb = null; }
+            // }
         }
         /// <summary>
         /// out json result
@@ -371,16 +382,17 @@ namespace CYQ.Data.Tool
             {
                 sb.Append(footText.ToString() + "}");
             }
-            string json = sb.ToString();
-            if (AppConfig.IsWeb && Escape == EscapeOp.Yes)
-            {
-                json = json.Replace("\n", "<br/>");
-            }
-            if (Escape != EscapeOp.No) // Web应用
-            {
-                json = json.Replace("\t", " ").Replace("\r", " ");
-            }
-            return json;
+            return sb.ToString();
+            //string json = sb.ToString();
+            //if (AppConfig.IsWeb && Escape == EscapeOp.Yes)
+            //{
+            //    json = json.Replace("\n", "<br/>");
+            //}
+            //if (Escape != EscapeOp.No) // Web应用
+            //{
+            //    json = json.Replace("\t", " ").Replace("\r", " ");
+            //}
+            //return json;
 
         }
 
