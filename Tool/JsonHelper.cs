@@ -249,7 +249,7 @@ namespace CYQ.Data.Tool
         private void SetEscape(ref string value)
         {
             if (Escape == EscapeOp.No) { return; }
-            if (value.IndexOfAny(new char[] { '"', '\\' }) > -1)//easyui 输出时需要处理\\符号
+            if (value.IndexOfAny(new char[] { '"', '\\', '\n' }) > -1)//easyui 输出时需要处理\\符号
             {
                 bool isInsert = false;
                 int len = value.Length;
@@ -266,26 +266,11 @@ namespace CYQ.Data.Tool
                                 sb.Append("\\");
                             }
                             break;
+                        case '\n':
+                            isInsert = true;
+                            sb.Append("\\n");//直接替换追加
+                            continue;
                         case '\\':
-                            //bool isAppend = i == len - 1;//最后一个字符，转
-                            //if (!isAppend)// && value[i + 1] != '\\'))最后一个字符，或者
-                            //{
-                            //    if (Escape == EscapeOp.Yes)
-                            //    {
-                            //        isAppend = value[i + 1] != '"';
-                            //    }
-                            //    else
-                            //    {
- 
-                            //    }
-                            //    isAppend = (value[i + 1] != '"') && Escape != EscapeOp.Yes && (value[i + 1] != 'n');
-                            //    if (Escape != EscapeOp.Yes)
-                            //    {
-                            //        //检测是不是"\n"
-                            //        // if(value[i+1]
-                            //    }
-
-                            //}
                             if (i == len - 1 || ((value[i + 1] != '"') && value[i + 1] != 'n'))
                             {
                                 isInsert = true;
