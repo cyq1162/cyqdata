@@ -899,6 +899,22 @@ namespace CYQ.Data
         {
             try
             {
+                if (!useConnBean.IsOK)
+                {
+                    if (connObject.BackUp != null && connObject.BackUp.IsOK)
+                    {
+                        ResetConn(connObject.BackUp);//重置链接。
+                        connObject.InterChange();//主从换位置
+                    }
+                    else // 切到从库，但只能做查询操作。
+                    {
+                        ConnBean nextSlaveBean = connObject.GetSlave();
+                        if (nextSlaveBean != null)
+                        {
+                            ResetConn(nextSlaveBean);//重置链接。
+                        }
+                    }
+                }
                 if (_con.State == ConnectionState.Closed)
                 {
                     _con.Open();
