@@ -926,20 +926,32 @@ namespace CYQ.Data
             }
             catch (DbException err)
             {
-                if (cb == null && connObject.BackUp != null)
+                if (cb == null)
                 {
-                    ResetConn(connObject.BackUp);//重置链接。
-                    connObject.InterChange();//主从换位置
-                    return OpenCon(connObject.Master);
-                    //if (OpenConBak())
-                    //{
-                    //    return true;
-                    //}
+                    connObject.Master.IsOK = false;//主库链接错误。
+                    if (connObject.BackUp != null && connObject.BackUp.IsOK)
+                    {
+                        ResetConn(connObject.BackUp);//重置链接。
+                        connObject.InterChange();//主从换位置
+                        return OpenCon(connObject.Master);
+                    }
                 }
-                else
+                else 
                 {
-                    WriteError("OpenCon():" + err.Message);
+                    cb.IsOK = false;
+                    if (cb.ConfigName.IndexOf("_Slave") > -1)//从库错误时，尝试切换到其它从库。
+                    {
+                        ConnBean nextSlaveBean = connObject.GetSlave();
+                        if (nextSlaveBean != null)
+                        {
+                            ResetConn(connObject.BackUp);//重置链接。
+                            return OpenCon(nextSlaveBean);
+                        }
+                    }
                 }
+
+                WriteError("OpenCon():" + err.Message);
+
 
             }
             return false;

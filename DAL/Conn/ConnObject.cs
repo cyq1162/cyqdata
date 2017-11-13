@@ -8,6 +8,14 @@ namespace CYQ.Data
 {
     internal class ConnBean
     {
+        /// <summary>
+        /// 对应的ConnectionString的Name
+        /// </summary>
+        internal string ConfigName = string.Empty;
+        /// <summary>
+        /// 链接的状态是否正常。
+        /// </summary>
+        internal bool IsOK = true;
         private string _Conn = string.Empty;
         /// <summary>
         /// 数据库链接
@@ -41,6 +49,8 @@ namespace CYQ.Data
             cb.Conn = this.Conn;
             cb.ProviderName = this.ProviderName;
             cb.ConnDalType = this.ConnDalType;
+            cb.ConfigName = this.ConfigName;
+            cb.IsOK = this.IsOK;
             return cb;
         }
 
@@ -72,6 +82,27 @@ namespace CYQ.Data
                 if (index == Slave.Count)//2
                 {
                     index = 0;
+                }
+                ConnBean slaveBean = Slave[index];
+                if (slaveBean.IsOK)//链接正常，则返回。
+                {
+                    return slaveBean;
+                }
+                else
+                {
+                    //int i = index + 1;//尝试一下个。
+                    for (int i = index + 1; i < Slave.Count; i++)
+                    {
+                        if (i == index) { break; }
+                        if (i == Slave.Count)
+                        {
+                            i = 0;
+                        }
+                        if (Slave[i].IsOK)
+                        {
+                            return Slave[i];
+                        }
+                    }
                 }
                 return Slave[index];
             }

@@ -316,6 +316,7 @@ namespace CYQ.Data
                 return null;
             }
             ConnBean cb = new ConnBean();
+            cb.ConfigName = dbConn;
             cb.Conn = conn;
             if (string.IsNullOrEmpty(provider))
             {
