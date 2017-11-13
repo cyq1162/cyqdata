@@ -43,7 +43,10 @@ namespace CYQ.Data
         /// 数据库链接实体（创建的时候被赋值）;
         /// </summary>
         internal ConnObject connObject;
-        private ConnBean useConnBean;
+        /// <summary>
+        /// 当前使用的链接对象
+        /// </summary>
+        internal ConnBean useConnBean;
         private IsolationLevel _TranLevel = IsolationLevel.ReadCommitted;
         internal IsolationLevel TranLevel
         {

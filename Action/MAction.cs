@@ -377,7 +377,7 @@ namespace CYQ.Data
         {
             _Data = row;
             _TableName = SqlCompatible.Format(_sourceTableName, dalHelper.dalType);
-            _TableName = DBTool.GetMapTableName(dalHelper.conn, _TableName);//处理数据库映射兼容。
+            _TableName = DBTool.GetMapTableName(dalHelper.useConnBean.ConfigName, _TableName);//处理数据库映射兼容。
             if (_Data.Count == 0)
             {
                 if (!TableSchema.FillTableSchema(ref _Data, ref dalHelper, _TableName, _sourceTableName))
