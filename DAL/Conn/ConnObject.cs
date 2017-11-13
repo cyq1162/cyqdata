@@ -104,6 +104,15 @@ namespace CYQ.Data
                         }
                     }
                 }
+                //从全部挂了，返回主
+                if (Master != null && Master.IsOK)
+                {
+                    return Master;
+                }
+                else if (BackUp != null && BackUp.IsOK)
+                {
+                    return BackUp;
+                }
             }
             return null;
         }
