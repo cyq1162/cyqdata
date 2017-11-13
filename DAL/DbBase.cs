@@ -99,6 +99,7 @@ namespace CYQ.Data
                 }
             }
         }
+        public static MDictionary<string, string> _VersionCache = new MDictionary<string, string>();
         private string _Version = string.Empty;
         /// <summary>
         /// 数据库的版本号
@@ -118,14 +119,20 @@ namespace CYQ.Data
                             _Version = "xml2.0";
                             break;
                         default:
-                            if (OpenCon(null))
+                            if (_VersionCache.ContainsKey(conn))
+                            {
+                                _Version = _VersionCache[conn];
+                            }
+                            else if (OpenCon(null))
                             {
                                 _Version = _con.ServerVersion;
+                                _VersionCache.Set(conn, _Version);
                                 if (!isOpenTrans)//避免把事务给关闭了。
                                 {
                                     CloseCon();
                                 }
                             }
+
                             break;
                     }
 
@@ -479,20 +486,20 @@ namespace CYQ.Data
             {
                 try
                 {
-                    
+
                     //else
                     //{
-                        if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
-                        {
-                            _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
-                        }
-                        //rowCount = 1;
-                        recordsAffected = _com.ExecuteNonQuery();
+                    if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
+                    {
+                        _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
+                    }
+                    //rowCount = 1;
+                    recordsAffected = _com.ExecuteNonQuery();
                     //}
                 }
                 catch (DbException err)
                 {
-                    
+
                     string msg = "ExeNonQuery():" + err.Message;
                     debugInfo.Append(msg + AppConst.BR);
                     recordsAffected = -2;
@@ -934,7 +941,16 @@ namespace CYQ.Data
         {
             try
             {
-                if (!isOpenTrans && cb != null && isAllowResetConn && connObject.IsAllowSlave())
+                if (cb == null && !useConnBean.IsOK)
+                {
+                    //主挂了，备也挂了（因为备会替主）
+                    ConnBean nextSlaveBean = connObject.GetSlave();
+                    if (nextSlaveBean != null)
+                    {
+                        ResetConn(nextSlaveBean);//重置链接。
+                    }
+                }
+                else if (!isOpenTrans && cb != null && isAllowResetConn && connObject.IsAllowSlave())
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
@@ -972,12 +988,12 @@ namespace CYQ.Data
                     cb.IsOK = false;
                     //if (cb.ConfigName.IndexOf("_Slave") > -1)//从库错误时，尝试切换到其它从库。
                     //{
-                        ConnBean nextSlaveBean = connObject.GetSlave();
-                        if (nextSlaveBean != null)
-                        {
-                            ResetConn(nextSlaveBean);//重置链接。
-                            return OpenCon(nextSlaveBean);
-                        }
+                    ConnBean nextSlaveBean = connObject.GetSlave();
+                    if (nextSlaveBean != null)
+                    {
+                        ResetConn(nextSlaveBean);//重置链接。
+                        return OpenCon(nextSlaveBean);
+                    }
                     //}
                 }
 
@@ -997,6 +1013,10 @@ namespace CYQ.Data
                     _com.Connection = _con;//重新赋值（Sybase每次Close后命令的Con都丢失）
                 }
                 _con.Open();
+                //if (useConnBean.ConfigName == "Conn")
+                //{
+                //    System.Console.WriteLine(useConnBean.ConfigName);
+                //}
             }
             if (isOpenTrans)
             {

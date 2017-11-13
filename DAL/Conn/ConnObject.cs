@@ -90,8 +90,8 @@ namespace CYQ.Data
                 }
                 else if (Slave.Count > 1)
                 {
-                    //int i = index + 1;//尝试一下个。
-                    for (int i = index + 1; i < Slave.Count; i++)
+                    //int i = index + 1;//尝试一下个，。
+                    for (int i = index + 1; i < Slave.Count + 1; i++)
                     {
                         if (i == index) { break; }
                         if (i == Slave.Count)
