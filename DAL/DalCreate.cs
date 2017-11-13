@@ -256,6 +256,7 @@ namespace CYQ.Data
         internal static ConnObject GetConnObject(string dbConn)
         {
             dbConn = string.IsNullOrEmpty(dbConn) ? AppConfig.DB.DefaultConn : dbConn;
+            if (dbConn.EndsWith("_Bak")) { dbConn = dbConn.Replace("_Bak", ""); }
             if (connDicCache.ContainsKey(dbConn))
             {
                 return connDicCache[dbConn];

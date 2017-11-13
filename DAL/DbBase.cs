@@ -926,6 +926,7 @@ namespace CYQ.Data
             catch (Exception err)
             {
                 isOpenOK = false;
+                useConnBean.IsOK = false;
                 debugInfo.Append(err.Message);
             }
         }
