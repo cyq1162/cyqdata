@@ -49,7 +49,7 @@ namespace CYQ.Data
         {
             get
             {
-                if (_tran!=null && _com != null && _com.Transaction != null)
+                if (_tran != null && _com != null && _com.Transaction != null)
                 {
                     return _com.Transaction.IsolationLevel;
                 }
@@ -901,9 +901,9 @@ namespace CYQ.Data
         /// 切换链接
         /// </summary>
         /// <param name="cb"></param>
-        private void ResetConn(ConnBean cb)
+        private void ResetConn(ConnBean cb)//, bool isAllowReset
         {
-            if (_con != null && _con.State != ConnectionState.Open && conn != cb.Conn && _IsAllowRecordSql)
+            if (_con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
             {
                 conn = cb.Conn;//切换。
                 _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
@@ -915,7 +915,7 @@ namespace CYQ.Data
             {
                 if (!isOpenTrans && cb != null && isAllowResetConn && connObject.IsAllowSlave())
                 {
-                    ResetConn(cb);
+                    ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
                 Open();
                 if (IsAllowRecordSql)
@@ -928,8 +928,9 @@ namespace CYQ.Data
             {
                 if (cb == null && connObject.BackUp != null)
                 {
-                    connObject.InterChange();
-                    return OpenCon(connObject.BackUp);
+                    ResetConn(connObject.BackUp);//重置链接。
+                    connObject.InterChange();//主从换位置
+                    return OpenCon(connObject.Master);
                     //if (OpenConBak())
                     //{
                     //    return true;
