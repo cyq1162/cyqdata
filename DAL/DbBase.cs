@@ -43,7 +43,7 @@ namespace CYQ.Data
         /// 数据库链接实体（创建的时候被赋值）;
         /// </summary>
         internal ConnObject connObject;
-
+        private ConnBean useConnBean;
         private IsolationLevel _TranLevel = IsolationLevel.ReadCommitted;
         internal IsolationLevel TranLevel
         {
@@ -163,6 +163,7 @@ namespace CYQ.Data
         public DbBase(ConnObject co)
         {
             this.connObject = co;
+            this.useConnBean = co.Master;
             this.conn = co.Master.Conn;
             this.providerName = co.Master.ProviderName;
             dalType = co.Master.ConnDalType;
@@ -407,7 +408,7 @@ namespace CYQ.Data
         {
             DbDataReader sdr = null;
             ConnBean coSlave = null;
-            if (!isOpenTrans && _IsAllowRecordSql)
+            if (!isOpenTrans)// && _IsAllowRecordSql
             {
                 coSlave = connObject.GetSlave();
             }
@@ -471,19 +472,24 @@ namespace CYQ.Data
         }
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
-            if (OpenCon())
+            if (OpenCon())//这里已经禁止切换从库了。
             {
                 try
                 {
-                    if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
-                    {
-                        _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
-                    }
-                    //rowCount = 1;
-                    recordsAffected = _com.ExecuteNonQuery();
+                    
+                    //else
+                    //{
+                        if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
+                        {
+                            _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
+                        }
+                        //rowCount = 1;
+                        recordsAffected = _com.ExecuteNonQuery();
+                    //}
                 }
                 catch (DbException err)
                 {
+                    
                     string msg = "ExeNonQuery():" + err.Message;
                     debugInfo.Append(msg + AppConst.BR);
                     recordsAffected = -2;
@@ -524,7 +530,8 @@ namespace CYQ.Data
             object returnValue = null;
             ConnBean coSlave = null;
             //mssql 有 insert into ...select 操作。
-            if (!isOpenTrans && _IsAllowRecordSql && !cmdText.ToLower().TrimStart().StartsWith("insert "))
+            bool allowSlave = !isOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
+            if (allowSlave)
             {
                 coSlave = connObject.GetSlave();
             }
@@ -532,8 +539,18 @@ namespace CYQ.Data
             {
                 try
                 {
-                    returnValue = _com.ExecuteScalar();
-                    recordsAffected = returnValue == null ? 0 : 1;
+                    if (!allowSlave && useConnBean != connObject.Master)
+                    {
+                        recordsAffected = -2;//从库不允许执行非查询操作。
+                        string msg = "You can't do ExeScalarSQL(with transaction or insert) on Slave DataBase!";
+                        debugInfo.Append(msg + AppConst.BR);
+                        WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
+                    }
+                    else
+                    {
+                        returnValue = _com.ExecuteScalar();
+                        recordsAffected = returnValue == null ? 0 : 1;
+                    }
                 }
                 catch (DbException err)
                 {
@@ -905,6 +922,7 @@ namespace CYQ.Data
         {
             if (_con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
             {
+                useConnBean = cb;
                 conn = cb.Conn;//切换。
                 _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
             }
@@ -935,20 +953,31 @@ namespace CYQ.Data
                         connObject.InterChange();//主从换位置
                         return OpenCon(connObject.Master);
                     }
-                }
-                else 
-                {
-                    cb.IsOK = false;
-                    if (cb.ConfigName.IndexOf("_Slave") > -1)//从库错误时，尝试切换到其它从库。
+                    else // 切到从库，但只能做查询操作。
                     {
                         ConnBean nextSlaveBean = connObject.GetSlave();
+                        //nextSlaveBean.
                         if (nextSlaveBean != null)
                         {
-                            ResetConn(connObject.BackUp);//重置链接。
+                            ResetConn(nextSlaveBean);//重置链接。
                             return OpenCon(nextSlaveBean);
                         }
                     }
                 }
+                else
+                {
+                    cb.IsOK = false;
+                    //if (cb.ConfigName.IndexOf("_Slave") > -1)//从库错误时，尝试切换到其它从库。
+                    //{
+                        ConnBean nextSlaveBean = connObject.GetSlave();
+                        if (nextSlaveBean != null)
+                        {
+                            ResetConn(nextSlaveBean);//重置链接。
+                            return OpenCon(nextSlaveBean);
+                        }
+                    //}
+                }
+
 
                 WriteError("OpenCon():" + err.Message);
 
