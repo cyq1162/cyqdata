@@ -88,7 +88,7 @@ namespace CYQ.Data
                 {
                     return slaveBean;
                 }
-                else
+                else if (Slave.Count > 1)
                 {
                     //int i = index + 1;//Ё╒йтр╩об╦Ж║ё
                     for (int i = index + 1; i < Slave.Count; i++)
@@ -104,7 +104,6 @@ namespace CYQ.Data
                         }
                     }
                 }
-                return Slave[index];
             }
             return null;
         }
