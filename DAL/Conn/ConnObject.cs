@@ -53,7 +53,13 @@ namespace CYQ.Data
             cb.IsOK = this.IsOK;
             return cb;
         }
-
+        public void TryTestConn()
+        {
+            if (!IsOK && !string.IsNullOrEmpty(Conn))
+            {
+                IsOK = CYQ.Data.Tool.DBTool.TestConn(Conn);
+            }
+        }
     }
     internal class ConnObject
     {

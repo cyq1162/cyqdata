@@ -911,7 +911,7 @@ namespace CYQ.Data
                         ResetConn(connObject.BackUp);//重置链接。
                         connObject.InterChange();//主从换位置
                     }
-                    else // 切到从库，但只能做查询操作。
+                    else if (connObject.Slave.Count > 0) // 切到从库，但只能做查询操作。
                     {
                         ConnBean nextSlaveBean = connObject.GetSlave();
                         if (nextSlaveBean != null)

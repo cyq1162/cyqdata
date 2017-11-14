@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
+using System.Threading;
 
 
 namespace CYQ.Data
@@ -252,6 +253,9 @@ namespace CYQ.Data
             return connString;
         }
 
+        /// <summary>
+        /// 所有链接的对象集合
+        /// </summary>
         private static MDictionary<string, ConnObject> connDicCache = new MDictionary<string, ConnObject>(StringComparer.OrdinalIgnoreCase);
         internal static ConnObject GetConnObject(string dbConn)
         {
@@ -326,6 +330,39 @@ namespace CYQ.Data
             cb.ProviderName = provider;
             cb.ConnDalType = GetDalType(provider);
             return cb;
+        }
+
+        public static void CheckConnIsOk(object threadID)
+        {
+            while (true)
+            {
+                Thread.Sleep(3000);
+                if (connDicCache.Count > 0)
+                {
+                    string[] items = new string[connDicCache.Count];
+                    connDicCache.Keys.CopyTo(items, 0);
+                    foreach (string key in items)
+                    {
+                        ConnObject obj = connDicCache[key];
+                        if (obj != null)
+                        {
+                            if (!obj.Master.IsOK) { obj.Master.TryTestConn(); }
+                            if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
+                            if (obj.Slave != null && obj.Slave.Count > 0)
+                            {
+                                for (int i = 0; i < obj.Slave.Count; i++)
+                                {
+                                    if (!obj.Slave[i].IsOK)
+                                    {
+                                        obj.Slave[i].TryTestConn();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    items = null;
+                }
+            }
         }
     }
 
