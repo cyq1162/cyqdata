@@ -486,16 +486,21 @@ namespace CYQ.Data
             {
                 try
                 {
-
-                    //else
-                    //{
-                    if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
+                    if (useConnBean != connObject.Master)
                     {
-                        _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
+                        recordsAffected = -2;//从库不允许执行非查询操作。
+                        string msg = "You can't do ExeNonQuerySQL(with transaction or insert) on Slave DataBase!";
+                        debugInfo.Append(msg + AppConst.BR);
+                        WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                     }
-                    //rowCount = 1;
-                    recordsAffected = _com.ExecuteNonQuery();
-                    //}
+                    else
+                    {
+                        if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
+                        {
+                            _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
+                        }
+                        recordsAffected = _com.ExecuteNonQuery();
+                    }
                 }
                 catch (DbException err)
                 {
@@ -930,16 +935,6 @@ namespace CYQ.Data
                 debugInfo.Append(err.Message);
             }
         }
-        internal bool OpenCon()
-        {
-            bool result = OpenCon(connObject.Master);
-            if (_IsAllowRecordSql)
-            {
-                connObject.SetNotAllowSlave();
-                isAllowResetConn = false;
-            }
-            return result;
-        }
 
         /// <summary>
         /// 切换链接
@@ -953,6 +948,16 @@ namespace CYQ.Data
                 conn = cb.Conn;//切换。
                 _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
             }
+        }
+        internal bool OpenCon()
+        {
+            bool result = OpenCon(connObject.Master);
+            if (_IsAllowRecordSql)
+            {
+                connObject.SetNotAllowSlave();
+                isAllowResetConn = false;
+            }
+            return result;
         }
         internal bool OpenCon(ConnBean cb)
         {
