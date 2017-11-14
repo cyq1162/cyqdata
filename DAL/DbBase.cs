@@ -947,7 +947,7 @@ namespace CYQ.Data
         /// <param name="cb"></param>
         private void ResetConn(ConnBean cb)//, bool isAllowReset
         {
-            if (_con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
+            if (cb != null && _con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
             {
                 useConnBean = cb;
                 conn = cb.Conn;//切换。
@@ -980,7 +980,7 @@ namespace CYQ.Data
             }
             catch (DbException err)
             {
-                if (cb == null)
+                if (cb == null || cb == connObject.Master)
                 {
                     connObject.Master.IsOK = false;//主库链接错误。
                     if (connObject.BackUp != null && connObject.BackUp.IsOK)
