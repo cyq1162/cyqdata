@@ -88,7 +88,7 @@ namespace CYQ.Data
                 BackUp = middle;
             }
         }
-        static int index = -1;
+        static int index = -1, times = 1;
         public ConnBean GetSlave()
         {
             if (Slave.Count > 0)
@@ -97,7 +97,11 @@ namespace CYQ.Data
                 {
                     index = new Random().Next(Slave.Count);
                 }
-                index++;
+                if (times % 3 == 0)
+                {
+                    index++;
+                }
+                times++; if (times == 100000) { times = 1; }
                 if (index == Slave.Count)//2
                 {
                     index = 0;

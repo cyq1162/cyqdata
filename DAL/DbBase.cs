@@ -123,10 +123,13 @@ namespace CYQ.Data
                             {
                                 _Version = _VersionCache[conn];
                             }
-                            else if (OpenCon(null))
+                            else if (OpenCon(null))//这里可能切换链接
                             {
                                 _Version = _con.ServerVersion;
-                                _VersionCache.Set(conn, _Version);
+                                if (!_VersionCache.ContainsKey(conn))
+                                {
+                                    _VersionCache.Set(conn, _Version);
+                                }
                                 if (!isOpenTrans)//避免把事务给关闭了。
                                 {
                                     CloseCon();
@@ -489,7 +492,7 @@ namespace CYQ.Data
                 {
                     if (useConnBean != connObject.Master)
                     {
-                       // recordsAffected = -2;//从库不允许执行非查询操作。
+                        // recordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeNonQuerySQL(with transaction or insert) on Slave DataBase!";
                         debugInfo.Append(msg + AppConst.BR);
                         WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
@@ -969,7 +972,7 @@ namespace CYQ.Data
         {
             try
             {
-                if (cb == null && !useConnBean.IsOK)
+                if ((cb == null && !useConnBean.IsOK) || (cb != null && !cb.IsOK))
                 {
                     //主挂了，备也挂了（因为备会替主）
                     ConnBean nextSlaveBean = connObject.GetSlave();
@@ -1046,7 +1049,7 @@ namespace CYQ.Data
                 _con.Open();
                 //if (useConnBean.ConfigName == "Conn")
                 //{
-                    //System.Console.WriteLine(useConnBean.ConfigName);
+                //System.Console.WriteLine(useConnBean.ConfigName);
                 //}
             }
             if (isOpenTrans)

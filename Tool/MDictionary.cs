@@ -212,6 +212,14 @@ namespace CYQ.Data.Tool
                 }
             }
         }
+
+        public bool ContainsKey(K key)
+        {
+            lock (lockObj)
+            {
+                return base.ContainsKey(key);
+            }
+        }
     }
 
     [Serializable]
