@@ -482,13 +482,14 @@ namespace CYQ.Data
         }
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
+            recordsAffected = -2;
             if (OpenCon())//这里已经禁止切换从库了。
             {
                 try
                 {
                     if (useConnBean != connObject.Master)
                     {
-                        recordsAffected = -2;//从库不允许执行非查询操作。
+                       // recordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeNonQuerySQL(with transaction or insert) on Slave DataBase!";
                         debugInfo.Append(msg + AppConst.BR);
                         WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
@@ -507,7 +508,7 @@ namespace CYQ.Data
 
                     string msg = "ExeNonQuery():" + err.Message;
                     debugInfo.Append(msg + AppConst.BR);
-                    recordsAffected = -2;
+                    //recordsAffected = -2;
                     WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                 }
                 finally
@@ -947,7 +948,7 @@ namespace CYQ.Data
         /// <param name="cb"></param>
         private void ResetConn(ConnBean cb)//, bool isAllowReset
         {
-            if (cb != null && _con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
+            if (cb != null && cb.IsOK && _con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
             {
                 useConnBean = cb;
                 conn = cb.Conn;//切换。
@@ -1045,7 +1046,7 @@ namespace CYQ.Data
                 _con.Open();
                 //if (useConnBean.ConfigName == "Conn")
                 //{
-                //    System.Console.WriteLine(useConnBean.ConfigName);
+                    //System.Console.WriteLine(useConnBean.ConfigName);
                 //}
             }
             if (isOpenTrans)
