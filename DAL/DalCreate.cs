@@ -331,7 +331,10 @@ namespace CYQ.Data
             cb.ConnDalType = GetDalType(provider);
             return cb;
         }
-
+        /// <summary>
+        /// 定时检测异常的链接是否恢复。
+        /// </summary>
+        /// <param name="threadID"></param>
         public static void CheckConnIsOk(object threadID)
         {
             while (true)
