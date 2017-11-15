@@ -887,10 +887,10 @@ namespace CYQ.Data
         internal bool TestConn()
         {
             openOKFlag = -1;
-            Thread thread = new Thread(TestOpen);
+            Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
             thread.IsBackground = true;
             thread.Priority = ThreadPriority.Highest;
-            thread.Start();
+            thread.Start(null);
             int sleepTimes = 0;
             while (openOKFlag == -1)
             {
@@ -905,7 +905,7 @@ namespace CYQ.Data
             return openOKFlag == 1;
         }
         private int openOKFlag = -1;
-        private void TestOpen()
+        private void TestOpen(object para)
         {
             try
             {
@@ -942,6 +942,7 @@ namespace CYQ.Data
                 openOKFlag = 0;
                 useConnBean.IsOK = false;
                 debugInfo.Append(err.Message);
+
             }
         }
 
@@ -960,7 +961,13 @@ namespace CYQ.Data
         }
         internal bool OpenCon()
         {
-            bool result = OpenCon(connObject.Master);
+            ConnBean master = connObject.Master;
+            if (!master.IsOK && connObject.BackUp != null && connObject.BackUp.IsOK)
+            {
+                master = connObject.BackUp;
+                connObject.InterChange();//主从换位置
+            }
+            bool result = OpenCon(master);
             if (_IsAllowRecordSql)
             {
                 connObject.SetNotAllowSlave();
