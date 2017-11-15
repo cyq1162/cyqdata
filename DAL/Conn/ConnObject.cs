@@ -57,7 +57,20 @@ namespace CYQ.Data
         {
             if (!IsOK && !string.IsNullOrEmpty(Conn))
             {
-                IsOK = CYQ.Data.Tool.DBTool.TestConn(Conn);
+                DbBase helper = DalCreate.CreateDal(Conn);
+                try
+                {
+
+                    helper.Con.Open();
+                    helper.Con.Close();
+                    IsOK = true;
+                }
+                catch
+                { }
+                finally
+                {
+                    helper.Dispose();
+                }
             }
         }
     }
