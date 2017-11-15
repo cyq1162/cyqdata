@@ -882,12 +882,13 @@ namespace CYQ.Data
 
         internal bool TestConn()
         {
+            openOKFlag = -1;
             Thread thread = new Thread(TestOpen);
             thread.IsBackground = true;
             thread.Priority = ThreadPriority.Highest;
             thread.Start();
             int sleepTimes = 0;
-            while (!isOpenOK)
+            while (openOKFlag == -1)
             {
                 sleepTimes += 30;
                 if (sleepTimes > 3000)
@@ -897,9 +898,9 @@ namespace CYQ.Data
                 }
                 Thread.Sleep(30);
             }
-            return isOpenOK;
+            return openOKFlag == 1;
         }
-        private bool isOpenOK;
+        private int openOKFlag = -1;
         private void TestOpen()
         {
             try
@@ -920,17 +921,21 @@ namespace CYQ.Data
                         }
                     }
                 }
-                if (_con.State == ConnectionState.Closed)
+                if (useConnBean.IsOK && _con.State == ConnectionState.Closed)
                 {
                     _con.Open();
                     _Version = _con.ServerVersion;//顺带设置版本号。
                     _con.Close();
+                    openOKFlag = 1;
                 }
-                isOpenOK = true;
+                else
+                {
+                    openOKFlag = 0;
+                }
             }
             catch (Exception err)
             {
-                isOpenOK = false;
+                openOKFlag = 0;
                 useConnBean.IsOK = false;
                 debugInfo.Append(err.Message);
             }
@@ -976,12 +981,15 @@ namespace CYQ.Data
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
-                Open();
+                if (useConnBean.IsOK)
+                {
+                    Open();
+                }
                 if (IsAllowRecordSql)
                 {
                     _watch.Start();
                 }
-                return true;
+                return useConnBean.IsOK;
             }
             catch (DbException err)
             {

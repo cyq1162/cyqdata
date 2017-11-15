@@ -579,7 +579,7 @@ namespace CYQ.Data
         /// <para>插入选项</para></param>
         public bool Insert(bool autoSetValue, InsertOp option)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return false; }
             if (autoSetValue)
             {
                 _UI.GetAll(!AllowInsertID);//允许插入ID时，也需要获取主键。
@@ -659,7 +659,7 @@ namespace CYQ.Data
         /// <para>自动取值（从上下文环境中）</para></param>
         public bool Update(object where, bool autoSetValue)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return false; }
             if (autoSetValue)
             {
                 _UI.GetAll(false);
@@ -721,7 +721,7 @@ namespace CYQ.Data
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Delete(object where)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return false; }
             if (where == null || Convert.ToString(where) == "")
             {
                 _UI.PrimayAutoGetValue();
@@ -814,7 +814,7 @@ namespace CYQ.Data
         /// <para>返回的记录总数</para></param>
         public MDataTable Select(int pageIndex, int pageSize, object where, out int rowCount)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { rowCount = -1; return new MDataTable(_TableName); }
             rowCount = 0;
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
@@ -955,7 +955,7 @@ namespace CYQ.Data
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Fill(object where)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return false; }
             if (where == null || Convert.ToString(where) == "")
             {
                 _UI.PrimayAutoGetValue();
@@ -1055,7 +1055,7 @@ namespace CYQ.Data
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public int GetCount(object where)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return -1; }
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
             {
@@ -1112,7 +1112,7 @@ namespace CYQ.Data
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Exists(object where)
         {
-            CheckDisposed();
+            if (CheckDisposed()) { return false; }
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
             {
@@ -1479,12 +1479,14 @@ namespace CYQ.Data
             }
         }
         bool hasDisposed = false;
-        private void CheckDisposed()
+        private bool CheckDisposed()
         {
-            if (hasDisposed)
+            if (hasDisposed || _Data.Columns.Count == 0)
             {
                 Error.Throw("The current object 'MAction' has been disposed");
+                return true;
             }
+            return false;
         }
         #endregion
 

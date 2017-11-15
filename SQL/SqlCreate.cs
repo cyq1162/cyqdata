@@ -492,6 +492,7 @@ namespace CYQ.Data.SQL
             {
                 return string.Empty;
             }
+            if (mdc == null || mdc.Count == 0) { return "error : Column.Count=0"; }
             where = SqlFormat.Compatible(where.TrimEnd(), dalType, com == null || com.Parameters.Count == 0);
             if (dalType == DalType.MySql)
             {

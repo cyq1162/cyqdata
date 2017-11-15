@@ -99,11 +99,11 @@ namespace CYQ.Data
                     //int i = index + 1;//³¢ÊÔÒ»ÏÂ¸ö£¬¡£
                     for (int i = index + 1; i < Slave.Count + 1; i++)
                     {
-                        if (i == index) { break; }
                         if (i == Slave.Count)
                         {
                             i = 0;
                         }
+                        if (i == index) { break; }
                         if (Slave[i].IsOK)
                         {
                             return Slave[i];
