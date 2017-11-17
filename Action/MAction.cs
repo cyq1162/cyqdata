@@ -382,7 +382,7 @@ namespace CYQ.Data
             {
                 if (!TableSchema.FillTableSchema(ref _Data, ref dalHelper, _TableName, _sourceTableName))
                 {
-                    if (!dalHelper.TestConn())
+                    if (!dalHelper.TestConn(AllowConnLevel.MaterBackupSlave))
                     {
                         Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.debugInfo.ToString());
                     }

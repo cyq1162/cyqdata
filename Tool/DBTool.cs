@@ -74,7 +74,7 @@ namespace CYQ.Data.Tool
             try
             {
                 DbBase helper = DalCreate.CreateDal(conn);
-                result = helper.TestConn();
+                result = helper.TestConn(AllowConnLevel.Master);
                 if (result)
                 {
                     msg = helper.Version;
@@ -125,7 +125,7 @@ namespace CYQ.Data.Tool
             DbBase helper = DalCreate.CreateDal(conn);
             helper.IsAllowRecordSql = false;
             dbName = helper.DataBase;
-            if (!helper.TestConn())
+            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
                 errInfo = helper.debugInfo.ToString();
                 if (string.IsNullOrEmpty(errInfo))
@@ -515,7 +515,7 @@ namespace CYQ.Data.Tool
         public static DataTable GetSchema(string conn, string connectionName, string[] restrictionValues)
         {
             DbBase helper = DalCreate.CreateDal(conn);
-            if (!helper.TestConn())
+            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
                 return null;
             }
@@ -570,7 +570,7 @@ namespace CYQ.Data.Tool
             errInfo = string.Empty;
             DbBase helper = DalCreate.CreateDal(conn);
             helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
-            if (!helper.TestConn())
+            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
                 errInfo = helper.debugInfo.ToString();
                 if (string.IsNullOrEmpty(errInfo))

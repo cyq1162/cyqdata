@@ -96,4 +96,13 @@ namespace CYQ.Data
         /// </summary>
         No_DBNoExists,
     }
+    /// <summary>
+    /// 测试链接的级别
+    /// </summary>
+    internal enum AllowConnLevel
+    {
+        Master = 1,
+        MasterBackup = 2,
+        MaterBackupSlave = 3
+    }
 }

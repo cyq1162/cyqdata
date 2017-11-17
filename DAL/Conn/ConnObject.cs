@@ -16,6 +16,10 @@ namespace CYQ.Data
         /// 链接的状态是否正常。
         /// </summary>
         internal bool IsOK = true;
+        /// <summary>
+        /// 链接错误时的异常消息。
+        /// </summary>
+        internal string ErrorMsg = string.Empty;
         private string _Conn = string.Empty;
         /// <summary>
         /// 数据库链接
@@ -53,25 +57,44 @@ namespace CYQ.Data
             cb.IsOK = this.IsOK;
             return cb;
         }
-        public void TryTestConn()
+        //public string TryTestConn()
+        //{
+        //    string err;
+        //    return TryTestConn(out err);
+        //}
+        public string TryTestConn()
         {
-            if (!IsOK && !string.IsNullOrEmpty(Conn))
+            string version = string.Empty;
+            //err = string.Empty;
+            if (!string.IsNullOrEmpty(Conn))
             {
                 DbBase helper = DalCreate.CreateDal(Conn);
                 try
                 {
 
                     helper.Con.Open();
+                    version = helper.Con.ServerVersion;
+                    if (string.IsNullOrEmpty(version)) { version = helper.dalType.ToString(); }
                     helper.Con.Close();
                     IsOK = true;
+                    ErrorMsg = string.Empty;
                 }
-                catch
-                { }
+                catch (Exception er)
+                {
+                    ErrorMsg = er.Message;
+                    //err = er.Message;
+                    IsOK = false;
+                }
                 finally
                 {
                     helper.Dispose();
                 }
             }
+            else
+            {
+                IsOK = false;
+            }
+            return version;
         }
     }
     internal class ConnObject

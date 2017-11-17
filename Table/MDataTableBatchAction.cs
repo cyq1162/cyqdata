@@ -472,7 +472,7 @@ namespace CYQ.Data.Table
                     if (isGoOn)
                     {
                         con = _dalHelper.Con as SqlConnection;
-                        _dalHelper.OpenCon(null);//如果未开启，则开启，打开链接后，如果以前没执行过数据，事务对象为空，这时会产生事务对象
+                        _dalHelper.OpenCon(null, AllowConnLevel.MasterBackup);//如果未开启，则开启，打开链接后，如果以前没执行过数据，事务对象为空，这时会产生事务对象
                         sqlTran = _dalHelper._tran as SqlTransaction;
                     }
                 }

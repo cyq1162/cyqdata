@@ -123,7 +123,7 @@ namespace CYQ.Data
                             {
                                 _Version = _VersionCache[conn];
                             }
-                            else if (OpenCon(null))//这里可能切换链接
+                            else if (OpenCon(useConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
                             {
                                 _Version = _con.ServerVersion;
                                 if (!_VersionCache.ContainsKey(conn))
@@ -425,7 +425,7 @@ namespace CYQ.Data
             {
                 coSlave = connObject.GetSlave();
             }
-            if (OpenCon(coSlave))
+            if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {
                 try
                 {
@@ -486,14 +486,14 @@ namespace CYQ.Data
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
             recordsAffected = -2;
-            if (OpenCon())//这里已经禁止切换从库了。
+            if (OpenCon())//这里也会切库了。
             {
                 try
                 {
                     if (useConnBean != connObject.Master)
                     {
                         // recordsAffected = -2;//从库不允许执行非查询操作。
-                        string msg = "You can't do ExeNonQuerySQL(with transaction or insert) on Slave DataBase!";
+                        string msg = "You can't do ExeNonQuerySQL() on Slave DataBase!";
                         debugInfo.Append(msg + AppConst.BR);
                         WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                     }
@@ -554,7 +554,7 @@ namespace CYQ.Data
             {
                 coSlave = connObject.GetSlave();
             }
-            if (OpenCon(coSlave))
+            if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {
                 try
                 {
@@ -883,21 +883,51 @@ namespace CYQ.Data
                 _watch = null;
             }
         }
-
-        internal bool TestConn()
+        int threadCount = 0;
+        /// <summary>
+        /// 测试链接
+        /// </summary>
+        /// <param name="allowLevel">1：只允许当前主链接；2：允许主备链接；3：允许主备从链接</param>
+        /// <returns></returns>
+        internal bool TestConn(AllowConnLevel allowLevel)
         {
+            threadCount = 0;
             openOKFlag = -1;
-            Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
-            thread.IsBackground = true;
-            thread.Priority = ThreadPriority.Highest;
-            thread.Start(null);
+            ConnObject obj = connObject;
+            if (obj.Master != null && obj.Master.IsOK && (int)allowLevel >= 1)
+            {
+                Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
+                thread.Start(obj.Master);
+                threadCount++;
+            }
+            Thread.Sleep(30);
+            if (openOKFlag == -1 && obj.BackUp != null && obj.BackUp.IsOK && (int)allowLevel >= 2)
+            {
+                Thread.Sleep(30);
+                Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
+                thread.Start(obj.BackUp);
+                threadCount++;
+            }
+            if (openOKFlag == -1 && obj.Slave != null && obj.Slave.Count > 0 && (int)allowLevel >= 3)
+            {
+                for (int i = 0; i < obj.Slave.Count; i++)
+                {
+                    Thread.Sleep(30);
+                    if (openOKFlag == -1 && obj.Slave[i].IsOK)
+                    {
+                        Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
+                        thread.Start(obj.Slave[i]);
+                        threadCount++;
+                    }
+                }
+            }
+
             int sleepTimes = 0;
-            while (openOKFlag == -1)
+            while (openOKFlag == -1 || threadCount == errorCount)
             {
                 sleepTimes += 30;
                 if (sleepTimes > 3000)
                 {
-                    thread.Abort();
                     break;
                 }
                 Thread.Sleep(30);
@@ -905,44 +935,24 @@ namespace CYQ.Data
             return openOKFlag == 1;
         }
         private int openOKFlag = -1;
+        private int errorCount = 0;
         private void TestOpen(object para)
         {
-            try
+            ConnBean connBean = para as ConnBean;
+            if (connBean != null && connBean.IsOK && openOKFlag == -1)
             {
-                if (!useConnBean.IsOK)
+                string v = connBean.TryTestConn();//顺带设置版本号。
+                if (connBean.IsOK && openOKFlag != 1)
                 {
-                    if (connObject.BackUp != null && connObject.BackUp.IsOK)
-                    {
-                        ResetConn(connObject.BackUp);//重置链接。
-                        connObject.InterChange();//主从换位置
-                    }
-                    else if (connObject.Slave.Count > 0) // 切到从库，但只能做查询操作。
-                    {
-                        ConnBean nextSlaveBean = connObject.GetSlave();
-                        if (nextSlaveBean != null)
-                        {
-                            ResetConn(nextSlaveBean);//重置链接。
-                        }
-                    }
-                }
-                if (useConnBean.IsOK && _con.State == ConnectionState.Closed)
-                {
-                    _con.Open();
-                    _Version = _con.ServerVersion;//顺带设置版本号。
-                    _con.Close();
                     openOKFlag = 1;
+                    _Version = v;
+                    ResetConn(connBean);//切到正常的去。
                 }
                 else
                 {
-                    openOKFlag = 0;
+                    errorCount++;
+                    debugInfo.Append(connBean.ErrorMsg);
                 }
-            }
-            catch (Exception err)
-            {
-                openOKFlag = 0;
-                useConnBean.IsOK = false;
-                debugInfo.Append(err.Message);
-
             }
         }
 
@@ -950,15 +960,21 @@ namespace CYQ.Data
         /// 切换链接
         /// </summary>
         /// <param name="cb"></param>
-        private void ResetConn(ConnBean cb)//, bool isAllowReset
+        private bool ResetConn(ConnBean cb)//, bool isAllowReset
         {
             if (cb != null && cb.IsOK && _con != null && _con.State != ConnectionState.Open && conn != cb.Conn)
             {
                 useConnBean = cb;
                 conn = cb.Conn;//切换。
                 _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
+                return true;
             }
+            return false;
         }
+        /// <summary>
+        /// 打开链接只切主备
+        /// </summary>
+        /// <returns></returns>
         internal bool OpenCon()
         {
             ConnBean master = connObject.Master;
@@ -967,34 +983,56 @@ namespace CYQ.Data
                 master = connObject.BackUp;
                 connObject.InterChange();//主从换位置
             }
-            bool result = OpenCon(master);
-            if (_IsAllowRecordSql)
+            if (master.IsOK || (connObject.BackUp != null && connObject.BackUp.IsOK))
             {
-                connObject.SetNotAllowSlave();
-                isAllowResetConn = false;
+                bool result = OpenCon(master, AllowConnLevel.MasterBackup);
+                if (result && _IsAllowRecordSql)
+                {
+                    connObject.SetNotAllowSlave();
+                    isAllowResetConn = false;
+                }
+                return result;
             }
-            return result;
+            return false;
         }
-        internal bool OpenCon(ConnBean cb)
+        /// <summary>
+        /// 打开链接，允许切从。
+        /// </summary>
+        internal bool OpenCon(ConnBean cb, AllowConnLevel leve)
         {
             try
             {
-                if ((cb == null && !useConnBean.IsOK) || (cb != null && !cb.IsOK))
+                if (cb == null) { cb = useConnBean; }
+                if (!cb.IsOK)
                 {
-                    //主挂了，备也挂了（因为备会替主）
-                    ConnBean nextSlaveBean = connObject.GetSlave();
-                    if (nextSlaveBean != null)
+                    if ((int)leve > 1 && connObject.BackUp != null && connObject.BackUp.IsOK)
                     {
-                        ResetConn(nextSlaveBean);//重置链接。
+                        ResetConn(connObject.BackUp);//重置链接。
+                        connObject.InterChange();//主从换位置
+                        return OpenCon(connObject.Master, leve);
+                    }
+                    else if ((int)leve > 2)
+                    {
+                        //主挂了，备也挂了（因为备会替主）
+                        ConnBean nextSlaveBean = connObject.GetSlave();
+                        if (nextSlaveBean != null)
+                        {
+                            ResetConn(nextSlaveBean);//重置链接。
+                            return OpenCon(nextSlaveBean, leve);
+                        }
                     }
                 }
-                else if (!isOpenTrans && cb != null && isAllowResetConn && connObject.IsAllowSlave())
+                else if (!isOpenTrans && cb != useConnBean && isAllowResetConn && connObject.IsAllowSlave())
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
                 if (useConnBean.IsOK)
                 {
-                    Open();
+                    Open();//异常抛
+                }
+                else
+                {
+                    WriteError("OpenCon():" + useConnBean.ErrorMsg);
                 }
                 if (IsAllowRecordSql)
                 {
@@ -1004,46 +1042,11 @@ namespace CYQ.Data
             }
             catch (DbException err)
             {
-                if (cb == null || cb == connObject.Master)
-                {
-                    connObject.Master.IsOK = false;//主库链接错误。
-                    if (connObject.BackUp != null && connObject.BackUp.IsOK)
-                    {
-                        ResetConn(connObject.BackUp);//重置链接。
-                        connObject.InterChange();//主从换位置
-                        return OpenCon(connObject.Master);
-                    }
-                    else // 切到从库，但只能做查询操作。
-                    {
-                        ConnBean nextSlaveBean = connObject.GetSlave();
-                        //nextSlaveBean.
-                        if (nextSlaveBean != null)
-                        {
-                            ResetConn(nextSlaveBean);//重置链接。
-                            return OpenCon(nextSlaveBean);
-                        }
-                    }
-                }
-                else
-                {
-                    cb.IsOK = false;
-                    //if (cb.ConfigName.IndexOf("_Slave") > -1)//从库错误时，尝试切换到其它从库。
-                    //{
-                    ConnBean nextSlaveBean = connObject.GetSlave();
-                    if (nextSlaveBean != null)
-                    {
-                        ResetConn(nextSlaveBean);//重置链接。
-                        return OpenCon(nextSlaveBean);
-                    }
-                    //}
-                }
-
-
-                WriteError("OpenCon():" + err.Message);
-
+                useConnBean.IsOK = false;
+                useConnBean.ErrorMsg = err.Message;
+                return OpenCon(null, leve);
 
             }
-            return false;
         }
         private void Open()
         {
@@ -1056,7 +1059,7 @@ namespace CYQ.Data
                 _con.Open();
                 //if (useConnBean.ConfigName == "Conn")
                 //{
-                //System.Console.WriteLine(useConnBean.ConfigName);
+                System.Console.WriteLine(useConnBean.ConfigName);
                 //}
             }
             if (isOpenTrans)

@@ -285,7 +285,7 @@ namespace CYQ.Data.SQL
 
             DbBase helper = DalCreate.CreateDal(conn);
             helper.ChangeDatabaseWithCheck(tableName);//¼ì²âdbname.dbo.tablenameµÄÇé¿ö
-            if (!helper.TestConn())
+            if (!helper.TestConn(AllowConnLevel.Master))
             {
                 helper.Dispose();
                 return sql;

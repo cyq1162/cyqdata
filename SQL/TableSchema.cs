@@ -101,8 +101,8 @@ namespace CYQ.Data.SQL
                             column.IsAutoIncrement = true;
                         }
                     }
-                    DefaultValueAttribute dva=GetAttr<DefaultValueAttribute>(pis[i]);
-                    if (dva != null && dva.DefaultValue!=null)
+                    DefaultValueAttribute dva = GetAttr<DefaultValueAttribute>(pis[i]);
+                    if (dva != null && dva.DefaultValue != null)
                     {
                         if (column.SqlType == SqlDbType.Bit)
                         {
@@ -607,7 +607,7 @@ namespace CYQ.Data.SQL
         }
         private static MDataColumn GetViewColumns(string sqlText, ref DbBase helper)
         {
-            helper.OpenCon(null);
+            helper.OpenCon(null, AllowConnLevel.MaterBackupSlave);
             helper.Com.CommandText = sqlText;
             DbDataReader sdr = helper.Com.ExecuteReader(CommandBehavior.KeyInfo);
             DataTable keyDt = null;
