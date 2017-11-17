@@ -896,17 +896,19 @@ namespace CYQ.Data
             ConnObject obj = connObject;
             if (obj.Master != null && obj.Master.IsOK && (int)allowLevel >= 1)
             {
+                threadCount++;
                 Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                 thread.Start(obj.Master);
-                threadCount++;
+                
             }
             Thread.Sleep(30);
             if (openOKFlag == -1 && obj.BackUp != null && obj.BackUp.IsOK && (int)allowLevel >= 2)
             {
+                threadCount++;
                 Thread.Sleep(30);
                 Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                 thread.Start(obj.BackUp);
-                threadCount++;
+               
             }
             if (openOKFlag == -1 && obj.Slave != null && obj.Slave.Count > 0 && (int)allowLevel >= 3)
             {
@@ -915,9 +917,10 @@ namespace CYQ.Data
                     Thread.Sleep(30);
                     if (openOKFlag == -1 && obj.Slave[i].IsOK)
                     {
+                        threadCount++;
                         Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                         thread.Start(obj.Slave[i]);
-                        threadCount++;
+                       
                     }
                 }
             }
