@@ -923,10 +923,10 @@ namespace CYQ.Data
             }
 
             int sleepTimes = 0;
-            while (openOKFlag == -1 || threadCount == errorCount)
+            while (openOKFlag == -1)
             {
                 sleepTimes += 30;
-                if (sleepTimes > 3000)
+                if (sleepTimes > 3000 || threadCount == errorCount)
                 {
                     break;
                 }
