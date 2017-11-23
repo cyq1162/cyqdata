@@ -63,7 +63,7 @@ namespace CYQ.Data.Tool
         /// Escape options
         /// <para>转义符号</para>
         /// </summary>
-        public EscapeOp Escape = EscapeOp.Default;
+        public EscapeOp Escape = JsonHelper.DefaultEscape;
         /// <summary>
         /// convert filed to lower
         /// <para>是否将名称转为小写</para>
