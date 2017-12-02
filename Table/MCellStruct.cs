@@ -76,10 +76,31 @@ namespace CYQ.Data.Table
         /// 字段描述
         /// </summary>
         public string Description;
+        private object _DefaultValue;
         /// <summary>
         /// 默认值
         /// </summary>
-        public object DefaultValue;
+        public object DefaultValue
+        {
+            get { return _DefaultValue; }
+            set { 
+                int groupID=DataType.GetGroup(SqlType);
+                if (groupID == 1 || groupID == 3)
+                {
+                    string defaultValue = Convert.ToString(value);
+                    if (!string.IsNullOrEmpty(defaultValue))
+                    {
+                        defaultValue = defaultValue.Trim('N','(', ')');//处理int型默认值（1）带括号的问题。
+                    }
+                    _DefaultValue = defaultValue;
+                }
+                else
+                {
+                    _DefaultValue = value;
+                }
+            }
+        }
+    
         /// <summary>
         /// 是否允许为Null
         /// </summary>

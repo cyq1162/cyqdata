@@ -549,7 +549,7 @@ namespace CYQ.Data.Tool
             else
             {
                 conn = dbName + "Conn";
-                if (tName.IndexOf('(') == -1)
+                if (tName.IndexOfAny(new char[] { '(', '.' }) == -1)
                 {
                     tName = dbName + "." + tName;//单表
                 }

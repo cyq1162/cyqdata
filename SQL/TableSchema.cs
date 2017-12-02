@@ -211,6 +211,7 @@ namespace CYQ.Data.SQL
                 case DalType.Xml:
                     if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
                     {
+                        tableName = SqlFormat.NotKeyword(tableName);//处理database..tableName;
                         tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
                         string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
                         MDataColumn mdc = MDataColumn.CreateFrom(fileName);
@@ -291,7 +292,7 @@ namespace CYQ.Data.SQL
                                 tableName = SqlFormat.NotKeyword(tableName);
                                 sql = GetSybaseColumns();
                             }
-                            helper.AddParameters("TableName", tableName, DbType.String, 150, ParameterDirection.Input);
+                            helper.AddParameters("TableName", SqlFormat.Keyword(SqlFormat.NotKeyword(tableName),helper.dalType), DbType.String, 150, ParameterDirection.Input);
                             DbDataReader sdr = helper.ExeDataReader(sql, false);
                             if (sdr != null)
                             {

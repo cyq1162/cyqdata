@@ -67,10 +67,14 @@ namespace CYQ.Data.Xml
         /// <returns></returns>
         public XmlNode Get(string idOrName)
         {
-            XmlNode node = GetByID(idOrName);
+            return Get(idOrName, null);
+        }
+        public XmlNode Get(string idOrName, XmlNode parentNode)
+        {
+            XmlNode node = GetByID(idOrName, parentNode);
             if (node == null)
             {
-                node = GetByName(idOrName);
+                node = GetByName(idOrName, parentNode);
                 if (node == null)
                 {
                     switch (idOrName.ToLower())
@@ -83,7 +87,7 @@ namespace CYQ.Data.Xml
                         case "meta":
                         case "link":
                         case "script":
-                            XmlNodeList xList = GetList(idOrName);
+                            XmlNodeList xList = GetList(idOrName.ToLower(), parentNode);
                             if (xList != null)
                             {
                                 node = xList[0];
@@ -91,16 +95,6 @@ namespace CYQ.Data.Xml
                             break;
                     }
                 }
-            }
-
-            return node;
-        }
-        public XmlNode Get(string idOrName, XmlNode parentNode)
-        {
-            XmlNode node = GetByID(idOrName, parentNode);
-            if (node == null)
-            {
-                node = GetByName(idOrName, parentNode);
             }
             return node;
         }
@@ -706,17 +700,25 @@ namespace CYQ.Data.Xml
         }
         public void Set(string idOrName, SetType setType, params string[] values)
         {
-            XmlNode node = Get(idOrName);
+            Set(null, idOrName, setType, values);
+        }
+        public void Set(XmlNode parentNode, string idOrName, SetType setType, params string[] values)
+        {
+            XmlNode node = Get(idOrName, parentNode);
             Set(node, setType, values);
+        }
+        public void Set(string idOrName, string value)
+        {
+            Set(null, idOrName, value);
         }
         /// <summary>
         /// 对节点赋值（此方法会忽略hidden隐藏域，隐藏节点赋值请用其它重载方法）
         /// </summary>
         /// <param name="idOrName"></param>
         /// <param name="value"></param>
-        public void Set(string idOrName, string value)
+        public void Set(XmlNode parentNode, string idOrName, string value)
         {
-            XmlNode node = Get(idOrName);
+            XmlNode node = Get(idOrName, parentNode);
             if (node != null)
             {
                 SetType setType = SetType.InnerXml;
