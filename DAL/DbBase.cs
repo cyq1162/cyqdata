@@ -238,6 +238,7 @@ namespace CYQ.Data
                         conn = GetNewConn(dbName);
                         _con.ConnectionString = DalCreate.FormatConn(dalType, conn);
                         connObject = DalCreate.GetConnObject(dbName + "Conn");
+                        connObject.Master.ConfigName = dbName + "Conn";
                         connObject.Master.Conn = conn;
                         return DbResetResult.Yes;
                     }
@@ -270,9 +271,9 @@ namespace CYQ.Data
         {
             if (IsOwnerOtherDb(dbTableName))//是其它数据库名称。
             {
-                string dbName = dbTableName.Split('.')[0];
                 if (_con.State != ConnectionState.Closed)//事务中。。创建新链接切换
                 {
+                    string dbName = dbTableName.Split('.')[0];
                     return DalCreate.CreateDal(GetNewConn(dbName));
                 }
 
@@ -1062,7 +1063,7 @@ namespace CYQ.Data
                 _con.Open();
                 //if (useConnBean.ConfigName == "Conn")
                 //{
-                System.Console.WriteLine(useConnBean.ConfigName);
+                //System.Console.WriteLine(useConnBean.ConfigName);
                 //}
             }
             if (isOpenTrans)

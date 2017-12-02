@@ -193,38 +193,49 @@ namespace CYQ.Data.SQL
         public static MDataColumn GetColumns(string tableName, ref DbBase dbHelper)
         {
             tableName = Convert.ToString(SqlCreate.SqlToViewSql(tableName));
-            DalType dalType = dbHelper.dalType;
-            tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
-
             string key = GetSchemaKey(tableName, dbHelper.DataBase, dbHelper.dalType);
             if (CacheManage.LocalInstance.Contains(key))//缓存里获取
             {
                 return CacheManage.LocalInstance.Get<MDataColumn>(key).Clone();
             }
-            switch (dalType)
+            DalType dalType = dbHelper.dalType;
+
+            #region 文本数据库处理。
+            if (dalType == DalType.Txt || dalType == DalType.Xml)
             {
-                case DalType.SQLite:
-                case DalType.MySql:
-                    tableName = SqlFormat.NotKeyword(tableName);
-                    break;
-                case DalType.Txt:
-                case DalType.Xml:
-                    if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
-                    {
-                        tableName = SqlFormat.NotKeyword(tableName);//处理database..tableName;
-                        tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
-                        string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
-                        MDataColumn mdc = MDataColumn.CreateFrom(fileName);
-                        mdc.dalType = dalType;
-                        return mdc;
-                    }
-                    return GetTxtDBViewColumns(tableName);
+                if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
+                {
+                    tableName = SqlFormat.NotKeyword(tableName);//处理database..tableName;
+                    tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
+                    string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
+                    MDataColumn mdc = MDataColumn.CreateFrom(fileName);
+                    mdc.dalType = dalType;
+                    return mdc;
+                }
+                return GetTxtDBViewColumns(tableName);//处理视图
             }
+            #endregion
+            
+
+            
+            tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
+
+            //switch (dalType)
+            //{
+            //    case DalType.SQLite:
+            //    case DalType.MySql:
+            //        tableName = SqlFormat.NotKeyword(tableName);
+            //        break;
+                    
+            //}
+
 
             MDataColumn mdcs = new MDataColumn();
-            mdcs.dalType = dbHelper.dalType;
+            mdcs.dalType = dalType
+                ;
             //如果table和helper不在同一个库
             DbBase helper = dbHelper.ResetDbBase(tableName);
+
             helper.IsAllowRecordSql = false;//内部系统，不记录SQL表结构语句。
             try
             {
@@ -292,7 +303,7 @@ namespace CYQ.Data.SQL
                                 tableName = SqlFormat.NotKeyword(tableName);
                                 sql = GetSybaseColumns();
                             }
-                            helper.AddParameters("TableName", SqlFormat.Keyword(SqlFormat.NotKeyword(tableName),helper.dalType), DbType.String, 150, ParameterDirection.Input);
+                            helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                             DbDataReader sdr = helper.ExeDataReader(sql, false);
                             if (sdr != null)
                             {
@@ -884,7 +895,7 @@ namespace CYQ.Data.SQL
         /// 是否存在表或视图
         /// </summary>
         /// <param name="type">"U"或"V"</param>
-        /// <param name="name">表名或视图名</param>
+        /// <param name="name">表名或视图名，允许database.tableName</param>
         public static bool Exists(string type, string name, ref DbBase helper)
         {
             if (type == "U" && tableCache.Count > 0)

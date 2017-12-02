@@ -549,9 +549,10 @@ namespace CYQ.Data.Tool
             else
             {
                 conn = dbName + "Conn";
-                if (tName.IndexOfAny(new char[] { '(', '.' }) == -1)
+                if (tName.IndexOfAny(new char[] { '(' }) == -1)
                 {
-                    tName = dbName + "." + tName;//单表
+                    tName = SqlFormat.NotKeyword(tName);
+                    //tName = dbName + "." + tName;//单表
                 }
 
             }
@@ -569,7 +570,17 @@ namespace CYQ.Data.Tool
         {
             errInfo = string.Empty;
             DbBase helper = DalCreate.CreateDal(conn);
-            helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
+            DbResetResult result = helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
+            switch (result)
+            {
+                case DbResetResult.No_DBNoExists:
+                    helper.Dispose();
+                    return null;
+                case DbResetResult.No_SaveDbName:
+                case DbResetResult.Yes:
+                    tableName = SqlFormat.NotKeyword(tableName);//same database no need database.tablename
+                    break;
+            }
             if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
                 errInfo = helper.debugInfo.ToString();
@@ -581,7 +592,7 @@ namespace CYQ.Data.Tool
                 Error.Throw(errInfo);
                 return null;
             }
-            if (!tableName.Contains(" "))
+            if (!tableName.Contains(" "))//
             {
                 tableName = GetMapTableName(conn, tableName);
             }
@@ -726,6 +737,7 @@ namespace CYQ.Data.Tool
                 }
             }
             key = tableName.Replace("_", "").Replace("-", "").Replace(" ", "").ToLower();
+            key = SqlFormat.NotKeyword(key);
             if (mapTable != null && mapTable.Count > 0 && mapTable.ContainsKey(key))
             {
                 return mapTable[key];

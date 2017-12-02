@@ -42,6 +42,7 @@ namespace CYQ.Data.SQL
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
                         case DalType.SQLite:
                             return "\"" + name + "\"";
+                            
                         case DalType.Txt:
                         case DalType.Xml:
                             return NotKeyword(name);

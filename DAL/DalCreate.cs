@@ -29,7 +29,19 @@ namespace CYQ.Data
         /// <returns></returns>
         public static DbBase CreateDal(string dbConn)
         {
-            return GetDbBaseBy(GetConnObject(dbConn));
+            DbBase db = GetDbBaseBy(GetConnObject(dbConn));
+            if (db.connObject.Master.ConfigName != dbConn && dbConn.EndsWith("Conn"))//需要切换配置。
+            {
+                DbResetResult result = db.ChangeDatabase(dbConn.Substring(0, dbConn.Length - 4));
+                if (result == DbResetResult.Yes) // 写入缓存
+                {
+                    if (!connDicCache.ContainsKey(dbConn))
+                    {
+                        connDicCache.Set(dbConn, db.connObject);
+                    }
+                }
+            }
+            return db;
             //ConnEntity cEntity = GetConnString(dbConn);
             //DbBase db = GetDbBaseBy(cEntity.Conn, cEntity.ProviderName);
             //db.connObject = cEntity;
@@ -305,7 +317,7 @@ namespace CYQ.Data
                     co.Slave.Add(cbSlave);
                 }
             }
-            if (!connDicCache.ContainsKey(dbConn))
+            if (!connDicCache.ContainsKey(dbConn) && co.Master.ConfigName == dbConn) // 非一致的，由外面切换后再缓存
             {
                 connDicCache.Set(dbConn, co);
             }
