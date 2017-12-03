@@ -1,0 +1,5 @@
+只要在项目源码中包含文件夹的源码一起编绎，即可在.net core 下运行。
+
+部分代码需要引用：Microsoft.AspNetCore.All
+
+可以通过nuget搜索名称安装引用即可。
