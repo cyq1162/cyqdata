@@ -1155,8 +1155,19 @@ namespace CYQ.Data.Table
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {
+
+                DataTable dt = null;
+                bool noSchema = OracleDal.clientType == 0;
+                if (!noSchema)
+                {
+                    try
+                    {
+                        dt = sdr.GetSchemaTable();
+                    }
+                    catch { noSchema = true; }
+                }
                 #region 读表结构
-                if (OracleDal.clientType == 0) //OracleClient 不支持子查询的GetSchemaTable，但ODP.NET是支持的。
+                if (noSchema) //OracleClient 不支持子查询的GetSchemaTable，但ODP.NET是支持的。
                 {
                     //从DataReader读取表结构，不管有没有数据。
                     string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
@@ -1177,30 +1188,11 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                else
+                else if (dt != null && dt.Rows.Count > 0)
                 {
-                    DataTable dt = sdr.GetSchemaTable();
-                    if (dt != null && dt.Rows.Count > 0)
-                    {
-                        TableSchema.FixTableSchemaType(sdr, dt);
-                        mTable.Columns = TableSchema.GetColumns(dt);
-                        mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
-                        //MCellStruct ms;
-                        //string name;
-                        //for (int i = 0; i < sdr.FieldCount; i++)//设置相同的读索引。
-                        //{
-                        //    name = sdr.GetName(i).Trim('"');//mssql是有空列存在的。
-                        //    if (string.IsNullOrEmpty(name))
-                        //    {
-                        //        name = "Empty_" + i;
-                        //    }
-                        //    ms = mTable.Columns[name];//sqlite的双引号问题
-                        //    if (ms != null)
-                        //    {
-                        //        ms.ReaderIndex = i;
-                        //    }
-                        //}
-                    }
+                    TableSchema.FixTableSchemaType(sdr, dt);
+                    mTable.Columns = TableSchema.GetColumns(dt);
+                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                 }
                 #endregion
                 if (sdr.HasRows)
