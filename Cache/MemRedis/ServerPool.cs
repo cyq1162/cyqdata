@@ -63,7 +63,7 @@ namespace CYQ.Data.Cache
         internal uint MinPoolSize { get { return minPoolSize; } set { minPoolSize = value; } }
         internal TimeSpan SocketRecycleAge { get { return socketRecycleAge; } set { socketRecycleAge = value; } }
 
-        private string clientName;
+        //private string clientName;
         /// <summary>
         /// Internal constructor. This method takes the array of hosts and sets up an internal list of socketpools.
         /// </summary>

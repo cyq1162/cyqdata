@@ -63,7 +63,7 @@ namespace CYQ.Data.Table
             return mColumns;
         }
 
-        public new MCellStruct this[string key]
+        public MCellStruct this[string key]
         {
             get
             {
@@ -546,7 +546,7 @@ namespace CYQ.Data.Table
             }
 
         }
-        public new void InsertRange(int index, MDataColumn mdc)
+        public void InsertRange(int index, MDataColumn mdc)
         {
             for (int i = mdc.Count; i >= 0; i--)
             {

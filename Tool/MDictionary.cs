@@ -213,7 +213,7 @@ namespace CYQ.Data.Tool
             }
         }
 
-        public bool ContainsKey(K key)
+        public new bool ContainsKey(K key)
         {
             lock (lockObj)
             {

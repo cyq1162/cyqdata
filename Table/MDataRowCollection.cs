@@ -213,7 +213,7 @@ namespace CYQ.Data.Table
         {
             get { return false; }
         }
-        internal new List<MDataRow> FindAll(Predicate<MDataRow> match)
+        internal List<MDataRow> FindAll(Predicate<MDataRow> match)
         {
             return RowList.FindAll(match);
         }

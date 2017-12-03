@@ -4,6 +4,7 @@ using System.Runtime.Remoting.Activation;
 using System.Runtime.Remoting;
 using System;
 using System.Reflection;
+using System.Runtime.Remoting.Services;
 
 namespace CYQ.Data.Orm
 {
@@ -45,7 +46,7 @@ namespace CYQ.Data.Orm
                     defaultProxy.InitializeServerObject(constructCallMsg);
 
                     //本类是一个RealProxy，它可通过GetTransparentProxy函数得到透明代理
-                    return System.Runtime.Remoting.Services.EnterpriseServicesHelper.CreateConstructionReturnMessage(constructCallMsg, (MarshalByRefObject)GetTransparentProxy());
+                    return EnterpriseServicesHelper.CreateConstructionReturnMessage(constructCallMsg, (MarshalByRefObject)GetTransparentProxy());
 
                 }
                 else if (msg is IMethodCallMessage)

@@ -214,10 +214,9 @@ namespace CYQ.Data
             //}
         }
         /// <summary>
-
-
         /// <param name="isClearPara">IsClearParameters
         /// <para>是否清除参数</para></param>
+        /// </summary>
         public void ResetProc(object procNameOrSql, bool isClearPara)
         {
             _procName = procNameOrSql.ToString().Trim();
@@ -235,7 +234,8 @@ namespace CYQ.Data
                     break;
             }
         }
-
+       
+        ///<summary>
         /// Toggle tProc Action: To switch between other sql/procedure, use this method
         /// <para>切换操作：如需操作其它语句或存储过程，通过此方法切换</para>
         /// </summary>
