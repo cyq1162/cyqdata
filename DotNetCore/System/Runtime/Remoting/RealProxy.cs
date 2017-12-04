@@ -12,7 +12,10 @@ namespace System.Runtime.Remoting.Proxies
         {
             this.serverType = serverType;
         }
-
+        internal MarshalByRefObject GetTransparentProxy()
+        {
+            throw new NotImplementedException();
+        }
         internal void InitializeServerObject(IConstructionCallMessage constructCallMsg)
         {
             throw new NotImplementedException();
