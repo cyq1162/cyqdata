@@ -369,7 +369,7 @@ namespace CYQ.Data.SQL
                             {
                                 helper.Con.Open();
                             }
-                            DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, tableName });
+                            DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null,SqlFormat.NotKeyword(tableName) });
                             if (!helper.isOpenTrans)
                             {
                                 helper.Con.Close();
