@@ -248,7 +248,7 @@ namespace CYQ.Data.Tool
         }
         private void SetEscape(ref string value)
         {
-            if (Escape == EscapeOp.No) { return; }
+            //if (Escape == EscapeOp.No) { return; }
             //if (value.IndexOfAny(new char[] { '"', '\\', '\n' }) > -1)//easyui 输出时需要处理\\符号
             //{
             bool isInsert = false;
@@ -257,32 +257,56 @@ namespace CYQ.Data.Tool
             for (int i = 0; i < len; i++)
             {
                 char c = value[i];
-                if (Escape == EscapeOp.Yes && c < 32)
+                if (c < 32 && Escape != EscapeOp.No)
                 {
+                    switch (c)
+                    {
+                        case '\n':
+                            sb.Append("\\n");//直接替换追加。
+                            break;
+                        case '\t':
+                            if (Escape == EscapeOp.Yes)
+                            {
+                                sb.Append("\\t");//直接替换追加
+                            }
+                            break;
+                        case '\r':
+                            if (Escape == EscapeOp.Yes)
+                            {
+                                sb.Append("\\r");//直接替换追加
+                            }
+                            break;
+                        default:
+                            //sb.Append(" ");//对于特殊符号，直接替换成空。
+                            break;
+                    }
+                    // '\n'=10  '\r'=13 '\t'=9 都会被过滤。
                     isInsert = true;
-                    sb.Append(" ");//对于特殊符号，直接替换成空。
+                   // sb.Append(" ");//对于特殊符号，直接替换成空。
                     continue;
                 }
                 switch (c)
                 {
                     case '"':
-                        if (i == 0 || value[i - 1] != '\\')
+                        if (i == 0 || value[i - 1] != '\\')//这个是强制转，不然整体格式有问题。
                         {
                             isInsert = true;
                             sb.Append("\\");
                         }
                         break;
-                    case '\n':
-                         isInsert = true;
-                        sb.Append("\\n");//直接替换追加
-                        continue;
-                    case '\t':
-                    case '\r':
-                        isInsert = true;
-                        sb.Append(" ");//直接替换追加
-                        continue;
+                    //case '\n':
+                    //    isInsert = true;
+                    //    sb.Append("\\n");//直接替换追加
+                    //    continue;
+                    //case '\t':
+                    //case '\r':
+                    //    isInsert = true;
+                    //    sb.Append(" ");//直接替换追加
+                    //    continue;
                     case '\\':
-                        if (i == len - 1 || ((value[i + 1] != '"') && value[i + 1] != 'n' && value[i + 1] != 't' && value[i + 1] != 'r'))
+                        if ((i!=0 && i == len - 1 && value[i-1]!='\\')//这部分是强制转，不会然影响整体格式
+                            || Escape== EscapeOp.Yes
+                            || (Escape== EscapeOp.Default && i != len - 1 && value[i + 1] != '"'))// && value[i + 1] != 'n' && value[i + 1] != 't' && value[i + 1] != 'r')
                         {
                             isInsert = true;
                             sb.Append("\\");
@@ -690,6 +714,7 @@ namespace CYQ.Data.Tool
                                     if (len <= 1)
                                     {
                                         JsonHelper js = new JsonHelper(false, false);
+                                        js.Escape = Escape;
                                         js._RowOp = _RowOp;
                                         js.DateTimeFormatter = DateTimeFormatter;
                                         js.IsConvertNameToLower = IsConvertNameToLower;
@@ -707,7 +732,7 @@ namespace CYQ.Data.Tool
                                     }
                                     else if (len == 2)
                                     {
-                                        value = MDataRow.CreateFrom(cell.Value).ToJson(_RowOp, IsConvertNameToLower);
+                                        value = MDataRow.CreateFrom(cell.Value).ToJson(RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
                                     }
                                 }
@@ -717,13 +742,13 @@ namespace CYQ.Data.Tool
                                     {
                                         MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
                                         oRow.LoadFrom(cell.Value);
-                                        value = oRow.ToJson(_RowOp, IsConvertNameToLower);
+                                        value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
                                     }
                                     else if (t.FullName == "System.Data.DataTable")
                                     {
                                         MDataTable dt = cell.Value as DataTable;
-                                        value = dt.ToJson(false, false);
+                                        value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
                                     }
                                 }

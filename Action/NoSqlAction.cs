@@ -493,7 +493,7 @@ namespace CYQ.Data
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < _insertRows.Count; i++)
                     {
-                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson());
+                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson(RowOp.None,false, EscapeOp.Yes));
                     }
                     _insertRows.Clear();//ÖØÖÃ
                     if (!Tool.IOHelper.Append(_FileFullName, sb.ToString()))
@@ -541,7 +541,7 @@ namespace CYQ.Data
                 string text = string.Empty;
                 if (string.IsNullOrEmpty(text))
                 {
-                    text = _DalType == DalType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Default).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
+                    text = _DalType == DalType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Yes).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
                 }
                 int tryAgainCount = 3;
                 bool isError = false;

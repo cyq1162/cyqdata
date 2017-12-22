@@ -827,23 +827,26 @@ namespace CYQ.Data.Table
         {
             return ToJson(op, false);
         }
+        public string ToJson(RowOp op, bool isConvertNameToLower)
+        {
+            return ToJson(op, isConvertNameToLower, EscapeOp.Default);
+        }
         /// <summary>
         /// 输出Json
         /// </summary>
         /// <param name="op">过滤条件</param>
+        /// <param name="escapeOp">转义选项</param>
         /// <returns></returns>
-        public string ToJson(RowOp op, bool isConvertNameToLower)
+        public string ToJson(RowOp op, bool isConvertNameToLower,EscapeOp escapeOp)
         {
             JsonHelper helper = new JsonHelper();
             helper.IsConvertNameToLower = isConvertNameToLower;
+            helper.Escape = escapeOp;
             helper.RowOp = op;
             helper.Fill(this);
             return helper.ToString();
         }
-        public bool WriteJson(string fileName)
-        {
-            return WriteJson(fileName, RowOp.IgnoreNull);
-        }
+
         internal string ToXml(bool isConvertNameToLower)
         {
             string xml = string.Empty;
@@ -853,6 +856,11 @@ namespace CYQ.Data.Table
             }
             return xml;
         }
+        /*
+        //public bool WriteJson(string fileName)
+        //{
+        //    return WriteJson(fileName, RowOp.IgnoreNull);
+        //}
         /// <summary>
         /// 将json保存到指定文件中
         /// </summary>
@@ -860,6 +868,7 @@ namespace CYQ.Data.Table
         {
             return IOHelper.Write(fileName, ToJson(op));
         }
+        */
         /// <summary>
         /// 转成实体
         /// </summary>

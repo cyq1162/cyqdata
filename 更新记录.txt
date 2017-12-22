@@ -712,6 +712,11 @@
 497：DataType修正Numeric为主键自增没有返回ID的问题。（2017-10-30）
 498：SqlCreate.FormatterWhere，增强对“xxxx order by abc desc"这样的语句解析。（2017-11-01）
 499：优化主从备机制（2017-11-14）
-
-
+500：TableSchema 修正多数据库模式下获取表结构的问题。（2017-12-02）
+501：修正默认值类型转换的问题。（2017-12-02）
+502：优化XHtmlAction的Get的细节问题。（2017-12-02）
+503: 修正MDataTable.AcceptChange的Update属性时，事务未回滚问题。
+504：调整文本数据库的保存时，也保留存档\r\t这种符号。
 --不同IP，同数据库名和表名的缓存处理问题。
+
+---Json转义 \r\n memcache的转义 自动缓存的转义  文本数据库的转义
