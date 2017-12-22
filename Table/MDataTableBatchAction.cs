@@ -815,6 +815,10 @@ namespace CYQ.Data.Table
                         }
                         if (!result)
                         {
+                            if (_dalHelper == null)//有外部时由外部控制，没外部时直接回滚。
+                            {
+                                action.RollBack();//回滚被删除的代码。
+                            }
                             break;
                         }
                         #endregion
