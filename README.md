@@ -1,4 +1,4 @@
-# cyq.data is not only a orm,but also a data access layer,it's very special and diffirent from others,who use who love it.
+# cyq.data is not only a orm,but also a data access layer,it's very special and different from others,who use who love it.
 <hr />
 Demo(入门教程)：<br />
 http Url：http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/ <br />
