@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CYQ.Data.Tool
 {
@@ -106,12 +107,36 @@ namespace CYQ.Data.Tool
                             {
                                 //if (value != string.Empty)
                                 //{
-                                bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && value.ToString() == "null";
+                                string val=value.ToString();
+                                bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
                                 if (isNull)
                                 {
-                                    value.Length = 0;
+                                    val="";
                                 }
-                                dic.Add(key, value.ToString());
+                                else
+                                {
+                                    //处理编码问题
+                                    if(val.IndexOf("@#")>-1 && val.IndexOf("#@")>-1)
+                                    {
+                                        MatchCollection matchs = Regex.Matches(val, @"@#(\d{1,2})#@", RegexOptions.Compiled);
+                                        if (matchs != null && matchs.Count > 0)
+                                        {
+                                            List<string> keys = new List<string>(matchs.Count);
+                                            foreach (Match match in matchs)
+                                            {
+                                                if (match.Groups.Count > 1)
+                                                {
+                                                    int code = int.Parse(match.Groups[1].Value);
+                                                    string charText = ((char)code).ToString();
+                                                    val = val.Replace(match.Groups[0].Value, charText);
+                                                }
+                                            }
+                                            keys.Clear();
+                                            keys = null;
+                                        }
+                                    }
+                                }
+                                dic.Add(key, val);
 
                                 //}
                             }

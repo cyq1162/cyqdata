@@ -19,11 +19,21 @@ namespace CYQ.Data.Tool
     public enum EscapeOp
     {
         /// <summary>
-        /// Web 默认转义，Win不转义
+        /// 过滤ascii小于32的特殊值、并对\n "（双引号）进行转义，对\转义符 （仅\\"或\\n时不转义，其它情况转义）
         /// </summary>
         Default,
+        /// <summary>
+        ///  不进行任何转义，只用于保留原如数据（注意：存在双引号时，[或ascii小于32的值都会破坏json格式]，从而json数据无法被解析）
+        /// </summary>
         No,
-        Yes
+        /// <summary>
+        ///  过滤ascii小于32的特殊值、并对 ：\r \n \t "（双引号） \(转义符号) 直接进行转义
+        /// </summary>
+        Yes,
+        /// <summary>
+        ///  ascii小于32（包括\n \t \r）、"(双引号)，\(转义符号) 进行编码（规则为：@#{0}#@ {0}为asciii值，系统转的时候会自动解码）
+        /// </summary>
+        Encode
     }
     /// <summary>
     /// Json class for you easy to operate json
@@ -248,17 +258,28 @@ namespace CYQ.Data.Tool
         }
         private void SetEscape(ref string value)
         {
-            //if (Escape == EscapeOp.No) { return; }
-            //if (value.IndexOfAny(new char[] { '"', '\\', '\n' }) > -1)//easyui 输出时需要处理\\符号
-            //{
+            if (Escape == EscapeOp.No) { return; }
             bool isInsert = false;
             int len = value.Length;
             StringBuilder sb = new StringBuilder(len + 10);
             for (int i = 0; i < len; i++)
             {
                 char c = value[i];
-                if (c < 32 && Escape != EscapeOp.No)
+                if (Escape == EscapeOp.Encode)
                 {
+                    if (c < 32 || c == '"' || c == '\\')
+                    {
+                        sb.AppendFormat("@#{0}#@", (int)c);
+                        isInsert = true;
+                    }
+                    else { sb.Append(c); }
+                    continue;
+                }
+
+                if (c < 32)
+                {
+                    
+                    #region 十六进制符号处理
                     switch (c)
                     {
                         case '\n':
@@ -277,14 +298,14 @@ namespace CYQ.Data.Tool
                             }
                             break;
                         default:
-                            //sb.Append(" ");//对于特殊符号，直接替换成空。
                             break;
-                    }
+                    } 
+                    #endregion
                     // '\n'=10  '\r'=13 '\t'=9 都会被过滤。
                     isInsert = true;
-                   // sb.Append(" ");//对于特殊符号，直接替换成空。
                     continue;
                 }
+                #region 双引号和转义符号处理
                 switch (c)
                 {
                     case '"':
@@ -294,34 +315,40 @@ namespace CYQ.Data.Tool
                             sb.Append("\\");
                         }
                         break;
-                    //case '\n':
-                    //    isInsert = true;
-                    //    sb.Append("\\n");//直接替换追加
-                    //    continue;
-                    //case '\t':
-                    //case '\r':
-                    //    isInsert = true;
-                    //    sb.Append(" ");//直接替换追加
-                    //    continue;
                     case '\\':
-                        if ((i!=0 && i == len - 1 && value[i-1]!='\\')//这部分是强制转，不会然影响整体格式
-                            || Escape== EscapeOp.Yes
-                            || (Escape== EscapeOp.Default && i != len - 1 && value[i + 1] != '"'))// && value[i + 1] != 'n' && value[i + 1] != 't' && value[i + 1] != 'r')
+                        bool isOK = Escape == EscapeOp.Yes || (i != 0 && i == len - 1 && value[i - 1] != '\\');// 如果是以\结尾,（非\\结尾时, 这部分是强制转，不会然影响整体格式）
+                        if (!isOK && Escape == EscapeOp.Default && len > 1 && i != len - 1)//中间
+                        {
+                            switch (value[i + 1])
+                            {
+                                case '"':
+                                case 'n':
+                                    //case 'r'://r和t要转义，不过出事。
+                                    //case 't':
+                                    break;
+                                default:
+                                    isOK = true;
+                                    break;
+                            }
+                        }
+                        if (isOK)
                         {
                             isInsert = true;
                             sb.Append("\\");
                         }
                         break;
-                }
+                } 
+                #endregion
                 sb.Append(c);
             }
+
             if (isInsert)
             {
                 value = null;
                 value = sb.ToString();
             }
             else { sb = null; }
-            // }
+
         }
         /// <summary>
         /// out json result
