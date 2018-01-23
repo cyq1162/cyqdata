@@ -31,7 +31,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         Yes,
         /// <summary>
-        ///  ascii小于32（包括\n \t \r）、"(双引号)，\(转义符号) 进行编码（规则为：@#{0}#@ {0}为asciii值，系统转的时候会自动解码）
+        /// 系统内部使用： ascii小于32（包括\n \t \r）、"(双引号)，\(转义符号) 进行编码（规则为：@#{0}#@ {0}为asciii值，系统转的时候会自动解码）
         /// </summary>
         Encode
     }
@@ -256,100 +256,7 @@ namespace CYQ.Data.Tool
             }
             return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
         }
-        private void SetEscape(ref string value)
-        {
-            if (Escape == EscapeOp.No) { return; }
-            bool isInsert = false;
-            int len = value.Length;
-            StringBuilder sb = new StringBuilder(len + 10);
-            for (int i = 0; i < len; i++)
-            {
-                char c = value[i];
-                if (Escape == EscapeOp.Encode)
-                {
-                    if (c < 32 || c == '"' || c == '\\')
-                    {
-                        sb.AppendFormat("@#{0}#@", (int)c);
-                        isInsert = true;
-                    }
-                    else { sb.Append(c); }
-                    continue;
-                }
-
-                if (c < 32)
-                {
-                    
-                    #region 十六进制符号处理
-                    switch (c)
-                    {
-                        case '\n':
-                            sb.Append("\\n");//直接替换追加。
-                            break;
-                        case '\t':
-                            if (Escape == EscapeOp.Yes)
-                            {
-                                sb.Append("\\t");//直接替换追加
-                            }
-                            break;
-                        case '\r':
-                            if (Escape == EscapeOp.Yes)
-                            {
-                                sb.Append("\\r");//直接替换追加
-                            }
-                            break;
-                        default:
-                            break;
-                    } 
-                    #endregion
-                    // '\n'=10  '\r'=13 '\t'=9 都会被过滤。
-                    isInsert = true;
-                    continue;
-                }
-                #region 双引号和转义符号处理
-                switch (c)
-                {
-                    case '"':
-                        if (i == 0 || value[i - 1] != '\\')//这个是强制转，不然整体格式有问题。
-                        {
-                            isInsert = true;
-                            sb.Append("\\");
-                        }
-                        break;
-                    case '\\':
-                        bool isOK = Escape == EscapeOp.Yes || (i != 0 && i == len - 1 && value[i - 1] != '\\');// 如果是以\结尾,（非\\结尾时, 这部分是强制转，不会然影响整体格式）
-                        if (!isOK && Escape == EscapeOp.Default && len > 1 && i != len - 1)//中间
-                        {
-                            switch (value[i + 1])
-                            {
-                                case '"':
-                                case 'n':
-                                    //case 'r'://r和t要转义，不过出事。
-                                    //case 't':
-                                    break;
-                                default:
-                                    isOK = true;
-                                    break;
-                            }
-                        }
-                        if (isOK)
-                        {
-                            isInsert = true;
-                            sb.Append("\\");
-                        }
-                        break;
-                } 
-                #endregion
-                sb.Append(c);
-            }
-
-            if (isInsert)
-            {
-                value = null;
-                value = sb.ToString();
-            }
-            else { sb = null; }
-
-        }
+       
         /// <summary>
         /// out json result
         /// <para>输出Json字符串</para>
@@ -477,6 +384,10 @@ namespace CYQ.Data.Tool
         {
             return JsonSplit.IsJson(json, out errIndex);
         }
+        public static string GetValue(string json, string key)
+        {
+            return GetValue(json, key, DefaultEscape);
+        }
         /// <summary>
         /// Get json value
         /// <para>获取Json字符串的值</para>
@@ -484,7 +395,13 @@ namespace CYQ.Data.Tool
         /// <param name="key">the name or key of json
         /// <para>键值(有层级时用：XXX.YYY.ZZZ)</para></param>
         /// <returns></returns>
-        public static string GetValue(string json, string key)
+        public static string GetValue(string json, string key, EscapeOp op)
+        {
+            string value = GetSourceValue(json, key);
+            return UnEscape(value, op);
+        }
+
+        private static string GetSourceValue(string json, string key)
         {
             string result = string.Empty;
             if (!string.IsNullOrEmpty(json))
@@ -515,7 +432,7 @@ namespace CYQ.Data.Tool
                             }
                             else
                             {
-                                return GetValue(ToJson(numJson), key.Substring(fi + 1));
+                                return GetSourceValue(ToJson(numJson), key.Substring(fi + 1));
                             }
                         }
                     }
@@ -532,40 +449,9 @@ namespace CYQ.Data.Tool
                         else  // 取子集
                         {
 
-                            return GetValue(jsonDic[fKey], key.Substring(fi + 1));
+                            return GetSourceValue(jsonDic[fKey], key.Substring(fi + 1));
                         }
                     }
-
-
-
-
-                    //int fi = key.IndexOf('.');
-                    //if (jsonDic.ContainsKey(key))
-                    //{
-                    //    result = jsonDic[key];
-                    //}
-                    //else
-                    //{
-
-                    //    if (fi > -1)
-                    //    {
-                    //        string fKey = key.Substring(0, fi);//0.abc
-                    //        if (jsonDic.ContainsKey(fKey))//0
-                    //        {
-                    //            return GetValue(jsonDic[fKey], key.Substring(fi + 1));
-                    //        }
-                    //        else
-                    //        {
-                    //            int index = -1;
-                    //            if (int.TryParse(fKey, out index))//数字,走索引
-                    //            {
-
-                    //            }
-                    //        }
-                    //    }
-                    //}
-                    //jsonDic = null;
-                    //jsonList = null;
                 }
             }
             return result;
@@ -607,6 +493,7 @@ namespace CYQ.Data.Tool
             }
             return js.ToString();
         }
+
         /// <summary>
         ///  split json to dicationary
         /// <para>将Json分隔成键值对。</para>
@@ -625,6 +512,10 @@ namespace CYQ.Data.Tool
             }
             return null;
         }
+        //public static List<Dictionary<string, string>> SplitArray(string jsonArray)
+        //{
+        //    return SplitArray(jsonArray, DefaultEscape);
+        //}
         /// <summary>
         ///  split json to dicationary array
         /// <para>将Json 数组分隔成多个键值对。</para>
@@ -638,8 +529,156 @@ namespace CYQ.Data.Tool
             jsonArray = jsonArray.Trim();
             return JsonSplit.Split(jsonArray);
         }
+        private void SetEscape(ref string value)
+        {
+            if (Escape == EscapeOp.No) { return; }
+            bool isInsert = false;
+            int len = value.Length;
+            StringBuilder sb = new StringBuilder(len + 10);
+            for (int i = 0; i < len; i++)
+            {
+                char c = value[i];
+                if (Escape == EscapeOp.Encode)
+                {
+                    if (c < 32 || c == '"' || c == '\\')
+                    {
+                        sb.AppendFormat("@#{0}#@", (int)c);
+                        isInsert = true;
+                    }
+                    else { sb.Append(c); }
+                    continue;
+                }
 
+                if (c < 32)
+                {
 
+                    #region 十六进制符号处理
+                    switch (c)
+                    {
+                        case '\n':
+                            sb.Append("\\n");//直接替换追加。
+                            break;
+                        case '\t':
+                            if (Escape == EscapeOp.Yes)
+                            {
+                                sb.Append("\\t");//直接替换追加
+                            }
+                            break;
+                        case '\r':
+                            if (Escape == EscapeOp.Yes)
+                            {
+                                sb.Append("\\r");//直接替换追加
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    #endregion
+                    // '\n'=10  '\r'=13 '\t'=9 都会被过滤。
+                    isInsert = true;
+                    continue;
+                }
+                #region 双引号和转义符号处理
+                switch (c)
+                {
+                    case '"':
+                        isInsert = true;
+                        sb.Append("\\");
+                        //if (i == 0 || value[i - 1] != '\\')//这个是强制转，不然整体格式有问题。
+                        //{
+                        //    isInsert = true;
+                        //    sb.Append("\\");
+                        //}
+                        break;
+                    case '\\':
+                        //if (i < len - 1)
+                        //{
+                        //    switch (value[i + 1])
+                        //    {
+                        //      //  case '"':
+                        //        case 'n':
+                        //            case 'r'://r和t要转义，不过出事。
+                        //            case 't':
+                        //                isInsert = true;
+                        //                sb.Append("\\");
+                        //            break;
+                        //        default:
+                        //            //isOK = true;
+                        //            break;
+                        //    }
+                        //}
+                        bool isOK = Escape == EscapeOp.Yes;// || (i != 0 && i == len - 1 && value[i - 1] != '\\');// 如果是以\结尾,（非\\结尾时, 这部分是强制转，不会然影响整体格式）
+                        if (!isOK && Escape == EscapeOp.Default && len > 1 && i < len - 1)//中间
+                        {
+                            switch (value[i + 1])
+                            {
+                               // case '"':
+                                case 'n':
+                                    //case 'r'://r和t要转义，不过出事。
+                                    //case 't':
+                                    break;
+                                default:
+                                    isOK = true;
+                                    break;
+                            }
+                        }
+                        if (isOK)
+                        {
+                            isInsert = true;
+                            sb.Append("\\");
+                        }
+                        break;
+                }
+                #endregion
+                sb.Append(c);
+            }
+
+            if (isInsert)
+            {
+                value = null;
+                value = sb.ToString();
+            }
+            else { sb = null; }
+        }
+        /// <summary>
+        /// 解码替换数据转义符
+        /// </summary>
+        public static string UnEscape(string result, EscapeOp op)
+        {
+            if (op == EscapeOp.No) { return result; }
+            if (op == EscapeOp.Encode)
+            {
+                if (result.IndexOf("@#") > -1 && result.IndexOf("#@") > -1) // 先解系统编码
+                {
+                    MatchCollection matchs = Regex.Matches(result, @"@#(\d{1,2})#@", RegexOptions.Compiled);
+                    if (matchs != null && matchs.Count > 0)
+                    {
+                        List<string> keys = new List<string>(matchs.Count);
+                        foreach (Match match in matchs)
+                        {
+                            if (match.Groups.Count > 1)
+                            {
+                                int code = int.Parse(match.Groups[1].Value);
+                                string charText = ((char)code).ToString();
+                                result = result.Replace(match.Groups[0].Value, charText);
+                            }
+                        }
+                    }
+                }
+                return result;
+            }
+            if (result.IndexOf("\\") > -1)
+            {
+                result = result.Replace("\\\\", "#&#=#");
+                if (op == EscapeOp.Yes)
+                {
+                    result = result.Replace("\\t", "\t").Replace("\\r", "\r");
+                }
+                result = result.Replace("\\\"", "\"").Replace("\\n", "\n");//.Replace("\\\\","\\");
+                result = result.Replace("#&#=#", "\\");
+            }
+            return result;
+        }
     }
 
     // 扩展交互部分
@@ -957,7 +996,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 从Json字符串中反加载成数据表
         /// </summary>
-        internal static MDataTable ToMDataTable(string jsonOrFileName, MDataColumn mdc)
+        internal static MDataTable ToMDataTable(string jsonOrFileName, MDataColumn mdc, EscapeOp op)
         {
 
             MDataTable table = new MDataTable("SysDefaultLoadFromJson");
@@ -1070,25 +1109,8 @@ namespace CYQ.Data.Tool
                                 }
                                 if (cell != null)
                                 {
-                                    string val = item.Value;
-                                    //处理编码问题
-                                    if (val.IndexOf("@#") > -1 && val.IndexOf("#@") > -1)
-                                    {
-                                        MatchCollection matchs = Regex.Matches(val, @"@#(\d{1,2})#@", RegexOptions.Compiled);
-                                        if (matchs != null && matchs.Count > 0)
-                                        {
-                                            List<string> keys = new List<string>(matchs.Count);
-                                            foreach (Match match in matchs)
-                                            {
-                                                if (match.Groups.Count > 1)
-                                                {
-                                                    int code = int.Parse(match.Groups[1].Value);
-                                                    string charText = ((char)code).ToString();
-                                                    val = val.Replace(match.Groups[0].Value, charText);
-                                                }
-                                            }
-                                        }
-                                    }
+                                    string val = UnEscape(item.Value, op);
+
 
                                     cell.Value = val;
                                     cell.State = 1;
@@ -1121,7 +1143,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">集合类型</typeparam>
         /// <param name="json">json数据</param>
         /// <returns></returns>
-        private static T ToIEnumerator<T>(string json)
+        private static T ToIEnumerator<T>(string json, EscapeOp op)
             where T : class
         {
             Type t = typeof(T);
@@ -1156,7 +1178,7 @@ namespace CYQ.Data.Tool
                 {
                     foreach (KeyValuePair<string, string> kv in dic)
                     {
-                        mi.Invoke(objT, new object[] { kv.Key, kv.Value });
+                        mi.Invoke(objT, new object[] { kv.Key, UnEscape(kv.Value, op) });
                     }
                     return objT;
                 }
@@ -1164,17 +1186,21 @@ namespace CYQ.Data.Tool
             }
             return default(T);
         }
+        public static T ToEntity<T>(string json) where T : class
+        {
+            return ToEntity<T>(json, DefaultEscape);
+        }
         /// <summary>
         /// Convert json to Entity
         /// <para>将Json转换为实体</para>
         /// </summary>
         /// <typeparam name="T">Type<para>类型</para></typeparam>
-        public static T ToEntity<T>(string json) where T : class
+        public static T ToEntity<T>(string json, EscapeOp op) where T : class
         {
             Type t = typeof(T);
             if (t.FullName.StartsWith("System.Collections."))
             {
-                return ToIEnumerator<T>(json);
+                return ToIEnumerator<T>(json, op);
             }
             else
             {
@@ -1183,14 +1209,18 @@ namespace CYQ.Data.Tool
                 return row.ToEntity<T>();
             }
         }
+        public static List<T> ToList<T>(string json) where T : class
+        {
+            return ToList<T>(json, DefaultEscape);
+        }
         /// <summary>
         ///  Convert json to Entity List
         ///  <para>将Json转换为实体列表</para>
         /// </summary>
         /// <typeparam name="T">Type<para>类型</para></typeparam>
-        public static List<T> ToList<T>(string json) where T : class
+        public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, TableSchema.GetColumns(typeof(T))).ToList<T>();
+            return ToMDataTable(json, TableSchema.GetColumns(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json
@@ -1206,11 +1236,14 @@ namespace CYQ.Data.Tool
         {
             return ToJson(obj, isConvertNameToLower, RowOp.IgnoreNull);
         }
-
+        public static string ToJson(object obj, bool isConvertNameToLower, RowOp rowOp)
+        {
+            return ToJson(obj, isConvertNameToLower, rowOp, DefaultEscape);
+        }
 
         /// <param name="op">default value is RowOp.All
         /// <para>默认值为RowOp.All</para></param>
-        public static string ToJson(object obj, bool isConvertNameToLower, RowOp op)
+        public static string ToJson(object obj, bool isConvertNameToLower, RowOp rowOp, EscapeOp escapeOp)
         {
             string text = Convert.ToString(obj);
             if (text == "")
@@ -1225,8 +1258,9 @@ namespace CYQ.Data.Tool
                 }
             }
             JsonHelper js = new JsonHelper();
+            js.Escape = escapeOp;
             js.IsConvertNameToLower = isConvertNameToLower;
-            js.RowOp = op;
+            js.RowOp = rowOp;
             js.Fill(obj);
             return js.ToString(obj is IList);
         }
@@ -1271,10 +1305,13 @@ namespace CYQ.Data.Tool
             return ToXml(json, true);
         }
 
-
+        public static string ToXml(string json, bool isWithAttr)
+        {
+            return ToXml(json, isWithAttr, DefaultEscape);
+        }
         /// <param name="isWithAttr">default value is true
         /// <para>是否转成属性，默认true</para></param>
-        public static string ToXml(string json, bool isWithAttr)
+        public static string ToXml(string json, bool isWithAttr, EscapeOp op)
         {
             StringBuilder xml = new StringBuilder();
             xml.Append("<?xml version=\"1.0\"  standalone=\"yes\"?>");
@@ -1287,7 +1324,7 @@ namespace CYQ.Data.Tool
                     xml.Append("<root>");//</root>";
                 }
 
-                xml.Append(GetXmlList(dicList, isWithAttr));
+                xml.Append(GetXmlList(dicList, isWithAttr, op));
 
                 if (addRoot)
                 {
@@ -1298,7 +1335,7 @@ namespace CYQ.Data.Tool
             return xml.ToString();
         }
 
-        private static string GetXmlList(List<Dictionary<string, string>> dicList, bool isWithAttr)
+        private static string GetXmlList(List<Dictionary<string, string>> dicList, bool isWithAttr, EscapeOp op)
         {
             if (dicList == null || dicList.Count == 0)
             {
@@ -1307,12 +1344,12 @@ namespace CYQ.Data.Tool
             StringBuilder xml = new StringBuilder();
             for (int i = 0; i < dicList.Count; i++)
             {
-                xml.Append(GetXml(dicList[i], isWithAttr));
+                xml.Append(GetXml(dicList[i], isWithAttr, op));
             }
             return xml.ToString();
         }
 
-        private static string GetXml(Dictionary<string, string> dic, bool isWithAttr)
+        private static string GetXml(Dictionary<string, string> dic, bool isWithAttr, EscapeOp op)
         {
             StringBuilder xml = new StringBuilder();
             bool isJson = false;
@@ -1321,7 +1358,7 @@ namespace CYQ.Data.Tool
                 isJson = IsJson(item.Value);
                 if (!isJson)
                 {
-                    xml.AppendFormat("<{0}>{1}</{0}>", item.Key, FormatCDATA(item.Value));
+                    xml.AppendFormat("<{0}>{1}</{0}>", item.Key, FormatCDATA(UnEscape(item.Value,op)));
                 }
                 else
                 {
@@ -1336,11 +1373,11 @@ namespace CYQ.Data.Tool
                         {
                             if (isWithAttr)
                             {
-                                xml.Append(GetXmlElement(item.Key, jsonList[j]));
+                                xml.Append(GetXmlElement(item.Key, jsonList[j], op));
                             }
                             else
                             {
-                                xml.Append(GetXml(jsonList[j], isWithAttr));
+                                xml.Append(GetXml(jsonList[j], isWithAttr, op));
                             }
                         }
                         if (!isWithAttr)
@@ -1357,7 +1394,7 @@ namespace CYQ.Data.Tool
             return xml.ToString();
         }
 
-        private static string GetXmlElement(string parentName, Dictionary<string, string> dic)
+        private static string GetXmlElement(string parentName, Dictionary<string, string> dic, EscapeOp op)
         {
             StringBuilder xml = new StringBuilder();
             Dictionary<string, string> jsonDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -1381,11 +1418,11 @@ namespace CYQ.Data.Tool
             xml.Append(">");
             if (useForInnerText)
             {
-                xml.Append(FormatCDATA(dic[parentName]));//InnerText。
+                xml.Append(FormatCDATA(UnEscape(dic[parentName],op)));//InnerText。
             }
             else if (jsonDic.Count > 0)
             {
-                xml.Append(GetXml(jsonDic, true));//数组，当元素处理。
+                xml.Append(GetXml(jsonDic, true, op));//数组，当元素处理。
             }
             xml.Append("</" + parentName + ">");
 

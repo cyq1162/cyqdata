@@ -51,6 +51,13 @@ namespace CYQ.Data.Tool
 
             return !cs.arrayStart && !cs.jsonStart; //只要不是正常关闭，则失败
         }
+
+        /// <summary>
+        /// 解析Json
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="op">除了NO，其它项都会消掉转义符，默认是：YES</param>
+        /// <returns></returns>
         internal static List<Dictionary<string, string>> Split(string json)
         {
             List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
@@ -463,6 +470,11 @@ namespace CYQ.Data.Tool
     }
     internal partial class JsonSplit
     {
+        /// <summary>
+        /// 将json数组分成字符串List
+        /// </summary>
+        /// <param name="jsonArray">["a,","bbb,,"]</param>
+        /// <returns></returns>
         internal static List<string> SplitEscapeArray(string jsonArray)
         {
             if (!string.IsNullOrEmpty(jsonArray))

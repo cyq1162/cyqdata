@@ -780,10 +780,18 @@ namespace CYQ.Data.Table
         {
             return CreateFrom(anyObj, null);
         }
+        public static MDataRow CreateFrom(object anyObj, Type valueType)
+        {
+            return CreateFrom(anyObj, valueType, BreakOp.None);
+        }
+        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
+        {
+            return CreateFrom(anyObj, valueType, op,JsonHelper.DefaultEscape);
+        }
         /// <summary>
         /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
         /// </summary>
-        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
+        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp breakOp,EscapeOp escapeOp)
         {
             MDataRow row = new MDataRow();
             if (anyObj is string)
@@ -792,7 +800,7 @@ namespace CYQ.Data.Table
             }
             else if (anyObj is IEnumerable)
             {
-                row.LoadFrom(anyObj as IEnumerable, valueType);
+                row.LoadFrom(anyObj as IEnumerable, valueType, escapeOp);
             }
             else if (anyObj is MDataRow)
             {
@@ -800,15 +808,12 @@ namespace CYQ.Data.Table
             }
             else
             {
-                row.LoadFrom(anyObj, op);
+                row.LoadFrom(anyObj, breakOp);
             }
             row.SetState(1);//外部创建的状态默认置为1.
             return row;
         }
-        public static MDataRow CreateFrom(object anyObj, Type valueType)
-        {
-            return CreateFrom(anyObj, valueType, BreakOp.None);
-        }
+
         /// <summary>
         /// 输出行的数据Json
         /// </summary>
@@ -837,7 +842,7 @@ namespace CYQ.Data.Table
         /// <param name="op">过滤条件</param>
         /// <param name="escapeOp">转义选项</param>
         /// <returns></returns>
-        public string ToJson(RowOp op, bool isConvertNameToLower,EscapeOp escapeOp)
+        public string ToJson(RowOp op, bool isConvertNameToLower, EscapeOp escapeOp)
         {
             JsonHelper helper = new JsonHelper();
             helper.IsConvertNameToLower = isConvertNameToLower;
@@ -1053,14 +1058,14 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 从json里加载值
         /// </summary>
-        public void LoadFrom(string json)
+        public void LoadFrom(string json, EscapeOp op)
         {
             if (!string.IsNullOrEmpty(json))
             {
                 Dictionary<string, string> dic = JsonHelper.Split(json);
                 if (dic != null && dic.Count > 0)
                 {
-                    LoadFrom(dic);
+                    LoadFrom(dic, null, op);
                 }
             }
             else
@@ -1073,9 +1078,9 @@ namespace CYQ.Data.Table
         /// </summary>
         public void LoadFrom(IEnumerable dic)
         {
-            LoadFrom(dic, null);
+            LoadFrom(dic, null, JsonHelper.DefaultEscape);
         }
-        internal void LoadFrom(IEnumerable dic, Type valueType)
+        internal void LoadFrom(IEnumerable dic, Type valueType, EscapeOp op)
         {
             if (dic != null)
             {
@@ -1142,6 +1147,10 @@ namespace CYQ.Data.Table
                         }
                         else
                         {
+                            if (value != null && value is string)
+                            {
+                                value = JsonHelper.UnEscape(value.ToString(), op);
+                            }
                             Set(key, value);
                         }
                     }

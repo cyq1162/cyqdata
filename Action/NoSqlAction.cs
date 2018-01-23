@@ -70,7 +70,7 @@ namespace CYQ.Data
                 switch (_DalType)
                 {
                     case DalType.Txt:
-                        _Table = MDataTable.CreateFrom(_FileFullName, _Row.Columns);
+                        _Table = MDataTable.CreateFrom(_FileFullName, _Row.Columns, EscapeOp.Encode);
                         break;
                     case DalType.Xml:
                         _Table = MDataTable.CreateFromXml(_FileFullName, _Row.Columns);
@@ -493,7 +493,7 @@ namespace CYQ.Data
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < _insertRows.Count; i++)
                     {
-                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson(RowOp.None,false, EscapeOp.Encode));
+                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson(RowOp.None, false, EscapeOp.Encode));
                     }
                     _insertRows.Clear();//ÖØÖÃ
                     if (!Tool.IOHelper.Append(_FileFullName, sb.ToString()))

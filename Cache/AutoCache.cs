@@ -46,7 +46,7 @@ namespace CYQ.Data.Cache
                         {
                             foreach (KeyValuePair<string, string> item in jd)
                             {
-                                list.Add(MDataTable.CreateFrom(item.Value));
+                                list.Add(MDataTable.CreateFrom(item.Value,null,EscapeOp.Encode));
                             }
                         }
                         aopInfo.TableList = list;
@@ -56,7 +56,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.ExeMDataTable:
                     if (obj != null)
                     {
-                        aopInfo.Table = MDataTable.CreateFrom(obj.ToString());
+                        aopInfo.Table = MDataTable.CreateFrom(obj.ToString(), null, EscapeOp.Encode);
                     }
                     break;
                 case AopEnum.ExeScalar:

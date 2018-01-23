@@ -443,18 +443,17 @@ namespace CYQ.Data.Table
         /// </summary>
         public string ToJson()
         {
-            return ToJson(true, false);
+            return ToJson(true);
+        }
+        public string ToJson(bool addHead)
+        {
+            return ToJson(addHead, false);
         }
         /// <param name="addHead">输出头部信息[带count、Success、ErrorMsg](默认true)</param>
         /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构(默认false)</param>
         public string ToJson(bool addHead, bool addSchema)
         {
             return ToJson(addHead, addSchema, RowOp.None);
-        }
-        /// <param name="isConvertNameToLower">是否将名称转为小写</param>
-        public string ToJson(bool addHead, bool addSchema, bool isConvertNameToLower)
-        {
-            return ToJson(addHead, addSchema, RowOp.None, isConvertNameToLower);
         }
         /// <param name="rowOp">过滤选项</param>
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp)
@@ -467,10 +466,10 @@ namespace CYQ.Data.Table
             return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, JsonHelper.DefaultEscape);
         }
         /// <param name="op">符号转义选项</param>
-        public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp op)
+        public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp escapeOp)
         {
             JsonHelper helper = new JsonHelper(addHead, addSchema);
-            helper.Escape = op;
+            helper.Escape = escapeOp;
             helper.IsConvertNameToLower = isConvertNameToLower;
             helper.RowOp = rowOp;
             helper.Fill(this);
@@ -1382,10 +1381,14 @@ namespace CYQ.Data.Table
         {
             return CreateFrom(jsonOrXml, null);
         }
+        public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc)
+        {
+            return CreateFrom(jsonOrXml, mdc, JsonHelper.DefaultEscape);
+        }
         /// <summary>
         /// 从Json或Xml字符串反加载成MDataTable
         /// </summary>
-        public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc)
+        public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc,EscapeOp op)
         {
             if (!string.IsNullOrEmpty(jsonOrXml))
             {
@@ -1395,7 +1398,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    return JsonHelper.ToMDataTable(jsonOrXml, mdc);
+                    return JsonHelper.ToMDataTable(jsonOrXml, mdc,op);
                 }
             }
             return new MDataTable();
