@@ -1055,6 +1055,10 @@ namespace CYQ.Data.Table
                 }
             }
         }
+        public void LoadFrom(string json)
+        {
+            LoadFrom(json, JsonHelper.DefaultEscape);
+        }
         /// <summary>
         /// 从json里加载值
         /// </summary>
@@ -1221,7 +1225,7 @@ namespace CYQ.Data.Table
                         int index = Columns.GetIndex(pi.Name);
                         if (index > -1)
                         {
-                            object propValue = pi.GetValue(entity, null);
+                            object propValue = entity.GetType().GetProperties()[index].GetValue(entity, null);
                             switch (op)
                             {
                                 case BreakOp.Null:
