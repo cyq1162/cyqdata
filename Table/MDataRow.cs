@@ -1055,6 +1055,10 @@ namespace CYQ.Data.Table
                 }
             }
         }
+        public void LoadFrom(string json)
+        {
+            LoadFrom(json, JsonHelper.DefaultEscape);
+        }
         /// <summary>
         /// 从json里加载值
         /// </summary>
