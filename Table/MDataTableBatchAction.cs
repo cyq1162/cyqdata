@@ -68,8 +68,26 @@ namespace CYQ.Data.Table
             {
                 mdt.TableName = mdt.TableName.Substring(mdt.TableName.LastIndexOf(')') + 1).Trim();
             }
-
-            _Conn = !string.IsNullOrEmpty(conn) ? conn : mTable.Conn;
+            if (!string.IsNullOrEmpty(conn))
+            {
+                _Conn = conn;
+            }
+            else
+            {
+                if (mTable.DynamicData != null && mTable.DynamicData is MAction)//尝试多动态中获取链接
+                {
+                    _Conn = ((MAction)mTable.DynamicData).ConnectionString;
+                }
+                else if (mTable.DynamicData != null && mTable.DynamicData is MProc)
+                {
+                    _Conn = ((MProc)mTable.DynamicData).ConnectionString;
+                }
+                else
+                {
+                    _Conn = mTable.Conn;
+                }
+            }
+           
             if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
             {
                 DBTool.ErrorMsg = null;

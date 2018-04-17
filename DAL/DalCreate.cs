@@ -355,6 +355,7 @@ namespace CYQ.Data
                 if (connDicCache.Count > 0)
                 {
                     string[] items = new string[connDicCache.Count];
+                    
                     connDicCache.Keys.CopyTo(items, 0);
                     foreach (string key in items)
                     {

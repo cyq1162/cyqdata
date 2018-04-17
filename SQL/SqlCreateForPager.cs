@@ -62,7 +62,7 @@ namespace CYQ.Data.SQL
                         int pageCount = leftNum == 0 ? rowCount / pageSize : rowCount / pageSize + 1;//页数
                         if (pageIndex == pageCount && dalType != DalType.Sybase) // 最后一页Sybase 不支持双Top order by
                         {
-                            return string.Format(top2Pager, pageSize, "top " + (leftNum == 0 ? pageSize : leftNum) + " " + columns, tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
+                            return string.Format(top2Pager, pageSize+" "+columns, "top " + (leftNum == 0 ? pageSize : leftNum) + " * ", tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
                         }
                         if ((pageCount > 1000 || rowCount > 100000) && pageIndex > pageCount / 2) // 页数过后半段，反转查询
                         {
@@ -136,9 +136,9 @@ namespace CYQ.Data.SQL
                 top3:
                     if (!string.IsNullOrEmpty(orderBy)) // 反转查询
                     {
-                        return string.Format(top4Pager, (rowCount - max > pageSize ? pageSize : rowCount - max), topN + " " + columns, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
+                        return string.Format(top4Pager,columns, (rowCount - max > pageSize ? pageSize : rowCount - max), topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
                     }
-                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max), topN + " " + columns, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
+                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max),columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
                 case DalType.SQLite:
                 case DalType.MySql:
                     if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
@@ -158,15 +158,15 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 最后一页查询
         /// </summary>
-        private const string top2Pager = "select top {0} * from (select {1} from {2} where {3}) v {4}";
+        private const string top2Pager = "select top {0} from (select {1} from {2} where {3}) v {4}";
         /// <summary>
         /// 前半段分页查询
         /// </summary>
-        private const string top3Pager = @"select top {0} * from (select top {0} * from (select top {1} from {2} where {3}) v {4}) v {5}";
+        private const string top3Pager = @"select top {0} {1} from (select top {0} * from (select top {2} * from {3} where {4}) v {5}) v {6}";
         /// <summary>
         /// 后半段分页查询（即倒过来查询）
         /// </summary>
-        private const string top4Pager = @"select * from (select top {0} * from (select top {0} * from (select top {1} from {2} where {3}) v {4}) v {5}) v {6}";
+        private const string top4Pager = @"select {0} from (select top {1} * from (select top {1} * from (select top {2} * from {3} where {4}) v {5}) v {6}) v {7}";
         /// <summary>
         /// MSSQL、Oracle的行号分页
         /// </summary>
