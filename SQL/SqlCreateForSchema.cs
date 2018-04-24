@@ -348,7 +348,7 @@ namespace CYQ.Data.SQL
                                     if (dalType == DalType.MsSql)
                                     {
                                         sql.Add(@"declare @name varchar(50) select  @name =b.name from sysobjects b join syscolumns a on b.id = a.cdefault 
-where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'if(@name!='') begin   EXEC('alter table Base_Button drop constraint '+ @name) end");
+where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'if(@name!='') begin   EXEC('alter table "+tableName+" drop constraint '+ @name) end");
                                     }
                                     sql.Add(alterTable + " drop column " + cName);
                                     break;
