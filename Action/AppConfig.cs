@@ -248,12 +248,16 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的运行路径（Bin目录）
+        /// 框架的运行路径（Bin目录、或者Web根目录）
         /// </summary>
         public static string RunPath
         {
             get
             {
+                if (AppConfig.IsWeb)
+                {
+                    return AppConfig.WebRootPath;
+                }
                 return AppConst.RunFolderPath;
             }
         }
