@@ -865,11 +865,16 @@ namespace CYQ.Data.SQL
 
                 switch (dbBase.dalType)//文本数据库不保存。
                 {
-                    case DalType.Access:
-                    case DalType.SQLite:
-                    case DalType.MsSql:
-                    case DalType.MySql:
-                    case DalType.Oracle:
+                    //case DalType.Access:
+                    //case DalType.SQLite:
+                    //case DalType.MsSql:
+                    //case DalType.MySql:
+                    //case DalType.Oracle:
+
+                    case DalType.Txt:
+                    case DalType.Xml:
+                        break;
+                    default:
                         if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                         {
                             string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath;
