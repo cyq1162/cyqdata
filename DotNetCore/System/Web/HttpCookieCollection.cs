@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using CYQ.Data.Tool;
+using Microsoft.AspNetCore.Http;
+
 namespace System.Web
 {
     internal class HttpCookieCollection : NameObjectCollectionBase
@@ -26,7 +28,12 @@ namespace System.Web
         {
             if (context != null && cookie!=null)
             {
-                context.Response.Cookies.Append(cookie.Name, cookie.Value);//找不到其它Cookie的操作，暂时先这样。
+                CookieOptions op = new CookieOptions();
+                op.Domain = cookie.Domain;
+                op.Expires = cookie.Expires;
+                op.HttpOnly = cookie.HttpOnly;
+                op.Path = cookie.Path;
+                context.Response.Cookies.Append(cookie.Name, cookie.Value,op);
                 dic.Add(cookie.Name, cookie);
                 //Microsoft.AspNetCore.Authentication.Cookies.
                 //Microsoft.AspNetCore.Http.CookieBuilder cb = new Microsoft.AspNetCore.Http.CookieBuilder();
