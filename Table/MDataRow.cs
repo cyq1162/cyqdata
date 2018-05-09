@@ -786,12 +786,12 @@ namespace CYQ.Data.Table
         }
         public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
         {
-            return CreateFrom(anyObj, valueType, op,JsonHelper.DefaultEscape);
+            return CreateFrom(anyObj, valueType, op, JsonHelper.DefaultEscape);
         }
         /// <summary>
         /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
         /// </summary>
-        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp breakOp,EscapeOp escapeOp)
+        public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp breakOp, EscapeOp escapeOp)
         {
             MDataRow row = new MDataRow();
             if (anyObj is string)
@@ -1247,7 +1247,7 @@ namespace CYQ.Data.Table
                                     }
                                     break;
                             }
-                            Set(index, propValue);//它的状态应该值设置，改为1是不对的。
+                            Set(index, propValue, 2);//它的状态应该值设置，改为1是不对的。
                         }
                     }
                 }

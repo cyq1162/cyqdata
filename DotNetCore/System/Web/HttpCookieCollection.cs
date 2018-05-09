@@ -7,20 +7,17 @@ using Microsoft.AspNetCore.Http;
 
 namespace System.Web
 {
-    internal class HttpCookieCollection : NameObjectCollectionBase
+    public class HttpCookieCollection : NameObjectCollectionBase, IResponseCookies
     {
         MDictionary<string, HttpCookie> dic = new MDictionary<string, HttpCookie>();
 
         Microsoft.AspNetCore.Http.HttpContext context;
-        public HttpCookieCollection()
-        {
 
-        }
         public HttpCookieCollection(Microsoft.AspNetCore.Http.HttpContext context)
         {
             this.context = context;
         }
-        
+
         public HttpCookie this[int index] { get { return dic[index]; } }
       
         public HttpCookie this[string name] { get { return dic[name]; } }
@@ -28,22 +25,33 @@ namespace System.Web
         {
             if (context != null && cookie!=null)
             {
-                CookieOptions op = new CookieOptions();
-                op.Domain = cookie.Domain;
-                op.Expires = cookie.Expires;
-                op.HttpOnly = cookie.HttpOnly;
-                op.Path = cookie.Path;
-                context.Response.Cookies.Append(cookie.Name, cookie.Value,op);
-                dic.Add(cookie.Name, cookie);
-                //Microsoft.AspNetCore.Authentication.Cookies.
-                //Microsoft.AspNetCore.Http.CookieBuilder cb = new Microsoft.AspNetCore.Http.CookieBuilder();
-                //cb.Domain = cookie.Domain;
-                //cb.Name = cookie.Name;
-                //cb.Expiration = cookie.Expires-DateTime.Now;
-                //cb.HttpOnly = cookie.HttpOnly;
-                ////cb.
-                //cb.Build(context);
+                Append(cookie.Name, cookie.Value, cookie.ToCookieOptions());
             }
+        }
+
+        public void Append(string key, string value)
+        {
+            Append(key, value,new CookieOptions());
+        }
+
+        public void Append(string key, string value, CookieOptions options)
+        {
+            context.Response.Cookies.Append(key, value,options);
+            HttpCookie cookie = options;
+            cookie.Name = key;
+            cookie.Value = value;
+            dic.Add(cookie.Name, cookie);
+        }
+
+        public void Delete(string key)
+        {
+            Delete(key,null);
+        }
+
+        public void Delete(string key, CookieOptions options)
+        {
+            context.Response.Cookies.Delete(key, options);
+            dic.Remove(key);
         }
     }
 }

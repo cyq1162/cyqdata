@@ -306,6 +306,19 @@ namespace CYQ.Data
                 return HttpContext.Current.Request.Url;
             }
         }
+        //读配置文件时会修改此值。
+        private static bool _IsAspNetCore = false;
+        internal static bool IsAspNetCore
+        {
+            get
+            {
+                return _IsAspNetCore;
+            }
+            set
+            {
+                _IsAspNetCore = value;
+            }
+        }
     }
     public static partial class AppConfig
     {
