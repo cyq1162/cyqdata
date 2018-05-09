@@ -248,7 +248,10 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的运行路径（Bin目录、或者Web根目录）
+        /// 框架的运行路径
+        /// Win项目：是dll和exe所在的目录，
+        /// Asp.net项目：是指根目录
+        /// Asp.net core 项目：是指运行的路径（dll所在的路径）
         /// </summary>
         public static string RunPath
         {
@@ -256,7 +259,7 @@ namespace CYQ.Data
             {
                 if (AppConfig.IsWeb)
                 {
-                    return AppConfig.WebRootPath;
+                    return AppDomain.CurrentDomain.BaseDirectory;
                 }
                 return AppConst.RunFolderPath;
             }
@@ -265,15 +268,28 @@ namespace CYQ.Data
     }
     public static partial class AppConfig
     {
+        private static string _WebRootPath;
         //内部变量
         /// <summary>
-        /// Web根目录
+        /// Web根目录(ASP.NET Core 项目时，由于机制不同，指向的路径需要调整，所以该值可以修改)
         /// </summary>
-        internal static string WebRootPath
+        public static string WebRootPath
         {
             get
             {
-                return AppDomain.CurrentDomain.BaseDirectory;
+                if (string.IsNullOrEmpty(_WebRootPath))
+                {
+                    _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
+                }
+                if (!_WebRootPath.EndsWith("\\") && !_WebRootPath.EndsWith("/"))
+                {
+                    _WebRootPath = _WebRootPath + "\\";
+                }
+                return _WebRootPath;
+            }
+            set
+            {
+                _WebRootPath = value;
             }
         }
         internal static bool IsWeb

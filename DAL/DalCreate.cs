@@ -327,7 +327,7 @@ namespace CYQ.Data
         private static ConnBean GetConnBean(string dbConn)
         {
             string provider;
-            string conn = string.Format(AppConfig.GetConn(dbConn, out provider), AppConfig.WebRootPath);
+            string conn = string.Format(AppConfig.GetConn(dbConn, out provider), AppConfig.RunPath);
             if (string.IsNullOrEmpty(conn))
             {
                 return null;
