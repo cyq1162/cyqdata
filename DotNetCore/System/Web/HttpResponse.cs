@@ -52,7 +52,35 @@ namespace System.Web
                 }
             }
         }
+        public string ContentType
+        {
+            get => response.ContentType ?? "";
+            set
+            {
+                if (value.Contains("charset") || string.IsNullOrEmpty(response.ContentType))
+                {
+                    response.ContentType = value;
+                }
+                else
+                {
+                    string[] items = response.ContentType.Split(';');
+                    if (items.Length == 2)
+                    {
+                        response.ContentType = value + ";" + items[1];
+                    }
+                    else if (response.ContentType.Contains("charset"))//只有charset
+                    {
+                        response.ContentType = value + ";" + items[0];
+                    }
+                    else
+                    {
+                        response.ContentType = value;
+                    }
+                }
 
+
+            }
+        }
         public Stream Filter { get => response.Body; set => response.Body = value; }
 
         public void AppendHeader(string key, string value)
@@ -84,7 +112,7 @@ namespace System.Web
 
         public  Stream Body { get => response.Body; set => response.Body=value; }
         public  long? ContentLength { get => response.ContentLength; set => response.ContentLength=value; }
-        public  string ContentType { get => response.ContentType??""; set => response.ContentType=value; }
+
 
         public  bool HasStarted => response.HasStarted;
 
