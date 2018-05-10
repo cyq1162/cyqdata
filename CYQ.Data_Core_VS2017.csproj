@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>CYQ.Data</AssemblyName>
+    <RootNamespace>CYQ.Data</RootNamespace>
+    <PackageId>cyqdatacore</PackageId>
+    <Version>5.7.8.6</Version>
+    <Authors>路过秋天</Authors>
+    <Description>What's cyq.data ?： 1： It is an ORM framework. 2： It is a data access layer components. 3： It is a set of tools library.</Description>
+    <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
+    <Company>路过秋天 （2018-05-10）</Company>
+    <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
+    <PackageProjectUrl>http://www.cyqdata.com/cyqdata</PackageProjectUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageReleaseNotes>cyq.data is not only a orm,but also a data access layer,it's very special and diffirent from others,who use who love it</PackageReleaseNotes>
+    <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
+    <AssemblyVersion>5.7.8.6</AssemblyVersion>
+    <FileVersion>5.7.8.6</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\CYQ.Data.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\CYQ.Data.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DotNetCore\CYQ.Data.Core\**" />
+    <EmbeddedResource Remove="DotNetCore\CYQ.Data.Core\**" />
+    <None Remove="DotNetCore\CYQ.Data.Core\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="ClearSVN.exe" />
+    <None Remove="CYQ.Data.suo" />
+    <None Remove="CYQ.Data.v11.suo" />
+    <None Remove="DotNetCore\使用说明.txt" />
+    <None Remove="LICENSE" />
+    <None Remove="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
+  </ItemGroup>
+
+</Project>
