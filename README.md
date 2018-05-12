@@ -2,10 +2,15 @@
 <hr />
 Demo(入门教程)：<br />
 http Url：http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/ <br />
-svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
+svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/<br/>
+开篇介绍：http://www.cnblogs.com/cyq1162/p/5634414.html <br />
+更多文章：http://www.cnblogs.com/cyq1162/category/852300.html<br />
+
 <br /><br />QQ群：6033006<br />
 VIP培训课程，精通系列视频，300元/套，(共18集，每集1小时左右)，可群里联系作者购买！
 <br /><br />
+
+
 注意事项：
 <hr />
 1：MySQL 5.7.9版本需要把用命令行设置：
