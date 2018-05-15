@@ -491,7 +491,7 @@ namespace CYQ.Data
             {
                 try
                 {
-                    if (useConnBean != connObject.Master)
+                    if (useConnBean.Conn != connObject.Master.Conn)
                     {
                         // recordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeNonQuerySQL() on Slave DataBase!";
@@ -550,8 +550,8 @@ namespace CYQ.Data
             object returnValue = null;
             ConnBean coSlave = null;
             //mssql 有 insert into ...select 操作。
-            bool allowSlave = !isOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
-            if (allowSlave)
+            bool isSelectSql = !isOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
+            if (isSelectSql)
             {
                 coSlave = connObject.GetSlave();
             }
@@ -559,7 +559,7 @@ namespace CYQ.Data
             {
                 try
                 {
-                    if (!allowSlave && useConnBean != connObject.Master)
+                    if (!isSelectSql && useConnBean.Conn != connObject.Master.Conn)
                     {
                         recordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeScalarSQL(with transaction or insert) on Slave DataBase!";

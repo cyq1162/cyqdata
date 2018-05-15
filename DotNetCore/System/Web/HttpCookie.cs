@@ -8,18 +8,22 @@ namespace System.Web
     public class HttpCookie
     {
         public HttpCookie() { }
+        public HttpCookie(string name)
+        {
+            this.Name = name;
+        }
         public HttpCookie(string name, string value)
         {
             this.Name = name;
             this.Value = value;
         }
 
-        public string Name { get; internal set; }
-        public DateTime Expires { get; internal set; }
-        public string Path { get; internal set; }
-        public bool HttpOnly { get; internal set; }
-        public string Value { get; internal set; }
-        public string Domain { get; internal set; }
+        public string Name { get; set; }
+        public DateTime Expires { get; set; }
+        public string Path { get; set; }
+        public bool HttpOnly { get; set; }
+        public string Value { get; set; }
+        public string Domain { get; set; }
         /// <summary>
         /// 转换后，还得补上name,value
         /// </summary>
@@ -56,7 +60,11 @@ namespace System.Web
         }
         static DateTimeOffset ConverFromDateTime(DateTime dateTime)
         {
-            return new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
+            return dateTime.ToUniversalTime() <= DateTimeOffset.MinValue.UtcDateTime
+                   ? DateTimeOffset.MinValue
+                   : new DateTimeOffset(dateTime);
+
+           // return new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
         }
     }
 }

@@ -5,7 +5,7 @@ using System.Collections.Specialized;
 
 namespace System.Configuration
 {
-    internal class ConfigurationManager
+    public class ConfigurationManager
     {
         static string appSettingJson = string.Empty;
         static ConfigurationManager()
@@ -74,5 +74,7 @@ namespace System.Configuration
                 return _ConnectionStrings;
             }
         }
+
+        public static object GetSection(string key) { return null; }
     }
 }

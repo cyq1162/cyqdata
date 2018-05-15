@@ -21,7 +21,7 @@ namespace System.Web
         #region 兼容Web
         public void End()
         {
-            context.Abort();
+            //context.Abort();
         }
 
         public string Charset
@@ -87,12 +87,33 @@ namespace System.Web
         {
             response.Headers.Add(key, value);
         }
+        //public bool Buffer { get; set; }
+        //public int Expires { get; set; }
+        //public DateTime ExpiresAbsolute { get; set; }
+        public string CacheControl
+        {
+            get => Headers["Cache-Control"];
+            set => AppendHeader("Cache-Control", value);
+        }
+        public void BinaryWrite(byte[] data)
+        {
+            response.Body = new MemoryStream(data);
+        }
+        public void Clear() { }
+        public void Flush() { }
         #endregion
 
 
         public  HttpCookieCollection Cookies => cookieCollection;
 
-        public  int StatusCode { get => response.StatusCode; set => response.StatusCode=value; }
+        public  int StatusCode { get => response.StatusCode; set
+            {
+                if (!response.HasStarted)
+                {
+                    response.StatusCode = value;
+                }
+            }
+        }
 
         public NameValueCollection Headers
         {
@@ -146,7 +167,7 @@ namespace System.Web
         }
         public void Write(string text)
         {
-            response.WriteAsync(text);
+           response.WriteAsync(text);
         }
     }
 }

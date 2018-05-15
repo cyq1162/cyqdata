@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CYQ.Data;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -21,6 +22,10 @@ namespace System.Web
         public string UrlDecode(string s)
         {
             return System.Net.WebUtility.UrlDecode(s);
+        }
+        public string MapPath(string path)
+        {
+            return AppConfig.WebRootPath + path.TrimStart('~', '/').Replace("/", "\\");
         }
     }
 }

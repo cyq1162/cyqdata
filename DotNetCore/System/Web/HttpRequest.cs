@@ -113,7 +113,7 @@ namespace System.Web
             {
                 return new StringBuilder()
                 .Append(request.PathBase)
-                .Append(request.Path)
+                .Append(request.Path.Value.Split('?')[0])
                 .Append(request.QueryString).ToString();
             }
         }
@@ -127,7 +127,7 @@ namespace System.Web
                 .Append("://")
                 .Append(request.Host)
                 .Append(request.PathBase)
-                .Append(request.Path)
+                .Append(request.Path.Value.Split('?')[0])
                 .Append(request.QueryString).ToString());
 
             }
@@ -144,8 +144,21 @@ namespace System.Web
                 return uri;
             }
         }
+        public string UserHostAddress
+        {
+            get
+            {
+                return request.Headers["X-Original-For"];
+            }
+        }
+        public string UserAgent
+        {
+            get
+            {
+                return request.Headers["User-Agent"];
+            }
+        }
 
-        
 
         public string HttpMethod { get => request.Method; set => request.Method = value; }
         //public  string Method { get => request.Method; set => request.Method=value; }
