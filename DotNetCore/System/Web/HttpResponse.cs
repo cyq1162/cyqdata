@@ -9,6 +9,7 @@ namespace System.Web
 {
     public class HttpResponse
     {
+        bool isEnd = false;
         Microsoft.AspNetCore.Http.HttpContext context;
         Microsoft.AspNetCore.Http.HttpResponse response => context.Response;
         HttpCookieCollection cookieCollection;
@@ -17,10 +18,11 @@ namespace System.Web
             this.context = context;
             cookieCollection = new HttpCookieCollection(context);
         }
-         
+
         #region 兼容Web
         public void End()
         {
+            isEnd = true;
             //context.Abort();
         }
 
@@ -34,7 +36,7 @@ namespace System.Web
                 {
                     return ct.Substring(i + 8);
                 }
- 
+
                 return "";
             }
             set
@@ -44,7 +46,7 @@ namespace System.Web
                 string ct = ContentType;
                 if (string.IsNullOrEmpty(ct))
                 {
-                    ContentType =  "charset=" + value;
+                    ContentType = "charset=" + value;
                 }
                 else if (!ct.Contains("charset="))
                 {
@@ -85,6 +87,7 @@ namespace System.Web
 
         public void AppendHeader(string key, string value)
         {
+            response.Headers.Remove(key);
             response.Headers.Add(key, value);
         }
         //public bool Buffer { get; set; }
@@ -97,16 +100,24 @@ namespace System.Web
         }
         public void BinaryWrite(byte[] data)
         {
-            response.Body = new MemoryStream(data);
+            // response.Body = new MemoryStream(data);
+            if (!isEnd)
+            {
+                response.Body.WriteAsync(data, 0, data.Length);
+            }
+            //response.Body.Flush();
+            //response.SendFileAsync()
         }
-        public void Clear() { }
-        public void Flush() { }
+        public void Clear() { response.Clear(); }
+        public void Flush() { response.Body.FlushAsync(); }
         #endregion
 
 
-        public  HttpCookieCollection Cookies => cookieCollection;
+        public HttpCookieCollection Cookies => cookieCollection;
 
-        public  int StatusCode { get => response.StatusCode; set
+        public int StatusCode
+        {
+            get => response.StatusCode; set
             {
                 if (!response.HasStarted)
                 {
@@ -131,20 +142,20 @@ namespace System.Web
             }
         }
 
-        public  Stream Body { get => response.Body; set => response.Body=value; }
-        public  long? ContentLength { get => response.ContentLength; set => response.ContentLength=value; }
+        public Stream Body { get => response.Body; set => response.Body = value; }
+        public long? ContentLength { get => response.ContentLength; set => response.ContentLength = value; }
 
 
-        public  bool HasStarted => response.HasStarted;
+        public bool HasStarted => response.HasStarted;
 
-        
 
-        public  void OnCompleted(Func<object, Task> callback, object state)
+
+        public void OnCompleted(Func<object, Task> callback, object state)
         {
             response.OnCompleted(callback, state);
         }
 
-        public  void OnStarting(Func<object, Task> callback, object state)
+        public void OnStarting(Func<object, Task> callback, object state)
         {
             response.OnStarting(callback, state);
         }
@@ -154,20 +165,24 @@ namespace System.Web
         /// <param name="location"></param>
         public void Redirect(string location)
         {
-            response.Redirect(location);
+            Redirect(location, false);
         }
         /// <summary>
         /// 跳转
         /// </summary>
         /// <param name="location"></param>
         /// <param name="permanent">true 301跳转，默认false 是302跳转</param>
-        public  void Redirect(string location, bool permanent)
+        public void Redirect(string location, bool permanent)
         {
             response.Redirect(location, permanent);
+            response.WriteAsync("");
         }
         public void Write(string text)
         {
-           response.WriteAsync(text);
+            if (!isEnd)
+            {
+                response.WriteAsync(text);
+            }
         }
     }
 }

@@ -7,6 +7,8 @@ namespace CYQ.Data.Tool
 {
     internal static class IOHelper
     {
+        internal static Encoding DefaultEncoding = Encoding.Default;
+
         private static List<object> tenObj = new List<object>(10);
         private static List<object> TenObj
         {
@@ -33,7 +35,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string ReadAllText(string fileName)
         {
-            return ReadAllText(fileName, Encoding.Default);
+            return ReadAllText(fileName, DefaultEncoding);
         }
         public static string ReadAllText(string fileName, Encoding encoding)
         {
@@ -52,6 +54,7 @@ namespace CYQ.Data.Tool
                     }
                     buff = File.ReadAllBytes(fileName);
                 }
+                if (buff.Length == 0) { return ""; }
                 if (buff[0] == 239 && buff[1] == 187 && buff[2] == 191)
                 {
                     return Encoding.UTF8.GetString(buff, 3, buff.Length - 3);
@@ -78,7 +81,7 @@ namespace CYQ.Data.Tool
         }
         public static bool Write(string fileName, string text)
         {
-            return Save(fileName, text, false, Encoding.Default, true);
+            return Save(fileName, text, false, DefaultEncoding, true);
         }
         public static bool Write(string fileName, string text, Encoding encode)
         {
@@ -91,7 +94,7 @@ namespace CYQ.Data.Tool
 
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError)
         {
-            return Save(fileName, text, true, Encoding.Default, writeLogOnError);
+            return Save(fileName, text, true, DefaultEncoding, writeLogOnError);
         }
         internal static bool Save(string fileName, string text, bool isAppend, Encoding encode, bool writeLogOnError)
         {
@@ -144,7 +147,7 @@ namespace CYQ.Data.Tool
             }
             catch
             {
-               
+
             }
             return false;
         }

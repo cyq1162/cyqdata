@@ -15,8 +15,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageReleaseNotes>cyq.data is not only a orm,but also a data access layer,it's very special and diffirent from others,who use who love it</PackageReleaseNotes>
     <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
-    <AssemblyVersion>5.7.8.6</AssemblyVersion>
-    <FileVersion>5.7.8.6</FileVersion>
+    <AssemblyVersion>5.7.8.7</AssemblyVersion>
+    <FileVersion>5.7.8.7</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -47,7 +47,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
   </ItemGroup>
 
 </Project>

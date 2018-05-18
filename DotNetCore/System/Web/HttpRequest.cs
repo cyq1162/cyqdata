@@ -33,7 +33,7 @@ namespace System.Web
             get
             {
                 NameValueCollection nvc = new NameValueCollection();
-                if (request.Method== "POST" && request.HasFormContentType && request.Form != null && request.Form.Keys.Count > 0)
+                if (request.Method == "POST" && request.HasFormContentType && request.Form != null && request.Form.Keys.Count > 0)
                 {
                     foreach (string key in request.Form.Keys)
                     {
@@ -47,7 +47,7 @@ namespace System.Web
         {
             get
             {
-                if (request.Method == "POST" && request.HasFormContentType && request.Form != null 
+                if (request.Method == "POST" && request.HasFormContentType && request.Form != null
                     && request.Form.Files != null && request.Form.Files.Count > 0)
                 {
                     HttpFileCollection files = new HttpFileCollection();
@@ -88,7 +88,7 @@ namespace System.Web
                     {
                         //request.Cookies.
                         HttpCookie cookie = new HttpCookie(key, request.Cookies[key]);
-                        nvc.Add(cookie);
+                        nvc.Add(cookie, false);
                     }
                 }
                 return nvc;
@@ -132,10 +132,11 @@ namespace System.Web
 
             }
         }
-        public Uri UrlReferrer {
+        public Uri UrlReferrer
+        {
             get
             {
-                Uri uri=null;
+                Uri uri = null;
                 string referer = request.Headers["Referer"];
                 if (!string.IsNullOrEmpty(referer))
                 {
@@ -162,13 +163,13 @@ namespace System.Web
 
         public string HttpMethod { get => request.Method; set => request.Method = value; }
         //public  string Method { get => request.Method; set => request.Method=value; }
-        public  string Scheme { get => request.Scheme; set => request.Scheme=value; }
-        public  bool IsHttps { get => request.IsHttps; set => request.IsHttps=value; }
-        public  HostString Host { get => request.Host; set => request.Host=value; }
-        public  PathString PathBase { get => request.PathBase; set => request.PathBase=value; }
-        public  PathString Path { get => request.Path; set => request.Path=value; }
-        public  IQueryCollection Query { get => request.Query; set => request.Query=value; }
-        public  string Protocol { get => request.Protocol; set => request.Protocol=value; }
+        public string Scheme { get => request.Scheme; set => request.Scheme = value; }
+        public bool IsHttps { get => request.IsHttps; set => request.IsHttps = value; }
+        public HostString Host { get => request.Host; set => request.Host = value; }
+        public PathString PathBase { get => request.PathBase; set => request.PathBase = value; }
+        public PathString Path { get => request.Path; set => request.Path = value; }
+        public IQueryCollection Query { get => request.Query; set => request.Query = value; }
+        public string Protocol { get => request.Protocol; set => request.Protocol = value; }
 
         public NameValueCollection Headers
         {
@@ -186,16 +187,16 @@ namespace System.Web
             }
         }
 
-        public  long? ContentLength { get => request.ContentLength; set => request.ContentLength=value; }
-        public  string ContentType { get => request.ContentType; set => request.ContentType=value; }
+        public long? ContentLength { get => request.ContentLength; set => request.ContentLength = value; }
+        public string ContentType { get => request.ContentType; set => request.ContentType = value; }
         public Stream InputStream => Body;
-        public  Stream Body { get => request.Body; set => request.Body=value; }
+        public Stream Body { get => request.Body; set => request.Body = value; }
 
-        public  bool HasFormContentType => request.HasFormContentType;
+        public bool HasFormContentType => request.HasFormContentType;
 
-        public  Task<IFormCollection> ReadFormAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public Task<IFormCollection> ReadFormAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-           return request.ReadFormAsync(cancellationToken = default(CancellationToken));
+            return request.ReadFormAsync(cancellationToken = default(CancellationToken));
         }
     }
 }

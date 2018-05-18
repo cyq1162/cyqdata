@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Text;
+﻿using System.Collections.Specialized;
 using CYQ.Data.Tool;
 using Microsoft.AspNetCore.Http;
 
@@ -21,8 +18,18 @@ namespace System.Web
         public HttpCookie this[int index] { get { return dic[index]; } }
       
         public HttpCookie this[string name] { get { return dic[name]; } }
+
         public void Add(HttpCookie cookie)
         {
+            Add(cookie, true);
+        }
+        public void Add(HttpCookie cookie,bool appendToReponse)
+        {
+            if (!appendToReponse)
+            {
+                dic.Add(cookie.Name, cookie);
+                return;
+            }
             if (context != null && cookie!=null)
             {
                 Append(cookie.Name, cookie.Value, cookie.ToCookieOptions());
@@ -36,6 +43,8 @@ namespace System.Web
 
         public void Append(string key, string value, CookieOptions options)
         {
+           // context.Response.Headers["Set-Cookie"]
+            //context.Response.Cookies.Delete(key);
             context.Response.Cookies.Append(key, value,options);
             HttpCookie cookie = options;
             cookie.Name = key;

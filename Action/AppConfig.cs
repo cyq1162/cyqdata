@@ -386,27 +386,32 @@ namespace CYQ.Data
                 {
                     if (string.IsNullOrEmpty(_Domain))
                     {
-                        string[] domains = GetApp("Domain", "").Split(',');
-                        if (domains != null && domains.Length > 0)
+                        Uri uri=AppConfig.WebUri;
+                        string domainList=GetApp("Domain", "");
+                        if (!string.IsNullOrEmpty(domainList))
                         {
-                            if (domains.Length == 1)
+                            string[] domains = domainList.Split(',');
+                            if (domains != null && domains.Length > 0)
                             {
-                                _Domain = domains[0];
-                            }
-                            else if (AppConfig.IsWeb)
-                            {
-                                foreach (string domain in domains)
+                                if (domains.Length == 1)
                                 {
-                                    if (AppConfig.WebUri.Authority.Contains(domain))
+                                    _Domain = domains[0];
+                                }
+                                else if (AppConfig.IsWeb)
+                                {
+                                    foreach (string domain in domains)
                                     {
-                                        _Domain = domain;
+                                        if (uri.Authority.Contains(domain))
+                                        {
+                                            _Domain = domain;
+                                        }
                                     }
                                 }
                             }
                         }
-                        else if (AppConfig.IsWeb)
+                        else if (AppConfig.IsWeb && uri.Host!="localhost")
                         {
-                            _Domain = AppConfig.WebUri.Authority.Replace("www.", string.Empty);
+                            _Domain = uri.Authority.Replace("www.", string.Empty);
                         }
                     }
                     return _Domain;

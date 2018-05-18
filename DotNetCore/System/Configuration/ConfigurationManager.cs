@@ -2,6 +2,7 @@
 using System.IO;
 using CYQ.Data.Tool;
 using System.Collections.Specialized;
+using System.Text;
 
 namespace System.Configuration
 {
@@ -11,6 +12,9 @@ namespace System.Configuration
         static ConfigurationManager()
         {
             AppConfig.IsAspNetCore = true;
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//注册编码
+            IOHelper.DefaultEncoding= Encoding.GetEncoding("gb2312");
+
             string filePath = AppConfig.RunPath + "appsettings.json";
             if (System.IO.File.Exists(filePath))
             {

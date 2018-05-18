@@ -1,7 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace System.Web
 {
@@ -46,7 +43,7 @@ namespace System.Web
             op.Domain = this.Domain;
             op.Expires = ConverFromDateTime(this.Expires);
             op.HttpOnly = this.HttpOnly;
-            op.Path = this.Path;
+            op.Path = string.IsNullOrEmpty(this.Path) ? "/" : this.Path;
             return op;
         }
         static DateTime ConvertFromDateTimeOffset(DateTimeOffset dateTime)
@@ -64,7 +61,7 @@ namespace System.Web
                    ? DateTimeOffset.MinValue
                    : new DateTimeOffset(dateTime);
 
-           // return new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
+            // return new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
         }
     }
 }
