@@ -113,7 +113,7 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Access:
-                    int index = text.IndexOf(SqlValue.IsNull, StringComparison.OrdinalIgnoreCase);//isnull  (isnull(aaa),'3,3')   iff(isnull   (aaa),333,aaa)
+                    int index = text.IndexOf(SqlValue.IsNull, StringComparison.OrdinalIgnoreCase);//isnull  (isnull(aaa),'3,3')   iif(isnull   (aaa),333,aaa)
                     if (index > -1)
                     {
 
@@ -128,7 +128,7 @@ namespace CYQ.Data.SQL
                             index = text.IndexOf(SqlValue.IsNull, end, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
                         }
                         while (index > -1);
-                        return Replace(text, SqlValue.IsNull, "iff(isnull");
+                        return Replace(text, SqlValue.IsNull, "iif(isnull");
                     }
                     break;
                 case DalType.SQLite:
