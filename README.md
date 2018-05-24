@@ -10,6 +10,8 @@ svn checkout: http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/<
 VIP培训课程，精通系列视频，300元/套，(共18集，每集1小时左右)，可群里联系作者购买！
 <br /><br />
 
+CYQ.Data 最近汇总了一下教程，放个人微信公众号里了，有需要的在公众号里输入cyq.data就可以看到了<br />
+<img src="https://images2018.cnblogs.com/blog/17408/201805/17408-20180523041027505-1002652922.jpg" width="200" height="200" /><br />
 
 注意事项：
 <hr />
