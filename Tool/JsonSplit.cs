@@ -114,13 +114,13 @@ namespace CYQ.Data.Tool
                             {
                                 //if (value != string.Empty)
                                 //{
-                                string val=value.ToString();
+                                string val = value.ToString();
                                 bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
                                 if (isNull)
                                 {
-                                    val="";
+                                    val = "";
                                 }
-                               
+
                                 dic.Add(key, val);
 
                                 //}
@@ -259,10 +259,19 @@ namespace CYQ.Data.Tool
                         break;
                     default: //值开头。。
                         isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && state == 0);//
-                        if (!isError && jsonStart && !arrayStart && state != 1 && keyStart < 2)
+                        if (!isError && keyStart < 2)
                         {
-                            //不是引号开头的，只允许数字
-                            isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                            if ((jsonStart && !arrayStart) && state != 1)
+                            {
+                                //不是引号开头的，只允许字母 {aaa:1}
+                                isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                            }
+                            else if (!jsonStart && arrayStart && valueStart < 2)//
+                            {
+                                //不是引号开头的，只允许数字[1]
+                                isError = c < 48 || c > 57;
+
+                            }
                         }
                         break;
                 }
