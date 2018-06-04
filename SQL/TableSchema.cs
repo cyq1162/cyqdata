@@ -658,7 +658,7 @@ namespace CYQ.Data.SQL
                         Dictionary<string, string> tables = null;
                         if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                         {
-                            string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                            string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
                             if (System.IO.File.Exists(fullPath))
                             {
                                 tables = JsonHelper.Split(IOHelper.ReadAllText(fullPath));
@@ -753,7 +753,7 @@ namespace CYQ.Data.SQL
 
                                 if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                                 {
-                                    string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                                    string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
                                     IOHelper.Save(fullPath, JsonHelper.ToJson(tables), false, true);
                                 }
                             }
@@ -829,7 +829,7 @@ namespace CYQ.Data.SQL
             }
             else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
                 if (System.IO.File.Exists(fullPath))
                 {
                     MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
@@ -865,14 +865,19 @@ namespace CYQ.Data.SQL
 
                 switch (dbBase.dalType)//文本数据库不保存。
                 {
-                    case DalType.Access:
-                    case DalType.SQLite:
-                    case DalType.MsSql:
-                    case DalType.MySql:
-                    case DalType.Oracle:
+                    //case DalType.Access:
+                    //case DalType.SQLite:
+                    //case DalType.MsSql:
+                    //case DalType.MySql:
+                    //case DalType.Oracle:
+
+                    case DalType.Txt:
+                    case DalType.Xml:
+                        break;
+                    default:
                         if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                         {
-                            string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath;
+                            string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
                             if (System.IO.Directory.Exists(folderPath))
                             {
                                 mdcs.WriteSchema(folderPath + key + ".ts");

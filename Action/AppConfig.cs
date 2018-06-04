@@ -248,12 +248,19 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的运行路径（Bin目录）
+        /// 框架的运行路径
+        /// Win项目：是dll和exe所在的目录，
+        /// Asp.net项目：是指根目录
+        /// Asp.net core 项目：是指运行的路径（dll所在的路径）
         /// </summary>
         public static string RunPath
         {
             get
             {
+                if (AppConfig.IsWeb)
+                {
+                    return AppDomain.CurrentDomain.BaseDirectory;
+                }
                 return AppConst.RunFolderPath;
             }
         }
@@ -261,15 +268,28 @@ namespace CYQ.Data
     }
     public static partial class AppConfig
     {
+        private static string _WebRootPath;
         //内部变量
         /// <summary>
-        /// Web根目录
+        /// Web根目录(ASP.NET Core 项目时，由于机制不同，指向的路径需要调整，所以该值可以修改)
         /// </summary>
-        internal static string WebRootPath
+        public static string WebRootPath
         {
             get
             {
-                return AppDomain.CurrentDomain.BaseDirectory;
+                if (string.IsNullOrEmpty(_WebRootPath))
+                {
+                    _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
+                }
+                if (!_WebRootPath.EndsWith("\\") && !_WebRootPath.EndsWith("/"))
+                {
+                    _WebRootPath = _WebRootPath + "\\";
+                }
+                return _WebRootPath;
+            }
+            set
+            {
+                _WebRootPath = value;
             }
         }
         internal static bool IsWeb
@@ -284,6 +304,19 @@ namespace CYQ.Data
             get
             {
                 return HttpContext.Current.Request.Url;
+            }
+        }
+        //读配置文件时会修改此值。
+        private static bool _IsAspNetCore = false;
+        internal static bool IsAspNetCore
+        {
+            get
+            {
+                return _IsAspNetCore;
+            }
+            set
+            {
+                _IsAspNetCore = value;
             }
         }
     }
@@ -353,27 +386,32 @@ namespace CYQ.Data
                 {
                     if (string.IsNullOrEmpty(_Domain))
                     {
-                        string[] domains = GetApp("Domain", "").Split(',');
-                        if (domains != null && domains.Length > 0)
+                        Uri uri=AppConfig.WebUri;
+                        string domainList=GetApp("Domain", "");
+                        if (!string.IsNullOrEmpty(domainList))
                         {
-                            if (domains.Length == 1)
+                            string[] domains = domainList.Split(',');
+                            if (domains != null && domains.Length > 0)
                             {
-                                _Domain = domains[0];
-                            }
-                            else if (AppConfig.IsWeb)
-                            {
-                                foreach (string domain in domains)
+                                if (domains.Length == 1)
                                 {
-                                    if (AppConfig.WebUri.Authority.Contains(domain))
+                                    _Domain = domains[0];
+                                }
+                                else if (AppConfig.IsWeb)
+                                {
+                                    foreach (string domain in domains)
                                     {
-                                        _Domain = domain;
+                                        if (uri.Authority.Contains(domain))
+                                        {
+                                            _Domain = domain;
+                                        }
                                     }
                                 }
                             }
                         }
-                        else if (AppConfig.IsWeb)
+                        else if (AppConfig.IsWeb && uri.Host!="localhost")
                         {
-                            _Domain = AppConfig.WebUri.Authority.Replace("www.", string.Empty);
+                            _Domain = uri.Authority.Replace("www.", string.Empty);
                         }
                     }
                     return _Domain;

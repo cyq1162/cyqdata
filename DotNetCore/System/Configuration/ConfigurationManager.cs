@@ -2,15 +2,20 @@
 using System.IO;
 using CYQ.Data.Tool;
 using System.Collections.Specialized;
+using System.Text;
 
 namespace System.Configuration
 {
-    internal class ConfigurationManager
+    public class ConfigurationManager
     {
         static string appSettingJson = string.Empty;
         static ConfigurationManager()
         {
-            string filePath = AppConfig.WebRootPath + "appsettings.json";
+            AppConfig.IsAspNetCore = true;
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//注册编码
+            IOHelper.DefaultEncoding= Encoding.GetEncoding("gb2312");
+
+            string filePath = AppConfig.RunPath + "appsettings.json";
             if (System.IO.File.Exists(filePath))
             {
                 appSettingJson = File.ReadAllText(filePath, Text.Encoding.UTF8);
@@ -27,10 +32,11 @@ namespace System.Configuration
             {
                 if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
                 {
-                    string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings");
+                    //EscapeOp.Default 参数若不设置，会造成死循环
+                    string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings",EscapeOp.Default);
                     if (!string.IsNullOrEmpty(settingValue))
                     {
-                        _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue);
+                        _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue,EscapeOp.Default);
                     }
                 }
                 if (_AppSettings == null)
@@ -72,5 +78,7 @@ namespace System.Configuration
                 return _ConnectionStrings;
             }
         }
+
+        public static object GetSection(string key) { return null; }
     }
 }

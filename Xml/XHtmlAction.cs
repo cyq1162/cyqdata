@@ -869,16 +869,13 @@ namespace CYQ.Data.Xml
 
 
         #region 加载表格循环方式
-        public void LoadData(object data)
+        /// <summary>
+        /// 加载MDataTable的多行数据
+        /// </summary>
+        /// <param name="data"></param>
+        public void LoadData(object anyObjToTable)
         {
-            if (data.GetType().IsGenericType)
-            {
-                LoadData(MDataTable.CreateFrom(data));
-            }
-            else
-            {
-                LoadData(MDataRow.CreateFrom(data));
-            }
+            LoadData(MDataTable.CreateFrom(anyObjToTable));
         }
         /// <summary>
         /// 装载数据行 （一般后续配合SetForeach方法使用）
@@ -1131,10 +1128,16 @@ namespace CYQ.Data.Xml
         #endregion
 
         #region 加载行数据后操作方式
-
-
         /// <summary>
-        /// 装载数据行 （一般后续配合SetFor方法使用）
+        /// 加载MDatarow行数据（CMS替换）
+        /// </summary>
+        /// <param name="autoSetValuePre">批量赋值的前缀（如："txt#",或空前缀：""）赋值后，将在获取OutXml属性时处理赋值</param>
+        public void LoadData(object anyObjToRow, string autoSetValuePre)
+        {
+            LoadData(MDataRow.CreateFrom(anyObjToRow), autoSetValuePre);
+        }
+        /// <summary>
+        /// 装载数据行 （一般后续配合SetFor方法使用或CMS替换）
         /// </summary>
         /// <param name="autoSetValuePre">批量赋值的前缀（如："txt#",或空前缀：""）赋值后，将在获取OutXml属性时处理赋值</param>
         public void LoadData(MDataRow row, string autoSetValuePre)

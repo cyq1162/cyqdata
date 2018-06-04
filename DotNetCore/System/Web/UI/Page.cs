@@ -2,7 +2,7 @@
 
 namespace System.Web.UI
 {
-    internal class Page
+    public class Page
     {
         private Microsoft.AspNetCore.Http.HttpContext context;
 
@@ -15,5 +15,6 @@ namespace System.Web.UI
         {
             throw new NotImplementedException();
         }
+        protected virtual void OnPreInit(EventArgs e) { }
     }
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace System.Configuration
 {
-    internal class ConnectionStringSettingsCollection: List<ConnectionStringSettings>
+    public class ConnectionStringSettingsCollection: List<ConnectionStringSettings>
     {
         //public ConnectionStringSettings this[int index] { get { return null; } }
         public ConnectionStringSettings this[string name]

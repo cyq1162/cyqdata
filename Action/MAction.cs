@@ -316,6 +316,10 @@ namespace CYQ.Data
             {
                 newRow.Conn = conn;
             }
+            else if (_Data != null)//新加的处理
+            {
+                newRow.Conn = _Data.Conn;
+            }
             _sourceTableName = newRow.TableName;
         }
         private void InitSqlHelper(MDataRow newRow, string newDbName)

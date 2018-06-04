@@ -370,7 +370,7 @@ namespace CYQ.Data.Tool
         }
 
         #region ½«×Ö·û´®±äHashKey
-        static Dictionary<string, string> hashKeyCache = new Dictionary<string, string>(32);
+        static MDictionary<string, string> hashKeyCache = new MDictionary<string, string>(32);
         internal static string GetHashKey(string sourceString)
         {
             try
@@ -384,7 +384,7 @@ namespace CYQ.Data.Tool
                     if (hashKeyCache.Count > 512)
                     {
                         hashKeyCache.Clear();
-                        hashKeyCache = new Dictionary<string, string>(64);
+                        hashKeyCache = new MDictionary<string, string>(64);
                     }
                     string value = "K" + Math.Abs(sourceString.GetHashCode()) + sourceString.Length;
                     hashKeyCache.Add(sourceString, value);

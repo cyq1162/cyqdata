@@ -30,7 +30,7 @@ namespace CYQ.Data.Cache
         }
         public override void Set(string key, object value)
         {
-            Set(key, value, 0);
+            Set(key, value, 60 * 24 * 30);
         }
 
         public override void Set(string key, object value, double cacheMinutes)

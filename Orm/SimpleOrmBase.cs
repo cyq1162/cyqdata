@@ -482,7 +482,7 @@ namespace CYQ.Data.Orm
         }
         private void GetValueFromEntity()
         {
-            if (!IsUseAop)
+            if (!IsUseAop || AppConfig.IsAspNetCore)//ASPNETCore下，动态代理的Aop是无效的
             {
                 Action.Data.LoadFrom(entity, BreakOp.Null);
             }
