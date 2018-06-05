@@ -724,4 +724,9 @@
 508：DBTool.AlterTable 修正移除列时约速表名错误问题。（2018-04-24）
 509：MAction 修正ResetTable后action.Data.Conn属性值问题。（2018-04-25）
 510：DbBase 修正主备切换的判断问题。（2018-05-15）
----Json转义 \r\n memcache的转义 自动缓存的转义  文本数据库的转义
+511：扩展.NET Core 支持。（2018-05-18）
+512：修正Access下的IIF函数（错写成iff)。（2018-05-22）
+513：D调整分布式缓存的默认时间。（2018-05-24）
+514：处理StaticTool里的GetHashKey在并发下的问题。（2018-05-30）
+515：JsonSplit 修正数组的判断问题（2018-06-04）
+---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
