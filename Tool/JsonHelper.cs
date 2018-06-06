@@ -1262,7 +1262,7 @@ namespace CYQ.Data.Tool
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = rowOp;
             js.Fill(obj);
-            return js.ToString(obj is IList);
+            return js.ToString(obj is IList || obj is MDataTable || obj is DataTable);
         }
 
 
