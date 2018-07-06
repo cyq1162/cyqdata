@@ -729,4 +729,7 @@
 513：D调整分布式缓存的默认时间。（2018-05-24）
 514：处理StaticTool里的GetHashKey在并发下的问题。（2018-05-30）
 515：JsonSplit 修正数组的判断问题（2018-06-04）
+516：JsonHelper ToJson 修正返回MDataTable和DataTable数组的判断问题（2018-06-06）
+517：IOHelper 增强对文件编码的检测（增加TextEncodingDetect类）（2018-06-24）
+518：DbBase 主从切换细节优化（在从库时，遇到事务或insert..select主动切回主库）。（2018-07-06）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义

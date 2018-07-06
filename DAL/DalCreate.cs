@@ -314,6 +314,7 @@ namespace CYQ.Data
                     {
                         break;
                     }
+                    cbSlave.IsSlave = true;
                     co.Slave.Add(cbSlave);
                 }
             }

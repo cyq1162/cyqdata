@@ -487,6 +487,10 @@ namespace CYQ.Data
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
             recordsAffected = -2;
+            if (isOpenTrans && useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+            {
+                useConnBean = connObject.Master;
+            }
             if (OpenCon())//这里也会切库了。
             {
                 try
@@ -554,6 +558,10 @@ namespace CYQ.Data
             if (isSelectSql)
             {
                 coSlave = connObject.GetSlave();
+            }
+            else if(useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
+            {
+                useConnBean = connObject.Master;
             }
             if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {

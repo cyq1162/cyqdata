@@ -736,7 +736,7 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// 读写分离时用户对主数据库操作持续时间，默认值10秒（单位：秒）
+            /// 读写分离时用户对主数据库操作持续时间，默认值10秒s（单位：秒s）
             /// </summary>
             public static int MasterSlaveTime
             {

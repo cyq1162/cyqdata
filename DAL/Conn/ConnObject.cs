@@ -17,6 +17,10 @@ namespace CYQ.Data
         /// </summary>
         internal bool IsOK = true;
         /// <summary>
+        /// 是否从库
+        /// </summary>
+        internal bool IsSlave = false;
+        /// <summary>
         /// 链接错误时的异常消息。
         /// </summary>
         internal string ErrorMsg = string.Empty;
