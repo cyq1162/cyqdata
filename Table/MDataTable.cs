@@ -395,12 +395,16 @@ namespace CYQ.Data.Table
         {
             return ToXml(false);
         }
+        public string ToXml(bool isConvertNameToLower)
+        {
+            return ToXml(isConvertNameToLower, true, true);
+        }
         /// <summary>
         /// 输出Xml文档
         /// </summary>
         /// <param name="isConvertNameToLower">名称转小写</param>
         /// <returns></returns>
-        public string ToXml(bool isConvertNameToLower)
+        public string ToXml(bool isConvertNameToLower, bool needHeader, bool needRootNode)
         {
             StringBuilder xml = new StringBuilder();
             if (Columns.Count > 0)
@@ -412,7 +416,14 @@ namespace CYQ.Data.Table
                     tableName = tableName.ToLower();
                     rowName = rowName.ToLower();
                 }
-                xml.AppendFormat("<?xml version=\"1.0\" standalone=\"yes\"?>\r\n<{0}>", tableName);
+                if (needHeader)
+                {
+                    xml.Append("<?xml version=\"1.0\" standalone=\"yes\"?>");
+                }
+                if (needRootNode)
+                {
+                    xml.AppendFormat("\r\n<{0}>", tableName);
+                }
                 foreach (MDataRow row in Rows)
                 {
                     xml.AppendFormat("\r\n  <{0}>", rowName);
@@ -422,7 +433,10 @@ namespace CYQ.Data.Table
                     }
                     xml.AppendFormat("\r\n  </{0}>", rowName);
                 }
-                xml.AppendFormat("\r\n</{0}>", tableName);
+                if (needRootNode)
+                {
+                    xml.AppendFormat("\r\n</{0}>", tableName);
+                }
             }
             return xml.ToString();
         }
