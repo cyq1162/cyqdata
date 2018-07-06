@@ -489,7 +489,7 @@ namespace CYQ.Data
             recordsAffected = -2;
             if (isOpenTrans && useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
             {
-                useConnBean = connObject.Master;
+                ResetConn(connObject.Master);
             }
             if (OpenCon())//这里也会切库了。
             {
@@ -561,7 +561,7 @@ namespace CYQ.Data
             }
             else if(useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
             {
-                useConnBean = connObject.Master;
+                ResetConn(connObject.Master);
             }
             if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {
