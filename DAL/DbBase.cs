@@ -426,6 +426,10 @@ namespace CYQ.Data
             {
                 coSlave = connObject.GetSlave();
             }
+            else if (useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+            {
+                ResetConn(connObject.Master);
+            }
             if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {
                 try
