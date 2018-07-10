@@ -449,6 +449,8 @@ namespace CYQ.Data.Table
         /// </summary>
         public void Clear()
         {
+            isNewValue = false;
+            newValue = null;
             CellValue.Value = null;
             CellValue.State = 0;
             CellValue.IsNull = true;
