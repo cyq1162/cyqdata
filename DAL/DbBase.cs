@@ -123,16 +123,23 @@ namespace CYQ.Data
                             {
                                 _Version = _VersionCache[conn];
                             }
-                            else if (OpenCon(useConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
+                            else
                             {
-                                _Version = _con.ServerVersion;
-                                if (!_VersionCache.ContainsKey(conn))
+                                if (isOpenTrans && useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
                                 {
-                                    _VersionCache.Set(conn, _Version);
+                                    ResetConn(connObject.Master);
                                 }
-                                if (!isOpenTrans)//避免把事务给关闭了。
+                                if (OpenCon(useConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
                                 {
-                                    CloseCon();
+                                    _Version = _con.ServerVersion;
+                                    if (!_VersionCache.ContainsKey(conn))
+                                    {
+                                        _VersionCache.Set(conn, _Version);
+                                    }
+                                    if (!isOpenTrans)//避免把事务给关闭了。
+                                    {
+                                        CloseCon();
+                                    }
                                 }
                             }
 
@@ -563,7 +570,7 @@ namespace CYQ.Data
             {
                 coSlave = connObject.GetSlave();
             }
-            else if(useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
+            else if (useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
             {
                 ResetConn(connObject.Master);
             }
@@ -912,7 +919,7 @@ namespace CYQ.Data
                 threadCount++;
                 Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                 thread.Start(obj.Master);
-                
+
             }
             Thread.Sleep(30);
             if (openOKFlag == -1 && obj.BackUp != null && obj.BackUp.IsOK && (int)allowLevel >= 2)
@@ -921,7 +928,7 @@ namespace CYQ.Data
                 Thread.Sleep(30);
                 Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                 thread.Start(obj.BackUp);
-               
+
             }
             if (openOKFlag == -1 && obj.Slave != null && obj.Slave.Count > 0 && (int)allowLevel >= 3)
             {
@@ -933,7 +940,7 @@ namespace CYQ.Data
                         threadCount++;
                         Thread thread = new Thread(new ParameterizedThreadStart(TestOpen));
                         thread.Start(obj.Slave[i]);
-                       
+
                     }
                 }
             }

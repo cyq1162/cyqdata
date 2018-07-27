@@ -215,9 +215,9 @@ namespace CYQ.Data.SQL
                 return GetTxtDBViewColumns(tableName);//处理视图
             }
             #endregion
-            
 
-            
+
+
             tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
 
             //switch (dalType)
@@ -226,7 +226,7 @@ namespace CYQ.Data.SQL
             //    case DalType.MySql:
             //        tableName = SqlFormat.NotKeyword(tableName);
             //        break;
-                    
+
             //}
 
 
@@ -369,7 +369,7 @@ namespace CYQ.Data.SQL
                             {
                                 helper.Con.Open();
                             }
-                            DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null,SqlFormat.NotKeyword(tableName) });
+                            DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, SqlFormat.NotKeyword(tableName) });
                             if (!helper.isOpenTrans)
                             {
                                 helper.Con.Close();
@@ -682,7 +682,7 @@ namespace CYQ.Data.SQL
                                 case DalType.Txt:
                                 case DalType.Xml:
                                     tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                                   // string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1] + "\\");
+                                    // string folder = Path.GetDirectoryName(helper.conn.Split(';')[0].Split('=')[1] + "\\");
                                     string[] files = Directory.GetFiles(helper.Con.DataSource, "*.ts");
                                     foreach (string file in files)
                                     {
@@ -854,6 +854,10 @@ namespace CYQ.Data.SQL
                 //    dbBase.tempSql = "view";//使用access方式加载列
                 //}
                 mdcs = GetColumns(tableName, ref dbBase);
+                if (dbBase != null && dbBase.Con != null && !dbBase.isOpenTrans && dbBase.Con.State != ConnectionState.Closed)
+                {
+                    dbBase.Con.Close();//非事务下，链接先关闭
+                }
                 if (mdcs.Count == 0)
                 {
                     return false;
