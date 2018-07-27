@@ -1025,7 +1025,15 @@ namespace CYQ.Data
         {
             try
             {
-                if (cb == null) { cb = useConnBean; }
+                if (cb == null)
+                {
+                    cb = useConnBean;
+                    if (isOpenTrans && cb.IsSlave)
+                    {
+                        ResetConn(connObject.Master);
+
+                    }
+                }
                 if (!cb.IsOK)
                 {
                     if ((int)leve > 1 && connObject.BackUp != null && connObject.BackUp.IsOK)
