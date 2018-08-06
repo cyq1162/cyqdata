@@ -157,13 +157,16 @@ namespace CYQ.Data.Table
                 else
                 {
                     //¿ªÆôÄ¬ÈÏÇ°×º¼ì²â
-                    string[] items = new string[] { "txt", "chb", "ddl" };
-                    foreach (string item in items)
+                    string[] items = AppConfig.UI.AutoPrefixs.Split(',');
+                    if (items != null && items.Length > 0)
                     {
-                        columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
-                        if (columnIndex.ContainsKey(columnName))
+                        foreach (string item in items)
                         {
-                            return columnIndex[columnName];
+                            columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
+                            if (columnIndex.ContainsKey(columnName))
+                            {
+                                return columnIndex[columnName];
+                            }
                         }
                     }
                 }

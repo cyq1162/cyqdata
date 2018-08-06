@@ -1138,5 +1138,25 @@ namespace CYQ.Data
         }
         #endregion
 
+        #region UI 相关的配置
+        public static class UI
+        {
+            /// <summary>
+            /// UI取值的默认前缀（ddl,chb,txt)，多个用逗号（,）分隔
+            /// </summary>
+            public static string AutoPrefixs
+            {
+                get
+                {
+                    return GetApp("AutoPrefixs", "txt,chb,ddl");
+                }
+                set
+                {
+                    SetApp("AutoPrefixs", value);
+                }
+            }
+        }
+        #endregion
+
     }
 }

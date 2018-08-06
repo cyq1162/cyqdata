@@ -734,4 +734,5 @@
 518：DbBase 主从切换细节优化（在从库时，遇到事务或insert..select主动切回主库）。（2018-07-06）
 519：MDataTable ToXml 方法归还旧版本的重载参数。（2018-07-06）
 520：MDataCell 修正新的延时机制下Clear方法未清除旧值的问题。（2018-07-10）
+521：将UI默认前缀（txt,chb,ddl)改成全局可配置AppConfig.UI.AutoPrefixs（2018-08-06）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
