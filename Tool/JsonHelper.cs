@@ -772,6 +772,10 @@ namespace CYQ.Data.Tool
                             {
                                 value = Convert.ToBase64String(cell.Value as byte[]);
                             }
+                            else if (t.Name == "String")
+                            {
+                                value = cell.StringValue;
+                            }
                             else
                             {
                                 if (cell.Value is IEnumerable)
