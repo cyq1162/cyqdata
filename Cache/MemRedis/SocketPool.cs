@@ -36,8 +36,16 @@ namespace CYQ.Data.Cache
     [DebuggerDisplay("[ Host: {Host} ]")]
     internal class SocketPool
     {
-        private static LogAdapter logger = LogAdapter.GetLogger(typeof(SocketPool));
 
+        //用于验证权限的委托事件。
+        internal delegate bool OnAfterSocketCreateDelegate(MSocket socket);
+        internal event OnAfterSocketCreateDelegate OnAfterSocketCreateEvent;
+
+        private static LogAdapter logger = LogAdapter.GetLogger(typeof(SocketPool));
+        /// <summary>
+        /// 扩展属性：如果链接后需要验证密码（如Redis可设置密码）
+        /// </summary>
+        internal string password;
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
         /// （问题：主SocketPool怎么找到对应的备份？）
@@ -187,6 +195,11 @@ namespace CYQ.Data.Cache
             {
                 MSocket socket = new MSocket(this, endPoint, owner.SendReceiveTimeout, owner.ConnectTimeout);
                 //Reset retry timer on success.
+                //不抛异常，则正常链接。
+                if (OnAfterSocketCreateEvent != null)
+                {
+                    OnAfterSocketCreateEvent(socket);
+                }
                 deadEndPointSecondsUntilRetry = 1;
                 return socket;
             }

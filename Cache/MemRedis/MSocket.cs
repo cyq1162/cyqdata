@@ -11,6 +11,13 @@ namespace CYQ.Data.Cache
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
 
         private SocketPool socketPool;
+        public SocketPool SocketPool
+        {
+            get
+            {
+                return socketPool;
+            }
+        }
         private Socket socket;
         private Stream stream;
         public readonly DateTime Created;
@@ -167,7 +174,8 @@ namespace CYQ.Data.Cache
                 Error.Throw("Received empty response.");
             }
 
-            if (response.StartsWith("ERROR")
+            if (response.StartsWith("-ERR")
+                || response.StartsWith("ERROR")
                 || response.StartsWith("CLIENT_ERROR")
                 || response.StartsWith("SERVER_ERROR"))
             {

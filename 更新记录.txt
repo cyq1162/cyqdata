@@ -736,4 +736,5 @@
 520：MDataCell 修正新的延时机制下Clear方法未清除旧值的问题。（2018-07-10）
 521：将UI默认前缀（txt,chb,ddl)改成全局可配置AppConfig.UI.AutoPrefixs（2018-08-06）
 522：JsonHelper ToJson 修正实体Object属性赋String值的判断问题（2018-08-27）
+523：Redis 支持密码设置，格式为：ip:port - password （2018-08-27）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义

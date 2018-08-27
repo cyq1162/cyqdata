@@ -160,7 +160,17 @@ namespace CYQ.Data.Cache
             }
 
             Name = name;
-            serverPool = new ServerPool(hosts);
+            serverPool = new ServerPool(hosts, CacheType.Redis);
+            serverPool.OnAuthEvent += new ServerPool.AuthDelegate(serverPool_OnAuthEvent);
+        }
+
+        bool serverPool_OnAuthEvent(MSocket socket)
+        {
+            if (!Auth(socket.SocketPool.password, socket))
+            {
+                Error.Throw("Auth password fail!");
+            }
+            return true;
         }
 
         /// <summary>
@@ -423,7 +433,21 @@ namespace CYQ.Data.Cache
             });
         }
         #endregion
+        #region Delete
 
+        private bool Auth(string password, MSocket socket)
+        {
+            if (!string.IsNullOrEmpty(password))
+            {
+                using (RedisCommand cmd = new RedisCommand(socket, 2, "AUTH"))
+                {
+                    cmd.WriteKey(password);
+                }
+                return socket.ReadResponse().StartsWith("+OK");
+            }
+            return true;
+        }
+        #endregion
 
         #region Flush All
         /// <summary>

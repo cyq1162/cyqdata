@@ -180,7 +180,7 @@ namespace CYQ.Data.Cache
             }
 
             Name = name;
-            serverPool = new ServerPool(hosts);
+            serverPool = new ServerPool(hosts, CacheType.MemCache);
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace CYQ.Data.Cache
         }
 
         //Private Unix-time converter
-        private static DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static DateTime epoch = new DateTime( 1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         private static int getUnixTime(DateTime datetime)
         {
             return (int)(datetime.ToUniversalTime() - epoch).TotalSeconds;

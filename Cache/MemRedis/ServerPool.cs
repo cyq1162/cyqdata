@@ -37,7 +37,13 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal class ServerPool
     {
+        //用于验证权限的委托事件。
+        internal delegate bool AuthDelegate(MSocket socket);
+        internal event AuthDelegate OnAuthEvent;
+
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(ServerPool));
+
+        internal CacheType serverType = CacheType.MemCache;
 
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
@@ -67,16 +73,30 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// Internal constructor. This method takes the array of hosts and sets up an internal list of socketpools.
         /// </summary>
-        internal ServerPool(string[] hosts)
+        internal ServerPool(string[] hosts, CacheType serverType)
         {
+            this.serverType = serverType;//服务的缓存类型（为了支持Redis的密码功能，在这里增加点依赖扩展。）
             hostDictionary = new Dictionary<uint, SocketPool>();
             List<SocketPool> pools = new List<SocketPool>();
             List<uint> keys = new List<uint>();
-            foreach (string host in hosts)
+            foreach (string hostItem in hosts)//遍历每一台主机。
             {
+                if (string.IsNullOrEmpty(hostItem)) { continue; }
+                string[] items = hostItem.Split('-');
+                string pwd = "";
+                string host = items[0].Trim(); ;
+                if (items.Length > 1)
+                {
+                    pwd = items[1].Trim();
+                }
                 //Create pool
-                SocketPool pool = new SocketPool(this, host.Trim());
+                SocketPool pool = new SocketPool(this, host);
+                pool.OnAfterSocketCreateEvent += new SocketPool.OnAfterSocketCreateDelegate(pool_OnAfterSocketCreateEvent);
+                if (!string.IsNullOrEmpty(pwd))
+                {
+                    pool.password = pwd;
 
+                }
                 //Create 250 keys for this pool, store each key in the hostDictionary, as well as in the list of keys.
                 for (int i = 0; i < 250; i++)
                 {
@@ -101,6 +121,15 @@ namespace CYQ.Data.Cache
             hostKeys = keys.ToArray();
         }
 
+        bool pool_OnAfterSocketCreateEvent(MSocket socket)
+        {
+            if (OnAuthEvent != null)
+            {
+                return OnAuthEvent(socket);
+            }
+            return true;
+        }
+
         /// <summary>
         /// Given an item key hash, this method returns the socketpool which is closest on the server key continuum.
         /// </summary>
@@ -120,7 +149,7 @@ namespace CYQ.Data.Cache
             {
                 //Get the index of the first item bigger than the one searched for.
                 i = ~i;
-                 
+
                 //If i is bigger than the last index, it was bigger than the last item = use the first item.
                 if (i >= hostKeys.Length)
                 {

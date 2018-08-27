@@ -791,6 +791,7 @@ namespace CYQ.Data
 
             /// <summary>
             /// Redis分布式缓存的服务器配置，多个用逗号（,）分隔
+            /// 格式：ip:port - password
             /// </summary>
             public static string RedisServers
             {
@@ -832,7 +833,8 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// Redis  备份服务器（当主服务器挂了后，请求会转向备用机）
+            /// Redis  备份服务器（当主服务器挂了后，请求会转向备用机），多个用逗号（,）分隔
+            /// 格式：ip:port - password
             /// </summary>
             public static string RedisServersBak
             {
