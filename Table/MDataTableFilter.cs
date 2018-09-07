@@ -115,14 +115,14 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-
-                    List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                    List<TFilter> group2 = null;
+                    List<TFilter> filters = GetTFilter(whereObj, table.Columns, out group2);
                     if (filters.Count > 0)
                     {
                         for (int i = 0; i < table.Rows.Count; i++)
                         {
                             MDataRow row = table.Rows[i];
-                            if (CompareMore(row, filters))
+                            if (CompareMore(row, filters) && (group2.Count == 0 || CompareMore(row, group2)))
                             {
                                 mdt2[0].Rows.Add(row, false);
                             }
@@ -145,12 +145,13 @@ namespace CYQ.Data.Table
                 {
                     return 0;
                 }
-                List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                List<TFilter> group2 = null;
+                List<TFilter> filters = GetTFilter(whereObj, table.Columns, out group2);
                 if (filters.Count > 0)
                 {
                     for (int i = 0; i < table.Rows.Count; i++)
                     {
-                        if (CompareMore(table.Rows[i], filters))
+                        if (CompareMore(table.Rows[i], filters) && (group2.Count == 0 || CompareMore(table.Rows[i], group2)))
                         {
                             index = i;
                             break;
@@ -170,12 +171,13 @@ namespace CYQ.Data.Table
                 {
                     return table.Rows.Count;
                 }
-                List<TFilter> filters = GetTFilter(whereObj, table.Columns);
+                List<TFilter> group2 = null;
+                List<TFilter> filters = GetTFilter(whereObj, table.Columns, out group2);
                 if (filters.Count > 0)
                 {
                     for (int i = 0; i < table.Rows.Count; i++)
                     {
-                        if (CompareMore(table.Rows[i], filters))
+                        if (CompareMore(table.Rows[i], filters) && (group2.Count == 0 || CompareMore(table.Rows[i], group2)))
                         {
                             count++;
                         }
@@ -199,13 +201,16 @@ namespace CYQ.Data.Table
                 string whereStr = SqlFormat.GetIFieldSql(whereObj);
                 string orderby;
                 SplitWhereOrderby(ref whereStr, out orderby);
-                List<TFilter> filters = GetTFilter(whereStr, table.Columns);
+
+                List<TFilter> group2 = null;
+                List<TFilter> filters = GetTFilter(whereStr, table.Columns, out group2);
                 IList<MDataRow> rows = table.Rows;
                 if (filters.Count > 0)
                 {
+
                     rows = table.Rows.FindAll(delegate(MDataRow row)
                      {
-                         return CompareMore(row, filters);
+                         return CompareMore(row, filters) && (group2.Count == 0 || CompareMore(row, group2));
                      }
                      );
                 }
@@ -241,7 +246,8 @@ namespace CYQ.Data.Table
                     sortRows.AddRange(table.Rows);
                     sortRows.Sort(orderby);
                 }
-                List<TFilter> filters = GetTFilter(whereStr, table.Columns);
+                List<TFilter> group2 = null;
+                List<TFilter> filters = GetTFilter(whereStr, table.Columns, out group2);
 
                 if (filters.Count > 0)
                 {
@@ -251,7 +257,7 @@ namespace CYQ.Data.Table
                     }
                     for (int i = 0; i < sortRows.Count; i++)
                     {
-                        if (CompareMore(sortRows[i], filters))
+                        if (CompareMore(sortRows[i], filters) && (group2.Count == 0 || CompareMore(sortRows[i], group2)))
                         {
                             return sortRows[i];
                         }
@@ -330,8 +336,9 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 多个条件
         /// </summary>
-        private static List<TFilter> GetTFilter(object whereObj, MDataColumn mdc)
+        private static List<TFilter> GetTFilter(object whereObj, MDataColumn mdc, out List<TFilter> group2)
         {
+            group2 = new List<TFilter>();
             List<TFilter> tFilterList = new List<TFilter>();
             string whereStr = SqlFormat.GetIFieldSql(whereObj);
             whereStr = SqlCreate.FormatWhere(whereStr, mdc, DalType.None, null);
@@ -406,7 +413,7 @@ namespace CYQ.Data.Table
                 int andOrIndex = isAnd ? andIndex : orIndex;//最小的，前面的先处理
 
                 int andOrStartIndex = 0;
-
+                bool needGroup2 = isAnd;//如果是and开头，则分成两组
                 while (andOrIndex > -1)
                 {
                     filter = GetSingleTFilter(whereStr.Substring(andOrStartIndex, andOrIndex - andOrStartIndex), mdc);
@@ -450,6 +457,23 @@ namespace CYQ.Data.Table
                 {
                     filter._Ao = lastAnd ? Ao.And : Ao.Or;
                     tFilterList.Add(filter);
+                }
+                if (tFilterList.Count > 2 && needGroup2)
+                {
+                    int okflag = -1;
+                    for (int i = 0; i < tFilterList.Count; i++)
+                    {
+                        if (okflag == -1 && tFilterList[i]._Ao == Ao.Or)
+                        {
+                            i--;//返回上一个索引1,2,3
+                            okflag = i;
+                        }
+                        if (okflag != -1)
+                        {
+                            group2.Add(tFilterList[i]);
+                        }
+                    }
+                    tFilterList.RemoveRange(okflag, tFilterList.Count - okflag);
                 }
             }
             // string firstFilter=whereStr.su

@@ -288,7 +288,14 @@ namespace CYQ.Data
             string dbName = StaticTool.GetDbName(ref tableObj);
             if (conn == AppConfig.DB.DefaultConn && !string.IsNullOrEmpty(dbName))
             {
-                conn = dbName + "Conn";
+                if (dbName.ToLower().EndsWith("conn") && !string.IsNullOrEmpty(AppConfig.GetConn(dbName)))
+                {
+                    conn = dbName;
+                }
+                else
+                {
+                    conn = dbName + "Conn";
+                }
             }
             MDataRow newRow;
             InitConn(tableObj, conn, out newRow);//尝试从MDataRow提取新的Conn链接
@@ -606,6 +613,7 @@ namespace CYQ.Data
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Insert(dalHelper.isOpenTrans);
+                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();
@@ -691,7 +699,9 @@ namespace CYQ.Data
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aop.Para.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where));
+                        int count;
+                        _aop.Para.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where), out count);
+                        dalHelper.recordsAffected = count;
                         break;
                     default:
                         ClearParameters();
@@ -751,15 +761,17 @@ namespace CYQ.Data
                     case DalType.Txt:
                     case DalType.Xml:
                         string sqlWhere = _sqlCreate.FormatWhere(where);
+                        int count;
                         if (isToUpdate)
                         {
                             _Data.Set(deleteField, true);
-                            _aop.Para.IsSuccess = _noSqlAction.Update(sqlWhere);
+                            _aop.Para.IsSuccess = _noSqlAction.Update(sqlWhere, out count);
                         }
                         else
                         {
-                            _aop.Para.IsSuccess = _noSqlAction.Delete(sqlWhere);
+                            _aop.Para.IsSuccess = _noSqlAction.Delete(sqlWhere, out count);
                         }
+                        dalHelper.recordsAffected = count;
                         break;
                     default:
                         ClearParameters();
@@ -842,6 +854,7 @@ namespace CYQ.Data
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.Table = _noSqlAction.Select(pageIndex, pageSize, _sqlCreate.FormatWhere(where), out rowCount, _sqlCreate.selectColumns);
+                        dalHelper.recordsAffected = rowCount;
                         break;
                     default:
                         _aop.Para.Table = new MDataTable(_TableName.Contains("(") ? "SysDefaultCustomTable" : _TableName);
@@ -984,6 +997,7 @@ namespace CYQ.Data
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Fill(_sqlCreate.FormatWhere(where));
+                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();
@@ -1078,6 +1092,7 @@ namespace CYQ.Data
                     case DalType.Xml:
                         _aop.Para.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
                         _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
+                        dalHelper.recordsAffected = _aop.Para.RowCount;
                         break;
                     default:
                         ClearParameters();//清除系统参数
@@ -1135,6 +1150,7 @@ namespace CYQ.Data
                     case DalType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
                         _aop.Para.ExeResult = _aop.Para.IsSuccess;
+                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();//清除系统参数
