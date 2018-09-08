@@ -195,12 +195,11 @@ namespace CYQ.Data
                         todayKey = logType.TrimEnd('_') + '_' + todayKey;
                     }
                 }
-                string pageUrl = Log.Url;
                 string filePath = folder + todayKey;
-                pageUrl += AppConst.NewLine + "---------------------------------------" + AppConst.NewLine;
-                pageUrl += "V" + AppConfig.Version + " Record On : " + DateTime.Now.ToString() + " " + pageUrl;
-                message = pageUrl + AppConst.NewLine + message;
-                IOHelper.Save(filePath, message, true, false);
+                string title = "V" + AppConfig.Version + " Record On : " + DateTime.Now.ToString() + " : " + Log.Url;
+                string body = title + AppConst.NewLine + AppConst.NewLine + message + AppConst.NewLine;
+                body += "---------------------------------------" + AppConst.NewLine + AppConst.NewLine;
+                IOHelper.Save(filePath, body, true, false);
 
             }
             catch //(Exception err)
@@ -231,7 +230,7 @@ namespace CYQ.Data
                     pageUrl = request.Url.Scheme + "://" + request.Url.Authority + request.RawUrl;
                     if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
                     {
-                        pageUrl += AppConst.NewLine + "Referer:" + request.UrlReferrer.ToString();
+                        pageUrl += AppConst.NewLine + AppConst.NewLine + "Referer:" + request.UrlReferrer.ToString();
                     }
                 }
                 return pageUrl;

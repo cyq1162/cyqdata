@@ -65,10 +65,27 @@ namespace CYQ.Data
             {
                 //处理 a as B 的列。
                 Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                string name, asName;
                 foreach (string field in ss.FieldItems)
                 {
                     string[] items = field.Trim().Split(' ');
-                    dic.Add(items[0], items.Length > 1 ? items[items.Length - 1] : "");
+                    name = items[0];
+                    asName = items[items.Length - 1];
+                    if (!dic.ContainsKey(name))
+                    {
+                        dic.Add(items[0], items.Length > 1 ? asName : "");
+                    }
+                    else if (items.Length > 1 && dt.Columns.Contains(name))//同一个字段as多次
+                    {
+                        MCellStruct newCell = dt.Columns[name].Clone();
+                        newCell.ColumnName = asName;
+                        dt.Columns.Add(newCell);
+                        for (int i = 0; i < dt.Rows.Count; i++)
+                        {
+                            dt.Rows[i].Set(asName, dt.Rows[i][name].Value);
+                        }
+                        dic.Add(asName, "");
+                    }
                 }
                 for (int i = dt.Columns.Count - 1; i >= 0; i--)
                 {
