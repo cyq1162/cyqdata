@@ -158,6 +158,27 @@ namespace CYQ.Data.Cache
                 }
             }
             return buffer.ToArray();
+        }
+      
+        /// <summary>
+        /// 读一行的数据
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ReadBytes(int maxLen)
+        {
+            MemoryStream buffer = new MemoryStream();
+            int b;
+            int i = 0;
+            while ((b = stream.ReadByte()) != -1)
+            {
+                buffer.WriteByte((byte)b);
+                i++;
+                if (i >= maxLen)
+                {
+                    break;
+                }
+            }
+            return buffer.ToArray();
 
         }
 

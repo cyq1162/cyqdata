@@ -338,7 +338,7 @@ namespace CYQ.Data.Cache
                     int len = 0;
                     if (int.TryParse(result.Substring(1), out len) && len > 0)
                     {
-                        byte[] bytes = socket.ReadLineBytes();
+                        byte[] bytes = socket.ReadBytes(len);
                         if (bytes.Length > 0)
                         {
                             byte[] data = new byte[bytes.Length - 1];
