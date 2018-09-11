@@ -1181,7 +1181,14 @@ namespace CYQ.Data.Table
                         SqlDbType sdType = sdt;
                         if (sdt == SqlDbType.Variant)
                         {
-                            sdType = DataType.GetSqlType(value.GetType());
+                            if (value == null)
+                            {
+                                sdType = SqlDbType.NVarChar;
+                            }
+                            else
+                            {
+                                sdType = DataType.GetSqlType(value.GetType());
+                            }
                         }
                         Add(key, sdType, value);
                     }
