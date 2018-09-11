@@ -101,7 +101,19 @@ namespace CYQ.Data.Tool
                 _RowOp = value;
             }
         }
-
+        //internal BreakOp BreakOp
+        //{
+        //    get
+        //    {
+        //        switch (_RowOp)
+        //        {
+        //            case Table.RowOp.IgnoreNull:
+        //                return Table.BreakOp.Null;
+        //            default:
+        //                return Table.BreakOp.None;
+        //        }
+        //    }
+        //}
         private bool _AddHead = false;
         private bool _AddSchema = false;
         /// <summary>
@@ -256,7 +268,7 @@ namespace CYQ.Data.Tool
             }
             return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
         }
-       
+
         /// <summary>
         /// out json result
         /// <para>输出Json字符串</para>
@@ -612,7 +624,7 @@ namespace CYQ.Data.Tool
                         {
                             switch (value[i + 1])
                             {
-                               // case '"':
+                                // case '"':
                                 case 'n':
                                     //case 'r'://r和t要转义，不过出事。
                                     //case 't':
@@ -1362,7 +1374,7 @@ namespace CYQ.Data.Tool
                 isJson = IsJson(item.Value);
                 if (!isJson)
                 {
-                    xml.AppendFormat("<{0}>{1}</{0}>", item.Key, FormatCDATA(UnEscape(item.Value,op)));
+                    xml.AppendFormat("<{0}>{1}</{0}>", item.Key, FormatCDATA(UnEscape(item.Value, op)));
                 }
                 else
                 {
@@ -1422,7 +1434,7 @@ namespace CYQ.Data.Tool
             xml.Append(">");
             if (useForInnerText)
             {
-                xml.Append(FormatCDATA(UnEscape(dic[parentName],op)));//InnerText。
+                xml.Append(FormatCDATA(UnEscape(dic[parentName], op)));//InnerText。
             }
             else if (jsonDic.Count > 0)
             {

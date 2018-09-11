@@ -796,15 +796,15 @@ namespace CYQ.Data.Table
             MDataRow row = new MDataRow();
             if (anyObj is string)
             {
-                row.LoadFrom(anyObj as string);
+                row.LoadFrom(anyObj as string, escapeOp, breakOp);
             }
             else if (anyObj is IEnumerable)
             {
-                row.LoadFrom(anyObj as IEnumerable, valueType, escapeOp);
+                row.LoadFrom(anyObj as IEnumerable, valueType, escapeOp, breakOp);
             }
             else if (anyObj is MDataRow)
             {
-                row.LoadFrom(row as MDataRow);
+                row.LoadFrom(row as MDataRow, (breakOp == BreakOp.Null ? RowOp.IgnoreNull : RowOp.None), true);
             }
             else
             {
@@ -1014,6 +1014,10 @@ namespace CYQ.Data.Table
                 {
                     for (int i = 0; i < row.Count; i++)
                     {
+                        //if (rowOp == RowOp.IgnoreNull && row[i].IsNull)
+                        //{
+                        //    continue;
+                        //}
                         if (!Columns.Contains(row[i].ColumnName))
                         {
                             Columns.Add(row[i].Struct);
@@ -1024,11 +1028,11 @@ namespace CYQ.Data.Table
                 foreach (MDataCell cell in this)
                 {
                     rowCell = row[cell.ColumnName];
-                    if (rowCell == null)
+                    if (rowCell == null || (rowOp == RowOp.IgnoreNull && rowCell.IsNull))
                     {
                         continue;
                     }
-                    if (rowOp == RowOp.None || (!rowCell.IsNull && rowCell.State >= (int)rowOp))
+                    if (rowOp == RowOp.None || rowCell.State >= (int)rowOp)
                     {
                         cell.Value = rowCell.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
                         //cell._CellValue.IsNull = rowCell._CellValue.IsNull;//
@@ -1064,12 +1068,19 @@ namespace CYQ.Data.Table
         /// </summary>
         public void LoadFrom(string json, EscapeOp op)
         {
+            LoadFrom(json, JsonHelper.DefaultEscape, BreakOp.None);
+        }
+        /// <summary>
+        /// 从json里加载值
+        /// </summary>
+        public void LoadFrom(string json, EscapeOp op, BreakOp breakOp)
+        {
             if (!string.IsNullOrEmpty(json))
             {
                 Dictionary<string, string> dic = JsonHelper.Split(json);
                 if (dic != null && dic.Count > 0)
                 {
-                    LoadFrom(dic, null, op);
+                    LoadFrom(dic, null, op, breakOp);
                 }
             }
             else
@@ -1082,9 +1093,9 @@ namespace CYQ.Data.Table
         /// </summary>
         public void LoadFrom(IEnumerable dic)
         {
-            LoadFrom(dic, null, JsonHelper.DefaultEscape);
+            LoadFrom(dic, null, JsonHelper.DefaultEscape, BreakOp.None);
         }
-        internal void LoadFrom(IEnumerable dic, Type valueType, EscapeOp op)
+        internal void LoadFrom(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
         {
             if (dic != null)
             {
@@ -1133,31 +1144,56 @@ namespace CYQ.Data.Table
                     {
                         t = o.GetType();
                         value = t.GetProperty("Value").GetValue(o, null);
-                        if (value != null)
+                        bool isContinue = false;
+                        switch (breakOp)
                         {
-                            key = Convert.ToString(t.GetProperty("Key").GetValue(o, null));
+                            case BreakOp.Null:
+                                if (value == null)
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+                            case BreakOp.Empty:
+                                if (value != null && Convert.ToString(value) == "")
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+                            case BreakOp.NullOrEmpty:
+                                if (Convert.ToString(value) == "")
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+
                         }
+                        if (isContinue) { continue; }
+                        key = Convert.ToString(t.GetProperty("Key").GetValue(o, null));
+                        //if (value != null)
+                        //{
+
+                        //}
                     }
-                    if (value != null)
+                    //if (value != null)
+                    //{
+                    if (isAddColumn)
                     {
-                        if (isAddColumn)
+                        SqlDbType sdType = sdt;
+                        if (sdt == SqlDbType.Variant)
                         {
-                            SqlDbType sdType = sdt;
-                            if (sdt == SqlDbType.Variant)
-                            {
-                                sdType = DataType.GetSqlType(value.GetType());
-                            }
-                            Add(key, sdType, value);
+                            sdType = DataType.GetSqlType(value.GetType());
                         }
-                        else
-                        {
-                            if (value != null && value is string)
-                            {
-                                value = JsonHelper.UnEscape(value.ToString(), op);
-                            }
-                            Set(key, value);
-                        }
+                        Add(key, sdType, value);
                     }
+                    else
+                    {
+                        if (value != null && value is string)
+                        {
+                            value = JsonHelper.UnEscape(value.ToString(), op);
+                        }
+                        Set(key, value);
+                    }
+                    // }
                 }
             }
         }

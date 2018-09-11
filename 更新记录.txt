@@ -737,10 +737,11 @@
 521：将UI默认前缀（txt,chb,ddl)改成全局可配置AppConfig.UI.AutoPrefixs（2018-08-06）
 522：JsonHelper ToJson 修正实体Object属性赋String值的判断问题（2018-08-27）
 523：Redis 支持密码设置，格式为：ip:port - password （2018-08-27）
-524：MAction的表名支持：（通过ConnConfigName.TableName的方式来指定数据库链接：在Aries支持多个配置名指向多个同名的数据库名时有用)（2018-09-25）
+524：MAction的表名支持：（通过ConnConfigName.TableName的方式来指定数据库链接：在Aries支持多个配置名指向多个同名的数据库名时有用)（2018-08-25）
 525：MDataTable的查询方法，增加一种支持情况解析支持（2018-09-07）
 526：MAction在操作文本数据库时，增加返回recordsAffected的值（2018-09-07）
 527：Redis 修正读取大文件错误的问题。（2018-09-08）
 528：文本数据库（NoSqlCommand) 修正同个字段多次as不同的name的问题。（2018-09-08）
 529：Log 调整日志格式，去掉重复的Url地址显示。（2018-09-09）
+530：JsonHelper（ToJson）、MDataRow(LoadFrom) 优化扩展处理BreakOp参数的使用范围。（2018-09-11）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
