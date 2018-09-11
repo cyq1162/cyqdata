@@ -159,7 +159,7 @@ namespace CYQ.Data.Cache
             }
             return buffer.ToArray();
         }
-      
+
         /// <summary>
         /// 读一行的数据
         /// </summary>
@@ -175,6 +175,12 @@ namespace CYQ.Data.Cache
                 i++;
                 if (i >= maxLen)
                 {
+                    try
+                    {
+                        stream.ReadByte();//13
+                        stream.ReadByte();//10
+                    }
+                    catch { }
                     break;
                 }
             }
