@@ -744,4 +744,6 @@
 528：文本数据库（NoSqlCommand) 修正同个字段多次as不同的name的问题。（2018-09-08）
 529：Log 调整日志格式，去掉重复的Url地址显示。（2018-09-09）
 530：JsonHelper（ToJson）、MDataRow(LoadFrom) 优化扩展处理BreakOp参数的使用范围。（2018-09-11）
+531：AppConfig.XHtml.Domain 属性修正在子线程获取可能异常的问题。（2018-09-12）
+532：MAction的Exists增加重载方法。（2018-09-12）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
