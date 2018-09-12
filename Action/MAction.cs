@@ -1127,11 +1127,21 @@ namespace CYQ.Data
         /// Whether or not the specified condition exists
         /// <para>是否存在指定条件的数据</para>
         /// </summary>
+        public bool Exists()
+        {
+            return Exists(null);
+        }
+       
         /// <param name="where">Sql statement where the conditions: 88, "id = 88"
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Exists(object where)
         {
             if (CheckDisposed()) { return false; }
+            if (where == null || Convert.ToString(where) == "")
+            {
+                _UI.PrimayAutoGetValue();
+                where = _sqlCreate.GetPrimaryWhere();
+            }
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
             {
