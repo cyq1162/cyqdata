@@ -418,7 +418,7 @@ namespace CYQ.Data
                         }
                         else if (uri != null && uri.Host != "localhost")
                         {
-                            _Domain = uri.Authority.Replace("www.", string.Empty);
+                            _Domain = uri.Host.Replace("www.", string.Empty);
                         }
                     }
                     return _Domain;
