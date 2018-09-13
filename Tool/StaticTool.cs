@@ -304,6 +304,10 @@ namespace CYQ.Data.Tool
             {
                 return strValue;
             }
+            if (t.FullName == "System.Text.Encoding")
+            {
+                return value as Encoding;
+            }
             if (strValue == "")
             {
                 return Activator.CreateInstance(t);

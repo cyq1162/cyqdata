@@ -746,4 +746,6 @@
 530：JsonHelper（ToJson）、MDataRow(LoadFrom) 优化扩展处理BreakOp参数的使用范围。（2018-09-11）
 531：AppConfig.XHtml.Domain 属性修正在子线程获取可能异常的问题。（2018-09-12）
 532：MAction的Exists增加重载方法。（2018-09-12）
+533：AppConfig开放IsNetCore属性。（2018-09-14）
+534：IOHelper 重写，并对外开放。（2018-09-14）
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义

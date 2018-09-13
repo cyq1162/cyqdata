@@ -674,7 +674,7 @@ namespace CYQ.Data.Table
                             isTxtOrXml = true;
                             if (exName == ".xml")
                             {
-                                json = IOHelper.ReadAllText(jsonOrFileName, Encoding.UTF8);
+                                json = IOHelper.ReadAllText(jsonOrFileName, 0, Encoding.UTF8);
                             }
                             else if (exName == ".txt")
                             {

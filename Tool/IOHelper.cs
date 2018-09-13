@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-
+using CYQ.Data.Cache;
 namespace CYQ.Data.Tool
 {
-    internal static class IOHelper
+    /// <summary>
+    /// 文件读取类（能自动识别文件编码）
+    /// </summary>
+    public static class IOHelper
     {
+        private static CacheManage cache = CacheManage.Instance;
         internal static Encoding DefaultEncoding = Encoding.Default;
 
         private static List<object> tenObj = new List<object>(10);
@@ -29,18 +33,34 @@ namespace CYQ.Data.Tool
             int i = length % 9;
             return TenObj[i];
         }
+        #region ReadAllText
+
         /// <summary>
-        /// 先自动识别UTF8，否则归到Default编码读取
+        /// 读取文件内容，并自动识别编码
         /// </summary>
+        /// <param name="fileName">完整路径</param>
         /// <returns></returns>
         public static string ReadAllText(string fileName)
         {
-            return ReadAllText(fileName, DefaultEncoding);
+            return ReadAllText(fileName, 0, DefaultEncoding);
         }
-        public static string ReadAllText(string fileName, Encoding encoding)
+        /// <param name="cacheMinutes">缓存分钟数（为0则不缓存）</param>
+        /// <returns></returns>
+        public static string ReadAllText(string fileName, int cacheMinutes)
+        {
+            return ReadAllText(fileName, cacheMinutes, DefaultEncoding);
+        }
+        /// <summary>
+        /// 读取文件内容
+        /// </summary>
+        /// <param name="encoding">指定编码时（会跳过编码自动检测）</param>
+        /// <returns></returns>
+        public static string ReadAllText(string fileName, int cacheMinutes, Encoding encoding)
         {
             try
             {
+                string key = "IOHelper_" + fileName.GetHashCode();
+                if (cache.Contains(key)) { return cache.Get<string>(key); }
                 if (!File.Exists(fileName))
                 {
                     return string.Empty;
@@ -53,7 +73,12 @@ namespace CYQ.Data.Tool
                         return string.Empty;
                     }
                     buff = File.ReadAllBytes(fileName);
-                    return BytesToText(buff, encoding);
+                    string result = BytesToText(buff, encoding);
+                    if (cacheMinutes > 0)
+                    {
+                        cache.Set(key, result, cacheMinutes);
+                    }
+                    return result;
                 }
 
             }
@@ -63,33 +88,85 @@ namespace CYQ.Data.Tool
             }
             return string.Empty;
         }
+        #endregion
+
+        #region ReadLines
+        /// <summary>
+        /// 读取文件内容，并自动识别编码
+        /// </summary>
+        public static string[] ReadLines(string fileName)
+        {
+            return ReadLines(fileName, 0, DefaultEncoding);
+        }
+        public static string[] ReadLines(string fileName, int cacheMinutes)
+        {
+            return ReadLines(fileName, cacheMinutes, DefaultEncoding);
+        }
+        public static string[] ReadLines(string fileName, int cacheMinutes, Encoding encoding)
+        {
+            string result = ReadAllText(fileName, cacheMinutes, encoding);
+            if (!string.IsNullOrEmpty(result))
+            {
+                return result.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+            return null;
+
+        }
+        #endregion
+
+        /// <summary>
+        /// 往文件里写入数据(文件存在则复盖，不存在则更新)
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public static bool Write(string fileName, string text)
         {
-            return Save(fileName, text, false, DefaultEncoding, true);
+            return Save(fileName, text, false, true, DefaultEncoding);
         }
         public static bool Write(string fileName, string text, Encoding encode)
         {
-            return Save(fileName, text, false, encode, true);
+            return Save(fileName, text, false, true, encode);
         }
+        /// <summary>
+        /// 往文件里追加数据(文件存在则追加，不存在则更新)，并自动识别文件编码
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public static bool Append(string fileName, string text)
         {
-            return Save(fileName, text, true, true);
+            return Save(fileName, text, true, true, DefaultEncoding);
         }
-
+        public static bool Append(string fileName, string text, Encoding encode)
+        {
+            return Save(fileName, text, true, true, encode);
+        }
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError)
         {
-            return Save(fileName, text, true, DefaultEncoding, writeLogOnError);
+            return Save(fileName, text, true, writeLogOnError, DefaultEncoding);
         }
-        internal static bool Save(string fileName, string text, bool isAppend, Encoding encode, bool writeLogOnError)
+        internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode)
         {
             try
             {
+                //System.Text.Encoding.UTF8
                 string folder = Path.GetDirectoryName(fileName);
                 if (!Directory.Exists(folder))
                 {
                     Directory.CreateDirectory(folder);
                 }
-
+                string key = "IOHelper_Save_" + fileName.GetHashCode();
+                if (cache.Contains(key))
+                {
+                    encode = cache.Get<Encoding>(key);
+                }
+                else if (File.Exists(fileName))
+                {
+                    TextEncodingDetect detect = new TextEncodingDetect();
+                    encode = detect.GetEncoding(File.ReadAllBytes(fileName), encode);
+                    cache.Set(key, encode, 60);
+                }
                 lock (GetLockObj(fileName.Length))
                 {
                     using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
@@ -112,8 +189,10 @@ namespace CYQ.Data.Tool
             }
             return false;
         }
-
-        internal static bool Delete(string fileName)
+        /// <summary>
+        /// 删除文件
+        /// </summary>
+        public static bool Delete(string fileName)
         {
             try
             {
@@ -136,7 +215,7 @@ namespace CYQ.Data.Tool
             return false;
         }
 
-        public static bool IsLastFileWriteTimeChanged(string fileName, ref DateTime compareTimeUtc)
+        internal static bool IsLastFileWriteTimeChanged(string fileName, ref DateTime compareTimeUtc)
         {
             bool isChanged = false;
             IOInfo info = new IOInfo(fileName);
@@ -147,89 +226,31 @@ namespace CYQ.Data.Tool
             }
             return isChanged;
         }
-        public static string BytesToText(byte[] buff, Encoding encoding)
+        internal static string BytesToText(byte[] buff, Encoding encoding)
         {
             if (buff.Length == 0) { return ""; }
-            //if (buff[0] == 239 && buff[1] == 187 && buff[2] == 191)
-            //{
-            //    return Encoding.UTF8.GetString(buff, 3, buff.Length - 3);
-            //}
-            //else if (buff[0] == 255 && buff[1] == 254)
-            //{
-            //    return Encoding.Unicode.GetString(buff, 2, buff.Length - 2);
-            //}
-            //else if (buff[0] == 254 && buff[1] == 255)
-            //{
-            //    if (buff.Length > 3 && buff[2] == 0 && buff[3] == 0)
-            //    {
-            //        return Encoding.UTF32.GetString(buff, 4, buff.Length - 4);
-            //    }
-            //    return Encoding.BigEndianUnicode.GetString(buff, 2, buff.Length - 2);
-            //}
-            //else
-            //{
             TextEncodingDetect detect = new TextEncodingDetect();
-
-            //检测Bom
-            switch (detect.DetectWithBom(buff))
+            encoding = detect.GetEncoding(buff, encoding);
+            if (detect.hasBom)
             {
-                case TextEncodingDetect.Encoding.Utf8Bom:
-                    return Encoding.UTF8.GetString(buff, 3, buff.Length - 3);
-                case TextEncodingDetect.Encoding.UnicodeBom:
-                    return Encoding.Unicode.GetString(buff, 2, buff.Length - 2);
-                case TextEncodingDetect.Encoding.BigEndianUnicodeBom:
-                    return Encoding.BigEndianUnicode.GetString(buff, 2, buff.Length - 2);
-                case TextEncodingDetect.Encoding.Utf32Bom:
-                    return Encoding.UTF32.GetString(buff, 4, buff.Length - 4);
+                if (encoding == Encoding.UTF8)
+                {
+                    return encoding.GetString(buff, 3, buff.Length - 3);
+                }
+                if (encoding == Encoding.Unicode || encoding == Encoding.BigEndianUnicode)
+                {
+                    return encoding.GetString(buff, 2, buff.Length - 2);
+                }
+                if (encoding == Encoding.UTF32)
+                {
+                    return encoding.GetString(buff, 4, buff.Length - 4);
+                }
             }
-            if (encoding != DefaultEncoding && encoding != Encoding.ASCII)//自定义设置编码，优先处理。
-            {
-                return encoding.GetString(buff);
-            }
-            switch (detect.DetectWithoutBom(buff, buff.Length > 1000 ? 1000 : buff.Length))//自动检测。
-            {
+            return encoding.GetString(buff);
 
-                case TextEncodingDetect.Encoding.Utf8Nobom:
-                    return Encoding.UTF8.GetString(buff);
-
-                case TextEncodingDetect.Encoding.UnicodeNoBom:
-                    return Encoding.Unicode.GetString(buff);
-
-                case TextEncodingDetect.Encoding.BigEndianUnicodeNoBom:
-                    return Encoding.BigEndianUnicode.GetString(buff);
-
-                case TextEncodingDetect.Encoding.Utf32NoBom:
-                    return Encoding.UTF32.GetString(buff);
-
-                case TextEncodingDetect.Encoding.Ansi:
-                    if (IsChineseEncoding(DefaultEncoding) && !IsChineseEncoding(encoding))
-                    {
-                        if (detect.IsChinese)
-                        {
-                            return Encoding.GetEncoding("gbk").GetString(buff);
-                        }
-                        else//非中文时，默认选一个。
-                        {
-                            return Encoding.Unicode.GetString(buff);
-                        }
-                    }
-                    else
-                    {
-                        return encoding.GetString(buff);
-                    }
-
-                case TextEncodingDetect.Encoding.Ascii:
-                    return Encoding.ASCII.GetString(buff);
-
-                default:
-                    return encoding.GetString(buff);
-            }
-            // }
+           
         }
-        private static bool IsChineseEncoding(Encoding encoding)
-        {
-            return encoding == Encoding.GetEncoding("gb2312") || encoding == Encoding.GetEncoding("gbk") || encoding == Encoding.GetEncoding("big5");
-        }
+
     }
     internal class IOInfo : FileSystemInfo
     {
@@ -302,8 +323,11 @@ namespace CYQ.Data.Tool
         /// 是否中文
         /// </summary>
         public bool IsChinese = false;
-
-        public enum Encoding
+        /// <summary>
+        /// 是否拥有Bom头
+        /// </summary>
+        public bool hasBom = false;
+        public enum TextEncode
         {
             None, // Unknown or binary
             Ansi, // 0-255
@@ -319,8 +343,81 @@ namespace CYQ.Data.Tool
             Utf32NoBom //UTF-32 without BOM
 
         }
+        private bool IsChineseEncoding(Encoding encoding)
+        {
+            return encoding == Encoding.GetEncoding("gb2312") || encoding == Encoding.GetEncoding("gbk") || encoding == Encoding.GetEncoding("big5");
+        }
+        /// <summary>
+        /// 获取文件编码
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public Encoding GetEncoding(byte[] buff)
+        {
+            return GetEncoding(buff, IOHelper.DefaultEncoding);
+        }
+        public Encoding GetEncoding(byte[] buff, Encoding defaultEncoding)
+        {
+            hasBom = true;
+            //检测Bom
+            switch (DetectWithBom(buff))
+            {
+                case TextEncodingDetect.TextEncode.Utf8Bom:
+                    return Encoding.UTF8;
+                case TextEncodingDetect.TextEncode.UnicodeBom:
+                    return Encoding.Unicode;
+                case TextEncodingDetect.TextEncode.BigEndianUnicodeBom:
+                    return Encoding.BigEndianUnicode;
+                case TextEncodingDetect.TextEncode.Utf32Bom:
+                    return Encoding.UTF32;
+            }
 
-        public Encoding DetectWithBom(byte[] buffer)
+            hasBom = false;
+            if (defaultEncoding != IOHelper.DefaultEncoding && defaultEncoding != Encoding.ASCII)//自定义设置编码，优先处理。
+            {
+                return defaultEncoding;
+            }
+            switch (DetectWithoutBom(buff, buff.Length > 1000 ? 1000 : buff.Length))//自动检测。
+            {
+
+                case TextEncodingDetect.TextEncode.Utf8Nobom:
+                    return Encoding.UTF8;
+
+                case TextEncodingDetect.TextEncode.UnicodeNoBom:
+                    return Encoding.Unicode;
+
+                case TextEncodingDetect.TextEncode.BigEndianUnicodeNoBom:
+                    return Encoding.BigEndianUnicode;
+
+                case TextEncodingDetect.TextEncode.Utf32NoBom:
+                    return Encoding.UTF32;
+
+                case TextEncodingDetect.TextEncode.Ansi:
+                    if (IsChineseEncoding(IOHelper.DefaultEncoding) && !IsChineseEncoding(defaultEncoding))
+                    {
+                        if (IsChinese)
+                        {
+                            return Encoding.GetEncoding("gbk");
+                        }
+                        else//非中文时，默认选一个。
+                        {
+                            return Encoding.Unicode;
+                        }
+                    }
+                    else
+                    {
+                        return defaultEncoding;
+                    }
+
+                case TextEncodingDetect.TextEncode.Ascii:
+                    return Encoding.ASCII;
+
+                default:
+                    return defaultEncoding;
+            }
+
+        }
+        public TextEncode DetectWithBom(byte[] buffer)
         {
             if (buffer != null)
             {
@@ -328,24 +425,24 @@ namespace CYQ.Data.Tool
                 // Check for BOM
                 if (size >= 2 && buffer[0] == _UTF16LeBom[0] && buffer[1] == _UTF16LeBom[1])
                 {
-                    return Encoding.UnicodeBom;
+                    return TextEncode.UnicodeBom;
                 }
 
                 if (size >= 2 && buffer[0] == _UTF16BeBom[0] && buffer[1] == _UTF16BeBom[1])
                 {
                     if (size >= 4 && buffer[2] == _UTF32LeBom[2] && buffer[3] == _UTF32LeBom[3])
                     {
-                        return Encoding.Utf32Bom;
+                        return TextEncode.Utf32Bom;
                     }
-                    return Encoding.BigEndianUnicodeBom;
+                    return TextEncode.BigEndianUnicodeBom;
                 }
 
                 if (size >= 3 && buffer[0] == _UTF8Bom[0] && buffer[1] == _UTF8Bom[1] && buffer[2] == _UTF8Bom[2])
                 {
-                    return Encoding.Utf8Bom;
+                    return TextEncode.Utf8Bom;
                 }
             }
-            return Encoding.None;
+            return TextEncode.None;
         }
 
         /// <summary>
@@ -354,11 +451,11 @@ namespace CYQ.Data.Tool
         /// <param name="buffer">The byte buffer.</param>
         /// <param name="size">The size of the byte buffer.</param>
         /// <returns>The Encoding type or Encoding.None if unknown.</returns>
-        public Encoding DetectWithoutBom(byte[] buffer, int size)
+        public TextEncode DetectWithoutBom(byte[] buffer, int size)
         {
             // Now check for valid UTF8
-            Encoding encoding = CheckUtf8(buffer, size);
-            if (encoding != Encoding.None)
+            TextEncode encoding = CheckUtf8(buffer, size);
+            if (encoding != TextEncode.None)
             {
                 return encoding;
             }
@@ -367,25 +464,25 @@ namespace CYQ.Data.Tool
             if (!ContainsZero(buffer, size))
             {
                 CheckChinese(buffer, size);
-                return Encoding.Ansi;
+                return TextEncode.Ansi;
             }
 
             // Now try UTF16  按寻找换行字符先进行判断
             encoding = CheckByNewLineChar(buffer, size);
-            if (encoding != Encoding.None)
+            if (encoding != TextEncode.None)
             {
                 return encoding;
             }
 
             // 没办法了，只能按0出现的次数比率，做大体的预判
             encoding = CheckByZeroNumPercent(buffer, size);
-            if (encoding != Encoding.None)
+            if (encoding != TextEncode.None)
             {
                 return encoding;
             }
 
             // Found a null, return based on the preference in null_suggests_binary_
-            return Encoding.None;
+            return TextEncode.None;
         }
 
         /// <summary>
@@ -396,11 +493,11 @@ namespace CYQ.Data.Tool
         /// <param name="buffer">The byte buffer.</param>
         /// <param name="size">The size of the byte buffer.</param>
         /// <returns>Encoding.none, Encoding.Utf16LeNoBom or Encoding.Utf16BeNoBom.</returns>
-        private static Encoding CheckByNewLineChar(byte[] buffer, int size)
+        private static TextEncode CheckByNewLineChar(byte[] buffer, int size)
         {
             if (size < 2)
             {
-                return Encoding.None;
+                return TextEncode.None;
             }
 
             // Reduce size by 1 so we don't need to worry about bounds checking for pairs of bytes
@@ -440,7 +537,7 @@ namespace CYQ.Data.Tool
                 // If we are getting both LE and BE control chars then this file is not utf16
                 if (le16 > 0 && be16 > 0)
                 {
-                    return Encoding.None;
+                    return TextEncode.None;
                 }
             }
 
@@ -448,19 +545,19 @@ namespace CYQ.Data.Tool
             {
                 if (le16 == le32 && buffer.Length % 4 == 0)
                 {
-                    return Encoding.Utf32NoBom;
+                    return TextEncode.Utf32NoBom;
                 }
-                return Encoding.UnicodeNoBom;
+                return TextEncode.UnicodeNoBom;
             }
             else if (be16 > 0)
             {
-                return Encoding.BigEndianUnicodeNoBom;
+                return TextEncode.BigEndianUnicodeNoBom;
             }
             else if (buffer.Length % 4 == 0 && zeroCount >= buffer.Length / 4)
             {
-                return Encoding.Utf32NoBom;
+                return TextEncode.Utf32NoBom;
             }
-            return Encoding.None;
+            return TextEncode.None;
         }
 
         /// <summary>
@@ -490,7 +587,7 @@ namespace CYQ.Data.Tool
         /// <param name="buffer">The byte buffer.</param>
         /// <param name="size">The size of the byte buffer.</param>
         /// <returns>Encoding.none, Encoding.Utf16LeNoBom or Encoding.Utf16BeNoBom.</returns>
-        private Encoding CheckByZeroNumPercent(byte[] buffer, int size)
+        private TextEncode CheckByZeroNumPercent(byte[] buffer, int size)
         {
             //单数
             int oddZeroCount = 0;
@@ -527,17 +624,17 @@ namespace CYQ.Data.Tool
             // Lots of odd nulls, low number of even nulls 这里的条件做了修改
             if (evenZeroPercent < 0.1 && oddZeroPercent > 0)
             {
-                return Encoding.UnicodeNoBom;
+                return TextEncode.UnicodeNoBom;
             }
 
             // Lots of even nulls, low number of odd nulls 这里的条件也做了修改
             if (oddZeroPercent < 0.1 && evenZeroPercent > 0)
             {
-                return Encoding.BigEndianUnicodeNoBom;
+                return TextEncode.BigEndianUnicodeNoBom;
             }
 
             // Don't know
-            return Encoding.None;
+            return TextEncode.None;
         }
 
         /// <summary>
@@ -551,7 +648,7 @@ namespace CYQ.Data.Tool
         ///     Encoding.ASCII (data in 0.127 range).
         /// </returns>
         /// <returns>2</returns>
-        private Encoding CheckUtf8(byte[] buffer, int size)
+        private TextEncode CheckUtf8(byte[] buffer, int size)
         {
             // UTF8 Valid sequences
             // 0xxxxxxx  ASCII
@@ -576,7 +673,7 @@ namespace CYQ.Data.Tool
 
                 if (ch == 0)
                 {
-                    return Encoding.None;
+                    return TextEncode.None;
                 }
 
                 int moreChars;
@@ -602,7 +699,7 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    return Encoding.None; // Not utf8
+                    return TextEncode.None; // Not utf8
                 }
 
                 // Check secondary chars are in range if we are expecting any
@@ -613,7 +710,7 @@ namespace CYQ.Data.Tool
                     ch = buffer[pos++];
                     if (ch < 128 || ch > 191)
                     {
-                        return Encoding.None; // Not utf8
+                        return TextEncode.None; // Not utf8
                     }
 
                     --moreChars;
@@ -623,7 +720,7 @@ namespace CYQ.Data.Tool
             // If we get to here then only valid UTF-8 sequences have been processed
 
             // If we only saw chars in the range 0-127 then we can't assume UTF8 (the caller will need to decide)
-            return onlySawAsciiRange ? Encoding.Ascii : Encoding.Utf8Nobom;
+            return onlySawAsciiRange ? TextEncode.Ascii : TextEncode.Utf8Nobom;
         }
         /// <summary>
         /// 是否中文编码（GB2312、GBK、Big5）
@@ -658,13 +755,14 @@ namespace CYQ.Data.Tool
                 isCN = (ch1 >= 176 && ch1 <= 247 && ch2 >= 160 && ch2 <= 254)
                     || (ch1 >= 129 && ch1 <= 254 && ch2 >= 64 && ch2 <= 254)
                     || (ch1 >= 129 && ((ch2 >= 64 && ch2 <= 126) || (ch2 >= 161 && ch2 <= 254)));
-                if (!isCN)
+                if (isCN)
                 {
+                    IsChinese = true;
                     return;
                 }
 
             }
-            IsChinese = true;
+
         }
     }
 }

@@ -83,7 +83,14 @@ namespace System.Web
 
             }
         }
-        public Stream Filter { get => response.Body; set => response.Body = value; }
+        public Stream Filter
+        {
+            get => Body;
+            set
+            {
+                Body = value;
+            }
+        }
 
         public void AppendHeader(string key, string value)
         {
@@ -142,7 +149,14 @@ namespace System.Web
             }
         }
 
-        public Stream Body { get => response.Body; set => response.Body = value; }
+        public Stream Body
+        {
+            get => response.Body;
+            set
+            {
+                response.Body = value;
+            }
+        }
         public long? ContentLength { get => response.ContentLength; set => response.ContentLength = value; }
 
 

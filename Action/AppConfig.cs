@@ -312,7 +312,10 @@ namespace CYQ.Data
         }
         //读配置文件时会修改此值。
         private static bool _IsAspNetCore = false;
-        internal static bool IsAspNetCore
+        /// <summary>
+        /// 当前是否ASP.NET Core环境。
+        /// </summary>
+        public static bool IsAspNetCore
         {
             get
             {

@@ -284,7 +284,7 @@ namespace CYQ.Data.Xml
                 string html = string.Empty;
                 if (xnm != null)
                 {
-                    html = IOHelper.ReadAllText(fileName, _Encoding);
+                    html = IOHelper.ReadAllText(fileName, 0, _Encoding);
                     ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
                 }
 
