@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CYQ.Data_Core_VS2017", "CYQ.Data_Core_VS2017.csproj", "{02E8B323-ADE2-4CB7-A47F-DDA05016B3F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CYQ.Data_NetCore", "CYQ.Data_NetCore.csproj", "{02E8B323-ADE2-4CB7-A47F-DDA05016B3F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
