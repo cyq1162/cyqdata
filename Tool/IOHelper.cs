@@ -164,7 +164,11 @@ namespace CYQ.Data.Tool
                 else if (File.Exists(fileName))
                 {
                     TextEncodingDetect detect = new TextEncodingDetect();
-                    encode = detect.GetEncoding(File.ReadAllBytes(fileName), encode);
+                    Encoding detectEncode = detect.GetEncoding(File.ReadAllBytes(fileName), encode);
+                    if (detectEncode != Encoding.ASCII)
+                    {
+                        encode = detectEncode;
+                    }
                     cache.Set(key, encode, 60);
                 }
                 lock (GetLockObj(fileName.Length))
@@ -248,7 +252,7 @@ namespace CYQ.Data.Tool
             }
             return encoding.GetString(buff);
 
-           
+
         }
 
     }
