@@ -78,7 +78,7 @@ namespace CYQ.Data
         public static string GetProvider(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//È¥µô¿Õ¸ñ
-            if (connString.Contains("initial catalog="))
+            if (connString.Contains("initialcatalog="))
             {
                 return SqlClient;
             }
@@ -95,7 +95,7 @@ namespace CYQ.Data
             {
                 return SQLiteClient;
             }
-            else if (connString.Contains("convert zero datetime") || (connString.Contains("host=") && connString.Contains("port=") && connString.Contains("database=")))
+            else if (connString.Contains("convertzerodatetime") || (connString.Contains("host=") && connString.Contains("port=") && connString.Contains("database=")))
             {
                 return MySqlClient;
             }
