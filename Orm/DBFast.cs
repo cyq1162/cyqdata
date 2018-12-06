@@ -107,9 +107,19 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public static bool Delete<T>(object where)
         {
+            if (where == null) { return false; }
             using (MAction action = GetMAction<T>())
             {
-                return action.Delete(where);
+                if (typeof(T).FullName == where.GetType().FullName)//传进实体类
+                {
+                    action.Data.LoadFrom(where);
+                    return action.Delete();
+                }
+                else
+                {
+                    return action.Delete(where);
+                }
+
             }
         }
         public static bool Insert<T>(T t)
