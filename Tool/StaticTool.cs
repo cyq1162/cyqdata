@@ -314,6 +314,10 @@ namespace CYQ.Data.Tool
             }
             else if (t.IsValueType)
             {
+                if (t.Name == "DateTime")
+                {
+                    return Convert.ChangeType(value, t);//’‚¿Ô”√value£¨±‹√‚∂™ ß∫¡√Î
+                }
                 if (t.Name == "Guid")
                 {
                     return new Guid(strValue);
