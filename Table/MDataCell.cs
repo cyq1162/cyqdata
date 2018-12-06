@@ -532,7 +532,7 @@ namespace CYQ.Data.Table
     {
         internal string ToXml(bool isConvertNameToLower)
         {
-            string text = StringValue;
+            string text = StringValue??"";
             switch (DataType.GetGroup(_CellStruct.SqlType))
             {
                 case 999:
