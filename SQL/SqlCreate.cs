@@ -153,15 +153,25 @@ namespace CYQ.Data.SQL
             {
                 case DalType.MsSql:
                 case DalType.Sybase:
+                case DalType.PostgreSQL:
                     if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
                     {
                         if (_action.dalHelper.dalType == DalType.Sybase)
                         {
                             sql = sql + " select @@IDENTITY as OutPutValue";
                         }
-                        else
+                        else if (_action.dalHelper.dalType == DalType.MsSql)
                         {
                             sql += " select cast(scope_Identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
+                        }
+                        else if (_action.dalHelper.dalType == DalType.PostgreSQL)
+                        {
+                            string key = Convert.ToString(primaryCell.Struct.DefaultValue);
+                            if (!string.IsNullOrEmpty(key))
+                            {
+                                key = key.Replace("nextval", "currval");
+                                sql = sql + "; select " + key + " as OutPutValue";
+                            }
                         }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
@@ -282,6 +292,7 @@ namespace CYQ.Data.SQL
                     return "select " + columnNames + " from " + TableName + " where rownum=1 and " + FormatWhere(whereObj);
                 case DalType.SQLite:
                 case DalType.MySql:
+                case DalType.PostgreSQL:
                     return "select " + columnNames + " from " + TableName + " where " + FormatWhere(whereObj) + " limit 1";
             }
             return (string)Error.Throw(string.Format("GetTopOneSql:{0} No Be Support Now!", _action.dalHelper.dalType.ToString()));
@@ -309,7 +320,14 @@ namespace CYQ.Data.SQL
                     //case DalType.MySql:
                     //case DalType.SQLite:
                     //case DalType.Access:
-                    return string.Format("select max({0}) from {1}", _action.Data.Columns.FirstPrimary.ColumnName, TableName);
+                    string columnName = _action.Data.Columns.FirstPrimary.ColumnName;
+                    string tableName = TableName;
+                    if(_action.dalHelper.dalType== DalType.PostgreSQL)
+                    {
+                        columnName = SqlFormat.Keyword(columnName, DalType.PostgreSQL);
+                        tableName = SqlFormat.Keyword(tableName, DalType.PostgreSQL);
+                    }
+                    return string.Format("select max({0}) from {1}", columnName, tableName);
 
             }
             // return (string)Error.Throw(string.Format("GetMaxID:{0} No Be Support Now!", _action.dalHelper.dalType.ToString()));

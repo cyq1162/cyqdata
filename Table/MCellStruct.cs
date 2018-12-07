@@ -88,7 +88,7 @@ namespace CYQ.Data.Table
                 if (groupID == 1 || groupID == 3)
                 {
                     string defaultValue = Convert.ToString(value);
-                    if (!string.IsNullOrEmpty(defaultValue))
+                    if (!string.IsNullOrEmpty(defaultValue) && (defaultValue[0] == 'N' || defaultValue[0]=='('))
                     {
                         defaultValue = defaultValue.Trim('N','(', ')');//处理int型默认值（1）带括号的问题。
                     }

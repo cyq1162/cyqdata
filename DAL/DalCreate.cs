@@ -18,6 +18,7 @@ namespace CYQ.Data
         private const string SQLiteClient = "System.Data.SQLite";
         private const string MySqlClient = "MySql.Data.MySqlClient";
         private const string SybaseClient = "Sybase.Data.AseClient";
+        private const string PostgreClient = "Npgsql";
         private const string TxtClient = "CYQ.Data.TxtClient";
         private const string XmlClient = "CYQ.Data.XmlClient";
         private const string XHtmlClient = "CYQ.Data.XHtmlClient";
@@ -70,6 +71,9 @@ namespace CYQ.Data
                 case "odbc":
                 case "ase":
                     return DalType.Sybase;
+                case "PgSql":
+                case "Npgsql":
+                    return DalType.PostgreSQL;
                 default:
                     return DalType.None;
 
@@ -78,7 +82,7 @@ namespace CYQ.Data
         public static string GetProvider(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//去掉空格
-            if (connString.Contains("initialcatalog="))
+            if (connString.Contains("initialcatalog=") || connString.Contains("port=1433"))
             {
                 return SqlClient;
             }
@@ -103,6 +107,10 @@ namespace CYQ.Data
             {
                 return SybaseClient;
             }
+            else if (connString.Contains("port=5432"))
+            {
+                return PostgreClient;
+            }
             else if (connString.Contains("txtpath="))
             {
                 return TxtClient;
@@ -113,7 +121,10 @@ namespace CYQ.Data
             }
             else
             {
-                return SqlClient;
+                //postgre和mssql的链接语句一样，这里用database=和uid=顺序来决定；database写在后面的，为postgre
+                int dbIndex = connString.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
+                int uid = connString.IndexOf("uid=", StringComparison.OrdinalIgnoreCase);
+                return (uid > 0 && uid < dbIndex) ? PostgreClient : SqlClient;
             }
         }
         public static DalType GetDalType(string providerName)
@@ -132,6 +143,8 @@ namespace CYQ.Data
                     return DalType.MySql;
                 case SybaseClient:
                     return DalType.Sybase;
+                case PostgreClient:
+                    return DalType.PostgreSQL;
                 case TxtClient:
                     return DalType.Txt;
                 case XmlClient:
@@ -158,6 +171,8 @@ namespace CYQ.Data
                     return new MySQLDal(co);
                 case SybaseClient:
                     return new SybaseDal(co);
+                case PostgreClient:
+                    return new PostgreDal(co);
                 case TxtClient:
                 case XmlClient:
                     return new NoSqlDal(co);
@@ -356,7 +371,7 @@ namespace CYQ.Data
                 if (connDicCache.Count > 0)
                 {
                     string[] items = new string[connDicCache.Count];
-                    
+
                     connDicCache.Keys.CopyTo(items, 0);
                     foreach (string key in items)
                     {

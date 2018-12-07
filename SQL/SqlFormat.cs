@@ -41,8 +41,8 @@ namespace CYQ.Data.SQL
                         case DalType.MySql:
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
                         case DalType.SQLite:
+                        case DalType.PostgreSQL:
                             return "\"" + name + "\"";
-                            
                         case DalType.Txt:
                         case DalType.Xml:
                             return NotKeyword(name);

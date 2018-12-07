@@ -260,10 +260,12 @@ namespace CYQ.Data.SQL
                         case DalType.Oracle:
                         case DalType.MySql:
                         case DalType.Sybase:
+                        case DalType.PostgreSQL:
                             #region Sql
                             string sql = string.Empty;
                             if (dalType == DalType.MsSql)
                             {
+                                #region Mssql
                                 string dbName = null;
                                 if (!helper.Version.StartsWith("08"))
                                 {
@@ -281,6 +283,7 @@ namespace CYQ.Data.SQL
                                 }
 
                                 sql = GetMSSQLColumns(helper.Version.StartsWith("08"), dbName ?? helper.DataBase);
+                                #endregion
                             }
                             else if (dalType == DalType.MySql)
                             {
@@ -302,6 +305,10 @@ namespace CYQ.Data.SQL
                             {
                                 tableName = SqlFormat.NotKeyword(tableName);
                                 sql = GetSybaseColumns();
+                            }
+                            else if (dalType == DalType.PostgreSQL)
+                            {
+                                sql = GetPostgreColumns();
                             }
                             helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                             DbDataReader sdr = helper.ExeDataReader(sql, false);
@@ -679,6 +686,9 @@ namespace CYQ.Data.SQL
                                 case DalType.MySql:
                                     sql = GetMySqlTables(helper.DataBase);
                                     break;
+                                case DalType.PostgreSQL:
+                                    sql = GetPostgreTables(helper.DataBase);
+                                    break;
                                 case DalType.Txt:
                                 case DalType.Xml:
                                     tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -1016,6 +1026,7 @@ namespace CYQ.Data.SQL
         internal const string ExistMySql = "SELECT count(*)  FROM  `information_schema`.`COLUMNS`  where TABLE_NAME='{0}' and TABLE_SCHEMA='{1}'";
         internal const string ExistSybase = "SELECT count(*) FROM sysobjects where id = OBJECT_ID(N'{0}') AND type in (N'{1}')";
         internal const string ExistSqlite = "SELECT count(*) FROM sqlite_master where type='{0}' and name='{1}'";
+        internal const string ExistPostgre = "SELECT count(*) FROM information_schema.tables where table_schema = 'public' and table_name='{0}'";
         internal const string ExistOracleSequence = "SELECT count(*) FROM All_Sequences where Sequence_name='{0}'";
         internal const string CreateOracleSequence = "create sequence {0} start with {1} increment by 1";
         internal const string GetOracleMaxID = "select max({0}) from {1}";
@@ -1109,7 +1120,32 @@ left join syscomments s3 on s1.cdefault=s3.id
 where s1.id =object_id(@TableName) and s2.usertype<100
 order by s1.colid";
         }
+        internal static string GetPostgreColumns()
+        {
+            return @"select
+a.attname AS ColumnName,
+case t.typname when 'int4' then 'int' when 'int8' then 'bigint' else t.typname end AS SqlType,
+coalesce(character_maximum_length,numeric_precision,-1) as MaxSize,numeric_scale as Scale,
+case a.attnotnull when 'true' then 0 else 1 end AS IsNullable,
+case  when position('nextval' in column_default)>0 then 1 else 0 end as IsAutoIncrement, 
+case when o.conname is null then 0 else 1 end as IsPrimaryKey,
+d.description AS Description,
+i.column_default as DefaultValue
+from pg_class c 
+left join pg_attribute a on c.oid=a.attrelid
+left join pg_description d on a.attrelid=d.objoid AND a.attnum = d.objsubid
+left join pg_type t on a.atttypid = t.oid
+left join information_schema.columns i on i.table_schema='public' and i.table_name=c.relname and i.column_name=a.attname
+left join pg_constraint o on a.attnum = o.conkey[1] and o.contype='p'
+where c.relname =:TableName
+and a.attnum > 0 and a.atttypid>0
+ORDER BY a.attnum";
+        }
+        
+       
+        #endregion
 
+        #region 读取所有表语句
         internal static string GetMSSQLTables(bool for2000)
         {
             return @"Select o.name as TableName, p.value as Description from sysobjects o " + (for2000 ? "left join sysproperties p on p.id = o.id and smallid = 0" : "left join sys.extended_properties p on p.major_id = o.id and minor_id = 0")
@@ -1122,6 +1158,10 @@ order by s1.colid";
         internal static string GetMySqlTables(string dbName)
         {
             return string.Format("select TABLE_NAME as TableName,TABLE_COMMENT as Description from `information_schema`.`TABLES`  where TABLE_SCHEMA='{0}'", dbName);
+        }
+        internal static string GetPostgreTables(string dbName)
+        {
+            return string.Format("select table_name as TableName,cast(obj_description(relfilenode,'pg_class') as varchar) as Description from information_schema.tables t left join  pg_class p on t.table_name=p.relname  where table_schema='public' and table_catalog='{0}'", dbName);
         }
         #endregion
     }

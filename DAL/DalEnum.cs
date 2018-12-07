@@ -8,9 +8,6 @@ namespace CYQ.Data
     /// </summary>
     public enum DalType
     {
-        /// <summary>
-        /// 未知
-        /// </summary>
         None,
         /// <summary>
         /// MSSQL[2000/2005/2008/2012/...]
@@ -26,15 +23,15 @@ namespace CYQ.Data
         /// </summary>
         // FireBird,
         /// <summary>
-        /// No Support Now
+        /// PostgreSQL 
         /// </summary>
-        // PostgreSQL,
+        PostgreSQL,
         /// <summary>
-        /// Txt文本数据库
+        /// Txt DataBase
         /// </summary>
         Txt,
         /// <summary>
-        /// Xml数据库
+        /// Xml DataBase
         /// </summary>
         Xml,
         Sybase

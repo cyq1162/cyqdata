@@ -114,6 +114,7 @@
     <Compile Include="DAL\NoSqlDal.cs" />
     <Compile Include="Action\ActionEnum.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
+    <Compile Include="DAL\PostgreDal.cs" />
     <Compile Include="Orm\Attribute\ColumnAttribute.cs" />
     <Compile Include="Orm\DBFast.cs">
       <SubType>Code</SubType>

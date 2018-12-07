@@ -47,6 +47,7 @@ namespace CYQ.Data.SQL
                     //    return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
                     case DalType.SQLite:
                     case DalType.MySql:
+                    case DalType.PostgreSQL:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize);
                 }
             }
@@ -141,6 +142,7 @@ namespace CYQ.Data.SQL
                     return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max),columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
                 case DalType.SQLite:
                 case DalType.MySql:
+                case DalType.PostgreSQL:
                     if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
                     {
                         where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);

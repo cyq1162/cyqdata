@@ -7,6 +7,7 @@ Sqlite::  Data Source=E:\cyqdata.db;failifmissing=false;
  MySql::  host=localhost;port=3306;database=cyqdata;uid=root;pwd=123456;Convert Zero Datetime=True;
  Mssql::  server=.;database=cyqdata;uid=sa;pwd=123456; 
 Sybase::  data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456;
+Postgre:  server=localhost;uid=sa;pwd=123456;database=cyqdata; 
 
 Oracle OracleClient:: 
 Provider=MSDAORA;Data Source=orcl;User ID=sa;Password=123456
