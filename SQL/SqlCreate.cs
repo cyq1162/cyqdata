@@ -178,7 +178,7 @@ namespace CYQ.Data.SQL
                     {
                         sql += string.Format(" select '{0}' as OutPutValue", primaryCell.Value);
                     }
-                    if (_action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
+                    if (_action.dalHelper.dalType!= DalType.PostgreSQL && _action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
                     {
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
                     }

@@ -19,7 +19,7 @@ namespace CYQ.Data
         private const string SQLiteClient = "System.Data.SQLite";
         private const string MySqlClient = "MySql.Data.MySqlClient";
         private const string SybaseClient = "Sybase.Data.AseClient";
-        private const string PostgreClient = "Npgsql";
+        private const string PostgreClient = "System.Data.NpgSqlClient";
         private const string TxtClient = "CYQ.Data.TxtClient";
         private const string XmlClient = "CYQ.Data.XmlClient";
         private const string XHtmlClient = "CYQ.Data.XHtmlClient";
