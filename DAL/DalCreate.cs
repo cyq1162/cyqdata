@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
+using System.IO;
 
 
 namespace CYQ.Data
@@ -124,7 +125,11 @@ namespace CYQ.Data
                 //postgre和mssql的链接语句一样，这里用database=和uid=顺序来决定；database写在后面的，为postgre
                 int dbIndex = connString.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
                 int uid = connString.IndexOf("uid=", StringComparison.OrdinalIgnoreCase);
-                return (uid > 0 && uid < dbIndex) ? PostgreClient : SqlClient;
+                if (uid > 0 && uid < dbIndex && File.Exists(AppConfig.RunPath + "Npgsql.dll"))
+                {
+                    return PostgreClient;
+                }
+                return SqlClient;
             }
         }
         public static DalType GetDalType(string providerName)
@@ -370,29 +375,36 @@ namespace CYQ.Data
                 Thread.Sleep(3000);
                 if (connDicCache.Count > 0)
                 {
-                    string[] items = new string[connDicCache.Count];
-
-                    connDicCache.Keys.CopyTo(items, 0);
-                    foreach (string key in items)
+                    try
                     {
-                        ConnObject obj = connDicCache[key];
-                        if (obj != null)
+                        string[] items = new string[connDicCache.Count];
+                        connDicCache.Keys.CopyTo(items, 0);
+                        foreach (string key in items)
                         {
-                            if (!obj.Master.IsOK) { obj.Master.TryTestConn(); }
-                            if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
-                            if (obj.Slave != null && obj.Slave.Count > 0)
+                            ConnObject obj = connDicCache[key];
+                            if (obj != null)
                             {
-                                for (int i = 0; i < obj.Slave.Count; i++)
+                                if (!obj.Master.IsOK) { obj.Master.TryTestConn(); }
+                                if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
+                                if (obj.Slave != null && obj.Slave.Count > 0)
                                 {
-                                    if (!obj.Slave[i].IsOK)
+                                    for (int i = 0; i < obj.Slave.Count; i++)
                                     {
-                                        obj.Slave[i].TryTestConn();
+                                        if (!obj.Slave[i].IsOK)
+                                        {
+                                            obj.Slave[i].TryTestConn();
+                                        }
                                     }
                                 }
                             }
                         }
+                        items = null;
                     }
-                    items = null;
+                    catch
+                    {
+
+                    }
+
                 }
             }
         }
