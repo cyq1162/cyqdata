@@ -151,9 +151,24 @@ namespace CYQ.Data.SQL
             string sql = _TempSql.ToString().TrimEnd(',') + _TempSql2.ToString().TrimEnd(',') + ")";
             switch (_action.dalHelper.dalType)
             {
+                case DalType.PostgreSQL:
+                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
+                    {
+                        string key = Convert.ToString(primaryCell.Struct.DefaultValue);
+                        if (!string.IsNullOrEmpty(key))
+                        {
+                            key = key.Replace("nextval", "currval");
+                            sql = sql + "; select " + key + " as OutPutValue";
+                        }
+                    }
+                    else if (!primaryCell.IsNullOrEmpty)
+                    {
+                        sql += string.Format("; select '{0}' as OutPutValue", primaryCell.Value);
+                    }
+                    break;
                 case DalType.MsSql:
                 case DalType.Sybase:
-                case DalType.PostgreSQL:
+
                     if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
                     {
                         if (_action.dalHelper.dalType == DalType.Sybase)
@@ -164,21 +179,12 @@ namespace CYQ.Data.SQL
                         {
                             sql += " select cast(scope_Identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
                         }
-                        else if (_action.dalHelper.dalType == DalType.PostgreSQL)
-                        {
-                            string key = Convert.ToString(primaryCell.Struct.DefaultValue);
-                            if (!string.IsNullOrEmpty(key))
-                            {
-                                key = key.Replace("nextval", "currval");
-                                sql = sql + "; select " + key + " as OutPutValue";
-                            }
-                        }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
                     {
                         sql += string.Format(" select '{0}' as OutPutValue", primaryCell.Value);
                     }
-                    if (_action.dalHelper.dalType!= DalType.PostgreSQL && _action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
+                    if (_action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
                     {
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
                     }
@@ -322,7 +328,7 @@ namespace CYQ.Data.SQL
                     //case DalType.Access:
                     string columnName = _action.Data.Columns.FirstPrimary.ColumnName;
                     string tableName = TableName;
-                    if(_action.dalHelper.dalType== DalType.PostgreSQL)
+                    if (_action.dalHelper.dalType == DalType.PostgreSQL)
                     {
                         columnName = SqlFormat.Keyword(columnName, DalType.PostgreSQL);
                         tableName = SqlFormat.Keyword(tableName, DalType.PostgreSQL);
