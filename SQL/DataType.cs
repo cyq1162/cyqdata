@@ -61,7 +61,7 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Money:
                 case SqlDbType.Decimal:
                 case SqlDbType.SmallMoney:
-                //case SqlDbType.Udt://这个是顶Numeric类型。
+                    //case SqlDbType.Udt://这个是顶Numeric类型。
                     return typeof(Decimal);
                 case SqlDbType.Float:
                     return typeof(Single);
@@ -115,10 +115,11 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static SqlDbType GetSqlType(string typeName)
         {
-            typeName = typeName.ToLower().Replace("system.", "").Split('(')[0];
+            typeName = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
             switch (typeName)
             {
                 case "char":
+                case "character":
                 case "ansistringfixedlength":
                     return SqlDbType.Char;
                 case "nchar":
@@ -130,6 +131,7 @@ namespace CYQ.Data.SQL
                 case "varchar":
                 case "ansistring":
                 case "varchar2":
+                case "character varying":
                     return SqlDbType.VarChar;
                 case "nvarchar":
                 case "nvarchar2":
@@ -150,12 +152,14 @@ namespace CYQ.Data.SQL
                 case "binary_float":
                 case "byte[]":
                 case "oleobject":
+                case "bytea"://postgre
                     return SqlDbType.Binary;
                 case "varbinary":
                     return SqlDbType.VarBinary;
                 case "image":
                     return SqlDbType.Image;
                 case "bit":
+                case "bit varying":
                 case "boolean":
                     return SqlDbType.Bit;
                 case "tinyint":
@@ -174,13 +178,18 @@ namespace CYQ.Data.SQL
                 case "datetimeoffset":
                     return SqlDbType.DateTimeOffset;
                 case "datetime":
+                case "timestamp with time zone":
+                case "timestamp without time zone":
                     return SqlDbType.DateTime;
                 case "time":
+                case "abstime"://postgresql
+                case "reltime":////postgresql
+                case "time with time zone":
                     return SqlDbType.Time;
                 case "date":
                     return SqlDbType.Date;
                 case "numeric":
-                    //return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
+                //return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
                 case "decimal":
                     return SqlDbType.Decimal;
                 case "real":
@@ -188,6 +197,7 @@ namespace CYQ.Data.SQL
                     return SqlDbType.Real;
                 case "uniqueidentifier":
                 case "guid":
+                case "uuid":
                     return SqlDbType.UniqueIdentifier;
                 case "smallint":
                 case "int16":
@@ -212,6 +222,7 @@ namespace CYQ.Data.SQL
                     return SqlDbType.Variant;
                 case "float":
                 case "single":
+                case "double precision"://postgresql
                     return SqlDbType.Float;
                 case "xml":
                 case "xmltype":
@@ -225,6 +236,8 @@ namespace CYQ.Data.SQL
                 case "mediumtext":
                 case "longtext":
                 case "clob":
+                case "json"://postgre
+                case "jsonb":
                     return SqlDbType.Text;
                 default:
                     if (typeName.EndsWith("[]"))
@@ -480,10 +493,20 @@ namespace CYQ.Data.SQL
                                 return "tinyint(" + (maxSize > 0 ? maxSize : 4) + ") UNSIGNED";
                             }
                             break;
+                        case DalType.PostgreSQL:
+                            if (sqlType == SqlDbType.TinyInt)
+                            {
+                                return "smallint";//postgreSQL没有tinyint
+                            }
+                            break;
 
                     }
                     return sqlType.ToString().ToLower();
                 case SqlDbType.Time:
+                    if (dalTo == DalType.PostgreSQL)
+                    {
+                        return isSameDalType ? ms.SqlTypeName : "time without time zone";
+                    }
                     if (dalTo == DalType.MySql || dalTo == DalType.SQLite || isSameDalType)
                     {
                         return sqlType.ToString().ToLower();
@@ -496,6 +519,7 @@ namespace CYQ.Data.SQL
                         case DalType.MySql:
                         case DalType.SQLite:
                         case DalType.Oracle:
+                        case DalType.PostgreSQL:
                             return sqlType.ToString().ToLower();
                     }
                     return "datetime";
@@ -504,7 +528,7 @@ namespace CYQ.Data.SQL
                     if (isSameDalType) { return "timestamp"; }
                     if (dalFrom == DalType.MySql || dalFrom == DalType.Oracle)
                     {
-                        if (dalTo == DalType.MySql || dalTo == DalType.Oracle)
+                        if (dalTo == DalType.MySql || dalTo == DalType.Oracle || dalTo == DalType.PostgreSQL)
                         {
                             return "timestamp";
                         }
@@ -516,6 +540,10 @@ namespace CYQ.Data.SQL
                         {
                             return "timestamp";
                         }
+                        else if (dalTo == DalType.PostgreSQL)
+                        {
+                            return "bytea";
+                        }
                         return "binary(8)";
                     }
                     return "datetime";
@@ -523,6 +551,10 @@ namespace CYQ.Data.SQL
                 case SqlDbType.DateTimeOffset:
                 case SqlDbType.DateTime2:
                 case SqlDbType.DateTime:
+                    if (dalTo == DalType.PostgreSQL)
+                    {
+                        return isSameDalType ? ms.SqlTypeName : "timestamp";
+                    }
                     if (isSameDalType) { return sqlType.ToString().ToLower(); }
                     switch (dalTo)
                     {
@@ -546,7 +578,16 @@ namespace CYQ.Data.SQL
                     switch (dalTo)
                     {
                         case DalType.Oracle:
-                            return "NUMBER(1)";
+                            return "NUMBER(" + (maxSize == -1 ? 1 : maxSize) + ")";
+                        case DalType.PostgreSQL:
+                            if (maxSize <= 1) { return "boolean"; }
+                            string name = isSameDalType ? ms.SqlTypeName : "bit";
+                            return name + "(" + maxSize + ")";
+
+                    }
+                    if (maxSize > 1)
+                    {
+                        return "char(" + maxSize + ")";
                     }
                     return "bit";
                 case SqlDbType.Udt://当Numeric类型用。
@@ -570,6 +611,12 @@ namespace CYQ.Data.SQL
                                 return "numeric(" + maxSize + "," + scale + ")";
                             }
                             break;
+                        case DalType.PostgreSQL:
+                            if (sqlType == SqlDbType.Decimal)
+                            {
+                                return "numeric(" + maxSize + "," + scale + ")";
+                            }
+                            return "money";
                     }
                     return "decimal(" + maxSize + "," + scale + ")";
                 case SqlDbType.Float:
@@ -637,6 +684,8 @@ namespace CYQ.Data.SQL
                             }
                             if (maxSize > 0 && maxSize <= 16) { maxSize = 255; }//兼容MySql，16的字节存了36的数据
                             return key + "(" + (maxSize < 0 ? "max" : maxSize.ToString()) + ")";
+                        case DalType.PostgreSQL:
+                            return "bytea";
                     }
                     return "binary";
 
@@ -653,6 +702,7 @@ namespace CYQ.Data.SQL
                             return (maxSize < 1 || maxSize > 255) ? "memo" : "text(" + maxSize + ")";
                         case DalType.MsSql:
                         case DalType.Sybase:
+                            #region mssql、sybase
                             if (maxSize < 1 || maxSize > 8000)//ntext、text
                             {
                                 if (dalTo == DalType.Sybase)
@@ -673,9 +723,11 @@ namespace CYQ.Data.SQL
                                 }
                                 return t + "(" + maxSize + ")";
                             }
+                            #endregion
                         case DalType.SQLite:
                             return (maxSize < 1 || maxSize > 65535) ? "TEXT" : "TEXT(" + maxSize + ")";
                         case DalType.MySql://mysql没有nchar之类的。
+                            #region mysql
                             if (ms.IsPrimaryKey && t.EndsWith("text"))
                             {
                                 return "varchar(255)";
@@ -708,6 +760,7 @@ namespace CYQ.Data.SQL
                             {
                                 return t + "(" + maxSize + ")";
                             }
+                            #endregion
                         //return (maxSize < 1 || maxSize > 8000) ? "longtext" : ();
                         case DalType.Oracle:
                             if (maxSize < 1 || maxSize > 4000 || (maxSize > 2000 && (sqlType == SqlDbType.NVarChar || sqlType == SqlDbType.Char))
@@ -720,6 +773,18 @@ namespace CYQ.Data.SQL
                                 return "char(" + maxSize + ")";
                             }
                             return t + "2(" + maxSize + ")";
+                        case DalType.PostgreSQL:
+                            string name = "varchar";
+                            if (isSameDalType)
+                            {
+                                name = ms.SqlTypeName;
+                            }
+                            else
+                            {
+                                if (t.EndsWith("text")) { return "text"; }
+                                if (!t.EndsWith(name)) { name = "char"; }
+                            }
+                            return name + (maxSize > -1 ? "(" + maxSize + ")" : "");
                     }
                     break;
                 case SqlDbType.UniqueIdentifier:
@@ -731,6 +796,8 @@ namespace CYQ.Data.SQL
                         case DalType.Oracle:
                         case DalType.Sybase:
                             return "char(36)";
+                        case DalType.PostgreSQL:
+                            return "uuid";
                     }
                     return "uniqueidentifier";
                 case SqlDbType.Xml:
@@ -754,6 +821,8 @@ namespace CYQ.Data.SQL
                             return "CLOB";
                         case DalType.Access:
                             return "memo";
+                        case DalType.PostgreSQL:
+                            return "Xml";
                     }
                     break;
             }

@@ -1127,7 +1127,7 @@ order by s1.colid";
         {
             return @"select
 a.attname AS ColumnName,
-case t.typname when 'int4' then 'int' when 'int8' then 'bigint' else t.typname end AS SqlType,
+i.data_type AS SqlType,
 coalesce(character_maximum_length,numeric_precision,-1) as MaxSize,numeric_scale as Scale,
 case a.attnotnull when 'true' then 0 else 1 end AS IsNullable,
 case  when position('nextval' in column_default)>0 then 1 else 0 end as IsAutoIncrement, 
@@ -1139,7 +1139,7 @@ left join pg_attribute a on c.oid=a.attrelid
 left join pg_description d on a.attrelid=d.objoid AND a.attnum = d.objsubid
 left join pg_type t on a.atttypid = t.oid
 left join information_schema.columns i on i.table_schema='public' and i.table_name=c.relname and i.column_name=a.attname
-left join pg_constraint o on a.attnum = o.conkey[1] and o.contype='p'
+left join pg_constraint o on a.attnum = o.conkey[1] and o.contype='p' and o.conrelid=c.oid
 where c.relname =:TableName
 and a.attnum > 0 and a.atttypid>0
 ORDER BY a.attnum";

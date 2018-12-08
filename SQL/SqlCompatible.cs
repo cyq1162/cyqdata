@@ -103,6 +103,7 @@ namespace CYQ.Data.SQL
             switch (dalType)
             {
                 case DalType.Oracle:
+                case DalType.PostgreSQL:
                     return Replace(text, SqlValue.Contact, "||");
                 default:
                     return Replace(text, SqlValue.Contact, "+");
@@ -136,6 +137,8 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.IsNull, "IfNull");
                 case DalType.Oracle:
                     return Replace(text, SqlValue.IsNull, "NVL");
+                case DalType.PostgreSQL:
+                    return Replace(text, SqlValue.IsNull, "COALESCE");
                 case DalType.MsSql:
                 case DalType.Sybase:
                 default:
@@ -158,7 +161,10 @@ namespace CYQ.Data.SQL
                 case DalType.Oracle:
                     return Replace(text, SqlValue.Guid, "SYS_GUID()");
                 case DalType.SQLite:
-                    return Replace(text, SqlValue.Guid, "");
+                    return Replace(text, SqlValue.Guid, Guid.NewGuid().ToString());
+                case DalType.PostgreSQL:
+                    return Replace(text, SqlValue.Guid, "uuid_generate_v4()");
+
             }
             return text;
         }
@@ -170,6 +176,7 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                     return text.Replace("=:?", "=?");
                 case DalType.Oracle:
+                case DalType.PostgreSQL:
                     return text.Replace("=:?", "=:");
                 default:
                     return text.Replace("=:?", "=@");
@@ -210,6 +217,9 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.Substring, "substring");
                 case DalType.Sybase:
                     text = Replace(text, SqlValue.Len, "datalength");
+                    return Replace(text, SqlValue.Substring, "substring");
+                case DalType.PostgreSQL:
+                    text = Replace(text, SqlValue.Len, "length");
                     return Replace(text, SqlValue.Substring, "substring");
             }
             return text;
@@ -293,6 +303,9 @@ namespace CYQ.Data.SQL
                         text = Replace(text, key + "(", "datepart(" + format);
                         //// [#YEAR](getdate())  datepart(mm,getdate()) datepart(mm,getdate()) datepart(mm,getdate())
                         break;
+                    case DalType.PostgreSQL:
+                        text = Replace(text, key + "(", "EXTRACT(" + func + " from ");
+                        break;
                     default:
                         text = Replace(text, key, func);
                         break;
@@ -306,6 +319,7 @@ namespace CYQ.Data.SQL
             {
                 case DalType.Access:
                 case DalType.MySql:
+                case DalType.PostgreSQL:
                     return Replace(text, SqlValue.GetDate, "now()");
                 case DalType.MsSql:
                 case DalType.Sybase:
@@ -351,9 +365,25 @@ namespace CYQ.Data.SQL
                         return Replace(text, key, "locate");
                     case DalType.MsSql:
                     case DalType.Sybase:
-                        return Replace(text, key, "charindex");
                     case DalType.SQLite:
                         return Replace(text, key, "charindex");
+                    case DalType.PostgreSQL:
+                        found = 0;
+                        func = string.Empty;
+                        do
+                        {
+                            int start = index + key.Length;
+                            text = text.Insert(index + 2, "_");//select [#_charindex]('ok',xxx) from xxx where [#charindex]('ok',xx)>0
+                            found = text.IndexOf(')', index + 4);
+                            func = text.Substring(start + 2, found - start - 2);//('ok',xxx)
+                            string[] funs = func.Split(',');
+                            text = text.Remove(start + 2, found - start - 2);//移除//select [#_charindex]() from xxx where [#charindex]('ok',xx)>0
+                            text = text.Insert(start + 2, funs[0] + " in " + funs[1]);
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
+                        }
+                        while (index > -1);
+                        text = text.Replace("#_", "#");
+                        return Replace(text, key, "position");
 
 
                 }
@@ -367,7 +397,7 @@ namespace CYQ.Data.SQL
             int index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);
             if (index > -1)//'yyyy','q','m','y','d','ww','hh/h','n','s'
             {
-                string[] keys = new string[] { "yyyy", "q", "m", "y", "d", "h", "ww", "n", "s" };//"hh/h"
+                string[] keys = new string[] { "yyyy", "m", "d", "h", "n", "s" };//"hh/h"
                 switch (dalType)
                 {
                     case DalType.Access:
@@ -425,6 +455,48 @@ namespace CYQ.Data.SQL
                         text = text.Replace("#_", "#");
                         text = Replace(text, key, string.Empty);
                         break;
+                    case DalType.PostgreSQL:
+                        found = 0;
+                        func = string.Empty;
+                        string para = "", ageFun = "";
+                        do
+                        {
+                            int start = index + key.Length;
+                            text = text.Insert(index + 2, "_");//[#_DateDiff]([#d],startTime',endTime)
+                            found = text.IndexOf(')', index + 4);
+                            func = text.Substring(start + 2, found - start - 2);//[#d],startTime',endTime
+                            string[] funs = func.Split(',');
+                            text = text.Remove(start + 2, found - start - 2);//移除[#_DateDiff]()
+                            ageFun = " from age(" + funs[2] + "," + funs[1] + "))";
+                            switch (funs[0])
+                            {
+                                case "[#yyyy]":
+                                    para = "year" + ageFun;
+                                    break;
+                                case "[#m]":
+                                    para = string.Format("year{0}*12 + extract(month{0}", ageFun);
+                                    break;
+                                case "[#d]":
+                                    para = "epoch" + ageFun + "/86400";
+                                    break;
+                                case "[#h]":
+                                    para = "epoch" + ageFun + "/3600";
+                                    break;
+                                case "[#n]":
+                                    para = "epoch" + ageFun + "/60";
+                                    break;
+                                case "[#s]":
+                                    para = "epoch" + ageFun;
+                                    break;
+
+                            }
+                            //floor(EXTRACT(   )
+                            text = text.Insert(start + 2, para);
+                            index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//寻找还有没有第二次出现的函数字段
+                        }
+                        while (index > -1);
+                        text = text.Replace("#_", "#");
+                        return Replace(text, key, "floor(extract");
                 }
             }
             return Replace(text, key, "DateDiff");
@@ -440,6 +512,7 @@ namespace CYQ.Data.SQL
                 case DalType.MySql:
                 case DalType.SQLite:
                 case DalType.Sybase:
+                case DalType.PostgreSQL:
                     if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1 || text.IndexOf(SqlValue.CaseWhen, StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         text = Replace(text, SqlValue.Case, "Case");
@@ -476,7 +549,7 @@ namespace CYQ.Data.SQL
         //忽略大小写的替换。
         private static string Replace(string text, string oldValue, string newValue)
         {
-            oldValue = oldValue.Replace("[", "\\[").Replace("]", "\\]");
+            oldValue = oldValue.Replace("[", "\\[").Replace("]", "\\]").Replace("(", "\\(");
             return Regex.Replace(text, oldValue, newValue, RegexOptions.IgnoreCase);
         }
     }

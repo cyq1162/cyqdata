@@ -41,6 +41,7 @@ namespace CYQ.Data.SQL
             {
                 case DalType.MsSql:
                 case DalType.Oracle:
+                case DalType.PostgreSQL:
                     StringBuilder sb = new StringBuilder();
                     foreach (MCellStruct mcs in columns)
                     {
@@ -54,11 +55,26 @@ namespace CYQ.Data.SQL
                             {
                                 sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n", tableName.ToUpper(), mcs.ColumnName.ToUpper(), mcs.Description);
                             }
+                            else if (dalType == DalType.PostgreSQL)
+                            {
+                                sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n",
+                                   SqlFormat.Keyword(tableName, DalType.PostgreSQL), SqlFormat.Keyword(mcs.ColumnName, DalType.PostgreSQL), mcs.Description);
+                            }
                         }
                     }
                     if (dalType == DalType.MsSql)//增加表的描述
                     {
                         sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}';\r\n", columns.Description, tableName);
+                    }
+                    else if (dalType == DalType.Oracle)
+                    {
+                        sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
+                                tableName.ToUpper(), columns.Description);
+                    }
+                    else if (dalType == DalType.PostgreSQL)
+                    {
+                        sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
+                                SqlFormat.Keyword(tableName, DalType.PostgreSQL), columns.Description);
                     }
                     result = sb.ToString().TrimEnd(';');
                     break;
@@ -196,6 +212,12 @@ namespace CYQ.Data.SQL
                         {
                             key += " PRIMARY KEY AUTOINCREMENT";
                             primaryKeyList.Clear();//如果有自增加，只允许存在这一个主键。
+                        }
+                        break;
+                    case DalType.PostgreSQL:
+                        if (column.IsAutoIncrement && key.EndsWith("int"))
+                        {
+                            key = key.Substring(0, key.Length - 3) + "serial";
                         }
                         break;
                 }
@@ -348,7 +370,7 @@ namespace CYQ.Data.SQL
                                     if (dalType == DalType.MsSql)
                                     {
                                         sql.Add(@"declare @name varchar(50) select  @name =b.name from sysobjects b join syscolumns a on b.id = a.cdefault 
-where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'if(@name!='') begin   EXEC('alter table "+tableName+" drop constraint '+ @name) end");
+where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'if(@name!='') begin   EXEC('alter table " + tableName + " drop constraint '+ @name) end");
                                     }
                                     sql.Add(alterTable + " drop column " + cName);
                                     break;
@@ -385,6 +407,7 @@ where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'i
                                         break;
                                     case DalType.MsSql:
                                     case DalType.Access:
+                                    case DalType.PostgreSQL:
                                         modify = " alter column ";
                                         break;
                                 }

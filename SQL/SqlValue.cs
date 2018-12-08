@@ -29,12 +29,12 @@ namespace CYQ.Data.SQL
         public const string Len = "[#LEN]";//length
 
         /// <summary>
-        /// 数据库函数 GUID 获取：[#GETDATE]
+        /// 数据库函数 GUID 获取：[#GUID]
         /// </summary>
         public const string Guid = "[#GUID]";
 
         /// <summary>
-        /// 数据库函数 ISNULL 判断：[#ISNULL](Exr1,Exr2)
+        /// 数据库函数 ISNULL 判断：[#ISNULL](ColumnName,ReplaceValueWhenIsNull)
         /// </summary>
         public const string IsNull = "[#ISNULL]";
 
@@ -77,6 +77,7 @@ namespace CYQ.Data.SQL
         public const string CharIndex = "[#CHARINDEX]";
         /// <summary>
         /// 数据库函数 DateDiff 比较日期的差异天数：[#DATEDIFF](参数,开始时间,结束时间)
+        /// 参数："yyyy", "m","d", "h", "n", "s"
         /// </summary>
         public const string DateDiff = "[#DATEDIFF]";
         /// <summary>
@@ -103,12 +104,12 @@ namespace CYQ.Data.SQL
         public const string Contact = "[#+]";//多条件分支
 
         /// <summary>
-        /// 数据库Left函数
+        /// 数据库函数:Left(column,length)
         /// </summary>
         public const string Left = "[#LEFT]";//多条件分支
 
         /// <summary>
-        /// 数据库Right函数
+        /// 数据库函数：Right(column,length)
         /// </summary>
         public const string Right = "[#RIGHT]";//多条件分支
     }
