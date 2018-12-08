@@ -773,7 +773,10 @@ namespace CYQ.Data
                 _com.Parameters.Clear();
             }
         }
-        public abstract void AddReturnPara();
+        /// <summary>
+        /// 处理内置的MSSQL和Oracle两种存储过程分页
+        /// </summary>
+        protected virtual void AddReturnPara() { }
 
         private void SetCommandText(string commandText, bool isProc)
         {

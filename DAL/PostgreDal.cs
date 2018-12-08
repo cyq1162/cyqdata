@@ -86,9 +86,5 @@ namespace CYQ.Data
                 return ':';
             }
         }
-        public override void AddReturnPara()
-        {
-
-        }
     }
 }

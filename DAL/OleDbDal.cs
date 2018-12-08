@@ -13,14 +13,6 @@ namespace CYQ.Data
         {
 
         }
-        public override void AddReturnPara()
-        {
-
-        }
-        //public override System.Data.Common.DbParameter GetNewParameter()
-        //{
-        //    return new OleDbParameter();
-        //}
         public override bool AddParameters(string parameterName, object value, DbType dbType, int size, ParameterDirection direction)
         {
             parameterName = parameterName.Substring(0, 1) == "@" ? parameterName : "@" + parameterName;

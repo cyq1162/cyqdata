@@ -15,11 +15,6 @@ namespace CYQ.Data
         {
 
         }
-
-        public override void AddReturnPara()
-        {
-
-        }
         internal static Assembly GetAssembly()
         {
             object ass = CacheManage.LocalInstance.Get("MySqlClient_Assembly");

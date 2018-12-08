@@ -14,10 +14,6 @@ namespace CYQ.Data
         {
             base.isUseUnsafeModeOnSqlite = co.Master.Conn.ToLower().Contains("syncpragma=off");
         }
-        public override void AddReturnPara()
-        {
-
-        }
         protected override bool IsExistsDbName(string dbName)
         {
             string name = Path.GetFileNameWithoutExtension(DbFilePath);

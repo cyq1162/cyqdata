@@ -82,10 +82,5 @@ namespace CYQ.Data
                 return true;
             }
         }
-
-        public override void AddReturnPara()
-        {
-
-        }
     }
 }
