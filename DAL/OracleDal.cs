@@ -20,7 +20,7 @@ namespace CYQ.Data
             : base(co)
         {
         }
-        public override void AddReturnPara()
+        protected override void AddReturnPara()
         {
             if (!Com.Parameters.Contains("ResultCount"))
             {

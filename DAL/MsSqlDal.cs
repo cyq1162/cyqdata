@@ -11,7 +11,7 @@ namespace CYQ.Data
         public MsSqlDal(ConnObject co)
             : base(co)
         { }
-        public override void AddReturnPara()
+        protected override void AddReturnPara()
         {
             AddParameters("ReturnValue", null, DbType.Int32, 32, ParameterDirection.ReturnValue);
         }
