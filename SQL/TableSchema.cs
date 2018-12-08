@@ -964,16 +964,19 @@ namespace CYQ.Data.SQL
                     }
                     break;
                 case DalType.Oracle:
-                    exist = string.Format(ExistOracle, (type == "U" ? "TABLE" : "VIEW"), name);
+                    exist = string.Format(ExistOracle, name, (type == "U" ? "TABLE" : "VIEW"));
                     break;
                 case DalType.MsSql:
                     exist = string.Format(helper.Version.StartsWith("08") ? Exist2000 : Exist2005, name, type);
                     break;
                 case DalType.SQLite:
-                    exist = string.Format(ExistSqlite, (type == "U" ? "table" : "view"), SqlFormat.NotKeyword(name));
+                    exist = string.Format(ExistSqlite, SqlFormat.NotKeyword(name), (type == "U" ? "table" : "view"));
                     break;
                 case DalType.Sybase:
                     exist = string.Format(ExistSybase, SqlFormat.NotKeyword(name), type);
+                    break;
+                case DalType.PostgreSQL:
+                    exist = string.Format(ExistPostgre, SqlFormat.NotKeyword(name), (type == "U" ? "BASE TABLE" : "VIEW"));
                     break;
                 case DalType.Txt:
                 case DalType.Xml:
@@ -1022,11 +1025,11 @@ namespace CYQ.Data.SQL
     {
         internal const string Exist2000 = "SELECT count(*) FROM sysobjects where id = OBJECT_ID(N'{0}') AND xtype in (N'{1}')";
         internal const string Exist2005 = "SELECT count(*) FROM sys.objects where object_id = OBJECT_ID(N'{0}') AND type in (N'{1}')";
-        internal const string ExistOracle = "Select count(*)  From user_objects where object_type='{0}' and object_name=upper('{1}')";
+        internal const string ExistOracle = "Select count(*)  From user_objects where  object_name=upper('{0}') and object_type='{1}'";
         internal const string ExistMySql = "SELECT count(*)  FROM  `information_schema`.`COLUMNS`  where TABLE_NAME='{0}' and TABLE_SCHEMA='{1}'";
         internal const string ExistSybase = "SELECT count(*) FROM sysobjects where id = OBJECT_ID(N'{0}') AND type in (N'{1}')";
-        internal const string ExistSqlite = "SELECT count(*) FROM sqlite_master where type='{0}' and name='{1}'";
-        internal const string ExistPostgre = "SELECT count(*) FROM information_schema.tables where table_schema = 'public' and table_name='{0}'";
+        internal const string ExistSqlite = "SELECT count(*) FROM sqlite_master where name='{0}' and type='{1}'";
+        internal const string ExistPostgre = "SELECT count(*) FROM information_schema.tables where table_schema = 'public' and table_name='{0}' and table_type='{1}'";
         internal const string ExistOracleSequence = "SELECT count(*) FROM All_Sequences where Sequence_name='{0}'";
         internal const string CreateOracleSequence = "create sequence {0} start with {1} increment by 1";
         internal const string GetOracleMaxID = "select max({0}) from {1}";
@@ -1161,7 +1164,7 @@ ORDER BY a.attnum";
         }
         internal static string GetPostgreTables(string dbName)
         {
-            return string.Format("select table_name as TableName,cast(obj_description(relfilenode,'pg_class') as varchar) as Description from information_schema.tables t left join  pg_class p on t.table_name=p.relname  where table_schema='public' and table_catalog='{0}'", dbName);
+            return string.Format("select table_name as TableName,cast(obj_description(relfilenode,'pg_class') as varchar) as Description from information_schema.tables t left join  pg_class p on t.table_name=p.relname  where table_schema='public' and table_type='BASE TABLE' and table_catalog='{0}'", dbName);
         }
         #endregion
     }
