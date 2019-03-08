@@ -159,13 +159,32 @@ namespace CYQ.Data.SQL
 
                             int start = sqlText.IndexOf(TableName) + TableName.Length;
                             int end = sqlText.IndexOf("values", start, StringComparison.OrdinalIgnoreCase);
+                            if (end == -1)
+                            {
+                                end = sqlText.IndexOf("select", start, StringComparison.OrdinalIgnoreCase);
+                                if (end == -1) { break; }
+                            }
                             string keys = sqlText.Substring(start, end - start).Trim();
                             string[] keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
 
                             string values = sqlText.Substring(end + 6).Trim();
-                            values = values.Substring(1, values.Length - 2);//去除两边括号
+                            if (IsSelect && IsFrom)
+                            {
+                                end = values.IndexOf("from");
+                                if (end > 0)
+                                {
+                                    //insert into ...select ...from 模式
+                                    values = values.Substring(0, end);//去除两边括号
+                                }
+                            }
+                            else
+                            {
+                                // insert into ... values 模式。
+                                values = values.Substring(1, values.Length - 2);//去除两边括号
+                            }
                             int quoteCount = 0, commaIndex = 0, valueIndex = 0;
 
+                            #region get values
                             for (int i = 0; i < values.Length; i++)
                             {
                                 if (valueIndex >= keyItems.Length)
@@ -196,7 +215,8 @@ namespace CYQ.Data.SQL
 
                                     }
                                 }
-                            }
+                            } 
+                            #endregion
                             FieldItems.AddRange(keyItems);
 
                             #endregion
@@ -208,8 +228,11 @@ namespace CYQ.Data.SQL
             #region Select 字段解析
             if (fieldText.Length > 0)
             {
-                string[] fields = fieldText.ToString().Split(',');
-                FieldItems.AddRange(fields);
+                if (FieldItems.Count == 0)
+                {
+                    string[] fields = fieldText.ToString().Split(',');
+                    FieldItems.AddRange(fields);
+                }
                 fieldText.Length = 0;
             }
             #endregion

@@ -16,7 +16,7 @@ namespace System.Web
         /// <summary>
         /// 访问器的上下文访问器，会在不同的线程中返回不同的上下文
         /// </summary>
-        public static Microsoft.AspNetCore.Http.HttpContext NetCoreContext => contextAccessor.HttpContext;
+        public static Microsoft.AspNetCore.Http.HttpContext NetCoreContext => contextAccessor == null ? null : contextAccessor.HttpContext;
         internal static void Configure(IHttpContextAccessor contextAccessor)
         {
             HttpContext.contextAccessor = contextAccessor;

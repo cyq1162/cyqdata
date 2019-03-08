@@ -752,4 +752,6 @@
 536：StaticTool的ChangeType方法修正DateTime的毫秒丢失问题。(2018-12-06)
 537：DBFast的Delete方法的where条件兼容传进实体类功能。(2018-12-06)
 538：增加支持PostgreSql数据库(2018-12-07)
+539：SqlSyntax.cs 修正insert into ...select ..from 语法的分析(2019-03-09)
+540：DotNetCore下的HttpContext：处理NetCore下非Web应用的上下文判断问题(2019-03-09)
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
