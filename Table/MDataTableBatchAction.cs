@@ -505,7 +505,14 @@ namespace CYQ.Data.Table
                         {
                             sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
                         }
-                        sbc.WriteToServer(mdt);
+                        if (AppConfig.IsAspNetCore)
+                        {
+                            sbc.WriteToServer(mdt.ToDataTable());
+                        }
+                        else
+                        {
+                            sbc.WriteToServer(mdt);
+                        }
                     }
                 }
                 return true;
