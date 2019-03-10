@@ -754,4 +754,5 @@
 538：增加支持PostgreSql数据库(2018-12-07)
 539：SqlSyntax.cs 修正insert into ...select ..from 语法的分析(2019-03-09)
 540：DotNetCore下的HttpContext：处理NetCore下非Web应用的上下文判断问题(2019-03-09)
+521：修正JsonSplit在解析{parentid:{bars.id}}时死循环的问题。(2019-03-10)
 ---Json转义 \r\n memcache的转义 自动缓存处理的转义  文本数据库的转义
