@@ -161,7 +161,7 @@ namespace CYQ.Data.Tool
         private static int GetValueLength(string json, bool breakOnErr, out int errIndex)
         {
             errIndex = 0;
-            int len = 0;
+            int len = json.Length - 1;
             if (!string.IsNullOrEmpty(json))
             {
                 CharState cs = new CharState();
