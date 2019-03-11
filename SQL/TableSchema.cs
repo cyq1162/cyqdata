@@ -1090,7 +1090,7 @@ namespace CYQ.Data.SQL
         }
         internal static string GetMySqlColumns(string dbName)
         {
-            return string.Format(@"SELECT DISTINCT s1.COLUMN_NAME as ColumnName,case DATA_TYPE when 'int' then 10 when 'date' then 10 when 'time' then 8  when 'datetime' then 23 when 'year' then 4
+            return string.Format(@"SELECT s1.COLUMN_NAME as ColumnName,case DATA_TYPE when 'int' then 10 when 'date' then 10 when 'time' then 8  when 'datetime' then 23 when 'year' then 4
                     else IFNULL(CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION) end as MaxSize,NUMERIC_SCALE as Scale,
                     case IS_NULLABLE when 'YES' then 1 else 0 end as IsNullable,
                     CASE extra when 'auto_increment' then 1 else 0 END AS IsAutoIncrement,
