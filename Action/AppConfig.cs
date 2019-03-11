@@ -283,7 +283,7 @@ namespace CYQ.Data
                 }
                 if (!_WebRootPath.EndsWith("\\") && !_WebRootPath.EndsWith("/"))
                 {
-                    _WebRootPath = _WebRootPath + "\\";
+                    _WebRootPath = _WebRootPath + "/";
                 }
                 return _WebRootPath;
             }
@@ -374,7 +374,7 @@ namespace CYQ.Data
                     string dtdUri = GetApp("DtdUri", "/Setting/DTD/xhtml1-transitional.dtd");
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
-                        dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/').Replace("/", "\\");
+                        dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/');//.Replace("/", "\\");
                     }
                     return dtdUri;
                 }

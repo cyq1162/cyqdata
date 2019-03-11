@@ -3,25 +3,59 @@ using System.IO;
 using CYQ.Data.Tool;
 using System.Collections.Specialized;
 using System.Text;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace System.Configuration
 {
     public class ConfigurationManager
     {
         static string appSettingJson = string.Empty;
+        static void RegGB2312(object threadID)
+        {
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//注册编码
+                IOHelper.DefaultEncoding = Encoding.GetEncoding("gb2312");
+            }
+            catch (Exception err)
+            {
+                Log.WriteLogToTxt(err);
+            }
+        }
         static ConfigurationManager()
         {
             AppConfig.IsAspNetCore = true;
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//注册编码
-            IOHelper.DefaultEncoding= Encoding.GetEncoding("gb2312");
-
+            ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
             string filePath = AppConfig.RunPath + "appsettings.json";
             if (System.IO.File.Exists(filePath))
             {
-                appSettingJson = File.ReadAllText(filePath, Text.Encoding.UTF8);
+                appSettingJson = IOHelper.ReadAllText(filePath);
                 if (!string.IsNullOrEmpty(appSettingJson))
                 {
-                    appSettingJson = appSettingJson.Replace("\\\\", "\\");
+                    int index = appSettingJson.LastIndexOf("/*");
+                    if (index > -1)//去掉注释
+                    {
+                        appSettingJson = Regex.Replace(appSettingJson, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
+                    }
+                    char splitChar = '\n';
+                    if (appSettingJson.IndexOf(splitChar) > -1)
+                    {
+                        string[] items = appSettingJson.Split(splitChar);
+                        StringBuilder sb = new StringBuilder();
+                        foreach (string item in items)
+                        {
+                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
+                            {
+                                sb.Append(item.Trim(' ', '\r'));
+                            }
+                        }
+                        appSettingJson = sb.ToString();
+                    }
+                    if (appSettingJson.IndexOf("\\\\") > -1)
+                    {
+                        appSettingJson = appSettingJson.Replace("\\\\", "\\");
+                    }
                 }
             }
         }
@@ -33,10 +67,10 @@ namespace System.Configuration
                 if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
                 {
                     //EscapeOp.Default 参数若不设置，会造成死循环
-                    string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings",EscapeOp.Default);
+                    string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings", EscapeOp.Default);
                     if (!string.IsNullOrEmpty(settingValue))
                     {
-                        _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue,EscapeOp.Default);
+                        _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
                     }
                 }
                 if (_AppSettings == null)
@@ -62,7 +96,7 @@ namespace System.Configuration
                             NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(settingValue);
                             if (nv != null && nv.Count > 0)
                             {
-                                foreach (string key  in nv.Keys)
+                                foreach (string key in nv.Keys)
                                 {
                                     ConnectionStringSettings cs = new ConnectionStringSettings();
                                     cs.Name = key;
@@ -74,7 +108,7 @@ namespace System.Configuration
                         }
                     }
                 }
-               
+
                 return _ConnectionStrings;
             }
         }

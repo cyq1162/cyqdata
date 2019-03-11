@@ -26,7 +26,7 @@ namespace CYQ.Data
         #endregion
 
         #region È«¾Ö
-        internal const string FilePre = "file:\\";
+        internal const string FilePre = "file:";
         internal const string Global_NotImplemented = "The method or operation is not implemented.";
         #endregion
 
@@ -94,7 +94,16 @@ namespace CYQ.Data
                     Assembly ass = System.Reflection.Assembly.GetExecutingAssembly();
                     _DLLFullName = ass.FullName;
                     _RunfolderPath = ass.CodeBase;
-                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath).Replace(AppConst.FilePre, string.Empty) + "\\";
+                    _RunfolderPath = System.IO.Path.GetDirectoryName(_RunfolderPath);
+                    _RunfolderPath = _RunfolderPath.Replace(AppConst.FilePre, string.Empty).TrimStart('\\');
+                    if (_RunfolderPath.Contains("\\"))
+                    {
+                        _RunfolderPath += "\\";
+                    }
+                    else
+                    {
+                        _RunfolderPath += "/";
+                    }
                     ass = null;
                 }
                 return _RunfolderPath;
