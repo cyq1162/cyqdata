@@ -748,7 +748,7 @@
 532：MAction的Exists增加重载方法。（2018-09-12）
 533：AppConfig开放IsNetCore属性。（2018-09-14）
 534：IOHelper 重写，并对外开放。（2018-09-14）
-535:MDataCell的ToXml方法修正值为Null时的判断问题。(2018-12-06)
+535: MDataCell的ToXml方法修正值为Null时的判断问题。(2018-12-06)
 536：StaticTool的ChangeType方法修正DateTime的毫秒丢失问题。(2018-12-06)
 537：DBFast的Delete方法的where条件兼容传进实体类功能。(2018-12-06)
 538：增加支持PostgreSql数据库(2018-12-07)
