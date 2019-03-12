@@ -172,7 +172,7 @@ namespace CYQ.Data
         {
             try
             {
-                string folder = AppConfig.RunPath;
+                string folder = AppConfig.WebRootPath;
                 string logPath = AppConfig.Log.LogPath;
                 if (logPath.StartsWith("~/"))
                 {

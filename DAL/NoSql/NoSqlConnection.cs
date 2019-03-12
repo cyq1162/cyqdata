@@ -44,7 +44,7 @@ namespace CYQ.Data
                 _Conn = value;
             }
         }
-        private string filePath;
+        private string filePath = "";
         public override string DataSource
         {
             get
@@ -186,10 +186,7 @@ namespace CYQ.Data
             {
                 Directory.CreateDirectory(filePath);//
             }
-            if (!filePath.EndsWith("\\"))
-            {
-                filePath = filePath.TrimEnd('/') + "\\";
-            }
+            filePath = filePath.TrimEnd('/', '\\') + "/";
             return filePath;
         }
     }

@@ -1028,7 +1028,7 @@ namespace CYQ.Data
             }
             private static string _LogPath;
             /// <summary>
-            /// 文本日志的配置相对路径（默认为：Logs\\"）
+            /// 文本日志的配置相对路径（默认为：Logs/"）
             /// </summary>
             public static string LogPath
             {
@@ -1036,21 +1036,15 @@ namespace CYQ.Data
                 {
                     if (string.IsNullOrEmpty(_LogPath))
                     {
-                        _LogPath = AppConfig.GetApp("LogPath", "Logs\\");
-                        if (!_LogPath.EndsWith("\\"))
-                        {
-                            _LogPath = _LogPath.TrimEnd('/') + "\\";
-                        }
+                        _LogPath = AppConfig.GetApp("LogPath", "Logs");
+                        _LogPath = _LogPath.TrimEnd('/', '\\') + "/";
                     }
                     return _LogPath;
                 }
                 set
                 {
                     _LogPath = value;
-                    if (!_LogPath.EndsWith("\\"))
-                    {
-                        _LogPath = _LogPath.TrimEnd('/') + "\\";
-                    }
+                    _LogPath = _LogPath.TrimEnd('/', '\\') + "/";
                 }
             }
 
