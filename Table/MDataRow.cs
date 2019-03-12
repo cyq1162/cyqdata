@@ -1244,12 +1244,18 @@ namespace CYQ.Data.Table
             try
             {
                 Type t = entity.GetType();
+                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(t);
                 if (Columns.Count == 0)
                 {
                     MDataColumn mcs = TableSchema.GetColumns(t);
                     MCellStruct ms = null;
                     for (int i = 0; i < mcs.Count; i++)
                     {
+                        if (mcs[i].SqlType == SqlDbType.Variant)
+                        {
+                            pis.Remove(t.GetProperty(mcs[i].ColumnName));           
+                            continue;
+                        }
                         ms = mcs[i];
                         MDataCell cell = new MDataCell(ref ms);
                         Add(cell);
@@ -1260,7 +1266,7 @@ namespace CYQ.Data.Table
                 {
                     TableName = t.Name;
                 }
-                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(t);
+                
                 if (pis != null)
                 {
                     foreach (PropertyInfo pi in pis)
@@ -1268,7 +1274,7 @@ namespace CYQ.Data.Table
                         int index = Columns.GetIndex(pi.Name);
                         if (index > -1)
                         {
-                            object propValue = pi.GetValue(entity, null);
+                            object propValue = entity.GetType().GetProperties()[index].GetValue(entity, null);
                             switch (op)
                             {
                                 case BreakOp.Null:
@@ -1289,6 +1295,7 @@ namespace CYQ.Data.Table
                                         continue;
                                     }
                                     break;
+                              
                             }
                             Set(index, propValue, 2);//它的状态应该值设置，改为1是不对的。
                         }

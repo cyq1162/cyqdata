@@ -140,6 +140,7 @@
     <Compile Include="Table\Extension\Serializable.cs" />
     <Compile Include="Table\FastToT.cs" />
     <Compile Include="Table\MCellStruct.cs" />
+    <Compile Include="Table\MDataTable.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
@@ -199,8 +200,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Table\MDataRowCollection.cs" />
-    <Compile Include="Table\MDataTable.cs">
-    </Compile>
     <Compile Include="Table\MDataTableBatchAction.cs" />
     <Compile Include="Table\MDataTableFilter.cs">
       <SubType>Code</SubType>
