@@ -502,7 +502,7 @@ namespace CYQ.Data
             {
                 ResetConn(connObject.Master);
             }
-            if (OpenCon())//这里也会切库了。
+            if (OpenCon())//这里也会切库了，同时设置了10秒切到主库。
             {
                 try
                 {
@@ -566,15 +566,21 @@ namespace CYQ.Data
             ConnBean coSlave = null;
             //mssql 有 insert into ...select 操作。
             bool isSelectSql = !isOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
+            bool isOpenOK;
             if (isSelectSql)
             {
                 coSlave = connObject.GetSlave();
+                isOpenOK=OpenCon(coSlave, AllowConnLevel.MaterBackupSlave);
             }
-            else if (useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
+            else
             {
-                ResetConn(connObject.Master);
+                if (useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
+                {
+                    ResetConn(connObject.Master);
+                }
+                isOpenOK = OpenCon();
             }
-            if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
+            if (isOpenOK)
             {
                 try
                 {
@@ -998,7 +1004,7 @@ namespace CYQ.Data
             return false;
         }
         /// <summary>
-        /// 打开链接只切主备
+        /// 打开链接，只切主备(同时有N秒的主库定位)
         /// </summary>
         /// <returns></returns>
         internal bool OpenCon()

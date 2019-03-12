@@ -758,3 +758,4 @@
 542：MDataTableBatchAction：修正在NetCore下的批量更新问题。(2019-03-10)
 543：TableSchema：兼容Mysql8版本上的表结构语句。(2019-03-11)
 544：修正：DotNetCore在Linux下部署的路径问题(2019-03-12)
+545：DbBase：优化主从在插入时的延时定位主库问题(2019-03-12)
