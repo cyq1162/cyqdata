@@ -885,6 +885,20 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
+            /// AutoCache开启时，可以设置仅需要缓存的Table，多个用逗号分隔（此项配置时，NoCacheTables配置则被无忽略）
+            /// </summary>
+            public static string CacheTables
+            {
+                get
+                {
+                    return GetApp("CacheTables", "");
+                }
+                set
+                {
+                    SetApp("CacheTables", value);
+                }
+            }
+            /// <summary>
             /// AutoCache开启时，可以设置不缓存的Table，多个用逗号分隔
             /// </summary>
             public static string NoCacheTables
@@ -896,7 +910,6 @@ namespace CYQ.Data
                 set
                 {
                     SetApp("NoCacheTables", value);
-                    CYQ.Data.Cache.AutoCache.NoCacheTables = null;
                 }
             }
 

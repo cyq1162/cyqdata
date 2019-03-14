@@ -46,7 +46,7 @@ namespace CYQ.Data.Cache
                         {
                             foreach (KeyValuePair<string, string> item in jd)
                             {
-                                list.Add(MDataTable.CreateFrom(item.Value,null,EscapeOp.Encode));
+                                list.Add(MDataTable.CreateFrom(item.Value, null, EscapeOp.Encode));
                             }
                         }
                         aopInfo.TableList = list;
@@ -396,27 +396,48 @@ namespace CYQ.Data.Cache
                 }
             }
         }
-        private static List<string> _NoCacheTables = null;
-        internal static List<string> NoCacheTables
-        {
-            get
-            {
-                if (_NoCacheTables == null)
-                {
-                    _NoCacheTables = new List<string>();
-                    string tables = AppConfig.Cache.NoCacheTables;
-                    if (!string.IsNullOrEmpty(tables))
-                    {
-                        _NoCacheTables.AddRange(tables.Split(','));
-                    }
-                }
-                return _NoCacheTables;
-            }
-            set
-            {
-                _NoCacheTables = value;
-            }
-        }
+        //private static List<string> _CacheTables = null;
+        //internal static List<string> CacheTables
+        //{
+        //    get
+        //    {
+        //        if (_CacheTables == null)
+        //        {
+        //            _CacheTables = new List<string>();
+        //            string tables = AppConfig.Cache.CacheTables.ToLower();
+        //            if (!string.IsNullOrEmpty(tables))
+        //            {
+        //                _CacheTables.AddRange(tables.Split(','));
+        //            }
+        //        }
+        //        return _CacheTables;
+        //    }
+        //    set
+        //    {
+        //        _CacheTables = value;
+        //    }
+        //}
+        //private static List<string> _NoCacheTables = null;
+        //internal static List<string> NoCacheTables
+        //{
+        //    get
+        //    {
+        //        if (_NoCacheTables == null)
+        //        {
+        //            _NoCacheTables = new List<string>();
+        //            string tables = AppConfig.Cache.NoCacheTables.ToLower();
+        //            if (!string.IsNullOrEmpty(tables))
+        //            {
+        //                _NoCacheTables.AddRange(tables.Split(','));
+        //            }
+        //        }
+        //        return _NoCacheTables;
+        //    }
+        //    set
+        //    {
+        //        _NoCacheTables = value;
+        //    }
+        //}
         private static bool IsCanOperateCache(AopEnum action, AopInfo para)
         {
             if (para.IsTransaction) // 事务中，读数据时，处理读缓存是无法放置共享锁的情况
@@ -446,12 +467,25 @@ namespace CYQ.Data.Cache
             List<string> tables = GetRelationTables(para);
             if (tables != null && tables.Count > 0)
             {
-
+                string cacheTables = "," + AppConfig.Cache.CacheTables + ",";//demo.Aa
+                string nNoCacheTables = "," + AppConfig.Cache.NoCacheTables + ",";
                 foreach (string tableName in tables)
                 {
-                    if (NoCacheTables.Contains(tableName))
+                    if (cacheTables.Length > 2)
                     {
-                        return false;
+                        if (cacheTables.IndexOf("," + tableName + ",", StringComparison.OrdinalIgnoreCase) == -1
+                            && cacheTables.IndexOf(para.DataBase + "." + tableName + ",", StringComparison.OrdinalIgnoreCase) == -1)
+                        {
+                            return false;
+                        }
+                    }
+                    else if (nNoCacheTables.Length > 2)
+                    {
+                        if (nNoCacheTables.IndexOf("," + tableName + ",", StringComparison.OrdinalIgnoreCase) > -1
+                            || nNoCacheTables.IndexOf(para.DataBase + "." + tableName + ",", StringComparison.OrdinalIgnoreCase) > -1)
+                        {
+                            return false;
+                        }
                     }
                     string baseKey = GetBaseKey(para, tableName);
                     string delKey = "DeleteAutoCache:" + baseKey;
@@ -697,7 +731,7 @@ namespace CYQ.Data.Cache
                             }
                         }
                     }
-                    
+
                 }
             }
             catch
@@ -706,7 +740,7 @@ namespace CYQ.Data.Cache
         }
         public static void AutoCacheKeyTask(object threadID)
         {
-           
+
             while (true)//定时扫描数据库
             {
                 int time = AppConfig.Cache.AutoCacheTaskTime;
