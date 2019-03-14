@@ -38,8 +38,17 @@ redis允许客户端以TCP方式连接，默认6379端口。传输数据都以\r
         public RedisCommand(MSocket socket, int commandCount, string command)
         {
             this.socket = socket;
-            Write(string.Format("*{0}\r\n", commandCount));
-            WriteKey(command);
+            //Write(string.Format("*{0}\r\n", commandCount));
+            //WriteKey(command);
+
+            //听说redis verstion 2.8 不支持参数分开发送，所以打包一起发送。
+            StringBuilder sb=new StringBuilder();
+            sb.AppendFormat("*{0}\r\n",commandCount);
+            sb.AppendFormat("${0}\r\n", Encoding.UTF8.GetBytes(command).Length);
+            sb.Append(command);
+            sb.Append("\r\n");
+            Write(sb.ToString());
+
         }
         private void Write(string cmd)
         {
