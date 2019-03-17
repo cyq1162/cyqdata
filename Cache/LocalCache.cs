@@ -88,7 +88,6 @@ namespace CYQ.Data.Cache
         private static DateTime errTime = DateTime.MinValue;
         private void ClearState(object threadID)
         {
-            CheckIsSafe();
             startTime = DateTime.Now;
             while (true)
             {
@@ -150,21 +149,25 @@ namespace CYQ.Data.Cache
         private bool isFirstCheck = false;
         private void CheckIsSafe()
         {
-            string key = EncryptHelper.Decrypt(AppConst.ACKey, AppConst.Host);
-            key = AppConfig.GetConn(key);
-            if (!string.IsNullOrEmpty(key))
+            if (!isFirstCheck)
             {
-                key = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
+                isFirstCheck = true;
+                string key = EncryptHelper.Decrypt(AppConst.ACKey, AppConst.Host);
+                key = AppConfig.GetConn(key);
                 if (!string.IsNullOrEmpty(key))
                 {
-                    string code = AppConfig.GetApp(key);
-                    if (!string.IsNullOrEmpty(code))
+                    key = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
+                    if (!string.IsNullOrEmpty(key))
                     {
-                        string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
-                        DateTime d;
-                        if (DateTime.TryParse(items[0], out d) && d > DateTime.Now)
+                        string code = AppConfig.GetApp(key);
+                        if (!string.IsNullOrEmpty(code))
                         {
-                            AppConfig.SetApp(key + ".result", "1");
+                            string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
+                            DateTime d;
+                            if (DateTime.TryParse(items[0], out d) && d > DateTime.Now)
+                            {
+                                AppConfig.SetApp(key + ".result", "1");
+                            }
                         }
                     }
                 }
