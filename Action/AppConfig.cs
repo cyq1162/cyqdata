@@ -265,9 +265,26 @@ namespace CYQ.Data
             }
         }
 
+        /// <summary>
+        /// EncryptHelper加密的Key。
+        /// </summary>
+        public static string EncryptKey
+        {
+            get
+            {
+                return GetApp("EncryptKey", "");
+            }
+            set
+            {
+                SetApp("EncryptKey", value);
+            }
+        }
+
     }
     public static partial class AppConfig
     {
+        #region Web相关
+
         private static string _WebRootPath;
         //内部变量
         /// <summary>
@@ -326,6 +343,7 @@ namespace CYQ.Data
                 _IsAspNetCore = value;
             }
         }
+        #endregion
     }
     public static partial class AppConfig
     {
@@ -425,6 +443,7 @@ namespace CYQ.Data
                 }
                 set
                 {
+                    _Domain = string.Empty;
                     SetApp("Domain", value);
                 }
             }

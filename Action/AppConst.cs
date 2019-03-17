@@ -10,7 +10,15 @@ namespace CYQ.Data
     /// </summary>
     internal static class AppConst
     {
+        #region 相关网址常量
+        internal const string Github = "https://github.com/cyq1162/cyqdata";
+        internal const string Host = "cyqdata.com";
+        internal const string Host_Aries = "aries.cyqdata.com";
+        internal const string Host_Taurus = "taurus.cyqdata.com";
+
+        #endregion
         #region License 常量
+        
         //internal const string Lic_Error_Contact = "\r\nContact email:cyq1162@126.com;QQ:272657997\r\n site : http://www.cyqdata.com/cyqdata";
         ////internal const string Lic_Error_AtNight = "Sorry ! You need to get a license key when you run it at night!";
         //internal const string Lic_Error_NotBuyProvider = "Sorry ! Your license key not contains this provider function : ";
@@ -28,6 +36,8 @@ namespace CYQ.Data
         #region 全局
         internal const string FilePre = "file:";
         internal const string Global_NotImplemented = "The method or operation is not implemented.";
+        internal const string KeyA = "file:";
+        internal const string KeyB = "file:";
         #endregion
 
         #region 静态常量
