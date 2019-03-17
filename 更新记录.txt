@@ -762,3 +762,4 @@
 546：AppConfig：增加CacheTables属性，可以配置仅需要自动缓存的表(2019-03-14)
 547：RedisCommand：听说redis verstion 2.8 不支持参数分开发送，所以改成打包一起发送。(2019-03-15)
 548：EncryptHelper：新增加的类(2019-03-17)
+549：LocalCache：缓存依赖路径修正。(2019-03-17)

@@ -420,11 +420,14 @@ namespace CYQ.Data.Cache
                 {
                     MList<string> keys = theFolderKeys[folder];//.GetList();
                     int count = keys.Count;
+                    //统一路径方式
+                    fileName = fileName.Replace("/", "\\");
                     for (int i = 0; i < count; i++)
                     {
                         if (i < keys.Count)
                         {
-                            if (string.Compare(theFileName[keys[i]], fileName, StringComparison.OrdinalIgnoreCase) == 0)
+                            string path = theFileName[keys[i]].Replace("/", "\\");
+                            if (string.Compare(path, fileName, StringComparison.OrdinalIgnoreCase) == 0)
                             {
                                 Remove(keys[i]);
                                 keys.Remove(keys[i]);
