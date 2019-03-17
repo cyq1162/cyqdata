@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
-
+using CYQ.Data.Tool;
 namespace CYQ.Data
 {
     /// <summary>
@@ -36,8 +36,8 @@ namespace CYQ.Data
         #region 全局
         internal const string FilePre = "file:";
         internal const string Global_NotImplemented = "The method or operation is not implemented.";
-        internal const string KeyA = "file:";
-        internal const string KeyB = "file:";
+        internal const string ACKey = "4pMxvlk1OlOv0K6z96T+mNDBdEkX6mPa7Yq27cWP/u0#=2";
+        internal const string ALKey = "YH/xArdNhygAvQ7NwJiq2HreAmphvcTP7Yq27cWP/u0#=2";
         #endregion
 
         #region 静态常量

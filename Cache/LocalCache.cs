@@ -88,6 +88,7 @@ namespace CYQ.Data.Cache
         private static DateTime errTime = DateTime.MinValue;
         private void ClearState(object threadID)
         {
+            CheckIsSafe();
             startTime = DateTime.Now;
             while (true)
             {
@@ -141,8 +142,32 @@ namespace CYQ.Data.Cache
                             errorCount++;
                         }
                     }
+                    CheckIsSafe();
                 }
 
+            }
+        }
+        private bool isFirstCheck = false;
+        private void CheckIsSafe()
+        {
+            string key = EncryptHelper.Decrypt(AppConst.ACKey, AppConst.Host);
+            key = AppConfig.GetConn(key);
+            if (!string.IsNullOrEmpty(key))
+            {
+                key = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
+                if (!string.IsNullOrEmpty(key))
+                {
+                    string code = AppConfig.GetApp(key);
+                    if (!string.IsNullOrEmpty(code))
+                    {
+                        string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
+                        DateTime d;
+                        if (DateTime.TryParse(items[0], out d) && d > DateTime.Now)
+                        {
+                            AppConfig.SetApp(key + ".result", "1");
+                        }
+                    }
+                }
             }
         }
         private int errorCount = 0;//»º´æ²¶Òì³£´ÎÊý
