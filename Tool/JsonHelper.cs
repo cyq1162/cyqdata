@@ -458,7 +458,7 @@ namespace CYQ.Data.Tool
                                 result = jsonDic[fKey];
                             }
                         }
-                        else  // 取子集
+                        else if (jsonDic.ContainsKey(fKey)) // 取子集
                         {
 
                             return GetSourceValue(jsonDic[fKey], key.Substring(fi + 1));
