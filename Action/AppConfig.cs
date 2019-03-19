@@ -248,10 +248,10 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的运行路径
-        /// Win项目：是dll和exe所在的目录，
-        /// Asp.net项目：是指根目录
-        /// Asp.net core 项目：是指运行的路径（dll所在的路径）
+        /// 框架的运行路径(最外层的目录）
+        /// Win项目：是dll和exe所在的目录；
+        /// Asp.net项目：是指根目录；
+        /// Asp.net core 项目：是指运行的路径（dll所在的路径，同Win项目）。
         /// </summary>
         public static string RunPath
         {
@@ -261,10 +261,19 @@ namespace CYQ.Data
                 {
                     return AppDomain.CurrentDomain.BaseDirectory;
                 }
-                return AppConst.RunFolderPath;
+                return AppConst.AssemblyPath;
             }
         }
-
+        /// <summary>
+        /// 框架的程序集所在的运行路径
+        /// </summary>
+        public static string AssemblyPath
+        {
+            get
+            {
+                return AppConst.AssemblyPath;
+            }
+        }
         /// <summary>
         /// EncryptHelper加密的Key。
         /// </summary>

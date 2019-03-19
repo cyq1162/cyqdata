@@ -93,9 +93,9 @@ namespace CYQ.Data
         internal static string _DLLFullName = string.Empty;
         static string _RunfolderPath;
         /// <summary>
-        /// 框架的运行路径
+        /// 框架的程序集所在的运行路径
         /// </summary>
-        internal static string RunFolderPath
+        internal static string AssemblyPath
         {
             get
             {

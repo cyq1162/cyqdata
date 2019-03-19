@@ -28,7 +28,7 @@ namespace CYQ.Data
                 catch(Exception err)
                 {
                     string errMsg = err.Message;
-                    if (!File.Exists(AppConst.RunFolderPath + "MySql.Data.dll"))
+                    if (!File.Exists(AppConst.AssemblyPath + "MySql.Data.dll"))
                     {
                         errMsg = "Can't find the MySql.Data.dll more info : " + errMsg;
                     }

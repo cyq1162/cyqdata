@@ -23,7 +23,7 @@ namespace CYQ.Data
                 try
                 {
                     string name = string.Empty;
-                    if (File.Exists(AppConst.RunFolderPath + "Npgsql.dll"))
+                    if (File.Exists(AppConst.AssemblyPath + "Npgsql.dll"))
                     {
                         name = "Npgsql";
                     }

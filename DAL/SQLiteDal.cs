@@ -51,7 +51,7 @@ namespace CYQ.Data
                         errMsg = "You need to add web.config or app.config : <startup useLegacyV2RuntimeActivationPolicy=\"true\"></startup> more info : " + AppConst.NewLine + errMsg;
 
                     }
-                    else if (!System.IO.File.Exists(AppConst.RunFolderPath + "System.Data.SQLite.DLL"))
+                    else if (!System.IO.File.Exists(AppConst.AssemblyPath + "System.Data.SQLite.DLL"))
                     {
                         errMsg = "Can't find the System.Data.SQLite.dll more info : " + AppConst.NewLine + errMsg;
                     }

@@ -23,11 +23,11 @@ namespace CYQ.Data
                 try
                 {
                     string name = string.Empty;
-                    if (File.Exists(AppConst.RunFolderPath + "Sybase.AdoNet2.AseClient.dll"))
+                    if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet2.AseClient.dll"))
                     {
                         name = "Sybase.AdoNet2.AseClient";
                     }
-                    else if (File.Exists(AppConst.RunFolderPath + "Sybase.AdoNet4.AseClient.dll"))
+                    else if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet4.AseClient.dll"))
                     {
                         name = "Sybase.AdoNet4.AseClient";
                     }

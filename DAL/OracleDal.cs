@@ -198,7 +198,7 @@ namespace CYQ.Data
                             }
                             else
                             {
-                                string path = AppConst.RunFolderPath;
+                                string path = AppConst.AssemblyPath;
                                 if (System.IO.File.Exists(path + "Oracle." + ManagedName + "DataAccess.dll"))//Oracle 12
                                 {
                                     clientType = 2;

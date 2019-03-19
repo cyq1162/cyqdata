@@ -142,7 +142,7 @@ namespace CYQ.Data.Aop
                                         object instance = ass.CreateInstance(aopItem[0]);
                                         if (instance != null)
                                         {
-                                            _Cache.Set(key, instance, 1440, AppConst.RunFolderPath + aopItem[1].Replace(".dll", "") + ".dll");
+                                            _Cache.Set(key, instance, 1440, AppConst.AssemblyPath + aopItem[1].Replace(".dll", "") + ".dll");
                                             aop = instance as IAop;
                                             aop.OnLoad();
                                         }

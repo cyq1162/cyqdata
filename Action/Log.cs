@@ -130,7 +130,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    pageUrl = AppConst.RunFolderPath;
+                    pageUrl = AppConst.AssemblyPath;
                 }
 
                 using (SysLogs el = new SysLogs())

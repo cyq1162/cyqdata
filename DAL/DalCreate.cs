@@ -125,7 +125,7 @@ namespace CYQ.Data
                 //postgre和mssql的链接语句一样，这里用database=和uid=顺序来决定；database写在后面的，为postgre
                 int dbIndex = connString.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
                 int uid = connString.IndexOf("uid=", StringComparison.OrdinalIgnoreCase);
-                if (uid > 0 && uid < dbIndex && File.Exists(AppConfig.RunPath + "Npgsql.dll"))
+                if (uid > 0 && uid < dbIndex && File.Exists(AppConfig.AssemblyPath + "Npgsql.dll"))
                 {
                     return PostgreClient;
                 }
