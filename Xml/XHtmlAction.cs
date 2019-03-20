@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using CYQ.Data.Tool;
 using System.Text;
+using System.Web;
 
 namespace CYQ.Data.Xml
 {
@@ -817,7 +818,7 @@ namespace CYQ.Data.Xml
                         html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
                     }
                     html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
-                    if (dicForAutoSetValue != null && dicForAutoSetValue.Count > 0 && html.Contains("${")) // 替换自定义标签。
+                    if (html.Contains("${")) // 替换自定义标签。
                     {
                         #region 替换自定义标签
                         MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -826,19 +827,29 @@ namespace CYQ.Data.Xml
                             List<string> keys = new List<string>(matchs.Count);
                             foreach (Match match in matchs)
                             {
-                                string value = match.Groups[0].Value;
+                                string value = match.Groups[0].Value;//${name}
                                 if (!keys.Contains(value))
                                 {
                                     keys.Add(value);
                                     string[] items = match.Groups[1].Value.Trim().Split('#', '-');
                                     string pre = items.Length > 1 ? items[0] : "";
-                                    string columnName = items.Length > 1 ? items[1] : items[0];
-                                    if (dicForAutoSetValue.ContainsKey(pre))
+                                    string columnName = items.Length > 1 ? items[1] : items[0];//name
+                                    bool isReplace = false;
+                                    if (dicForAutoSetValue != null && dicForAutoSetValue.ContainsKey(pre))
                                     {
                                         MDataCell matchCell = dicForAutoSetValue[pre][columnName];
                                         if (matchCell != null)
                                         {
+                                            isReplace = true;
                                             html = html.Replace(value, matchCell.ToString());
+                                        }
+                                    }
+                                    if (!isReplace && HttpContext.Current != null)
+                                    {
+                                        string replaceValue = HttpContext.Current.Request[columnName];
+                                        if (replaceValue != null)
+                                        {
+                                            html = html.Replace(value, replaceValue);
                                         }
                                     }
                                 }
@@ -846,8 +857,11 @@ namespace CYQ.Data.Xml
                             keys.Clear();
                             keys = null;
                         }
-                        dicForAutoSetValue.Clear();
-                        dicForAutoSetValue = null;
+                        if (dicForAutoSetValue != null)
+                        {
+                            dicForAutoSetValue.Clear();
+                            dicForAutoSetValue = null;
+                        }
                         matchs = null;
                         #endregion
                     }
@@ -1067,7 +1081,7 @@ namespace CYQ.Data.Xml
                                     if (!keys.Contains(value))
                                     {
                                         keys.Add(value);
-                                        if (value.Contains(columnName))//值可能被格式化过，所以优先取值。
+                                        if (value.Contains(columnName) && values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
                                         {
                                             tempText = tempText.Replace(value, values[columnName]);
                                         }
@@ -1077,6 +1091,10 @@ namespace CYQ.Data.Xml
                                             if (matchCell != null)
                                             {
                                                 tempText = tempText.Replace(value, matchCell.ToString());
+                                            }
+                                            else if (HttpContext.Current != null && HttpContext.Current.Request[columnName] != null)
+                                            {
+                                                tempText = tempText.Replace(value, HttpContext.Current.Request[columnName]);
                                             }
                                         }
                                     }

@@ -56,6 +56,10 @@ namespace CYQ.Data
             else
             {
                 string value = ConfigurationManager.AppSettings[key];
+                if (string.IsNullOrEmpty(value) && key.IndexOf('.') > 0)
+                {
+                    value = ConfigurationManager.AppSettings[key.Substring(key.IndexOf('.') + 1)];
+                }
                 value = string.IsNullOrEmpty(value) ? defaultValue : value;
                 try
                 {

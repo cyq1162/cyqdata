@@ -153,6 +153,7 @@ namespace CYQ.Data.Table
         {
             get
             {
+                if (field == null) { return null; }
                 if (field is int || (field is Enum && AppConfig.IsEnumToInt))
                 {
                     int index = (int)field;
@@ -664,7 +665,11 @@ namespace CYQ.Data.Table
         {
             get
             {
-                return CellList[index];
+                if (index < Count)
+                {
+                    return CellList[index];
+                }
+                return null;
             }
             set
             {
@@ -1261,36 +1266,21 @@ namespace CYQ.Data.Table
                     TableName = t.Name;
                 }
                 List<PropertyInfo> pis = StaticTool.GetPropertyInfo(t);
-                if (pis != null)
+                if (pis.Count > 0)
                 {
-                    foreach (PropertyInfo pi in pis)
+                    foreach (PropertyInfo p in pis)
                     {
-                        int index = Columns.GetIndex(pi.Name);
-                        if (index > -1)
+                        SetValueToCell(entity, op, p, null);
+                    }
+                }
+                else
+                {
+                    List<FieldInfo> fis = StaticTool.GetFieldInfo(t);
+                    if (fis.Count > 0)
+                    {
+                        foreach (FieldInfo f in fis)
                         {
-                            object propValue = pi.GetValue(entity, null);
-                            switch (op)
-                            {
-                                case BreakOp.Null:
-                                    if (propValue == null)
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                case BreakOp.Empty:
-                                    if (Convert.ToString(propValue) == "")
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                                case BreakOp.NullOrEmpty:
-                                    if (propValue == null || Convert.ToString(propValue) == "")
-                                    {
-                                        continue;
-                                    }
-                                    break;
-                            }
-                            Set(index, propValue, 2);//它的状态应该值设置，改为1是不对的。
+                            SetValueToCell(entity, op, null, f);
                         }
                     }
                 }
@@ -1300,7 +1290,37 @@ namespace CYQ.Data.Table
                 Log.WriteLogToTxt(err);
             }
         }
-
+        private void SetValueToCell(object entity, BreakOp op, PropertyInfo p, FieldInfo f)
+        {
+            string name = p != null ? p.Name : f.Name;
+            int index = Columns.GetIndex(name);
+            if (index > -1)
+            {
+                object objValue = p != null ? p.GetValue(entity, null) : f.GetValue(entity);
+                switch (op)
+                {
+                    case BreakOp.Null:
+                        if (objValue == null)
+                        {
+                            return;
+                        }
+                        break;
+                    case BreakOp.Empty:
+                        if (Convert.ToString(objValue) == "")
+                        {
+                            return;
+                        }
+                        break;
+                    case BreakOp.NullOrEmpty:
+                        if (objValue == null || Convert.ToString(objValue) == "")
+                        {
+                            return;
+                        }
+                        break;
+                }
+                Set(index, objValue, 2);//它的状态应该值设置，改为1是不对的。
+            }
+        }
         /// <summary>
         /// 将行中的数据值赋给实体对象
         /// </summary>
@@ -1321,142 +1341,27 @@ namespace CYQ.Data.Table
                 return;
             }
             Type objType = obj.GetType();
-            string objName = objType.FullName, cellName = string.Empty;
+            string objName = objType.FullName, cellName = "";
             try
             {
                 #region 处理核心
                 List<PropertyInfo> pis = StaticTool.GetPropertyInfo(objType);
-                foreach (PropertyInfo p in pis)//遍历实体
+                if (pis.Count > 0)
                 {
-                    cellName = p.Name;
-                    MDataCell cell = row[cellName];
-                    if (cell == null || cell.IsNull)
+                    foreach (PropertyInfo p in pis)//遍历实体
                     {
-                        continue;
+                        SetValueToPropertyOrField(ref obj, row, p, null, out cellName);
                     }
-                    Type propType = p.PropertyType;
-                    object objValue = null;
-                    SysType sysType = StaticTool.GetSystemType(ref propType);
-                    switch (sysType)
+                }
+                else
+                {
+                    List<FieldInfo> fis = StaticTool.GetFieldInfo(objType);
+                    if (fis.Count > 0)
                     {
-                        case SysType.Enum:
-                            p.SetValue(obj, Enum.Parse(propType, cell.ToString()), null);
-                            break;
-                        case SysType.Base:
-                            if (propType.Name == "String")
-                            {
-                                //去掉转义符号
-                                if (cell.StringValue.IndexOf("\\\"") > -1)
-                                {
-                                    p.SetValue(obj, cell.StringValue.Replace("\\\"", "\""), null);
-                                }
-                                else
-                                {
-                                    p.SetValue(obj, cell.StringValue, null);
-                                }
-                            }
-                            else
-                            {
-                                object value = StaticTool.ChangeType(cell.Value, p.PropertyType);
-                                p.SetValue(obj, value, null);
-                            }
-                            break;
-                        case SysType.Array:
-                        case SysType.Collection:
-                        case SysType.Generic:
-                            if (cell.Value.GetType() == propType)
-                            {
-                                objValue = cell.Value;
-                            }
-                            else
-                            {
-                                Type[] argTypes = null;
-                                int len = StaticTool.GetArgumentLength(ref propType, out argTypes);
-                                if (len == 1) // Table
-                                {
-
-                                    if (JsonSplit.IsJson(cell.StringValue) && cell.StringValue.Contains(":") && cell.StringValue.Contains("{"))
-                                    {
-                                        #region Json嵌套处理。
-                                        MDataTable dt = MDataTable.CreateFrom(cell.StringValue);//, SchemaCreate.GetColumns(argTypes[0])
-                                        objValue = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
-                                        Type objListType = objValue.GetType();
-                                        foreach (MDataRow rowItem in dt.Rows)
-                                        {
-                                            object o = GetValue(rowItem, argTypes[0]);
-                                            MethodInfo method = objListType.GetMethod("Add");
-                                            if (method == null)
-                                            {
-                                                method = objListType.GetMethod("Push");
-                                            }
-                                            if (method != null)
-                                            {
-                                                method.Invoke(objValue, new object[] { o });
-                                            }
-                                        }
-                                        dt = null;
-                                        #endregion
-                                    }
-                                    else
-                                    {
-                                        #region 数组处理
-                                        List<string> items = JsonSplit.SplitEscapeArray(cell.StringValue);//内部去掉转义符号
-                                        if (items == null) { continue; }
-                                        objValue = Activator.CreateInstance(propType, items.Count);//创建实例
-                                        Type objListType = objValue.GetType();
-                                        bool isArray = sysType == SysType.Array;
-                                        for (int i = 0; i < items.Count; i++)
-                                        {
-                                            MethodInfo method;
-                                            if (isArray)
-                                            {
-                                                Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
-                                                method = objListType.GetMethod("Set");
-                                                if (method != null)
-                                                {
-                                                    method.Invoke(objValue, new object[] { i, item });
-                                                }
-                                            }
-                                            else
-                                            {
-                                                Object item = StaticTool.ChangeType(items[i], argTypes[0]);
-                                                method = objListType.GetMethod("Add");
-                                                if (method == null)
-                                                {
-                                                    method = objListType.GetMethod("Push");
-                                                }
-                                                if (method != null)
-                                                {
-                                                    method.Invoke(objValue, new object[] { item });
-                                                }
-                                            }
-                                        }
-                                        #endregion
-                                    }
-                                }
-                                else if (len == 2) // row
-                                {
-                                    MDataRow mRow = MDataRow.CreateFrom(cell.Value, argTypes[1]);
-                                    objValue = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
-                                    foreach (MDataCell mCell in mRow)
-                                    {
-                                        object mObj = GetValue(mCell.ToRow(), argTypes[1]);
-                                        objValue.GetType().GetMethod("Add").Invoke(objValue, new object[] { mCell.ColumnName, mObj });
-                                    }
-                                    mRow = null;
-                                }
-                            }
-                            p.SetValue(obj, objValue, null);
-                            break;
-                        case SysType.Custom://继续递归
-                            MDataRow mr = new MDataRow(TableSchema.GetColumns(propType));
-                            mr.LoadFrom(cell.ToString());
-                            objValue = Activator.CreateInstance(propType);
-                            SetToEntity(ref objValue, mr);
-                            mr = null;
-                            p.SetValue(obj, objValue, null);
-                            break;
-
+                        foreach (FieldInfo f in fis)//遍历实体
+                        {
+                            SetValueToPropertyOrField(ref obj, row, null, f, out cellName);
+                        }
                     }
                 }
                 #endregion
@@ -1469,6 +1374,148 @@ namespace CYQ.Data.Table
             }
         }
 
+        private void SetValueToPropertyOrField(ref object obj, MDataRow row, PropertyInfo p, FieldInfo f, out string cellName)
+        {
+            cellName = p != null ? p.Name : f.Name;
+            MDataCell cell = row[cellName];
+            if (cell == null || cell.IsNull)
+            {
+                return;
+            }
+            Type propType = p != null ? p.PropertyType : f.FieldType;
+            object objValue = null;
+            SysType sysType = StaticTool.GetSystemType(ref propType);
+            switch (sysType)
+            {
+                case SysType.Enum:
+                    objValue = Enum.Parse(propType, cell.ToString());
+                    break;
+                case SysType.Base:
+                    #region 基础类型处理
+                    if (propType.Name == "String")
+                    {
+                        //去掉转义符号
+                        if (cell.StringValue.IndexOf("\\\"") > -1)
+                        {
+                            objValue = cell.StringValue.Replace("\\\"", "\"");
+                        }
+                        else
+                        {
+                            objValue = cell.StringValue;
+                        }
+                    }
+                    else
+                    {
+                        objValue = StaticTool.ChangeType(cell.Value, p.PropertyType);
+                    }
+                    #endregion
+                    break;
+                case SysType.Array:
+                case SysType.Collection:
+                case SysType.Generic:
+                    #region 数组处理
+                    if (cell.Value.GetType() == propType)
+                    {
+                        objValue = cell.Value;
+                    }
+                    else
+                    {
+                        Type[] argTypes = null;
+                        int len = StaticTool.GetArgumentLength(ref propType, out argTypes);
+                        if (len == 1) // Table
+                        {
+
+                            if (JsonSplit.IsJson(cell.StringValue) && cell.StringValue.Contains(":") && cell.StringValue.Contains("{"))
+                            {
+                                #region Json嵌套处理。
+                                MDataTable dt = MDataTable.CreateFrom(cell.StringValue);//, SchemaCreate.GetColumns(argTypes[0])
+                                objValue = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
+                                Type objListType = objValue.GetType();
+                                foreach (MDataRow rowItem in dt.Rows)
+                                {
+                                    object o = GetValue(rowItem, argTypes[0]);
+                                    MethodInfo method = objListType.GetMethod("Add");
+                                    if (method == null)
+                                    {
+                                        method = objListType.GetMethod("Push");
+                                    }
+                                    if (method != null)
+                                    {
+                                        method.Invoke(objValue, new object[] { o });
+                                    }
+                                }
+                                dt = null;
+                                #endregion
+                            }
+                            else
+                            {
+                                #region 数组处理
+                                List<string> items = JsonSplit.SplitEscapeArray(cell.StringValue);//内部去掉转义符号
+                                if (items == null) { return; }
+                                objValue = Activator.CreateInstance(propType, items.Count);//创建实例
+                                Type objListType = objValue.GetType();
+                                bool isArray = sysType == SysType.Array;
+                                for (int i = 0; i < items.Count; i++)
+                                {
+                                    MethodInfo method;
+                                    if (isArray)
+                                    {
+                                        Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
+                                        method = objListType.GetMethod("Set");
+                                        if (method != null)
+                                        {
+                                            method.Invoke(objValue, new object[] { i, item });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Object item = StaticTool.ChangeType(items[i], argTypes[0]);
+                                        method = objListType.GetMethod("Add");
+                                        if (method == null)
+                                        {
+                                            method = objListType.GetMethod("Push");
+                                        }
+                                        if (method != null)
+                                        {
+                                            method.Invoke(objValue, new object[] { item });
+                                        }
+                                    }
+                                }
+                                #endregion
+                            }
+                        }
+                        else if (len == 2) // row
+                        {
+                            MDataRow mRow = MDataRow.CreateFrom(cell.Value, argTypes[1]);
+                            objValue = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
+                            foreach (MDataCell mCell in mRow)
+                            {
+                                object mObj = GetValue(mCell.ToRow(), argTypes[1]);
+                                objValue.GetType().GetMethod("Add").Invoke(objValue, new object[] { mCell.ColumnName, mObj });
+                            }
+                            mRow = null;
+                        }
+                    }
+                    #endregion
+                    break;
+                case SysType.Custom://继续递归
+                    MDataRow mr = new MDataRow(TableSchema.GetColumns(propType));
+                    mr.LoadFrom(cell.ToString());
+                    objValue = Activator.CreateInstance(propType);
+                    SetToEntity(ref objValue, mr);
+                    mr = null;
+                    break;
+
+            }
+            if (p != null)
+            {
+                p.SetValue(obj, objValue, null);
+            }
+            else
+            {
+                f.SetValue(obj, objValue);
+            }
+        }
     }
 
 }

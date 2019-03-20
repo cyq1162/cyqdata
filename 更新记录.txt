@@ -763,3 +763,6 @@
 547：RedisCommand：听说redis verstion 2.8 不支持参数分开发送，所以改成打包一起发送。(2019-03-15)
 548：EncryptHelper：新增加的类(2019-03-17)
 549：LocalCache：缓存依赖路径修正。(2019-03-17)
+550：AppConfig：开放AssemblyPath属性，同时对GetApp方法进行优化。(2019-03-20)
+551：JsonHelper：增加当实体类没有Property时，则处理Field属性。(2019-03-20)
+552：XHtmlAction：增强语法，${xxx} 可以从页面参数取值替换。(2019-03-21)

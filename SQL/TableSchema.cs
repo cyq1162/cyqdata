@@ -68,59 +68,22 @@ namespace CYQ.Data.SQL
                 }
 
                 List<PropertyInfo> pis = StaticTool.GetPropertyInfo(typeInfo);
-
-                SqlDbType sqlType;
-                for (int i = 0; i < pis.Count; i++)
+                if (pis.Count > 0)
                 {
-                    sqlType = SQL.DataType.GetSqlType(pis[i].PropertyType);
-                    mdc.Add(pis[i].Name, sqlType);
-                    MCellStruct column = mdc[i];
-                    LengthAttribute la = GetAttr<LengthAttribute>(pis[i]);//获取长度设置
-                    if (la != null)
+                    for (int i = 0; i < pis.Count; i++)
                     {
-                        column.MaxSize = la.MaxSize;
-                        column.Scale = la.Scale;
+                        SetStruct(mdc, pis[i], null, i, pis.Count);
                     }
-                    if (column.MaxSize <= 0)
+                }
+                else
+                {
+                    List<FieldInfo> fis = StaticTool.GetFieldInfo(typeInfo);
+                    if (fis.Count > 0)
                     {
-                        column.MaxSize = DataType.GetMaxSize(sqlType);
-                    }
-                    KeyAttribute ka = GetAttr<KeyAttribute>(pis[i]);//获取关键字判断
-                    if (ka != null)
-                    {
-                        column.IsPrimaryKey = ka.IsPrimaryKey;
-                        column.IsAutoIncrement = ka.IsAutoIncrement;
-                        column.IsCanNull = ka.IsCanNull;
-                    }
-                    else if (i == 0)
-                    {
-                        column.IsPrimaryKey = true;
-                        column.IsCanNull = false;
-                        if (column.ColumnName.ToLower().Contains("id") && (column.SqlType == System.Data.SqlDbType.Int || column.SqlType == SqlDbType.BigInt))
+                        for (int i = 0; i < fis.Count; i++)
                         {
-                            column.IsAutoIncrement = true;
+                            SetStruct(mdc, null, fis[i], i, fis.Count);
                         }
-                    }
-                    DefaultValueAttribute dva = GetAttr<DefaultValueAttribute>(pis[i]);
-                    if (dva != null && dva.DefaultValue != null)
-                    {
-                        if (column.SqlType == SqlDbType.Bit)
-                        {
-                            column.DefaultValue = (dva.DefaultValue.ToString() == "True" || dva.DefaultValue.ToString() == "1") ? 1 : 0;
-                        }
-                        else
-                        {
-                            column.DefaultValue = dva.DefaultValue;
-                        }
-                    }
-                    else if (i > pis.Count - 3 && sqlType == SqlDbType.DateTime && pis[i].Name.EndsWith("Time"))
-                    {
-                        column.DefaultValue = SqlValue.GetDate;
-                    }
-                    DescriptionAttribute da = GetAttr<DescriptionAttribute>(pis[i]);//看是否有字段描述属性。
-                    if (da != null)
-                    {
-                        column.Description = da.Description;
                     }
                 }
                 object[] tableAttr = typeInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
@@ -144,9 +107,66 @@ namespace CYQ.Data.SQL
             }
 
         }
-        private static T GetAttr<T>(PropertyInfo pi)
+        private static void SetStruct(MDataColumn mdc, PropertyInfo pi, FieldInfo fi, int i, int count)
         {
-            object[] attr = pi.GetCustomAttributes(typeof(T), false);//看是否设置了特性
+            Type type = pi != null ? pi.PropertyType : fi.FieldType;
+            string name = pi != null ? pi.Name : fi.Name;
+            SqlDbType sqlType = SQL.DataType.GetSqlType(type);
+            mdc.Add(name, sqlType);
+            MCellStruct column = mdc[i];
+            LengthAttribute la = GetAttr<LengthAttribute>(pi, fi);//获取长度设置
+            if (la != null)
+            {
+                column.MaxSize = la.MaxSize;
+                column.Scale = la.Scale;
+            }
+            if (column.MaxSize <= 0)
+            {
+                column.MaxSize = DataType.GetMaxSize(sqlType);
+            }
+            KeyAttribute ka = GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
+            if (ka != null)
+            {
+                column.IsPrimaryKey = ka.IsPrimaryKey;
+                column.IsAutoIncrement = ka.IsAutoIncrement;
+                column.IsCanNull = ka.IsCanNull;
+            }
+            else if (i == 0)
+            {
+                column.IsPrimaryKey = true;
+                column.IsCanNull = false;
+                if (column.ColumnName.ToLower().Contains("id") && (column.SqlType == System.Data.SqlDbType.Int || column.SqlType == SqlDbType.BigInt))
+                {
+                    column.IsAutoIncrement = true;
+                }
+            }
+            DefaultValueAttribute dva = GetAttr<DefaultValueAttribute>(pi, fi);
+            if (dva != null && dva.DefaultValue != null)
+            {
+                if (column.SqlType == SqlDbType.Bit)
+                {
+                    column.DefaultValue = (dva.DefaultValue.ToString() == "True" || dva.DefaultValue.ToString() == "1") ? 1 : 0;
+                }
+                else
+                {
+                    column.DefaultValue = dva.DefaultValue;
+                }
+            }
+            else if (i > count - 3 && sqlType == SqlDbType.DateTime && name.EndsWith("Time"))
+            {
+                column.DefaultValue = SqlValue.GetDate;
+            }
+            DescriptionAttribute da = GetAttr<DescriptionAttribute>(pi, fi);//看是否有字段描述属性。
+            if (da != null)
+            {
+                column.Description = da.Description;
+            }
+        }
+        private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
+        {
+            Type type = typeof(T);
+            object[] attr = pi != null ? pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
+
             if (attr != null && attr.Length == 1)
             {
                 return (T)attr[0];
@@ -1144,8 +1164,8 @@ where c.relname =:TableName
 and a.attnum > 0 and a.atttypid>0
 ORDER BY a.attnum";
         }
-        
-       
+
+
         #endregion
 
         #region 读取所有表语句
