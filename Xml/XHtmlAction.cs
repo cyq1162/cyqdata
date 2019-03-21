@@ -827,31 +827,31 @@ namespace CYQ.Data.Xml
                             List<string> keys = new List<string>(matchs.Count);
                             foreach (Match match in matchs)
                             {
-                                string value = match.Groups[0].Value;//${name}
+                                string value = match.Groups[0].Value;//${txt#name:xx#xx}
                                 if (!keys.Contains(value))
                                 {
                                     keys.Add(value);
-                                    string[] items = match.Groups[1].Value.Trim().Split('#', '-');
+                                    string[] items = match.Groups[1].Value.Trim().Split(':')[0].Split('#', '-');
                                     string pre = items.Length > 1 ? items[0] : "";
                                     string columnName = items.Length > 1 ? items[1] : items[0];//name
-                                    bool isReplace = false;
+                                    string replaceValue = "";
                                     if (dicForAutoSetValue != null && dicForAutoSetValue.ContainsKey(pre))
                                     {
                                         MDataCell matchCell = dicForAutoSetValue[pre][columnName];
                                         if (matchCell != null)
                                         {
-                                            isReplace = true;
-                                            html = html.Replace(value, matchCell.ToString());
+                                            replaceValue = matchCell.ToString();
                                         }
                                     }
-                                    if (!isReplace && HttpContext.Current != null)
+                                    if (string.IsNullOrEmpty(replaceValue) && HttpContext.Current != null)
                                     {
-                                        string replaceValue = HttpContext.Current.Request[columnName];
-                                        if (replaceValue != null)
-                                        {
-                                            html = html.Replace(value, replaceValue);
-                                        }
+                                        replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
                                     }
+                                    if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
+                                    {
+                                        replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
+                                    }
+                                    html = html.Replace(value, replaceValue ?? "");
                                 }
                             }
                             keys.Clear();
@@ -1077,26 +1077,32 @@ namespace CYQ.Data.Xml
                                 foreach (Match match in matchs)
                                 {
                                     value = match.Groups[0].Value;
-                                    columnName = match.Groups[1].Value.Trim();
+                                    columnName = match.Groups[1].Value.Split(':')[0].Trim();
                                     if (!keys.Contains(value))
                                     {
                                         keys.Add(value);
+                                        string replaceValue = "";
                                         if (value.Contains(columnName) && values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
                                         {
-                                            tempText = tempText.Replace(value, values[columnName]);
+                                            replaceValue = values[columnName];
                                         }
                                         else
                                         {
                                             matchCell = _Table.Rows[k][columnName];
                                             if (matchCell != null)
                                             {
-                                                tempText = tempText.Replace(value, matchCell.ToString());
+                                                replaceValue = matchCell.ToString();
                                             }
                                             else if (HttpContext.Current != null && HttpContext.Current.Request[columnName] != null)
                                             {
-                                                tempText = tempText.Replace(value, HttpContext.Current.Request[columnName]);
+                                                replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
                                             }
                                         }
+                                        if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
+                                        {
+                                            replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
+                                        }
+                                        tempText = tempText.Replace(value, replaceValue ?? "");
                                     }
                                 }
                                 keys.Clear();
