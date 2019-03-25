@@ -152,7 +152,7 @@ namespace CYQ.Data.Aop
                             }
                             catch (Exception err)
                             {
-                                string errMsg = err.Message + "--Web.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format:namespace.Classname,Assembly name) ";
+                                string errMsg = err.Message + "--Web.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format : ClassFullName,AssemblyName) ";
                                 Error.Throw(errMsg);
                             }
                         }
