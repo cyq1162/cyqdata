@@ -766,3 +766,4 @@
 550：AppConfig：开放AssemblyPath属性，同时对GetApp方法进行优化。(2019-03-20)
 551：JsonHelper：增加当实体类没有Property时，则处理Field属性。(2019-03-20)
 552：XHtmlAction：增强语法，${xxx} 可以从页面参数取值替换、${xxx:这里可以写默认值}。(2019-03-21)
+553：MDataColumn：修正RemoveRange方法。(2019-03-26)

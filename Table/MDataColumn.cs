@@ -508,7 +508,7 @@ namespace CYQ.Data.Table
         {
             for (int i = index; i < index + count; i++)
             {
-                RemoveAt(i);
+                RemoveAt(index);//每次删除都移动索引，所以连续删除N次即可。
             }
         }
         public void RemoveAt(int index)
