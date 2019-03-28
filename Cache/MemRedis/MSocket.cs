@@ -6,11 +6,17 @@ using System.Text;
 
 namespace CYQ.Data.Cache
 {
+    /// <summary>
+    /// µ×²ãCache Socket
+    /// </summary>
     internal class MSocket : IDisposable
     {
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
 
         private SocketPool socketPool;
+        /// <summary>
+        /// ¹ÒÔØµÄSocket³Ø¡£
+        /// </summary>
         public SocketPool SocketPool
         {
             get

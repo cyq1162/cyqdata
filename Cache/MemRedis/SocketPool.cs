@@ -33,7 +33,6 @@ namespace CYQ.Data.Cache
     /// The SocketPool encapsulates the list of PooledSockets against one specific host, and contains methods for 
     /// acquiring or returning PooledSockets.
     /// </summary>
-    [DebuggerDisplay("[ Host: {Host} ]")]
     internal class SocketPool
     {
 

@@ -491,7 +491,7 @@ namespace CYQ.Data
                     {
                         case DalType.MsSql:
                         case DalType.Sybase:
-                        case CYQ.Data.DalType.PostgreSQL:
+                        case DalType.PostgreSQL:
                             ID = dalHelper.ExeScalar(sqlCommandText, false);
                             if (ID == null && AllowInsertID && dalHelper.recordsAffected > -2)
                             {
