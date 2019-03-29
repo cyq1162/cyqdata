@@ -769,3 +769,4 @@
 553：MDataColumn：修正RemoveRange方法。(2019-03-26)
 554：Redis、MemCache：重写分布式缓存，支持高并发和高可用（升级功能较大）(2019-03-29)
 555：IOHelper：增加文件读或保存时的三次重试机制，并修正一个重载的默认参数错误问题。(2019-03-29)
+556：JsonHelper：修复ToEntity<object[]>(json) 的转化问题。(2019-03-29)

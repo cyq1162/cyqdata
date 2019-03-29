@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Text;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace System.Configuration
 {
@@ -28,36 +29,8 @@ namespace System.Configuration
             AppConfig.IsAspNetCore = true;
             ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
             string filePath = AppConfig.RunPath + "appsettings.json";
-            if (System.IO.File.Exists(filePath))
-            {
-                appSettingJson = IOHelper.ReadAllText(filePath);
-                if (!string.IsNullOrEmpty(appSettingJson))
-                {
-                    int index = appSettingJson.LastIndexOf("/*");
-                    if (index > -1)//去掉注释
-                    {
-                        appSettingJson = Regex.Replace(appSettingJson, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
-                    }
-                    char splitChar = '\n';
-                    if (appSettingJson.IndexOf(splitChar) > -1)
-                    {
-                        string[] items = appSettingJson.Split(splitChar);
-                        StringBuilder sb = new StringBuilder();
-                        foreach (string item in items)
-                        {
-                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
-                            {
-                                sb.Append(item.Trim(' ', '\r'));
-                            }
-                        }
-                        appSettingJson = sb.ToString();
-                    }
-                    if (appSettingJson.IndexOf("\\\\") > -1)
-                    {
-                        appSettingJson = appSettingJson.Replace("\\\\", "\\");
-                    }
-                }
-            }
+            appSettingJson = ReadJson(filePath);
+            InitAddtionalConfigFiles();//加载额外的附加配置。
         }
         private static NameValueCollection _AppSettings;
         public static NameValueCollection AppSettings
@@ -112,7 +85,79 @@ namespace System.Configuration
                 return _ConnectionStrings;
             }
         }
-
-        public static object GetSection(string key) { return null; }
+        private static void InitAddtionalConfigFiles()
+        {
+            string config = Convert.ToString(GetSection("AddtionalConfigFiles"));//里面可以是一个数组，指向多个配置文件
+            if (!string.IsNullOrEmpty(config))
+            {
+                string[] items = JsonHelper.ToEntity<string[]>(config);
+                if (items != null && items.Length > 0)
+                {
+                    foreach (string item in items)
+                    {
+                        string json = ReadJson(AppConfig.RunPath + item);
+                        if (string.IsNullOrEmpty(json))
+                        {
+                            continue;
+                        }
+                        Dictionary<string, string> dic = JsonHelper.Split(json);
+                        if (dic != null && dic.Count > 0)
+                        {
+                            foreach (KeyValuePair<string, string> keyValue in dic)
+                            {
+                                AppConfig.SetApp(keyValue.Key, keyValue.Value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 获得其它节点的值(字符串)。
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static object GetSection(string key)
+        {
+            ////EscapeOp.Default 参数若不设置，会造成死循环
+            return JsonHelper.GetValue(appSettingJson, key, EscapeOp.Default);
+        }
+        private static string ReadJson(string filePath)
+        {
+            string appSettingJson = string.Empty;
+            if (System.IO.File.Exists(filePath))
+            {
+                #region Read from path
+                appSettingJson = IOHelper.ReadAllText(filePath);
+                if (!string.IsNullOrEmpty(appSettingJson))
+                {
+                    int index = appSettingJson.LastIndexOf("/*");
+                    if (index > -1)//去掉注释
+                    {
+                        appSettingJson = Regex.Replace(appSettingJson, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
+                    }
+                    char splitChar = '\n';
+                    if (appSettingJson.IndexOf(splitChar) > -1)
+                    {
+                        string[] items = appSettingJson.Split(splitChar);
+                        StringBuilder sb = new StringBuilder();
+                        foreach (string item in items)
+                        {
+                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
+                            {
+                                sb.Append(item.Trim(' ', '\r'));
+                            }
+                        }
+                        appSettingJson = sb.ToString();
+                    }
+                    if (appSettingJson.IndexOf("\\\\") > -1)
+                    {
+                        appSettingJson = appSettingJson.Replace("\\\\", "\\");
+                    }
+                }
+                #endregion
+            }
+            return appSettingJson;
+        }
     }
 }

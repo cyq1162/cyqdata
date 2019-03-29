@@ -1383,30 +1383,46 @@ namespace CYQ.Data.Table
                 return;
             }
             Type propType = p != null ? p.PropertyType : f.FieldType;
-            object objValue = null;
+            object objValue = GetObj(propType, cell.Value);
+
+            if (p != null)
+            {
+                p.SetValue(obj, objValue, null);
+            }
+            else
+            {
+                f.SetValue(obj, objValue);
+            }
+        }
+
+        internal object GetObj(Type toType, object objValue)
+        {
+            Type propType = toType;
+            string value = Convert.ToString(objValue);
+            object returnObj = null;
             SysType sysType = StaticTool.GetSystemType(ref propType);
             switch (sysType)
             {
                 case SysType.Enum:
-                    objValue = Enum.Parse(propType, cell.ToString());
+                    returnObj = Enum.Parse(propType, value);
                     break;
                 case SysType.Base:
                     #region 基础类型处理
                     if (propType.Name == "String")
                     {
                         //去掉转义符号
-                        if (cell.StringValue.IndexOf("\\\"") > -1)
+                        if (value.IndexOf("\\\"") > -1)
                         {
-                            objValue = cell.StringValue.Replace("\\\"", "\"");
+                            returnObj = value.Replace("\\\"", "\"");
                         }
                         else
                         {
-                            objValue = cell.StringValue;
+                            returnObj = value;
                         }
                     }
                     else
                     {
-                        objValue = StaticTool.ChangeType(cell.Value, p.PropertyType);
+                        returnObj = StaticTool.ChangeType(value, propType);
                     }
                     #endregion
                     break;
@@ -1414,9 +1430,9 @@ namespace CYQ.Data.Table
                 case SysType.Collection:
                 case SysType.Generic:
                     #region 数组处理
-                    if (cell.Value.GetType() == propType)
+                    if (objValue.GetType() == propType)
                     {
-                        objValue = cell.Value;
+                        returnObj = objValue;
                     }
                     else
                     {
@@ -1425,23 +1441,39 @@ namespace CYQ.Data.Table
                         if (len == 1) // Table
                         {
 
-                            if (JsonSplit.IsJson(cell.StringValue) && cell.StringValue.Contains(":") && cell.StringValue.Contains("{"))
+                            if (JsonSplit.IsJson(value) && value.Contains(":") && value.Contains("{"))
                             {
-                                #region Json嵌套处理。
-                                MDataTable dt = MDataTable.CreateFrom(cell.StringValue);//, SchemaCreate.GetColumns(argTypes[0])
-                                objValue = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
-                                Type objListType = objValue.GetType();
-                                foreach (MDataRow rowItem in dt.Rows)
+                                #region Json 嵌套处理，复杂数组处理。
+                                MDataTable dt = MDataTable.CreateFrom(value);//, SchemaCreate.GetColumns(argTypes[0])
+                                returnObj = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
+                                Type objListType = returnObj.GetType();
+                                bool isArray = sysType == SysType.Array;
+                                for (int i = 0; i < dt.Rows.Count; i++)
                                 {
+                                    MDataRow rowItem = dt.Rows[i];
                                     object o = GetValue(rowItem, argTypes[0]);
-                                    MethodInfo method = objListType.GetMethod("Add");
-                                    if (method == null)
+                                    MethodInfo method;
+                                    if (isArray)
                                     {
-                                        method = objListType.GetMethod("Push");
+                                        Type objType = propType.Assembly.GetType(propType.FullName.Replace("[]", ""));
+                                        Object item = rowItem.ToEntity(objType);
+                                        method = objListType.GetMethod("Set");
+                                        if (method != null)
+                                        {
+                                            method.Invoke(returnObj, new object[] { i, item });
+                                        }
                                     }
-                                    if (method != null)
+                                    else
                                     {
-                                        method.Invoke(objValue, new object[] { o });
+                                        method = objListType.GetMethod("Add");
+                                        if (method == null)
+                                        {
+                                            method = objListType.GetMethod("Push");
+                                        }
+                                        if (method != null)
+                                        {
+                                            method.Invoke(returnObj, new object[] { o });
+                                        }
                                     }
                                 }
                                 dt = null;
@@ -1449,11 +1481,11 @@ namespace CYQ.Data.Table
                             }
                             else
                             {
-                                #region 数组处理
-                                List<string> items = JsonSplit.SplitEscapeArray(cell.StringValue);//内部去掉转义符号
-                                if (items == null) { return; }
-                                objValue = Activator.CreateInstance(propType, items.Count);//创建实例
-                                Type objListType = objValue.GetType();
+                                #region 单纯的基础类型数组处理["xxx","xxx2","xx3"]
+                                List<string> items = JsonSplit.SplitEscapeArray(value);//内部去掉转义符号
+                                if (items == null) { return null; }
+                                returnObj = Activator.CreateInstance(propType, items.Count);//创建实例
+                                Type objListType = returnObj.GetType();
                                 bool isArray = sysType == SysType.Array;
                                 for (int i = 0; i < items.Count; i++)
                                 {
@@ -1464,7 +1496,7 @@ namespace CYQ.Data.Table
                                         method = objListType.GetMethod("Set");
                                         if (method != null)
                                         {
-                                            method.Invoke(objValue, new object[] { i, item });
+                                            method.Invoke(returnObj, new object[] { i, item });
                                         }
                                     }
                                     else
@@ -1477,7 +1509,7 @@ namespace CYQ.Data.Table
                                         }
                                         if (method != null)
                                         {
-                                            method.Invoke(objValue, new object[] { item });
+                                            method.Invoke(returnObj, new object[] { item });
                                         }
                                     }
                                 }
@@ -1486,12 +1518,12 @@ namespace CYQ.Data.Table
                         }
                         else if (len == 2) // row
                         {
-                            MDataRow mRow = MDataRow.CreateFrom(cell.Value, argTypes[1]);
-                            objValue = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
+                            MDataRow mRow = MDataRow.CreateFrom(value, argTypes[1]);
+                            returnObj = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
                             foreach (MDataCell mCell in mRow)
                             {
                                 object mObj = GetValue(mCell.ToRow(), argTypes[1]);
-                                objValue.GetType().GetMethod("Add").Invoke(objValue, new object[] { mCell.ColumnName, mObj });
+                                returnObj.GetType().GetMethod("Add").Invoke(returnObj, new object[] { mCell.ColumnName, mObj });
                             }
                             mRow = null;
                         }
@@ -1500,21 +1532,14 @@ namespace CYQ.Data.Table
                     break;
                 case SysType.Custom://继续递归
                     MDataRow mr = new MDataRow(TableSchema.GetColumns(propType));
-                    mr.LoadFrom(cell.ToString());
-                    objValue = Activator.CreateInstance(propType);
-                    SetToEntity(ref objValue, mr);
+                    mr.LoadFrom(value);
+                    returnObj = Activator.CreateInstance(propType);
+                    SetToEntity(ref returnObj, mr);
                     mr = null;
                     break;
 
             }
-            if (p != null)
-            {
-                p.SetValue(obj, objValue, null);
-            }
-            else
-            {
-                f.SetValue(obj, objValue);
-            }
+            return returnObj;
         }
     }
 

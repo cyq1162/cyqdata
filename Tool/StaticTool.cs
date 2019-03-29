@@ -139,7 +139,7 @@ namespace CYQ.Data.Tool
             return GetArgumentLength(ref t, out argTypes);
         }
         /// <summary>
-        /// 获取泛型的参数长度（非泛型按默认方法计算）
+        /// 获取泛型的参数长度，同时类型修改为普通类型（非泛型按默认方法计算）
         /// </summary>
         public static int GetArgumentLength(ref Type t, out Type[] argTypes)
         {
@@ -211,6 +211,10 @@ namespace CYQ.Data.Tool
             if (t.IsEnum)
             {
                 return SysType.Enum;
+            }
+            if (t.FullName.EndsWith("[]"))
+            {
+                return SysType.Array;
             }
             if (t.FullName.StartsWith("System.")) // 系统类型
             {

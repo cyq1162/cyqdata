@@ -1169,6 +1169,7 @@ namespace CYQ.Data.Tool
             if (t.FullName.StartsWith("System.Collections."))
             {
                 Dictionary<string, string> dic = Split(json);
+                #region Dictionary
                 if (t.FullName.Contains("Dictionary"))
                 {
                     Type[] ts;
@@ -1201,7 +1202,16 @@ namespace CYQ.Data.Tool
                     }
                     return objT;
                 }
+                #endregion
 
+            }
+            else if (t.FullName.EndsWith("[]"))
+            {
+                Object o = new MDataRow().GetObj(t, json);
+                if (o != null)
+                {
+                    return (T)o;
+                }
             }
             return default(T);
         }
@@ -1217,7 +1227,7 @@ namespace CYQ.Data.Tool
         public static T ToEntity<T>(string json, EscapeOp op) where T : class
         {
             Type t = typeof(T);
-            if (t.FullName.StartsWith("System.Collections."))
+            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]"))
             {
                 return ToIEnumerator<T>(json, op);
             }
