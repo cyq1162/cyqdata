@@ -19,44 +19,50 @@ namespace CYQ.Data.Cache
             {
                 Error.Throw("AppConfig.Cache.RedisServers cant' be Empty!");
             }
-            client = RedisClient.Setup("RedisCache", AppConfig.Cache.RedisServers.Split(','));
+            client = RedisClient.Create(AppConfig.Cache.RedisServers);
+            if (client.hostServer.HostList.Count == 0)
+            {
+                Error.Throw("AppConfig.Cache.RedisServers can't find the host for service : " + AppConfig.Cache.RedisServers);
+            }
             if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServersBak))
             {
-                RedisClient clientBak = RedisClient.Setup("RedisCacheBak", AppConfig.Cache.RedisServersBak.Split(','));
-                client.serverPool.serverPoolBak = clientBak.serverPool;
+                RedisClient clientBak = RedisClient.Create(AppConfig.Cache.RedisServersBak);
+                client.hostServer.hostServerBak = clientBak.hostServer;
             }
 
 
         }
-        public override void Set(string key, object value)
+        public override bool Set(string key, object value)
         {
-            Set(key, value, 60 * 24 * 30);
+            return Set(key, value, 60 * 24 * 30);
         }
 
-        public override void Set(string key, object value, double cacheMinutes)
+        public override bool Set(string key, object value, double cacheMinutes)
         {
-            Set(key, value, cacheMinutes, null);
+            return Set(key, value, cacheMinutes, null);
         }
 
-        public override void Set(string key, object value, double cacheMinutes, string fileName)
+        public override bool Set(string key, object value, double cacheMinutes, string fileName)
         {
-            client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
+            return client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
 
         DateTime allowCacheTableTime = DateTime.Now;
-        private MDataTable cacheTable = null;
+        private MDataTable cacheInfoTable = null;
         public override MDataTable CacheInfo
         {
             get
             {
-                if (cacheTable == null || DateTime.Now > allowCacheTableTime)
+
+                if (cacheInfoTable == null || cacheInfoTable.Columns.Count == 0 || DateTime.Now > allowCacheTableTime)
                 {
-                    cacheTable = null;
-                    cacheTable = new MDataTable();
+
+                    MDataTable cacheTable = new MDataTable();
+
+                    #region Create Table
                     Dictionary<string, Dictionary<string, string>> status = client.Stats();
                     if (status != null)
                     {
-
                         foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
                         {
                             if (item.Value.Count > 0)
@@ -76,9 +82,13 @@ namespace CYQ.Data.Cache
                         }
                     }
                     cacheTable.TableName = "Redis";
-                    allowCacheTableTime = DateTime.Now.AddMinutes(1);
+                    allowCacheTableTime = DateTime.Now.AddSeconds(5);
+                    #endregion
+
+                    cacheInfoTable = cacheTable;
+
                 }
-                return cacheTable;
+                return cacheInfoTable;
             }
         }
 
@@ -94,22 +104,34 @@ namespace CYQ.Data.Cache
 
         //int count = -1;
         //DateTime allowGetCountTime = DateTime.Now;
+        private static object o = new object();
         public override int Count
         {
             get
             {
+
                 int count = 0;
-                IList<MDataRow> rows = CacheInfo.FindAll("Key like 'db%'");
-                if (rows != null && rows.Count > 0)
+                if (CacheInfo != null && CacheInfo.Columns.Count > 0)
                 {
-                    foreach (MDataRow row in rows)
+                    lock (o)
                     {
-                        for (int i = 1; i < row.Columns.Count; i++)
+                        if (CacheInfo.Columns.Contains("Key"))
                         {
-                            count += int.Parse(row[i].StringValue.Split(',')[0].Split('=')[1]);
+                            IList<MDataRow> rows = CacheInfo.FindAll("Key like 'db%'");
+                            if (rows != null && rows.Count > 0)
+                            {
+                                foreach (MDataRow row in rows)
+                                {
+                                    for (int i = 1; i < row.Columns.Count; i++)
+                                    {
+                                        if (row[i].IsNullOrEmpty) { continue; }
+                                        count += int.Parse(row[i].StringValue.Split(',')[0].Split('=')[1]);
+                                    }
+                                }
+
+                            }
                         }
                     }
-
                 }
                 return count;
             }
@@ -121,37 +143,17 @@ namespace CYQ.Data.Cache
         }
 
 
-        public override void Remove(string key)
+        public override bool Remove(string key)
         {
-            client.Delete(key);
+            return client.Delete(key);
         }
 
 
-        DateTime allowGetWorkInfoTime = DateTime.Now;
-        string workInfo = string.Empty;
         public override string WorkInfo
         {
             get
             {
-                if (workInfo == string.Empty || DateTime.Now > allowGetWorkInfoTime)
-                {
-                    workInfo = null;
-                    Dictionary<string, Dictionary<string, string>> status = client.Status();
-                    if (status != null)
-                    {
-                        JsonHelper js = new JsonHelper(false, false);
-                        js.Add("OKServerCount", client.okServer.ToString());
-                        js.Add("DeadServerCount", client.errorServer.ToString());
-                        foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
-                        {
-                            js.Add(item.Key, JsonHelper.ToJson(item.Value));
-                        }
-                        js.AddBr();
-                        workInfo = js.ToString();
-                    }
-                    allowGetWorkInfoTime = DateTime.Now.AddMinutes(5);
-                }
-                return workInfo;
+                return client.WorkInfo;
             }
         }
 

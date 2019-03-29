@@ -35,77 +35,119 @@ redis允许客户端以TCP方式连接，默认6379端口。传输数据都以\r
     internal class RedisCommand : IDisposable
     {
         MSocket socket;
+        //public RedisCommand(MSocket socket)
+        //{
+
+        //}
+        List<byte> command = new List<byte>();
+        public RedisCommand(MSocket socket)
+        {
+            this.socket = socket;
+            socket.Reset();
+        }
         public RedisCommand(MSocket socket, int commandCount, string command)
         {
             this.socket = socket;
+            this.socket.Reset();
             //Write(string.Format("*{0}\r\n", commandCount));
             //WriteKey(command);
 
             //听说redis verstion 2.8 不支持参数分开发送，所以打包一起发送。
-            StringBuilder sb=new StringBuilder();
-            sb.AppendFormat("*{0}\r\n",commandCount);
-            sb.AppendFormat("${0}\r\n", Encoding.UTF8.GetBytes(command).Length);
-            sb.Append(command);
-            sb.Append("\r\n");
-            Write(sb.ToString());
+            string cmd = string.Format("*{0}\r\n${1}\r\n{2}\r\n", commandCount, Encoding.UTF8.GetBytes(command).Length, command);
+            Add(cmd);
 
         }
-        private void Write(string cmd)
-        {
-            WriteData(Encoding.UTF8.GetBytes(cmd));
-        }
-        private void WriteHeader(int bodyLen)
-        {
-            Write("$" + bodyLen + "\r\n");
-        }
-        public void WriteKey(string cmd)
-        {
-            byte[] data = Encoding.UTF8.GetBytes(cmd);
 
-            WriteHeader(data.Length);
+        //private void WriteHeader(int bodyLen)
+        //{
+        //    Send("$" + bodyLen + "\r\n");
+        //}
+        public void AddKey(string key)
+        {
+            string cmd = string.Format("${0}\r\n{1}\r\n", Encoding.UTF8.GetBytes(key).Length, key);
+            Add(cmd);
+            //byte[] data = Encoding.UTF8.GetBytes(cmd);
 
-            WriteData(data);
-            Write("\r\n");
+            //WriteHeader(data.Length);
+
+            //WriteData(data);
+            //Write("\r\n");
         }
-        public void WriteValue(string value)
+        //public void WriteValue(string value)
+        //{
+        //    WriteKey(value);
+        //}
+        //public void WriteValue(byte[] data1)
+        //{
+        //    WriteValue(data1, null);
+        //}
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="data1"></param>
+        /// <param name="data2"></param>
+        public void AddValue(byte[] dataType, byte[] dataValue)
         {
-            WriteKey(value);
-        }
-        public void WriteValue(byte[] data1)
-        {
-            WriteValue(data1, null);
-        }
-        public void WriteValue(byte[] data1, byte[] data2)
-        {
-            int len = data1.Length;
-            if (data2 != null)
+            int len = dataType.Length;
+            if (dataValue != null)
             {
-                len += data2.Length;
+                len += dataValue.Length;
             }
-            WriteHeader(len);
-            WriteData(data1);
-            if (data2 != null)
+
+            List<byte> bytes = new List<byte>();
+
+            bytes.AddRange(Encoding.UTF8.GetBytes(string.Format("${0}\r\n", len)));
+            bytes.AddRange(dataType);
+            if (dataValue != null)
             {
-                WriteData(data2);
+                bytes.AddRange(dataValue);
             }
-            Write("\r\n");
+            bytes.AddRange(Encoding.UTF8.GetBytes("\r\n"));
+            Add(bytes.ToArray());
+
+            //WriteHeader(len);
+            //Send(data1);
+            //if (data2 != null)
+            //{
+            //    Send(data2);
+            //}
+            //Send("\r\n");
         }
-        private void WriteData(byte[] cmd)
-        {
-            socket.Write(cmd);
-        }
+
 
 
 
         public void Reset(int commandCount, string command)
         {
-            Write(string.Format("*{0}\r\n", commandCount));
-            WriteKey(command);
+            string cmd = string.Format("*{0}\r\n${1}\r\n{2}\r\n", commandCount, Encoding.UTF8.GetBytes(command).Length, command);
+            Add(cmd);
+            //Write(string.Format("*{0}\r\n", commandCount));
+            //WriteKey(command);
         }
 
+        #region 送到Socket 发送
+        private void Add(string cmd)
+        {
+            Add(Encoding.UTF8.GetBytes(cmd));
+        }
+        private void Add(byte[] cmd)
+        {
+            command.AddRange(cmd);
+            //socket.Write(cmd);
+        }
+        #endregion
+
+        public void Send()
+        {
+            if (command.Count > 0)
+            {
+                socket.Write(command.ToArray());
+                command.Clear();
+            }
+        }
         public void Dispose()
         {
-
+            Send();
         }
 
 

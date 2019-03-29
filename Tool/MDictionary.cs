@@ -66,17 +66,17 @@ namespace CYQ.Data.Tool
                 }
             }
         }
-        public new void Remove(K key)
+        public new bool Remove(K key)
         {
-            Remove(key, 1);
+            return Remove(key, 1);
         }
-        private void Remove(K key, int times)
+        private bool Remove(K key, int times)
         {
             try
             {
                 lock (lockObj)
                 {
-                    base.Remove(key);
+                    return base.Remove(key);
                 }
             }
             catch (Exception err)
@@ -86,15 +86,16 @@ namespace CYQ.Data.Tool
                     if (times > 3)
                     {
                         Log.WriteLogToTxt(err);
-                        return;
+                        return false;
                     }
                     else if (times > 2)
                     {
                         System.Threading.Thread.Sleep(10);
                     }
                     times++;
-                    Remove(key, times);
+                    return Remove(key, times);
                 }
+                return false;
             }
         }
         /// <summary>
@@ -127,7 +128,7 @@ namespace CYQ.Data.Tool
         public V this[int index]
         {
             get
-            { 
+            {
                 if (index >= 0 && index < this.Count)
                 {
                     lock (lockObj)
@@ -228,7 +229,7 @@ namespace CYQ.Data.Tool
         protected MDictionary(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            
+
         }
     }
 }

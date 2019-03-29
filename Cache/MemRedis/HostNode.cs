@@ -1,25 +1,3 @@
-//Copyright (c) 2007-2008 Henrik Schr鰀er, Oliver Kofoed Pedersen
-
-//Permission is hereby granted, free of charge, to any person
-//obtaining a copy of this software and associated documentation
-//files (the "Software"), to deal in the Software without
-//restriction, including without limitation the rights to use,
-//copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the
-//Software is furnished to do so, subject to the following
-//conditions:
-
-//The above copyright notice and this permission notice shall be
-//included in all copies or substantial portions of the Software.
-
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-//EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-//OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-//NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-//HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-//WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-//FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-//OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
@@ -33,27 +11,56 @@ namespace CYQ.Data.Cache
     /// The SocketPool encapsulates the list of PooledSockets against one specific host, and contains methods for 
     /// acquiring or returning PooledSockets.
     /// </summary>
-    internal class SocketPool
+    internal class HostNode : IDisposable
     {
 
         //用于验证权限的委托事件。
         internal delegate bool OnAfterSocketCreateDelegate(MSocket socket);
         internal event OnAfterSocketCreateDelegate OnAfterSocketCreateEvent;
 
-        private static LogAdapter logger = LogAdapter.GetLogger(typeof(SocketPool));
+        private static LogAdapter logger = LogAdapter.GetLogger(typeof(HostNode));
+        #region 可对外的属性
+        //Public variables and properties
+        public readonly string Host;
         /// <summary>
         /// 扩展属性：如果链接后需要验证密码（如Redis可设置密码）
         /// </summary>
-        internal string password;
+        public string Password;
+        //Debug variables and properties
+        public int NewSockets = 0;
+        public int FailedNewSockets = 0;
+        public int ReusedSockets = 0;
+        public int DeadSocketsInPool = 0;
+        public int DeadSocketsOnReturn = 0;
+        public int Acquired = 0;
+        /// <summary>
+        /// 最后的错误信息。
+        /// </summary>
+        public string Error;
+        /// <summary>
+        /// 当前 Socket 池的可用数量。
+        /// </summary>
+        public int Poolsize { get { return socketQueue.Count; } }
+
+        /// <summary>
+        /// 主机节点是不是挂了。
+        /// </summary>
+        public bool IsEndPointDead = false;
+        public DateTime DeadEndPointRetryTime;
+        #endregion
+       
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
-        /// （问题：主SocketPool怎么找到对应的备份？）
         /// </summary>
-        internal SocketPool socketPoolBak;
+        public HostNode HostNodeBak;
         /// <summary>
         /// Socket的挂科时间。
         /// </summary>
         private DateTime socketDeadTime = DateTime.MinValue;
+
+        private int maxQueue = 64;
+        private int minQueue = 2;
+
         /// <summary>
         /// If the host stops responding, we mark it as dead for this amount of seconds, 
         /// and we double this for each consecutive failed retry. If the host comes alive
@@ -61,49 +68,27 @@ namespace CYQ.Data.Cache
         /// </summary>
         private int deadEndPointSecondsUntilRetry = 1;
         private const int maxDeadEndPointSecondsUntilRetry = 60 * 10; //10 minutes
-        private ServerPool owner;
+        private HostServer hostServer;
         private IPEndPoint endPoint;
-        private Queue<MSocket> queue;
+        private Queue<MSocket> socketQueue = new Queue<MSocket>();
 
-        //Debug variables and properties
-        private int newsockets = 0;
-        private int failednewsockets = 0;
-        private int reusedsockets = 0;
-        private int deadsocketsinpool = 0;
-        private int deadsocketsonreturn = 0;
-        private int dirtysocketsonreturn = 0;
-        private int acquired = 0;
-        public int NewSockets { get { return newsockets; } }
-        public int FailedNewSockets { get { return failednewsockets; } }
-        public int ReusedSockets { get { return reusedsockets; } }
-        public int DeadSocketsInPool { get { return deadsocketsinpool; } }
-        public int DeadSocketsOnReturn { get { return deadsocketsonreturn; } }
-        public int DirtySocketsOnReturn { get { return dirtysocketsonreturn; } }
-        public int Acquired { get { return acquired; } }
-        public int Poolsize { get { return queue.Count; } }
-
-        //Public variables and properties
-        public readonly string Host;
-
-        private bool isEndPointDead = false;
-        public bool IsEndPointDead { get { return isEndPointDead; } }
-
-        private DateTime deadEndPointRetryTime;
-        public DateTime DeadEndPointRetryTime { get { return deadEndPointRetryTime; } }
-
-        internal SocketPool(ServerPool owner, string host)
+        internal HostNode(HostServer hostServer, string host)
         {
-            Host = host;
-            this.owner = owner;
-            endPoint = getEndPoint(host);
-            queue = new Queue<MSocket>();
+            this.hostServer = hostServer;
+            string[] items = host.Split('-');
+            Host = items[0].Trim();
+            if (items.Length > 1)
+            {
+                Password = items[1].Trim();
+            }
+            endPoint = GetEndPoint(Host);
         }
 
         /// <summary>
         /// This method parses the given string into an IPEndPoint.
         /// If the string is malformed in some way, or if the host cannot be resolved, this method will throw an exception.
         /// </summary>
-        private static IPEndPoint getEndPoint(string host)
+        private static IPEndPoint GetEndPoint(string host)
         {
             //Parse port, default to 11211.
             int port = 11211;
@@ -119,11 +104,7 @@ namespace CYQ.Data.Cache
 
             //Parse host string.
             IPAddress address;
-            if (IPAddress.TryParse(host, out address))
-            {
-                //host string successfully resolved as an IP address.
-            }
-            else
+            if (!IPAddress.TryParse(host, out address))
             {
                 //See if we can resolve it as a hostname
                 try
@@ -150,37 +131,37 @@ namespace CYQ.Data.Cache
         internal MSocket Acquire()
         {
             //检测当前是否挂科，如果是(15分钟内)，由备份服务器提供服务
-            if (socketDeadTime.AddMinutes(15) >= DateTime.Now && socketPoolBak != null)
+            if (socketDeadTime.AddMinutes(15) >= DateTime.Now && HostNodeBak != null)
             {
-                return socketPoolBak.Acquire();
+                return HostNodeBak.Acquire();
             }
 
             //Do we have free sockets in the pool?
             //if so - return the first working one.
             //if not - create a new one.
-            Interlocked.Increment(ref acquired);
-            lock (queue)
+            Interlocked.Increment(ref Acquired);
+            lock (socketQueue)
             {
-                while (queue.Count > 0)
+                while (socketQueue.Count > 0)
                 {
-                    MSocket socket = queue.Dequeue();
+                    MSocket socket = socketQueue.Dequeue();
                     if (socket != null && socket.IsAlive)
                     {
-                        Interlocked.Increment(ref reusedsockets);
+                        Interlocked.Increment(ref ReusedSockets);
                         return socket;
                     }
-                    Interlocked.Increment(ref deadsocketsinpool);
+                    Interlocked.Increment(ref DeadSocketsInPool);
                 }
             }
 
-            Interlocked.Increment(ref newsockets);
+
             //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
-            if (isEndPointDead)
+            if (IsEndPointDead)
             {
-                if (DateTime.Now > deadEndPointRetryTime)
+                if (DateTime.Now > DeadEndPointRetryTime)
                 {
                     //Retry
-                    isEndPointDead = false;
+                    IsEndPointDead = false;
                 }
                 else
                 {
@@ -192,7 +173,8 @@ namespace CYQ.Data.Cache
             //Try to create a new socket. On failure, mark endpoint as dead and return null.
             try
             {
-                MSocket socket = new MSocket(this, endPoint, owner.SendReceiveTimeout, owner.ConnectTimeout);
+                MSocket socket = new MSocket(this, endPoint);
+                Interlocked.Increment(ref NewSockets);
                 //Reset retry timer on success.
                 //不抛异常，则正常链接。
                 if (OnAfterSocketCreateEvent != null)
@@ -204,12 +186,12 @@ namespace CYQ.Data.Cache
             }
             catch (Exception e)
             {
-                Interlocked.Increment(ref failednewsockets);
+                Interlocked.Increment(ref FailedNewSockets);
                 logger.Error("Error connecting to: " + endPoint.Address, e);
                 //Mark endpoint as dead
-                isEndPointDead = true;
+                IsEndPointDead = true;
                 //Retry in 2 minutes
-                deadEndPointRetryTime = DateTime.Now.AddSeconds(deadEndPointSecondsUntilRetry);
+                DeadEndPointRetryTime = DateTime.Now.AddSeconds(deadEndPointSecondsUntilRetry);
                 if (deadEndPointSecondsUntilRetry < maxDeadEndPointSecondsUntilRetry)
                 {
                     deadEndPointSecondsUntilRetry = deadEndPointSecondsUntilRetry * 2; //Double retry interval until next time
@@ -217,9 +199,9 @@ namespace CYQ.Data.Cache
 
                 socketDeadTime = DateTime.Now;
                 //返回备份的池
-                if (socketPoolBak != null)
+                if (HostNodeBak != null)
                 {
-                    return socketPoolBak.Acquire();
+                    return HostNodeBak.Acquire();
                 }
                 return null;
             }
@@ -237,39 +219,49 @@ namespace CYQ.Data.Cache
         internal void Return(MSocket socket)
         {
             //If the socket is dead, destroy it.
-            if (!socket.IsAlive)
+            if (!socket.IsAlive || hasDisponse)
             {
-                Interlocked.Increment(ref deadsocketsonreturn);
+                Interlocked.Increment(ref DeadSocketsOnReturn);
                 socket.Close();
             }
             else
             {
                 //Clean up socket
-                if (socket.Reset())
-                {
-                    Interlocked.Increment(ref dirtysocketsonreturn);
-                }
-
+                socket.Reset();
                 //Check pool size.
-                if (queue.Count >= owner.MaxPoolSize)
+                if (socketQueue.Count >= maxQueue)
                 {
                     //If the pool is full, destroy the socket.
                     socket.Close();
                 }
-                else if (queue.Count > owner.MinPoolSize && DateTime.Now - socket.Created > owner.SocketRecycleAge)
+                else if (socketQueue.Count > minQueue && socket.CreateTime.AddMinutes(30) < DateTime.Now)
                 {
+                    //socket 服务超过半小时的，也可以休息了，只保留最底个数。
                     //If we have more than the minimum amount of sockets, but less than the max, and the socket is older than the recycle age, we destroy it.
                     socket.Close();
                 }
                 else
                 {
                     //Put the socket back in the pool.
-                    lock (queue)
+                    lock (socketQueue)
                     {
-                        queue.Enqueue(socket);
+                        socketQueue.Enqueue(socket);
                     }
                 }
             }
         }
+
+        #region IDisposable 成员
+        bool hasDisponse = false;
+        public void Dispose()
+        {
+            hasDisponse = true;
+            while (socketQueue.Count > 0)
+            {
+                socketQueue.Dequeue().Close();
+            }
+        }
+
+        #endregion
     }
 }

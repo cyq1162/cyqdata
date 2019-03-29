@@ -91,15 +91,17 @@
     <Compile Include="Aop\IAop.cs" />
     <Compile Include="Cache\LocalCache.cs" />
     <Compile Include="Cache\MemCache.cs" />
+    <Compile Include="Cache\MemRedis\ClientBase.cs" />
     <Compile Include="Cache\MemRedis\HashAlgorithms.cs" />
+    <Compile Include="Cache\MemRedis\HostConfigWatch.cs" />
     <Compile Include="Cache\MemRedis\LogAdapter.cs" />
     <Compile Include="Cache\MemCache\MemcachedClient.cs" />
     <Compile Include="Cache\MemRedis\MSocket.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Cache\MemRedis\Serializer.cs" />
-    <Compile Include="Cache\MemRedis\ServerPool.cs" />
-    <Compile Include="Cache\MemRedis\SocketPool.cs" />
+    <Compile Include="Cache\MemRedis\HostServer.cs" />
+    <Compile Include="Cache\MemRedis\HostNode.cs" />
     <Compile Include="Cache\RedisCache.cs" />
     <Compile Include="Cache\Redis\RedisClient.cs" />
     <Compile Include="Cache\Redis\RedisCommand.cs" />

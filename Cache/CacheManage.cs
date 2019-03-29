@@ -127,9 +127,9 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 设置一个Cache对象
         /// </summary>
-        public abstract void Set(string key, object value);
-        public abstract void Set(string key, object value, double cacheMinutes);
-        public abstract void Set(string key, object value, double cacheMinutes, string fileName);
+        public abstract bool Set(string key, object value);
+        public abstract bool Set(string key, object value, double cacheMinutes);
+        public abstract bool Set(string key, object value, double cacheMinutes, string fileName);
         
         /// <summary>
         /// 清除所有缓存
@@ -169,7 +169,10 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 删除一个Cache对象
         /// </summary>
-        public abstract void Remove(string key);
+        public abstract bool Remove(string key);
+        /// <summary>
+        /// 缓存的工作信息
+        /// </summary>
         public abstract string WorkInfo { get; }
 
     }

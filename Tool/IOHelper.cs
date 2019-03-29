@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using CYQ.Data.Cache;
+using System.Threading;
 namespace CYQ.Data.Tool
 {
     /// <summary>
@@ -10,7 +11,7 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static class IOHelper
     {
-        private static CacheManage cache = CacheManage.Instance;
+        private static CacheManage cache = CacheManage.LocalInstance;
         internal static Encoding DefaultEncoding = Encoding.Default;
 
         private static List<object> tenObj = new List<object>(10);
@@ -57,6 +58,10 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string ReadAllText(string fileName, int cacheMinutes, Encoding encoding)
         {
+            return ReadAllText(fileName, cacheMinutes, encoding, 3);
+        }
+        private static string ReadAllText(string fileName, int cacheMinutes, Encoding encoding, int tryCount)
+        {
             try
             {
                 string key = "IOHelper_" + fileName.GetHashCode();
@@ -72,7 +77,23 @@ namespace CYQ.Data.Tool
                     {
                         return string.Empty;
                     }
-                    buff = File.ReadAllBytes(fileName);
+                    try
+                    {
+                        buff = File.ReadAllBytes(fileName);
+                    }
+                    catch (Exception err)
+                    {
+                        if (tryCount > 0)
+                        {
+                            tryCount--;
+                            Thread.Sleep(500 + (3 - tryCount) * 500);
+                            ReadAllText(fileName, cacheMinutes, encoding, tryCount);
+                        }
+                        else
+                        {
+                            Error.Throw(err.Message);
+                        }
+                    }
                     string result = BytesToText(buff, encoding);
                     if (cacheMinutes > 0)
                     {
@@ -94,15 +115,15 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 读取文件内容，并自动识别编码
         /// </summary>
-        public static string[] ReadLines(string fileName)
+        public static string[] ReadAllLines(string fileName)
         {
-            return ReadLines(fileName, 0, DefaultEncoding);
+            return ReadAllLines(fileName, 0, DefaultEncoding);
         }
-        public static string[] ReadLines(string fileName, int cacheMinutes)
+        public static string[] ReadAllLines(string fileName, int cacheMinutes)
         {
-            return ReadLines(fileName, cacheMinutes, DefaultEncoding);
+            return ReadAllLines(fileName, cacheMinutes, DefaultEncoding);
         }
-        public static string[] ReadLines(string fileName, int cacheMinutes, Encoding encoding)
+        public static string[] ReadAllLines(string fileName, int cacheMinutes, Encoding encoding)
         {
             string result = ReadAllText(fileName, cacheMinutes, encoding);
             if (!string.IsNullOrEmpty(result))
@@ -144,9 +165,13 @@ namespace CYQ.Data.Tool
         }
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError)
         {
-            return Save(fileName, text, true, writeLogOnError, DefaultEncoding);
+            return Save(fileName, text, isAppend, writeLogOnError, DefaultEncoding);
         }
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode)
+        {
+            return Save(fileName, text, isAppend, writeLogOnError, DefaultEncoding, 3);
+        }
+        internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode, int tryCount)
         {
             try
             {
@@ -173,9 +198,25 @@ namespace CYQ.Data.Tool
                 }
                 lock (GetLockObj(fileName.Length))
                 {
-                    using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
+                    try
                     {
-                        writer.Write(text);
+                        using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
+                        {
+                            writer.Write(text);
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        if (tryCount > 0)
+                        {
+                            tryCount--;
+                            Thread.Sleep(500 + (3 - tryCount) * 500);
+                            Save(fileName, text, isAppend, writeLogOnError, encode, tryCount);
+                        }
+                        else
+                        {
+                            Error.Throw(err.Message);
+                        }
                     }
                 }
                 return true;
@@ -232,7 +273,7 @@ namespace CYQ.Data.Tool
         }
         internal static string BytesToText(byte[] buff, Encoding encoding)
         {
-            if (buff.Length == 0) { return ""; }
+            if (buff == null || buff.Length == 0) { return ""; }
             TextEncodingDetect detect = new TextEncodingDetect();
             encoding = detect.GetEncoding(buff, encoding);
             if (detect.hasBom)

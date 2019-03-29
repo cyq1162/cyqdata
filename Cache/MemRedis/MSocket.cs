@@ -9,15 +9,15 @@ namespace CYQ.Data.Cache
     /// <summary>
     /// 底层Cache Socket
     /// </summary>
-    internal class MSocket : IDisposable
+    internal class MSocket
     {
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
 
-        private SocketPool socketPool;
+        private HostNode socketPool;
         /// <summary>
         /// 挂载的Socket池。
         /// </summary>
-        public SocketPool SocketPool
+        public HostNode SocketPool
         {
             get
             {
@@ -26,19 +26,21 @@ namespace CYQ.Data.Cache
         }
         private Socket socket;
         private Stream stream;
-        public readonly DateTime Created;
+        public readonly DateTime CreateTime;
         /// <summary>
         /// 额外扩展的属性（用于Redis）
         /// </summary>
         public uint DB = 0;
-
-        public MSocket(SocketPool socketPool, IPEndPoint endPoint, int sendReceiveTimeout, int connectTimeout)
+        private int sendReceiveTimeout = 5000;
+        private int connectTimeout = 3000;
+        public MSocket(HostNode socketPool, IPEndPoint endPoint)
         {
             this.socketPool = socketPool;
-            Created = DateTime.Now;
+            CreateTime = DateTime.Now;
 
             //Set up the socket.
             socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, true);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendReceiveTimeout);
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, sendReceiveTimeout);
             socket.ReceiveTimeout = sendReceiveTimeout;
@@ -47,7 +49,7 @@ namespace CYQ.Data.Cache
             //socket.SendBufferSize = 1024 * 1024;
 
             //Do not use Nagle's Algorithm
-            socket.NoDelay = true;
+            //socket.NoDelay = true;
 
             //Establish connection asynchronously to enable connect timeout.
             IAsyncResult result = socket.BeginConnect(endPoint, null, null);
@@ -65,30 +67,52 @@ namespace CYQ.Data.Cache
         }
 
         /// <summary>
-        /// Disposing of a PooledSocket object in any way causes it to be returned to its SocketPool.
+        /// 回归 Socket池
         /// </summary>
-        public void Dispose()
+        public void ReturnPool()
         {
-            socketPool.Return(this);
+            if (socketPool != null)
+            {
+                socketPool.Return(this);
+            }
         }
 
         /// <summary>
         /// This method closes the underlying stream and socket.
+        /// 关闭Socket并释放相关资源。
         /// </summary>
         public void Close()
         {
             if (stream != null)
             {
-                try { stream.Close(); }
-                catch (Exception e) { logger.Error("Error closing stream: " + socketPool.Host, e); }
+                try
+                {
+                    stream.Close();
+                }
+                catch (Exception e)
+                {
+                    logger.Error("Error closing stream: " + socketPool.Host, e);
+                }
                 stream = null;
             }
             if (socket != null)
             {
-                try { socket.Shutdown(SocketShutdown.Both); }
-                catch (Exception e) { logger.Error("Error shutting down socket: " + socketPool.Host, e); }
-                try { socket.Close(); }
-                catch (Exception e) { logger.Error("Error closing socket: " + socketPool.Host, e); }
+                //try 
+                //{
+                //    socket.Shutdown(SocketShutdown.SocketShutdown.Both); 
+                //}
+                //catch (Exception e)
+                //{
+                //    logger.Error("Error shutting down socket: " + socketPool.Host, e);
+                //}
+                try
+                {
+                    socket.Close();
+                }
+                catch (Exception e)
+                {
+                    logger.Error("Error closing socket: " + socketPool.Host, e);
+                }
                 socket = null;
             }
         }
@@ -114,8 +138,16 @@ namespace CYQ.Data.Cache
         /// </summary>
         public void Write(byte[] bytes)
         {
-            stream.Write(bytes, 0, bytes.Length);
-            stream.Flush();
+            try
+            {
+                //stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
+                stream.Write(bytes, 0, bytes.Length);
+
+            }
+            catch (Exception e)
+            {
+                logger.Error("Error socket Write : bytes length " + bytes.Length, e);
+            }
         }
         /// <summary>
         /// Reads from the socket until the sequence '\r\n' is encountered, 
@@ -246,7 +278,7 @@ namespace CYQ.Data.Cache
             {
                 if (gotReturn)
                 {
-                    if (b == 10)
+                    if (b == 10)//\n
                     {
                         break;
                     }
@@ -261,6 +293,13 @@ namespace CYQ.Data.Cache
                 }
             }
         }
+        public void SkipToEndOfLine(int cmdCount)
+        {
+            for (int i = 0; i < cmdCount; i++)
+            {
+                SkipToEndOfLine();
+            }
+        }
 
         /// <summary>
         /// Resets this PooledSocket by making sure the incoming buffer of the socket is empty.
@@ -268,13 +307,22 @@ namespace CYQ.Data.Cache
         /// </summary>
         public bool Reset()
         {
-            if (socket.Available > 0)
+            try
             {
-                byte[] b = new byte[socket.Available];
-                Read(b);
+                if (socket.Available > 0)
+                {
+                    byte[] b = new byte[socket.Available];
+                    Read(b);
+
+                }
+                stream.Flush();//清空流靠的是这个
                 return true;
             }
-            return false;
+            catch
+            {
+                return false;
+            }
+
         }
     }
 }

@@ -19,38 +19,42 @@ namespace CYQ.Data.Cache
             {
                 Error.Throw("AppConfig.Cache.MemCacheServers cant' be Empty!");
             }
-            client = MemcachedClient.Setup("MemCache", AppConfig.Cache.MemCacheServers.Split(','));
+            client = MemcachedClient.Create(AppConfig.Cache.MemCacheServers);
+            if (client.hostServer.HostList.Count == 0)
+            {
+                Error.Throw("AppConfig.Cache.MemCacheServers can't find the host for service : " + AppConfig.Cache.MemCacheServers);
+            }
             if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServersBak))
             {
-                MemcachedClient clientBak = MemcachedClient.Setup("MemCacheBak", AppConfig.Cache.MemCacheServersBak.Split(','));
-                client.serverPool.serverPoolBak = clientBak.serverPool;
+                MemcachedClient clientBak = MemcachedClient.Create(AppConfig.Cache.MemCacheServersBak);
+                client.hostServer.hostServerBak = clientBak.hostServer;
             }
 
 
         }
-        public override void Set(string key, object value)
+        public override bool Set(string key, object value)
         {
-            Set(key, value, 60 * 24 * 30);
+            return Set(key, value, 60 * 24 * 30);
         }
-        public override void Set(string key, object value, double cacheMinutes)
+        public override bool Set(string key, object value, double cacheMinutes)
         {
-            Set(key, value, cacheMinutes, null);
+            return Set(key, value, cacheMinutes, null);
         }
-        public override void Set(string key, object value, double cacheMinutes, string fileName)
+        public override bool Set(string key, object value, double cacheMinutes, string fileName)
         {
-            client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            return client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
 
         DateTime allowCacheTableTime = DateTime.Now;
-        private MDataTable cacheTable = null;
+        private MDataTable cacheInfoTable = null;
         public override MDataTable CacheInfo
         {
             get
             {
-                if (cacheTable == null || DateTime.Now > allowCacheTableTime)
+                if (cacheInfoTable == null || DateTime.Now > allowCacheTableTime)
                 {
-                    cacheTable = null;
-                    cacheTable = new MDataTable();
+                    #region Create Table
+                    MDataTable cacheTable = new MDataTable();
                     Dictionary<string, Dictionary<string, string>> status = client.Stats();
                     if (status != null)
                     {
@@ -74,9 +78,12 @@ namespace CYQ.Data.Cache
                         }
                     }
                     cacheTable.TableName = "MemCache";
-                    allowCacheTableTime = DateTime.Now.AddMinutes(1);
+                    allowCacheTableTime = DateTime.Now.AddSeconds(5); 
+                    #endregion
+
+                    cacheInfoTable = cacheTable;
                 }
-                return cacheTable;
+                return cacheInfoTable;
             }
         }
 
@@ -115,37 +122,17 @@ namespace CYQ.Data.Cache
         }
 
 
-        public override void Remove(string key)
+        public override bool Remove(string key)
         {
-            client.Delete(key);
+            return client.Delete(key);
         }
 
-
-        DateTime allowGetWorkInfoTime = DateTime.Now;
-        string workInfo = string.Empty;
         public override string WorkInfo
         {
             get
             {
-                if (workInfo == string.Empty || DateTime.Now > allowGetWorkInfoTime)
-                {
-                    workInfo = null;
-                    Dictionary<string, Dictionary<string, string>> status = client.Status();
-                    if (status != null)
-                    {
-                        JsonHelper js = new JsonHelper(false, false);
-                        js.Add("OKServerCount", client.okServer.ToString());
-                        js.Add("DeadServerCount", client.errorServer.ToString());
-                        foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
-                        {
-                            js.Add(item.Key, JsonHelper.ToJson(item.Value));
-                        }
-                        js.AddBr();
-                        workInfo = js.ToString();
-                    }
-                    allowGetWorkInfoTime = DateTime.Now.AddMinutes(5);
-                }
-                return workInfo;
+                return client.WorkInfo;
+
             }
         }
 
