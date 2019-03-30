@@ -290,7 +290,7 @@ namespace CYQ.Data.Xml
             get
             {
                 BuildRss();
-                return rssDoc.ClearMMS(rssDoc.XmlDoc.OuterXml);
+                return rssDoc.XmlDoc.OuterXml;
             }
         }
 

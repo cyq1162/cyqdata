@@ -771,3 +771,4 @@
 555：IOHelper：增加文件读或保存时的三次重试机制，并修正一个重载的默认参数错误问题。(2019-03-29)
 556：JsonHelper：修复ToEntity<object[]>(json) 的转化问题。(2019-03-30)
 557：NetCore下：appsettings.json 支持指定额外的配置文件，如： {ConnectionStrings:{},AppSettings:{...}, AddtionalConfigFiles:["a.json","b.json"]}(2019-03-30)
+558：XHtmlAction：新增KeyValue属性用于增强替换语法的后端操作，前端增强语法，${'/'+xxx} 可以指定当存在xxx时，附加前缀或后缀，这在动态显示url路径时很有用。(2019-03-30)

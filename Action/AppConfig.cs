@@ -373,7 +373,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("CDataLeft", "<![CDATA[MMS::");
+                    return GetApp("CDataLeft", "<![CDATA[");
                 }
                 set
                 {
@@ -387,7 +387,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("CDataRight", "::MMS]]>");
+                    return GetApp("CDataRight", "]]>");
                 }
                 set
                 {

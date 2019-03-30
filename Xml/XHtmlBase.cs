@@ -34,13 +34,13 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 用于批量赋值（LoadData(MDataRow,pre)方法装载)
         /// </summary>
-        protected Dictionary<string, MDataRow> dicForAutoSetValue;
+        protected List<string> PreList;
         /// <summary>
         /// xml对象
         /// </summary>
         protected XmlDocument _XmlDocument;
         /// <summary>
-        /// 内部XmlDocument对象
+        /// 内部XmlDocument对象（ReadOnly）
         /// </summary>
         public XmlDocument XmlDoc
         {
@@ -63,7 +63,7 @@ namespace CYQ.Data.Xml
         protected string htmlNameSpace = "http://www.w3.org/1999/xhtml";
         internal string PreXml = "preXml";
         /// <summary>
-        /// 加载的Xml文件的完整（路径）名称
+        /// 加载的Xml文件的完整（路径）名称（ReadOnly）
         /// </summary>
         public string FileName
         {
@@ -110,7 +110,7 @@ namespace CYQ.Data.Xml
 
         private double _CacheMinutes = 5;
         /// <summary>
-        /// 缓存分钟数
+        /// 缓存分钟数(ReadOnly)
         /// </summary>
         public double CacheMinutes
         {
@@ -120,7 +120,7 @@ namespace CYQ.Data.Xml
             }
         }
         /// <summary>
-        /// 返回最终格式化后的XHtml内容。
+        /// 返回最终格式化后的XHtml内容（ReadOnly）
         /// </summary>
         public virtual string OutXml
         {
@@ -130,7 +130,7 @@ namespace CYQ.Data.Xml
             }
         }
         /// <summary>
-        /// 加载的Html是否已改变
+        /// 加载的Html是否已改变（ReadOnly）
         /// </summary>
         public bool IsXHtmlChanged
         {
@@ -511,15 +511,6 @@ namespace CYQ.Data.Xml
             text = text.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
             text = text.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
             return text;
-        }
-        /// <summary>
-        /// 替换掉MMS前缀
-        /// </summary>
-        /// <param name="text">对象字符</param>
-        /// <returns></returns>
-        public string ClearMMS(string text)
-        {
-            return text.Replace("MMS::", string.Empty).Replace("::MMS", string.Empty);
         }
         /// <summary>
         /// 过滤XML(十六进制值 0x1D)无效的字符（同时替换&gt;符号）

@@ -218,7 +218,6 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 保留节点,但清除节点所内容/属性
         /// </summary>
-        /// <param name="OldNode"></param>
         public void Clear(XmlNode node)
         {
             node.RemoveAll();
@@ -282,7 +281,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 移除多个属性
         /// </summary>
-        /// <param name="ids"></param>
+        /// <param name="ids">要移除的名称列表</param>
         public void RemoveAttrList(params string[] attrNames)
         {
             XmlNodeList nodeList = null;
@@ -807,6 +806,8 @@ namespace CYQ.Data.Xml
                         }
                     }
                     #endregion
+                    #region 处理XHtml 头前缀、清空CData
+
                     string xml = _XmlDocument.InnerXml.Replace(".dtd\"[]>", ".dtd\">");
                     if (xml.IndexOf(" xmlns=") > -1)
                     {
@@ -818,57 +819,131 @@ namespace CYQ.Data.Xml
                         html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
                     }
                     html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
+                    #endregion
                     if (html.Contains("${")) // 替换自定义标签。
                     {
-                        #region 替换自定义标签
-                        MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                        if (matchs != null && matchs.Count > 0)
-                        {
-                            List<string> keys = new List<string>(matchs.Count);
-                            foreach (Match match in matchs)
-                            {
-                                string value = match.Groups[0].Value;//${txt#name:xx#xx}
-                                if (!keys.Contains(value))
-                                {
-                                    keys.Add(value);
-                                    string[] items = match.Groups[1].Value.Trim().Split(':')[0].Split('#', '-');
-                                    string pre = items.Length > 1 ? items[0] : "";
-                                    string columnName = items.Length > 1 ? items[1] : items[0];//name
-                                    string replaceValue = "";
-                                    if (dicForAutoSetValue != null && dicForAutoSetValue.ContainsKey(pre))
-                                    {
-                                        MDataCell matchCell = dicForAutoSetValue[pre][columnName];
-                                        if (matchCell != null)
-                                        {
-                                            replaceValue = matchCell.ToString();
-                                        }
-                                    }
-                                    if (string.IsNullOrEmpty(replaceValue) && HttpContext.Current != null)
-                                    {
-                                        replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
-                                    }
-                                    if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
-                                    {
-                                        replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
-                                    }
-                                    html = html.Replace(value, replaceValue ?? "");
-                                }
-                            }
-                            keys.Clear();
-                            keys = null;
-                        }
-                        if (dicForAutoSetValue != null)
-                        {
-                            dicForAutoSetValue.Clear();
-                            dicForAutoSetValue = null;
-                        }
-                        matchs = null;
-                        #endregion
+                        html = ReplaceCustomFlag(html, null, null);
                     }
                     return html;
                 }
                 return string.Empty;
             }
+        }
+        private string ReplaceCustomFlag(string html, MDictionary<string, string> values, MDataRow row)
+        {
+            #region 替换自定义标签
+            MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            if (matchs != null && matchs.Count > 0)
+            {
+                List<string> keys = new List<string>(matchs.Count);
+                foreach (Match match in matchs)
+                {
+                    //原始的占位符
+                    string value = match.Groups[0].Value;//${txt#name:xx#xx}，${'aaa'+txt#name:xx#xx+'bbb'}
+                    if (keys.Contains(value))
+                    {
+                        continue;
+                    }
+                    keys.Add(value);
+                    #region 分解占位符
+
+                    //先处理+号 ${'aaa'+txt#name:xx#xx+'bbb'}
+                    string formatter = "", key = "";
+                    foreach (string item in match.Groups[1].Value.Trim().Split('+'))
+                    {
+                        if (item[0] == '"')
+                        {
+                            formatter += item.Trim('"');
+                        }
+                        else if (item[0] == '\'')
+                        {
+                            formatter += item.Trim('\'');
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(key))
+                            {
+                                break;//只允许存在一个key : txt#name:这是描述说明。
+                            }
+                            formatter += "{0}";
+                            key = item.Trim();
+                        }
+                    }
+                    string columnName = key.Split(':')[0];//name
+                    #endregion
+                    string replaceValue = "";
+
+                    #region 获取占位符的值
+                    if (value != null && row != null)
+                    {
+                        replaceValue = GetValueByTable(columnName, key, values, row);
+                    }
+                    if (string.IsNullOrEmpty(replaceValue))
+                    {
+                        replaceValue = GetValueByKeyValue(columnName);
+                    }
+                    if (string.IsNullOrEmpty(replaceValue))
+                    {
+                        replaceValue = GetValueByRequest(columnName, key);
+                    }
+                    #endregion
+
+                    html = html.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
+
+                }
+                keys.Clear();
+                keys = null;
+                matchs = null;
+            }
+
+            #endregion
+            return html;
+        }
+        private string GetValueByKeyValue(string columnName)
+        {
+            //if (PreList != null && PreList.Contains(pre) && _Row != null)
+            //{
+            //    MDataCell matchCell = _Row[columnName];
+            //    if (matchCell != null)
+            //    {
+            //        return matchCell.ToString();
+            //    }
+            //}
+            //处理keyValue替换
+            if (KeyValue.Count > 0 && KeyValue.ContainsKey(columnName))
+            {
+                return KeyValue[columnName];
+            }
+            return string.Empty;
+        }
+        private string GetValueByTable(string columnName, string key, MDictionary<string, string> values, MDataRow row)
+        {
+            if (values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
+            {
+                return values[columnName];
+            }
+            else
+            {
+                MDataCell matchCell = row[columnName];
+                if (matchCell != null)
+                {
+                    return matchCell.ToString();
+                }
+            }
+            return string.Empty;
+        }
+        private string GetValueByRequest(string columnName, string key)
+        {
+            string replaceValue = string.Empty;
+            if (HttpContext.Current != null)
+            {
+                replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
+            }
+            if (string.IsNullOrEmpty(replaceValue) && key.Contains(":"))//如果为空，设置默认的说明。
+            {
+                replaceValue = key.Substring(key.LastIndexOf(':') + 1);
+            }
+            return replaceValue;
         }
         #endregion
     }
@@ -883,10 +958,10 @@ namespace CYQ.Data.Xml
 
 
         #region 加载表格循环方式
+
         /// <summary>
         /// 加载MDataTable的多行数据
         /// </summary>
-        /// <param name="data"></param>
         public void LoadData(object anyObjToTable)
         {
             LoadData(MDataTable.CreateFrom(anyObjToTable));
@@ -1067,49 +1142,50 @@ namespace CYQ.Data.Xml
                         //}
                         if (tempText.Contains("${"))
                         {
-                            #region 处理标签占位符
-                            MatchCollection matchs = Regex.Matches(tempText, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                            if (matchs != null && matchs.Count > 0)
-                            {
-                                MDataCell matchCell = null;
-                                string columnName = null, value = null;
-                                List<string> keys = new List<string>(matchs.Count);
-                                foreach (Match match in matchs)
-                                {
-                                    value = match.Groups[0].Value;
-                                    columnName = match.Groups[1].Value.Split(':')[0].Trim();
-                                    if (!keys.Contains(value))
-                                    {
-                                        keys.Add(value);
-                                        string replaceValue = "";
-                                        if (value.Contains(columnName) && values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
-                                        {
-                                            replaceValue = values[columnName];
-                                        }
-                                        else
-                                        {
-                                            matchCell = _Table.Rows[k][columnName];
-                                            if (matchCell != null)
-                                            {
-                                                replaceValue = matchCell.ToString();
-                                            }
-                                            else if (HttpContext.Current != null && HttpContext.Current.Request[columnName] != null)
-                                            {
-                                                replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
-                                            }
-                                        }
-                                        if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
-                                        {
-                                            replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
-                                        }
-                                        tempText = tempText.Replace(value, replaceValue ?? "");
-                                    }
-                                }
-                                keys.Clear();
-                                keys = null;
-                            }
-                            matchs = null;
-                            #endregion
+                            tempText = ReplaceCustomFlag(tempText, values, _Table.Rows[k]);
+                            //#region 处理标签占位符
+                            //MatchCollection matchs = Regex.Matches(tempText, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                            //if (matchs != null && matchs.Count > 0)
+                            //{
+                            //    MDataCell matchCell = null;
+                            //    string columnName = null, value = null;
+                            //    List<string> keys = new List<string>(matchs.Count);
+                            //    foreach (Match match in matchs)
+                            //    {
+                            //        value = match.Groups[0].Value;
+                            //        columnName = match.Groups[1].Value.Split(':')[0].Trim();
+                            //        if (!keys.Contains(value))
+                            //        {
+                            //            keys.Add(value);
+                            //            string replaceValue = "";
+                            //            if (value.Contains(columnName) && values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
+                            //            {
+                            //                replaceValue = values[columnName];
+                            //            }
+                            //            else
+                            //            {
+                            //                matchCell = _Table.Rows[k][columnName];
+                            //                if (matchCell != null)
+                            //                {
+                            //                    replaceValue = matchCell.ToString();
+                            //                }
+                            //                else if (HttpContext.Current != null && HttpContext.Current.Request[columnName] != null)
+                            //                {
+                            //                    replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
+                            //                }
+                            //            }
+                            //            if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
+                            //            {
+                            //                replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
+                            //            }
+                            //            tempText = tempText.Replace(value, replaceValue ?? "");
+                            //        }
+                            //    }
+                            //    keys.Clear();
+                            //    keys = null;
+                            //}
+                            //matchs = null;
+                            //#endregion
                         }
                         //处理${}语法
                         innerXml.Append(tempText);
@@ -1153,29 +1229,38 @@ namespace CYQ.Data.Xml
 
         #region 加载行数据后操作方式
         /// <summary>
+        /// 用于替换占位符的数据。
+        /// </summary>
+        public MDictionary<string, string> KeyValue = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// 加载MDatarow行数据（CMS替换）
         /// </summary>
-        /// <param name="autoSetValuePre">批量赋值的前缀（如："txt#",或空前缀：""）赋值后，将在获取OutXml属性时处理赋值</param>
-        public void LoadData(object anyObjToRow, string autoSetValuePre)
+        /// <param name="pre">为所有字段名指定前缀（如："a.",或空前缀：""</param>
+        public void LoadData(object anyObjToRow, string pre)
         {
-            LoadData(MDataRow.CreateFrom(anyObjToRow), autoSetValuePre);
+            LoadData(MDataRow.CreateFrom(anyObjToRow), pre);
         }
         /// <summary>
         /// 装载数据行 （一般后续配合SetFor方法使用或CMS替换）
         /// </summary>
-        /// <param name="autoSetValuePre">批量赋值的前缀（如："txt#",或空前缀：""）赋值后，将在获取OutXml属性时处理赋值</param>
-        public void LoadData(MDataRow row, string autoSetValuePre)
+        /// <param name="pre">为所有字段名指定前缀（如："a.",或空前缀：""）</param>
+        public void LoadData(MDataRow row, string pre)
         {
-            if (autoSetValuePre != null)
+            if (pre != null)
             {
-                autoSetValuePre = autoSetValuePre.TrimEnd('#', '-');
-                if (dicForAutoSetValue == null)
+                foreach (MDataCell cell in row)
                 {
-                    dicForAutoSetValue = new Dictionary<string, MDataRow>(6);
-                }
-                if (!dicForAutoSetValue.ContainsKey(autoSetValuePre))
-                {
-                    dicForAutoSetValue.Add(autoSetValuePre, row);
+                    if (cell.IsNullOrEmpty) { continue; }
+                    string cName = pre + cell.ColumnName;
+                    if (KeyValue.ContainsKey(cName))
+                    {
+                        KeyValue[cName] = cell.ToString();
+                    }
+                    else
+                    {
+                        KeyValue.Add(cName, cell.ToString());
+                    }
                 }
             }
             _Row = row;
@@ -1311,6 +1396,14 @@ namespace CYQ.Data.Xml
             return js.ToString();
         }
         #endregion
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            KeyValue.Clear();
+            _Row = null;
+            _Table = null;
+        }
     }
 
 }

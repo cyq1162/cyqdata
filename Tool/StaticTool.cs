@@ -323,6 +323,10 @@ namespace CYQ.Data.Tool
             {
                 return null;
             }
+            if (t.FullName == "System.Type")
+            {
+                return (Type)value;
+            }
             string strValue = Convert.ToString(value);
             if (t.IsGenericType && t.Name.StartsWith("Nullable"))
             {
