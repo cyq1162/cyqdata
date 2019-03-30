@@ -169,7 +169,7 @@ namespace CYQ.Data.Tool
         }
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode)
         {
-            return Save(fileName, text, isAppend, writeLogOnError, DefaultEncoding, 3);
+            return Save(fileName, text, isAppend, writeLogOnError, encode, 3);
         }
         internal static bool Save(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode, int tryCount)
         {

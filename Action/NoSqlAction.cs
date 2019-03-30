@@ -550,7 +550,7 @@ namespace CYQ.Data
                     try
                     {
 
-                        IOHelper.Write(_FileFullName, text);
+                        IOHelper.Write(_FileFullName, text, _DalType == DalType.Txt ? IOHelper.DefaultEncoding : Encoding.UTF8);
                         tryAgainCount = 0;
                         if (_isDeleteAll.Contains(_FileFullName))
                         {

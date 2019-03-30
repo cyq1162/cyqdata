@@ -1442,8 +1442,10 @@ namespace CYQ.Data.Table
                         doc.Load(xmlOrFileName);
                         loadOk = true;
                     }
-                    catch
-                    { }
+                    catch(Exception err)
+                    {
+                        Log.WriteLogToTxt(err);
+                    }
                 }
             }
             else  // xml ×Ö·û´®
@@ -1453,8 +1455,9 @@ namespace CYQ.Data.Table
                     doc.LoadXml(xmlOrFileName);
                     loadOk = true;
                 }
-                catch
+                catch (Exception err)
                 {
+                    Log.WriteLogToTxt(err);
                 }
             }
             if (loadOk)
