@@ -43,7 +43,7 @@ namespace CYQ.Data
             }
             return ass as Assembly;
         }
-        protected override DbProviderFactory GetFactory(string providerName)
+        protected override DbProviderFactory GetFactory()
         {
             object factory = CacheManage.LocalInstance.Get("Postgre_Factory");
             if (factory == null)

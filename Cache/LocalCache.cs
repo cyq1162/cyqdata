@@ -65,7 +65,7 @@ namespace CYQ.Data.Cache
             try
             {
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
-                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(DalCreate.CheckConnIsOk));//主从链接的检测机制。
+                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ConnObject.CheckConnIsOk));//主从链接的检测机制。
                 if (AppConfig.Cache.IsAutoCache)
                 {
                     ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));

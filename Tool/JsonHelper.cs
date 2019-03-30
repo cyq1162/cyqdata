@@ -515,15 +515,18 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static Dictionary<string, string> Split(string json)
         {
-            json = json.Trim();
-            if (json[0] != '{' && json[0] != '[')
+            if (!string.IsNullOrEmpty(json))
             {
-                json = ToJson(json);
-            }
-            List<Dictionary<string, string>> result = JsonSplit.Split(json);
-            if (result != null && result.Count > 0)
-            {
-                return result[0];
+                json = json.Trim();
+                if (json[0] != '{' && json[0] != '[')
+                {
+                    json = ToJson(json);
+                }
+                List<Dictionary<string, string>> result = JsonSplit.Split(json);
+                if (result != null && result.Count > 0)
+                {
+                    return result[0];
+                }
             }
             return null;
         }
@@ -1466,5 +1469,50 @@ namespace CYQ.Data.Tool
             return text;
         }
         #endregion
+    }
+
+    public partial class JsonHelper
+    {
+        /// <summary>
+        /// 读取文本中的Json（并去掉注释）
+        /// </summary>
+        /// <returns></returns>
+        internal static string ReadJson(string filePath)
+        {
+            string json = string.Empty;
+            if (System.IO.File.Exists(filePath))
+            {
+                #region Read from path
+                json = IOHelper.ReadAllText(filePath);
+                if (!string.IsNullOrEmpty(json))
+                {
+                    int index = json.LastIndexOf("/*");
+                    if (index > -1)//去掉注释
+                    {
+                        json = Regex.Replace(json, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
+                    }
+                    char splitChar = '\n';
+                    if (json.IndexOf(splitChar) > -1)
+                    {
+                        string[] items = json.Split(splitChar);
+                        StringBuilder sb = new StringBuilder();
+                        foreach (string item in items)
+                        {
+                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
+                            {
+                                sb.Append(item.Trim(' ', '\r'));
+                            }
+                        }
+                        json = sb.ToString();
+                    }
+                    if (json.IndexOf("\\\\") > -1)
+                    {
+                        json = json.Replace("\\\\", "\\");
+                    }
+                }
+                #endregion
+            }
+            return json;
+        }
     }
 }

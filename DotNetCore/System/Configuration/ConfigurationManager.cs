@@ -29,7 +29,7 @@ namespace System.Configuration
             AppConfig.IsAspNetCore = true;
             ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
             string filePath = AppConfig.RunPath + "appsettings.json";
-            appSettingJson = ReadJson(filePath);
+            appSettingJson = JsonHelper.ReadJson(filePath);
             InitAddtionalConfigFiles();//加载额外的附加配置。
         }
         private static NameValueCollection _AppSettings;
@@ -95,7 +95,7 @@ namespace System.Configuration
                 {
                     foreach (string item in items)
                     {
-                        string json = ReadJson(AppConfig.RunPath + item);
+                        string json = JsonHelper.ReadJson(AppConfig.RunPath + item);
                         if (string.IsNullOrEmpty(json))
                         {
                             continue;
@@ -122,42 +122,6 @@ namespace System.Configuration
             ////EscapeOp.Default 参数若不设置，会造成死循环
             return JsonHelper.GetValue(appSettingJson, key, EscapeOp.Default);
         }
-        private static string ReadJson(string filePath)
-        {
-            string appSettingJson = string.Empty;
-            if (System.IO.File.Exists(filePath))
-            {
-                #region Read from path
-                appSettingJson = IOHelper.ReadAllText(filePath);
-                if (!string.IsNullOrEmpty(appSettingJson))
-                {
-                    int index = appSettingJson.LastIndexOf("/*");
-                    if (index > -1)//去掉注释
-                    {
-                        appSettingJson = Regex.Replace(appSettingJson, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
-                    }
-                    char splitChar = '\n';
-                    if (appSettingJson.IndexOf(splitChar) > -1)
-                    {
-                        string[] items = appSettingJson.Split(splitChar);
-                        StringBuilder sb = new StringBuilder();
-                        foreach (string item in items)
-                        {
-                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
-                            {
-                                sb.Append(item.Trim(' ', '\r'));
-                            }
-                        }
-                        appSettingJson = sb.ToString();
-                    }
-                    if (appSettingJson.IndexOf("\\\\") > -1)
-                    {
-                        appSettingJson = appSettingJson.Replace("\\\\", "\\");
-                    }
-                }
-                #endregion
-            }
-            return appSettingJson;
-        }
+
     }
 }

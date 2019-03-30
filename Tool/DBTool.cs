@@ -45,7 +45,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static DalType GetDalType(string conn)
         {
-            return DalCreate.GetDalTypeByConn(conn);
+            return ConnBean.Create(conn).ConnDalType;
         }
         /// <summary>
         /// 获取指定数据库的数据类型

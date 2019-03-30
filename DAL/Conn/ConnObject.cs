@@ -3,109 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Web;
+using CYQ.Data.Tool;
 
 namespace CYQ.Data
 {
-    internal class ConnBean
+    /// <summary>
+    /// 一个数据库对像实例：集合了主从备三种
+    /// </summary>
+    internal partial class ConnObject
     {
-        /// <summary>
-        /// 对应的ConnectionString的Name
-        /// </summary>
-        internal string ConfigName = string.Empty;
-        /// <summary>
-        /// 链接的状态是否正常。
-        /// </summary>
-        internal bool IsOK = true;
-        /// <summary>
-        /// 是否从库
-        /// </summary>
-        internal bool IsSlave = false;
-        /// <summary>
-        /// 链接错误时的异常消息。
-        /// </summary>
-        internal string ErrorMsg = string.Empty;
-        private string _Conn = string.Empty;
-        /// <summary>
-        /// 数据库链接
-        /// </summary>
-        public string Conn
-        {
-            get { return _Conn; }
-            set { _Conn = value; }
-        }
-        private string _ProviderName;
-        /// <summary>
-        /// 数据类型提供者
-        /// </summary>
-        public string ProviderName
-        {
-            get { return _ProviderName; }
-            set { _ProviderName = value; }
-        }
-        private DalType _ConnDalType;
-        /// <summary>
-        /// 数据库类型
-        /// </summary>
-        public DalType ConnDalType
-        {
-            get { return _ConnDalType; }
-            set { _ConnDalType = value; }
-        }
-        public ConnBean Clone()
-        {
-            ConnBean cb = new ConnBean();
-            cb.Conn = this.Conn;
-            cb.ProviderName = this.ProviderName;
-            cb.ConnDalType = this.ConnDalType;
-            cb.ConfigName = this.ConfigName;
-            cb.IsOK = this.IsOK;
-            return cb;
-        }
-        //public string TryTestConn()
-        //{
-        //    string err;
-        //    return TryTestConn(out err);
-        //}
-        public string TryTestConn()
-        {
-            string version = string.Empty;
-            //err = string.Empty;
-            if (!string.IsNullOrEmpty(Conn))
-            {
-                DbBase helper = DalCreate.CreateDal(Conn);
-                try
-                {
-
-                    helper.Con.Open();
-                    version = helper.Con.ServerVersion;
-                    if (string.IsNullOrEmpty(version)) { version = helper.dalType.ToString(); }
-                    helper.Con.Close();
-                    IsOK = true;
-                    ErrorMsg = string.Empty;
-                }
-                catch (Exception er)
-                {
-                    ErrorMsg = er.Message;
-                    //err = er.Message;
-                    IsOK = false;
-                }
-                finally
-                {
-                    helper.Dispose();
-                }
-            }
-            else
-            {
-                IsOK = false;
-            }
-            return version;
-        }
-    }
-    internal class ConnObject
-    {
-        public ConnBean Master = new ConnBean();
+        public ConnBean Master;
         public ConnBean BackUp;
-        public List<ConnBean> Slave = new List<ConnBean>();
+        public MList<ConnBean> Slave = new MList<ConnBean>();
         internal void InterChange()
         {
             if (BackUp != null)
@@ -115,59 +24,61 @@ namespace CYQ.Data
                 BackUp = middle;
             }
         }
-        static int index = -1, times = 1;
+        static int index = -1;
+        static readonly object o = new object();
         public ConnBean GetSlave()
         {
             if (Slave.Count > 0)
             {
-                if (index == -1)
+                lock (o)
                 {
-                    index = new Random().Next(Slave.Count);
-                }
-                if (times % 3 == 0)
-                {
-                    index++;
-                }
-                times++; if (times == 100000) { times = 1; }
-                if (index == Slave.Count)//2
-                {
-                    index = 0;
-                }
-                ConnBean slaveBean = Slave[index];
-                if (slaveBean.IsOK)//链接正常，则返回。
-                {
-                    return slaveBean;
-                }
-                else if (Slave.Count > 1)
-                {
-                    //int i = index + 1;//尝试一下个，。
-                    for (int i = index + 1; i < Slave.Count + 1; i++)
+                    if (index == -1)
                     {
-                        if (i == Slave.Count)
+                        index = new Random().Next(Slave.Count);
+                    }
+                    if (index >= Slave.Count)//2
+                    {
+                        index = 0;
+                    }
+                    ConnBean slaveBean = Slave[index];
+                    index++;
+                    if (slaveBean.IsOK)//链接正常，则返回。
+                    {
+                        return slaveBean;
+                    }
+                    else if (Slave.Count > 1)
+                    {
+                        //int i = index + 1;//尝试一下个，。
+                        for (int i = index + 1; i < Slave.Count + 1; i++)
                         {
-                            i = 0;
-                        }
-                        if (i == index) { break; }
-                        if (Slave[i].IsOK)
-                        {
-                            return Slave[i];
+                            if (i == Slave.Count)
+                            {
+                                i = 0;
+                            }
+                            if (i == index) { break; }
+                            if (Slave[i].IsOK)
+                            {
+                                return Slave[i];
+                            }
                         }
                     }
-                }
-                //从全部挂了，返回主
-                if (Master != null && Master.IsOK)
-                {
-                    return Master;
-                }
-                else if (BackUp != null && BackUp.IsOK)
-                {
-                    return BackUp;
+                    //从全部挂了，返回主
+                    if (Master != null && Master.IsOK)
+                    {
+                        return Master;
+                    }
+                    else if (BackUp != null && BackUp.IsOK)
+                    {
+                        return BackUp;
+                    }
                 }
             }
             return null;
         }
-
-        public void SetNotAllowSlave()
+        /// <summary>
+        /// 设置临时仅允许访问主库（默认10秒）
+        /// </summary>
+        public void SetFocusOnMaster()
         {
             if (Slave.Count > 0)
             {
@@ -217,107 +128,131 @@ namespace CYQ.Data
             return "MasterSlave_" + id;
         }
     }
-    /*
-    /// <summary>
-    /// 存储链接数据
-    /// </summary>
-    internal class ConnEntity
+
+    internal partial class ConnObject
     {
-        private string _Conn = string.Empty;
+        /// <summary>
+        /// 所有链接的对象集合
+        /// </summary>
+        private static MDictionary<string, ConnObject> connDicCache = new MDictionary<string, ConnObject>(StringComparer.OrdinalIgnoreCase);
 
-        public string Conn
+        internal static ConnObject Create(string connNameOrString)
         {
-            get { return _Conn; }
-            set { _Conn = value; }
+            connNameOrString = string.IsNullOrEmpty(connNameOrString) ? AppConfig.DB.DefaultConn : connNameOrString;
+            if (connNameOrString.EndsWith("_Bak"))
+            {
+                connNameOrString = connNameOrString.Replace("_Bak", "");
+            }
+            if (connDicCache.ContainsKey(connNameOrString))
+            {
+                return connDicCache[connNameOrString];
+            }
+            ConnBean cbMaster = ConnBean.Create(connNameOrString);
+            if (cbMaster == null)
+            {
+                #region 重试读取默认Conn配置
+                string errMsg = string.Format("Can't find the connection key '{0}' from connectionStrings config section !", connNameOrString);
+                if (connNameOrString == AppConfig.DB.DefaultConn)
+                {
+                    Error.Throw(errMsg);
+                }
+                else
+                {
+                    ConnBean cb = ConnBean.Create(AppConfig.DB.DefaultConn); // 这里切到了默认链接，导致ConnName变成了默认
+                    if (cb != null)
+                    {
+                        cbMaster = cb.Clone();//获取默认的值。
+                    }
+                    else
+                    {
+                        Error.Throw(errMsg);
+                    }
+                }
+                #endregion
+            }
+            ConnObject co = new ConnObject();
+            co.Master = cbMaster;
+            #region 加载主从备节点
+            if (connNameOrString != null && connNameOrString.Length < 32 && !connNameOrString.Trim().Contains(" ")) // 为configKey
+            {
+                ConnBean coBak = ConnBean.Create(connNameOrString + "_Bak");
+                if (coBak != null && coBak.ConnDalType == cbMaster.ConnDalType)
+                {
+                    co.BackUp = coBak;
+                }
+                for (int i = 1; i < 10000; i++)
+                {
+                    ConnBean cbSlave = ConnBean.Create(connNameOrString + "_Slave" + i);
+                    if (cbSlave == null)
+                    {
+                        break;
+                    }
+                    cbSlave.IsSlave = true;
+                    co.Slave.Add(cbSlave);
+                }
+            }
+            #endregion
+
+            if (!connDicCache.ContainsKey(connNameOrString) && co.Master.ConnName == connNameOrString) // 非一致的，由外面切换后再缓存
+            {
+                connDicCache.Set(connNameOrString, co);
+            }
+            return co;
         }
-        private string _ProviderName;
-
-        public string ProviderName
+        public void SaveToCache(string key)
         {
-            get { return _ProviderName; }
-            set { _ProviderName = value; }
+            if (!connDicCache.ContainsKey(key))
+            {
+                connDicCache.Add(key, this);
+            }
         }
-        private DalType _ConnDalType;
-
-        public DalType ConnDalType
+        public static void ClearCache(string key)
         {
-            get { return _ConnDalType; }
-            set { _ConnDalType = value; }
-        }
-
-        private string _ConnBak = string.Empty;
-
-        public string ConnBak
-        {
-            get { return _ConnBak; }
-            set { _ConnBak = value; }
-        }
-        private string _ProviderNameBak;
-
-        public string ProviderNameBak
-        {
-            get { return _ProviderNameBak; }
-            set { _ProviderNameBak = value; }
-        }
-
-        private DalType _ConnBakDalType;
-
-        public DalType ConnBakDalType
-        {
-            get { return _ConnBakDalType; }
-            set { _ConnBakDalType = value; }
+            connDicCache.Remove(key);
         }
         /// <summary>
-        /// 互换主从链接
+        /// 定时检测异常的链接是否恢复。
         /// </summary>
-        /// <returns></returns>
-        public bool ExchangeConn()
+        /// <param name="threadID"></param>
+        public static void CheckConnIsOk(object threadID)
         {
-            if (!string.IsNullOrEmpty(_ConnBak))
+            while (true)
             {
-                string temp = _Conn;
-                _Conn = _ConnBak;
-                _ConnBak = temp;
+                Thread.Sleep(3000);
+                if (connDicCache.Count > 0)
+                {
+                    try
+                    {
+                        string[] items = new string[connDicCache.Count];
+                        connDicCache.Keys.CopyTo(items, 0);
+                        foreach (string key in items)
+                        {
+                            ConnObject obj = connDicCache[key];
+                            if (obj != null)
+                            {
+                                if (!obj.Master.IsOK) { obj.Master.TryTestConn(); }
+                                if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
+                                if (obj.Slave != null && obj.Slave.Count > 0)
+                                {
+                                    for (int i = 0; i < obj.Slave.Count; i++)
+                                    {
+                                        if (!obj.Slave[i].IsOK)
+                                        {
+                                            obj.Slave[i].TryTestConn();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        items = null;
+                    }
+                    catch
+                    {
 
-                temp = _ProviderName;
-                _ProviderName = _ProviderNameBak;
-                _ProviderNameBak = temp;
+                    }
 
-                DalType tempDal = _ConnDalType;
-                _ConnDalType = _ConnBakDalType;
-                _ConnBakDalType = tempDal;
-
-                return true;
+                }
             }
-            return false;
         }
     }
-
-    //internal class ConnFactory
-    //{
-    //    private static Dictionary<string, ConnEntity> connDic = new Dictionary<string, ConnEntity>(StringComparer.OrdinalIgnoreCase);
-    //    public ConnEntity Get(string connName)
-    //    {
-    //        if (!connDic.ContainsKey(connName))
-    //        {
-    //            foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
-    //            {
-    //                if (!connDic.ContainsKey(item.Name))
-    //                {
-    //                    ConnEntity entity = new ConnEntity();
-    //                    entity.Conn = item.ConnectionString;
-    //                    entity.s
-    //                    connDic.Add(item.Name, entity);
-    //                }
-    //            }
-
-    //        }
-    //        if (connDic.ContainsKey(connName))
-    //        {
-    //            return connDic[connName];
-    //        }
-    //        return null;
-    //    }
-    //}
-     */
 }

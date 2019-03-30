@@ -105,6 +105,8 @@
     <Compile Include="Cache\RedisCache.cs" />
     <Compile Include="Cache\Redis\RedisClient.cs" />
     <Compile Include="Cache\Redis\RedisCommand.cs" />
+    <Compile Include="DAL\Conn\ConnBean.cs" />
+    <Compile Include="DAL\Conn\ConnConfigWatch.cs" />
     <Compile Include="DAL\Conn\ConnObject.cs" />
     <Compile Include="DAL\DalEnum.cs" />
     <Compile Include="DAL\NoSql\NoSqlConnection.cs">

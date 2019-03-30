@@ -216,6 +216,7 @@ namespace CYQ.Data.Tool
 
         public new bool ContainsKey(K key)
         {
+            if (key == null) { return false; }
             lock (lockObj)
             {
                 return base.ContainsKey(key);

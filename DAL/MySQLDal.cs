@@ -37,7 +37,7 @@ namespace CYQ.Data
             }
             return ass as Assembly;
         }
-        protected override DbProviderFactory GetFactory(string providerName)
+        protected override DbProviderFactory GetFactory()
         {
             object factory = _Cache.Get("MySqlClient_Factory");
             if (factory == null)

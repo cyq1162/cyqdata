@@ -17,25 +17,25 @@ namespace CYQ.Data
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
-        /// 设置Web.config或App.config的值。
+        /// 设置Web.config或App.config的值 value为null时移除缓存。
         /// </summary>
-        public static void SetApp(string key, string value)
+        public static bool SetApp(string key, string value)
         {
-            try
+            if (string.IsNullOrEmpty(key)) { return false; }
+            if (value == null)
             {
-                if (appConfigs.ContainsKey(key))
-                {
-                    appConfigs[key] = value;
-                }
-                else
-                {
-                    appConfigs.Add(key, value);
-                }
+                return appConfigs.Remove(key);
             }
-            catch (Exception err)
+            if (appConfigs.ContainsKey(key))
             {
-                CYQ.Data.Log.WriteLogToTxt(err);
+                appConfigs[key] = value;
             }
+            else
+            {
+                appConfigs.Add(key, value);
+            }
+
+            return true;
         }
         /// <summary>
         /// 获取Web.config或App.config的值。
@@ -99,9 +99,8 @@ namespace CYQ.Data
         /// <summary>
         /// 获取Web.config或App.config的connectionStrings节点的值。
         /// </summary>
-        public static string GetConn(string name, out string providerName)
+        public static string GetConn(string name)
         {
-            providerName = string.Empty;
             if (string.IsNullOrEmpty(name))
             {
                 name = "Conn";
@@ -117,23 +116,30 @@ namespace CYQ.Data
             ConnectionStringSettings conn = ConfigurationManager.ConnectionStrings[name];
             if (conn != null)
             {
-                providerName = conn.ProviderName;
-                if (name == conn.ConnectionString)//避免误写自己造成死循环。
+                string connString = conn.ConnectionString;
+                if (name == connString || string.IsNullOrEmpty(connString))//避免误写自己造成死循环。
                 {
                     return name;
                 }
-                name = conn.ConnectionString;
-                if (!string.IsNullOrEmpty(name) && name.Length < 32 && name.Split(' ').Length == 1)
+
+
+                if (connString.EndsWith(".txt") || connString.EndsWith(".ini") || connString.EndsWith(".json"))
                 {
-                    return GetConn(name);
+                    return ConnConfigWatch.Start(name, connString);
                 }
-                if (!connConfigs.ContainsKey(name) && string.IsNullOrEmpty(providerName)) // 如果有providerName，则不存档
+                //启动高可用配置加载方式
+
+                if (connString.Length < 32 && connString.Split(' ').Length == 1)
                 {
-                    connConfigs.Add(name, conn.ConnectionString);
+                    return GetConn(connString);
                 }
-                return conn.ConnectionString;
+                if (!connConfigs.ContainsKey(name))
+                {
+                    connConfigs.Add(name, connString);
+                }
+                return connString;
             }
-            if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况
+            if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况 txt path={0}
             {
                 return name;
             }
@@ -141,20 +147,17 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 获取Web.config或App.config的connectionStrings节点的值。
-        /// </summary>
-        public static string GetConn(string name)
-        {
-            string p;
-            return GetConn(name, out p);
-        }
-        /// <summary>
-        /// 添加自定义链接（内存有效，并未写入config文件）
+        /// 添加自定义链接（内存有效，并未写入config文件） value为null时移除缓存
         /// </summary>
         /// <param name="name">名称</param>
         /// <param name="connectionString">链接字符串</param>
-        public static void SetConn(string name, string connectionString)
+        public static bool SetConn(string name, string connectionString)
         {
+            if (string.IsNullOrEmpty(name)) { return false; }
+            if (connectionString == null)
+            {
+                return connConfigs.Remove(name);
+            }
             if (!connConfigs.ContainsKey(name))
             {
                 connConfigs.Add(name, connectionString);
@@ -163,6 +166,7 @@ namespace CYQ.Data
             {
                 connConfigs[name] = connectionString;
             }
+            return true;
         }
 
         #endregion

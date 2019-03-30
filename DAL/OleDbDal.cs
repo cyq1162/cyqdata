@@ -4,6 +4,7 @@ using System.Text;
 using System.Data.OleDb;
 using System.Data;
 using System.IO;
+using System.Data.Common;
 namespace CYQ.Data
 {
     internal class OleDbDal : DbBase
@@ -56,6 +57,10 @@ namespace CYQ.Data
             }
             Com.Parameters.Add(para);
             return true;
+        }
+        protected override DbProviderFactory GetFactory()
+        {
+            return DbProviderFactories.GetFactory("System.Data.OleDb");
         }
         protected override bool IsExistsDbName(string dbName)
         {

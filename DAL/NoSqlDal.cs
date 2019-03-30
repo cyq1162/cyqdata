@@ -11,7 +11,7 @@ namespace CYQ.Data
         {
 
         }
-        protected override System.Data.Common.DbProviderFactory GetFactory(string providerName)
+        protected override System.Data.Common.DbProviderFactory GetFactory()
         {
             return NoSqlFactory.Instance;
         }

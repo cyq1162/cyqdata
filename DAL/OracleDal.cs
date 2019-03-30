@@ -147,7 +147,7 @@ namespace CYQ.Data
         /// <summary>
         /// 抽象工厂
         /// </summary>
-        protected override DbProviderFactory GetFactory(string providerName)
+        protected override DbProviderFactory GetFactory()
         {
             if (IsUseOdpNet)
             {
@@ -171,7 +171,7 @@ namespace CYQ.Data
             }
             else
             {
-                return base.GetFactory(providerName);
+                return DbProviderFactories.GetFactory("System.Data.OracleClient");
             }
         }
         /// <summary>

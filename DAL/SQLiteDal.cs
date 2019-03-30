@@ -12,7 +12,7 @@ namespace CYQ.Data
         public SQLiteDal(ConnObject co)
             : base(co)
         {
-            base.isUseUnsafeModeOnSqlite = co.Master.Conn.ToLower().Contains("syncpragma=off");
+            base.isUseUnsafeModeOnSqlite = co.Master.ConnString.ToLower().Contains("syncpragma=off");
         }
         protected override bool IsExistsDbName(string dbName)
         {
@@ -38,7 +38,7 @@ namespace CYQ.Data
             {
                 try
                 {
-                    ass = Assembly.Load(providerName);
+                    ass = Assembly.Load("System.Data.SQLite");
                     _Cache.Set("SQLite_Assembly", ass, 10080);
                 }
                 catch (Exception err)
@@ -64,7 +64,7 @@ namespace CYQ.Data
             }
             return ass as Assembly;
         }
-        protected override DbProviderFactory GetFactory(string providerName)
+        protected override DbProviderFactory GetFactory()
         {
             object factory = _Cache.Get("SQLite_Factory");
             if (factory == null)

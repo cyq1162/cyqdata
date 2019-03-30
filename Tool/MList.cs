@@ -146,7 +146,11 @@ namespace CYQ.Data.Tool
         {
             get
             {
-                return list[index];
+                if (index < list.Count)
+                {
+                    return list[index];
+                }
+                return default(T);
             }
         }
     }
