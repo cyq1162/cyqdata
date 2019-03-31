@@ -54,9 +54,9 @@ namespace CYQ.Data
         public bool TryTestConn()
         {
             //err = string.Empty;
-            if (!string.IsNullOrEmpty(ConnString))
+            if (!string.IsNullOrEmpty(ConnName))
             {
-                DbBase helper = DalCreate.CreateDal(ConnString);
+                DbBase helper = DalCreate.CreateDal(ConnName);
                 try
                 {
 
