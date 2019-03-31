@@ -1143,6 +1143,7 @@ namespace CYQ.Data
             #region 配置文件的其它属性
             /// <summary>
             ///毫秒数（这个是在对所有SQL语句的：将所有长时间(ms)的SQL语句写入日志，对应配置项LogPath的路径）
+            /// 此项设置后，即启用（无视OpenDebugInfo是否设置）
             /// </summary>
             public static int SqlFilter
             {
@@ -1158,6 +1159,7 @@ namespace CYQ.Data
 
             /// <summary>
             /// 毫秒数（这个是在AppDebug开启后的：可通过此项设置条件过滤出时间(ms)较长的SQL语句）
+            /// OpenDebugInfo为true，同时 AppDebug.Start() 后，此项才有效。
             /// </summary>
             public static int InfoFilter
             {
