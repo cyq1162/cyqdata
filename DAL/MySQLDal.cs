@@ -23,9 +23,9 @@ namespace CYQ.Data
                 try
                 {
                     ass = Assembly.Load("MySql.Data");
-                    CacheManage.LocalInstance.Set("MySqlClient_Assembly", 10080);
+                    CacheManage.LocalInstance.Set("MySqlClient_Assembly", ass, 10080);
                 }
-                catch(Exception err)
+                catch (Exception err)
                 {
                     string errMsg = err.Message;
                     if (!File.Exists(AppConst.AssemblyPath + "MySql.Data.dll"))
