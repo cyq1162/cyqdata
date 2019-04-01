@@ -223,13 +223,16 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                if (writeLogOnError)
+                if (tryCount == 3) // ±‹√‚À¿—≠ª∑°£
                 {
-                    Log.WriteLogToTxt(err);
-                }
-                else
-                {
-                    Error.Throw("IOHelper.Save() : " + err.Message);
+                    if (writeLogOnError)
+                    {
+                        Log.WriteLogToTxt(err);
+                    }
+                    else
+                    {
+                        Error.Throw("IOHelper.Save() : " + err.Message);
+                    }
                 }
             }
             return false;
