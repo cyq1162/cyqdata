@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Data.SqlClient;
 
 namespace CYQ.Data
 {
@@ -16,6 +17,7 @@ namespace CYQ.Data
         }
         /// <summary>
         /// 对应的ConnectionString的Name
+        /// 或者最原始传进来的链接
         /// </summary>
         public string ConnName = string.Empty;
         /// <summary>
@@ -27,11 +29,15 @@ namespace CYQ.Data
         /// </summary>
         public bool IsSlave = false;
         /// <summary>
+        /// 是否备用库
+        /// </summary>
+        public bool IsBackup = false;
+        /// <summary>
         /// 链接错误时的异常消息。
         /// </summary>
         internal string ErrorMsg = string.Empty;
         /// <summary>
-        /// 数据库链接字符串
+        /// 经过格式化后的数据库链接字符串
         /// </summary>
         public string ConnString = string.Empty;
         /// <summary>
@@ -62,7 +68,7 @@ namespace CYQ.Data
 
                     helper.Con.Open();
                     Version = helper.Con.ServerVersion;
-                    if (string.IsNullOrEmpty(Version)) { Version = helper.dalType.ToString(); }
+                    if (string.IsNullOrEmpty(Version)) { Version = helper.DataBaseType.ToString(); }
                     helper.Con.Close();
                     IsOK = true;
                     ErrorMsg = string.Empty;
@@ -89,7 +95,6 @@ namespace CYQ.Data
         /// <summary>
         /// 创建一个实例。
         /// </summary>
-        /// <param name="dbConn"></param>
         /// <returns></returns>
         public static ConnBean Create(string connNameOrString)
         {
@@ -130,46 +135,65 @@ namespace CYQ.Data
             connString = connString.ToLower().Replace(" ", "");//去掉空格
 
             #region 先处理容易判断规则的
+            if (connString.Contains("server=") && !connString.Contains("port="))
+            {
+                return DalType.MsSql;
+            }
             if (connString.Contains("txtpath="))
             {
+                // txt path={0}
                 return DalType.Txt;
             }
             if (connString.Contains("xmlpath="))
             {
+                // xml path={0}
                 return DalType.Xml;
             }
-            if (connString.Contains("initialcatalog=") || connString.Contains(",1433;"))
+            if (connString.Contains(".mdb") || connString.Contains(".accdb"))
             {
-                return DalType.MsSql;
-            }
-            if (connString.Contains("microsoft.jet.oledb.4.0") || connString.Contains("microsoft.ace.oledb") || connString.Contains(".mdb"))
-            {
+                //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
+                //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
                 return DalType.Access;
             }
+            if (connString.Contains(".db;") || connString.Contains(".db3;"))
+            {
+                //Data Source={0}App_Data/demo.db;failifmissing=false
+                return DalType.SQLite;
+            }
             if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
-                || connString.Contains("description=") || connString.Contains("fororacle"))
+               || connString.Contains("description=") || connString.Contains("fororacle"))
             {
                 return DalType.Oracle;
             }
-            if (connString.Contains("failifmissing=") || (connString.StartsWith("datasource=") && (connString.EndsWith(".db") || connString.EndsWith(".db3"))))
+
+            #endregion
+
+            #region 其它简单或端口识别
+            if (connString.Contains("provider=ase") || connString.Contains("port=5000"))
             {
-                return DalType.SQLite;
-            }
-            if (connString.Contains("convertzerodatetime") || connString.Contains("port=3306") || (connString.Contains("host=") && connString.Contains("port=") && connString.Contains("database=")))
-            {
-                return DalType.MySql;
-            }
-            if (connString.Contains("provider=ase") || connString.Contains("port=5000") || (connString.Contains("datasource=") && connString.Contains("port=") && connString.Contains("database=")))
-            {
+                //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
                 return DalType.Sybase;
             }
             if (connString.Contains("port=5432"))
             {
                 return DalType.PostgreSQL;
             }
-
+            if (connString.Contains("port=3306"))
+            {
+                return DalType.MySql;
+            }
             #endregion
 
+            if (connString.Contains("host=") && File.Exists(AppConfig.AssemblyPath + "MySql.Data.dll"))
+            {
+                return DalType.MySql;
+            }
+
+            if (connString.Contains("datasource") && 
+                (File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet2.AseClient.dll") || File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet4.AseClient.dll")))
+            {
+                return DalType.Sybase;
+            }
             //postgre和mssql的链接语句一样，为postgre
             if (File.Exists(AppConfig.AssemblyPath + "Npgsql.dll"))
             {

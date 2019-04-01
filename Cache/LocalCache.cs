@@ -74,7 +74,7 @@ namespace CYQ.Data.Cache
             catch (Exception err)
             {
                 errorCount++;
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Cache);
             }
         }
         int taskCount = 0, taskInterval = 5;//5分钟清一次缓存。
@@ -113,7 +113,7 @@ namespace CYQ.Data.Cache
                     if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
                     {
                         errTime = DateTime.Now;
-                        Log.WriteLogToTxt("LocalCache.ClearState:" + Log.GetExceptionMessage(err));
+                        Log.Write("LocalCache.ClearState : " + Log.GetExceptionMessage(err), LogType.Cache);
                     }
                 }
                 finally
@@ -214,6 +214,7 @@ namespace CYQ.Data.Cache
         /// <returns></returns>
         public override bool Contains(string key)
         {
+            if (string.IsNullOrEmpty(key)) { return false; }
             return theCache.ContainsKey(key) && theKeyTime.ContainsKey(key) && theKeyTime[key] > DateTime.Now;
         }
         /// <summary>
@@ -233,8 +234,11 @@ namespace CYQ.Data.Cache
         /// <param name="fileName">文件依赖路径</param>
         public override bool Set(string key, object value, double cacheMinutes, string fileName)
         {
+
             try
             {
+                if (string.IsNullOrEmpty(key)) { return false; }
+                if (value == null) { return Remove(key); }
                 lock (lockObj)
                 {
                     if (theCache.ContainsKey(key))
@@ -317,8 +321,9 @@ namespace CYQ.Data.Cache
                 }
                 return true;
             }
-            catch
+            catch(Exception err)
             {
+                Log.Write(err, LogType.Cache);
                 errorCount++;
                 return false;
             }
@@ -336,6 +341,7 @@ namespace CYQ.Data.Cache
         /// <param name="key">标识</param>
         public override bool Remove(string key)
         {
+            if (string.IsNullOrEmpty(key)) { return false; }
             return theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>

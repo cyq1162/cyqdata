@@ -15,6 +15,9 @@ namespace CYQ.Data
         public ConnBean Master;
         public ConnBean BackUp;
         public MList<ConnBean> Slave = new MList<ConnBean>();
+        /// <summary>
+        /// Ö÷±¸»¥»»Î»ÖÃ¡£
+        /// </summary>
         internal void InterChange()
         {
             if (BackUp != null)
@@ -101,6 +104,14 @@ namespace CYQ.Data
                 {
                     id = HttpContext.Current.Session.SessionID;
                 }
+                else if (HttpContext.Current.Request["Token"] != null)
+                {
+                    id = HttpContext.Current.Request["Token"];
+                }
+                else if (HttpContext.Current.Request.Headers["Token"] != null)
+                {
+                    id = HttpContext.Current.Request.Headers["Token"];
+                }
                 else if (HttpContext.Current.Request["MasterSlaveID"] != null)
                 {
                     id = HttpContext.Current.Request["MasterSlaveID"];
@@ -179,6 +190,7 @@ namespace CYQ.Data
                 if (coBak != null && coBak.ConnDalType == cbMaster.ConnDalType)
                 {
                     co.BackUp = coBak;
+                    co.BackUp.IsBackup = true;
                 }
                 for (int i = 1; i < 10000; i++)
                 {

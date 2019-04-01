@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
+using System.Threading;
 
 namespace CYQ.Data.Cache
 {

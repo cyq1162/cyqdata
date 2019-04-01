@@ -1193,7 +1193,7 @@ namespace CYQ.Data.Xml
                     }
                     catch (Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                     }
                     finally
                     {
@@ -1212,7 +1212,7 @@ namespace CYQ.Data.Xml
                     }
                     catch (Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                     }
                 }
 

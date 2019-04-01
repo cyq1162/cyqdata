@@ -102,6 +102,7 @@
     <Compile Include="Cache\MemRedis\Serializer.cs" />
     <Compile Include="Cache\MemRedis\HostServer.cs" />
     <Compile Include="Cache\MemRedis\HostNode.cs" />
+    <Compile Include="Cache\MemRedis\SocketCreate.cs" />
     <Compile Include="Cache\RedisCache.cs" />
     <Compile Include="Cache\Redis\RedisClient.cs" />
     <Compile Include="Cache\Redis\RedisCommand.cs" />
@@ -119,6 +120,12 @@
     <Compile Include="Action\ActionEnum.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
+    <Compile Include="Log\LocalEnvironment.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Log\LogType.cs" />
+    <Compile Include="Log\LogWorker.cs" />
+    <Compile Include="Log\SysLogs.cs" />
     <Compile Include="Orm\Attribute\ColumnAttribute.cs" />
     <Compile Include="Orm\DBFast.cs">
       <SubType>Code</SubType>
@@ -164,7 +171,7 @@
     <Compile Include="DAL\DbBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Action\Log.cs">
+    <Compile Include="Log\Log.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DAL\OleDbDal.cs">

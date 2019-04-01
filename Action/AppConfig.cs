@@ -604,7 +604,7 @@ namespace CYQ.Data
                 if (db != null)
                 {
                     _DefaultDataBase = db.DataBase;
-                    _DefaultDalType = db.dalType;
+                    _DefaultDalType = db.DataBaseType;
                     db.Dispose();
                 }
             }
@@ -1098,13 +1098,13 @@ namespace CYQ.Data
             }
 
             /// <summary>
-            /// 是否写数据库异常日志:开启时：有异常不抛出，转写入数据库；不开启：有异常会抛出
+            /// 是否写数据库异常日志（默认true）:开启时：有异常不抛出，转写入数据库；不开启：有异常会抛出
             /// </summary>
             public static bool IsWriteLog
             {
                 get
                 {
-                    return GetAppBool("IsWriteLog", false);
+                    return GetAppBool("IsWriteLog", true);
                 }
                 set
                 {

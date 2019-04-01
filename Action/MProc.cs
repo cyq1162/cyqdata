@@ -34,10 +34,6 @@ namespace CYQ.Data
         private string _procName = string.Empty;
         private bool _isProc = true;
         private string _debugInfo = string.Empty;
-        /// <summary>
-        /// 原始传进进来的链接。
-        /// </summary>
-        private string _conn = string.Empty;
 
         /// <summary>
         /// Get or set debugging information [need to set App Config.Debug.Open DebugInfo to ture]
@@ -49,7 +45,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null)
                 {
-                    return dalHelper.debugInfo.ToString();
+                    return dalHelper.DebugInfo.ToString();
                 }
                 return _debugInfo;
             }
@@ -62,7 +58,7 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.dalType;
+                return dalHelper.DataBaseType;
             }
         }
         /// <summary>
@@ -95,7 +91,7 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.recordsAffected;
+                return dalHelper.RecordsAffected;
             }
         }
         /// <summary>
@@ -106,9 +102,9 @@ namespace CYQ.Data
         {
             get
             {
-                if (dalHelper != null)
+                if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.conn;
+                    return dalHelper.Con.ConnectionString;
                 }
                 return string.Empty;
             }
@@ -154,7 +150,6 @@ namespace CYQ.Data
         internal MProc(DbBase dbBase)
         {
             _procName = string.Empty;
-            _conn = dbBase.conn;
             SetDbBase(dbBase);
 
         }
@@ -190,7 +185,6 @@ namespace CYQ.Data
 
             }
             #endregion
-            _conn = conn;
             SetDbBase(DalCreate.CreateDal(conn));
         }
         private void SetDbBase(DbBase dbBase)
@@ -200,7 +194,7 @@ namespace CYQ.Data
             {
                 dalHelper.OnExceptionEvent += new DbBase.OnException(helper_OnExceptionEvent);
             }
-            switch (dalHelper.dalType)
+            switch (dalHelper.DataBaseType)
             {
                 case DalType.Txt:
                 case DalType.Xml:
@@ -225,7 +219,7 @@ namespace CYQ.Data
                 dalHelper.ClearParameters();
             }
             _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-            switch (dalHelper.dalType)
+            switch (dalHelper.DataBaseType)
             {
                 case DalType.Txt:
                 case DalType.Xml:
@@ -234,7 +228,7 @@ namespace CYQ.Data
                     break;
             }
         }
-       
+
         ///<summary>
         /// Toggle tProc Action: To switch between other sql/procedure, use this method
         /// <para>切换操作：如需操作其它语句或存储过程，通过此方法切换</para>
@@ -256,7 +250,7 @@ namespace CYQ.Data
                 {
                     _aop.Para.DBParameters = dalHelper.Com.Parameters;
                 }
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 return _aop.Begin(action);
             }
             return AopResult.Default;
@@ -276,7 +270,7 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    switch (dalHelper.dalType)
+                    switch (dalHelper.DataBaseType)
                     {
                         case DalType.Txt:
                         case DalType.Xml:
@@ -288,7 +282,7 @@ namespace CYQ.Data
                             // dalHelper.ResetConn();//重置Slave
                             break;
                     }
-                    _aop.Para.Table.Conn = _conn;
+                    _aop.Para.Table.Conn = dalHelper.ConnName;
                     _aop.Para.IsSuccess = _aop.Para.Table.Rows.Count > 0;
                 }
                 if (aopResult != AopResult.Default)
@@ -315,19 +309,19 @@ namespace CYQ.Data
                 if (aopResult != AopResult.Break)
                 {
                     List<MDataTable> dtList = new List<MDataTable>();
-                    switch (dalHelper.dalType)
+                    switch (dalHelper.DataBaseType)
                     {
                         case DalType.Txt:
                         case DalType.Xml:
                         case DalType.Oracle:
-                            if (_isProc && dalHelper.dalType == DalType.Oracle)
+                            if (_isProc && dalHelper.DataBaseType == DalType.Oracle)
                             {
                                 goto isProc;
                             }
                             foreach (string sql in _procName.TrimEnd(';').Split(';'))
                             {
                                 MDataTable dt = null;
-                                if (dalHelper.dalType == DalType.Oracle)
+                                if (dalHelper.DataBaseType == DalType.Oracle)
                                 {
                                     dt = dalHelper.ExeDataReader(sql, false);
                                 }
@@ -385,7 +379,7 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    switch (dalHelper.dalType)
+                    switch (dalHelper.DataBaseType)
                     {
                         case DalType.Txt:
                         case DalType.Xml:
@@ -414,7 +408,7 @@ namespace CYQ.Data
             AopResult aopResult = SetAopResult(AopEnum.ExeScalar);
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
@@ -460,7 +454,7 @@ namespace CYQ.Data
             }
             return (T)value;
         }
-     
+
 
         /// <summary>
         /// <para>Set Input Para</para>
@@ -498,7 +492,7 @@ namespace CYQ.Data
         {
             dalHelper.AddCustomePara(Convert.ToString(paraName), paraType, value, typeName); return this;
         }
-       
+
 
         /// <summary>
         /// Clear Parameters
@@ -578,7 +572,7 @@ namespace CYQ.Data
         /// </summary>
         public void BeginTransation()
         {
-            dalHelper.isOpenTrans = true;
+            dalHelper.IsOpenTrans = true;
         }
         /// <summary>
         /// Commit Transation
@@ -586,7 +580,7 @@ namespace CYQ.Data
         /// </summary>
         public bool EndTransation()
         {
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
                 return dalHelper.EndTransaction();
             }
@@ -598,7 +592,7 @@ namespace CYQ.Data
         /// </summary>
         public bool RollBack()
         {
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
                 return dalHelper.RollBack();
             }
@@ -619,7 +613,7 @@ namespace CYQ.Data
                 {
                     dalHelper.OnExceptionEvent -= new DbBase.OnException(helper_OnExceptionEvent);
                 }
-                _debugInfo = dalHelper.debugInfo.ToString();
+                _debugInfo = dalHelper.DebugInfo.ToString();
                 dalHelper.Dispose();
                 dalHelper = null;
             }

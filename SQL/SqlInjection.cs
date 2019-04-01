@@ -55,10 +55,12 @@ namespace CYQ.Data.SQL
             items = text.Split(' ', '(', ')');
             if (items.Length == 1 && text.Length > 30)
             {
-                if (text.IndexOf("%20") > -1)
+                if (text.IndexOf("%20") > -1 && text.IndexOf("%20") != text.LastIndexOf("%20"))
                 {
-                    Log.WriteLog(true, text);//记录日志
-                    return "SqlInjection error:" + text;
+                    //多个%20组合
+                    Log.Write("SqlInjection error:" + text, LogType.Warn);
+                    Error.Throw("SqlInjection error:" + text);
+                    
                 }
             }
             else
@@ -115,8 +117,8 @@ namespace CYQ.Data.SQL
                     }
                     if (!isOK)
                     {
-                        Log.WriteLog(true, FilterKeyList[i] + ":" + text);//记录日志
-                        return "SqlInjection error:" + text;
+                        Log.Write("SqlInjection error:" + FilterKeyList[i] + ":" + text, LogType.Warn);
+                        Error.Throw("SqlInjection error:" + text);
                     }
                     else
                     {

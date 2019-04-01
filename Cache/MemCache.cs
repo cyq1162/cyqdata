@@ -42,6 +42,8 @@ namespace CYQ.Data.Cache
         }
         public override bool Set(string key, object value, double cacheMinutes, string fileName)
         {
+            if (string.IsNullOrEmpty(key)) { return false; }
+            if (value == null) { return Remove(key); }
             return client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
 
@@ -94,6 +96,7 @@ namespace CYQ.Data.Cache
 
         public override bool Contains(string key)
         {
+            if (string.IsNullOrEmpty(key)) { return false; }
             return Get(key) != null;
         }
 
@@ -118,12 +121,14 @@ namespace CYQ.Data.Cache
 
         public override object Get(string key)
         {
+            if (string.IsNullOrEmpty(key)) { return null; }
             return client.Get(key);
         }
 
 
         public override bool Remove(string key)
         {
+            if (string.IsNullOrEmpty(key)) { return false; }
             return client.Delete(key);
         }
 

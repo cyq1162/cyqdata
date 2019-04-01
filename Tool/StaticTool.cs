@@ -96,7 +96,7 @@ namespace CYQ.Data.Tool
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Error);
                 }
                 return list;
             }
@@ -124,7 +124,7 @@ namespace CYQ.Data.Tool
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Error);
                 }
                 return list;
             }
@@ -339,6 +339,10 @@ namespace CYQ.Data.Tool
             if (t.Name == "String")
             {
                 return strValue;
+            }
+            if (t.FullName == "System.Text.StringBuilder")
+            {
+                return value as StringBuilder;
             }
             if (t.FullName == "System.Text.Encoding")
             {

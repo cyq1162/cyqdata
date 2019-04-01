@@ -1336,7 +1336,7 @@ namespace CYQ.Data.Table
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Error);
                 }
             }
             return dt;
@@ -1444,7 +1444,7 @@ namespace CYQ.Data.Table
                     }
                     catch(Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                     }
                 }
             }
@@ -1457,7 +1457,7 @@ namespace CYQ.Data.Table
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Error);
                 }
             }
             if (loadOk)

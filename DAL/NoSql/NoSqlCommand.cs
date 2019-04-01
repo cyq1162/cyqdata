@@ -41,20 +41,20 @@ namespace CYQ.Data
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
             }
             if (ss.IsSelect || ss.IsUpdate || ss.IsDelete || ss.IsInsert)
             {
                 MDataRow row = new MDataRow();
                 if (TableSchema.FillTableSchema(ref row, ref dbBase, ss.TableName, ss.TableName))
                 {
-                    row.Conn = dbBase.conn;
-                    action = new NoSqlAction(ref row, ss.TableName, dbBase.Con.DataSource, dbBase.dalType);
+                    row.Conn = dbBase.ConnName;
+                    action = new NoSqlAction(ref row, ss.TableName, dbBase.Con.DataSource, dbBase.DataBaseType);
                 }
             }
             else
             {
-                Log.WriteLogToTxt("NoSql Grammar Error Or No Support : " + sqlText);
+                Log.Write("NoSql Grammar Error Or No Support : " + sqlText, LogType.DataBase);
             }
         }
         public MDataTable ExeMDataTable()

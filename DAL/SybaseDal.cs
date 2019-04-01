@@ -72,9 +72,9 @@ namespace CYQ.Data
         {
             try
             {
-                IsAllowRecordSql = false;
+                IsRecordDebugInfo = false;
                 bool result = ExeScalar("select 1 from master..sysdatabases where [name]='" + dbName + "'", false) != null;
-                IsAllowRecordSql = true;
+                IsRecordDebugInfo = true;
                 return result;
             }
             catch

@@ -192,7 +192,7 @@ namespace CYQ.Data
                     {
                         if (clientType == -1)
                         {
-                            if (AppConfig.GetConn(base.conn).IndexOf("host", StringComparison.OrdinalIgnoreCase) == -1)
+                            if (AppConfig.GetConn(base.ConnName).IndexOf("host", StringComparison.OrdinalIgnoreCase) == -1)
                             {
                                 clientType = 0;
                             }
@@ -211,7 +211,7 @@ namespace CYQ.Data
                                 else
                                 {
                                     clientType = 0;
-                                    Log.WriteLog("Can't find Oracle.ManagedDataAccess.dll or Oracle.DataAccess.dll on the path:" + path);
+                                    Log.Write("Can't find Oracle.ManagedDataAccess.dll or Oracle.DataAccess.dll on the path:" + path, LogType.DataBase);
                                 }
                             }
                         }
@@ -222,7 +222,7 @@ namespace CYQ.Data
         }
         protected override bool IsExistsDbName(string dbName)
         {
-            return DBTool.TestConn(GetNewConn(dbName));
+            return DBTool.TestConn(GetConnString(dbName));
         }
     }
 

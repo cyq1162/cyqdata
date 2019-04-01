@@ -81,7 +81,7 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    msg = helper.debugInfo.ToString();
+                    msg = helper.DebugInfo.ToString();
                 }
                 helper.Dispose();
             }
@@ -123,11 +123,11 @@ namespace CYQ.Data.Tool
         {
             errInfo = string.Empty;
             DbBase helper = DalCreate.CreateDal(conn);
-            helper.IsAllowRecordSql = false;
+            helper.IsRecordDebugInfo = false;
             dbName = helper.DataBase;
             if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
-                errInfo = helper.debugInfo.ToString();
+                errInfo = helper.DebugInfo.ToString();
                 if (string.IsNullOrEmpty(errInfo))
                 {
                     errInfo = "Open database fail : " + dbName;
@@ -185,7 +185,7 @@ namespace CYQ.Data.Tool
                 return false;
             }
             DbBase helper = DalCreate.CreateDal(conn);
-            dalType = helper.dalType;
+            dalType = helper.DataBaseType;
             database = helper.DataBase;
             bool result = TableSchema.Exists("U", tableName, ref helper);
             helper.Dispose();
@@ -237,7 +237,7 @@ namespace CYQ.Data.Tool
                         dataBase = proc.DataBase;
                         try
                         {
-                            proc.dalHelper.IsAllowRecordSql = false;
+                            proc.dalHelper.IsRecordDebugInfo = false;
                             proc.SetAopState(Aop.AopOp.CloseAll);
                             proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DalType, proc.DalVersion));//.Replace("\n", string.Empty)
                             result = proc.ExeNonQuery() > -2;
@@ -270,7 +270,7 @@ namespace CYQ.Data.Tool
                         }
                         catch (Exception err)
                         {
-                            Log.WriteLogToTxt(err);
+                            Log.Write(err, LogType.DataBase);
                         }
                         finally
                         {
@@ -319,13 +319,13 @@ namespace CYQ.Data.Tool
             using (DbBase db = DalCreate.CreateDal(conn))
             {
                 object o = db.ExeScalar(string.Format(TableSchema.ExistOracleSequence, seqName), false);
-                if (db.recordsAffected != -2 && (o == null || Convert.ToString(o) == "0"))
+                if (db.RecordsAffected != -2 && (o == null || Convert.ToString(o) == "0"))
                 {
                     int startWith = 1;
                     if (!string.IsNullOrEmpty(primaryKey))
                     {
                         o = db.ExeScalar(string.Format(TableSchema.GetOracleMaxID, primaryKey, tableName), false);
-                        if (db.recordsAffected != -2)
+                        if (db.RecordsAffected != -2)
                         {
                             if (!int.TryParse(Convert.ToString(o), out startWith) || startWith < 1)
                             {
@@ -339,9 +339,9 @@ namespace CYQ.Data.Tool
                     }
                     db.ExeNonQuery(string.Format(TableSchema.CreateOracleSequence, seqName, startWith), false);
                 }
-                if (db.recordsAffected == -2)
+                if (db.RecordsAffected == -2)
                 {
-                    _ErrorMsg.AppendLine("CheckAndCreateOracleSequence:" + db.debugInfo.ToString());
+                    _ErrorMsg.AppendLine("CheckAndCreateOracleSequence:" + db.DebugInfo.ToString());
                 }
             }
 
@@ -413,7 +413,7 @@ namespace CYQ.Data.Tool
                         {
                             proc.RollBack();
                             _ErrorMsg.AppendLine("AlterTable:" + proc.DebugInfo);
-                            Log.WriteLogToTxt(proc.DebugInfo);
+                            Log.Write(proc.DebugInfo, LogType.DataBase);
 
                             return false;
                         }
@@ -447,7 +447,7 @@ namespace CYQ.Data.Tool
             using (DbBase helper = DalCreate.CreateDal(conn))
             {
                 key = TableSchema.GetTableCacheKey(helper);
-                DalType dalType = helper.dalType;
+                DalType dalType = helper.DataBaseType;
                 switch (dalType)
                 {
                     case DalType.Txt:
@@ -480,9 +480,9 @@ namespace CYQ.Data.Tool
                         }
                         break;
                 }
-                if (helper.recordsAffected == -2)
+                if (helper.RecordsAffected == -2)
                 {
-                    _ErrorMsg.AppendLine(helper.debugInfo.ToString());
+                    _ErrorMsg.AppendLine(helper.DebugInfo.ToString());
                 }
             }
             if (result)
@@ -583,7 +583,7 @@ namespace CYQ.Data.Tool
             }
             if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
-                errInfo = helper.debugInfo.ToString();
+                errInfo = helper.DebugInfo.ToString();
                 if (string.IsNullOrEmpty(errInfo))
                 {
                     errInfo = "Open database fail : " + tableName;
@@ -644,7 +644,7 @@ namespace CYQ.Data.Tool
                             flag.Add("sql");//考虑到一个应用不太可能同时使用mssql的不同版本，只使用一个标识。
                             using (DbBase db = DalCreate.CreateDal(conn))
                             {
-                                db.IsAllowRecordSql = false;
+                                db.IsRecordDebugInfo = false;
                                 object o = null;
                                 if (!db.Version.StartsWith("08"))
                                 {
@@ -669,7 +669,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
             }
         }
 

@@ -358,10 +358,7 @@ namespace CYQ.Data.Table
                 ex = err;
                 string msg = string.Format("ChangeType Error£ºColumnName¡¾{0}¡¿({1}) £¬ Value£º¡¾{2}¡¿\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
                 StringValue = null;
-                if (AppConfig.Log.IsWriteLog)
-                {
-                    Log.WriteLog(true, msg);
-                }
+                Log.Write(msg, LogType.Error);
 
             }
             return value;
@@ -532,7 +529,7 @@ namespace CYQ.Data.Table
     {
         internal string ToXml(bool isConvertNameToLower)
         {
-            string text = StringValue??"";
+            string text = StringValue ?? "";
             switch (DataType.GetGroup(_CellStruct.SqlType))
             {
                 case 999:

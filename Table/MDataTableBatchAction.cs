@@ -87,7 +87,7 @@ namespace CYQ.Data.Table
                     _Conn = mTable.Conn;
                 }
             }
-           
+
             if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
             {
                 DBTool.ErrorMsg = null;
@@ -249,7 +249,7 @@ namespace CYQ.Data.Table
                     err = err.InnerException;
                 }
                 sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
                 return false;
             }
         }
@@ -297,7 +297,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
+                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
 
                 if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1))
                 //jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000
@@ -416,14 +416,14 @@ namespace CYQ.Data.Table
                         {
                             string msg = "Error On : MDataTable.AcceptChanges.Auto." + mdt.TableName + " : [" + where + "] : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
-                            Log.WriteLogToTxt(msg);
+                            Log.Write(msg, LogType.DataBase);
                             break;
                         }
                         #endregion
                     }
 
                 }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = true;//恢复SQL日志记录
                 if (_dalHelper == null)
                 {
                     action.EndTransation();
@@ -479,12 +479,12 @@ namespace CYQ.Data.Table
                 {
                     if (IsTruncate)
                     {
-                        _dalHelper.isOpenTrans = true;
+                        _dalHelper.IsOpenTrans = true;
                         if (_dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(mdt.TableName, dalTypeTo)), false) == -2)
                         {
                             isGoOn = false;
-                            sourceTable.DynamicData = _dalHelper.debugInfo;
-                            Log.WriteLogToTxt(_dalHelper.debugInfo.ToString());
+                            sourceTable.DynamicData = _dalHelper.DebugInfo;
+                            Log.Write(_dalHelper.DebugInfo.ToString(), LogType.DataBase);
                         }
                     }
                     if (isGoOn)
@@ -520,7 +520,7 @@ namespace CYQ.Data.Table
             catch (Exception err)
             {
                 sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
             }
             finally
             {
@@ -569,7 +569,7 @@ namespace CYQ.Data.Table
                     err = err.InnerException;
                 }
                 sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
                 return false;
             }
             finally
@@ -627,7 +627,7 @@ namespace CYQ.Data.Table
             if (isNeedCreateDal && dalType != DalType.Oracle)
             {
                 _dalHelper = DalCreate.CreateDal(_Conn);
-                _dalHelper.isAllowInterWriteLog = false;
+                _dalHelper.IsWriteLogOnError = false;
             }
             string path = MDataTableToFile(mdt, fillGUID ? true : keepID, dalType);
             string formatSql = dalType == DalType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
@@ -649,7 +649,7 @@ namespace CYQ.Data.Table
                     bool isGoOn = true;
                     if (IsTruncate)
                     {
-                        _dalHelper.isOpenTrans = true;//开启事务
+                        _dalHelper.IsOpenTrans = true;//开启事务
                         isGoOn = _dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(mdt.TableName, dalTypeTo)), false) != -2;
                     }
                     if (isGoOn && _dalHelper.ExeNonQuery(sql, false) != -2)
@@ -667,7 +667,7 @@ namespace CYQ.Data.Table
                     err = err.InnerException;
                 }
                 sourceTable.DynamicData = err;
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
             }
             finally
             {
@@ -905,7 +905,7 @@ namespace CYQ.Data.Table
                             sourceTable.RecordsAffected = 0;
                             string msg = "Error On : MDataTable.AcceptChanges.Delete." + mdt.TableName + " : where (" + whereIn + ") : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
-                            Log.WriteLogToTxt(msg);
+                            Log.Write(msg, LogType.DataBase);
                             break;
                         }
                         #endregion
@@ -972,7 +972,7 @@ namespace CYQ.Data.Table
             //}
             //catch (Exception err)
             //{
-            //    Log.WriteLogToTxt(err);
+            //    Log.Write(err);
             //    return false;
             //}
             //finally
@@ -998,7 +998,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();//事务由外部控制
                 }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
                 if (keepID)
                 {
                     action.SetIdentityInsertOn();
@@ -1014,7 +1014,7 @@ namespace CYQ.Data.Table
                     {
                         isGoOn = false;
                         sourceTable.DynamicData = action.DebugInfo;
-                        Log.WriteLogToTxt(action.DebugInfo);
+                        Log.Write(action.DebugInfo, LogType.DataBase);
                     }
                 }
                 if (isGoOn)
@@ -1031,7 +1031,7 @@ namespace CYQ.Data.Table
                         {
                             string msg = "Error On : MDataTable.AcceptChanges.Insert." + mdt.TableName + " : [" + row.PrimaryCell.Value + "] : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
-                            Log.WriteLogToTxt(msg);
+                            Log.Write(msg, LogType.DataBase);
                             break;
                         }
                     }
@@ -1044,7 +1044,7 @@ namespace CYQ.Data.Table
                 {
                     action.EndTransation();
                 }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = true;//恢复SQL日志记录
                 action.dalHelper = sourceHelper;//恢复原来，避免外来的链接被关闭。
             }
             return result;
@@ -1065,7 +1065,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
 
                 MDataRow row;
                 for (int i = 0; i < mdt.Rows.Count; i++)
@@ -1085,7 +1085,7 @@ namespace CYQ.Data.Table
                             sourceTable.RecordsAffected = 0;
                             string msg = "Error On : MDataTable.AcceptChanges.Update." + mdt.TableName + " : where (" + where + ") : " + action.DebugInfo;
                             sourceTable.DynamicData = msg;
-                            Log.WriteLogToTxt(msg);
+                            Log.Write(msg, LogType.DataBase);
                             break;
                         }
                         else
@@ -1094,7 +1094,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = true;//恢复SQL日志记录
                 if (_dalHelper == null)
                 {
                     action.EndTransation();
@@ -1130,7 +1130,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsAllowRecordSql = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
 
                 MDataRow row;
                 for (int i = 0; i < mdt.Rows.Count; i++)
@@ -1148,11 +1148,11 @@ namespace CYQ.Data.Table
                         sourceTable.RecordsAffected = 0;
                         string msg = "Error On : MDataTable.AcceptChanges.Delete." + mdt.TableName + " : where (" + where + ") : " + action.DebugInfo;
                         sourceTable.DynamicData = msg;
-                        Log.WriteLogToTxt(msg);
+                        Log.Write(msg, LogType.DataBase);
                         break;
                     }
                 }
-                action.dalHelper.IsAllowRecordSql = true;//恢复SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = true;//恢复SQL日志记录
                 if (_dalHelper == null)
                 {
                     action.EndTransation();

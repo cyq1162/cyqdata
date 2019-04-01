@@ -37,7 +37,7 @@ namespace System.Web
                     return ct.Substring(i + 8);
                 }
 
-                return "";
+                return "utf-8";
             }
             set
             {
@@ -46,7 +46,7 @@ namespace System.Web
                 string ct = ContentType;
                 if (string.IsNullOrEmpty(ct))
                 {
-                    ContentType = "charset=" + value;
+                    ContentType = "text/html; charset=" + value.Replace("charset=", "");
                 }
                 else if (!ct.Contains("charset="))
                 {
@@ -66,17 +66,17 @@ namespace System.Web
                 else
                 {
                     string[] items = response.ContentType.Split(';');
-                    if (items.Length == 2)
+                    if (items.Length == 2)//包含两个，只改前面的，不改编码
                     {
                         response.ContentType = value + ";" + items[1];
                     }
                     else if (response.ContentType.Contains("charset"))//只有charset
                     {
-                        response.ContentType = value + ";" + items[0];
+                        response.ContentType = value + "; " + items[0].Trim();
                     }
-                    else
+                    else//只有text/html
                     {
-                        response.ContentType = value;
+                        response.ContentType = value + "; charset=utf-8";
                     }
                 }
 

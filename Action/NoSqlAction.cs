@@ -573,7 +573,7 @@ namespace CYQ.Data
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
             }
         }
         #endregion

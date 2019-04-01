@@ -68,9 +68,9 @@ namespace CYQ.Data
         {
             get
             {
-                if (dalHelper != null)
+                if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.conn;
+                    return dalHelper.Con.ConnectionString;
                 }
                 return string.Empty;
             }
@@ -86,7 +86,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null)
                 {
-                    return dalHelper.debugInfo.ToString();
+                    return dalHelper.DebugInfo.ToString();
                 }
                 return _debugInfo;
             }
@@ -94,8 +94,8 @@ namespace CYQ.Data
             {
                 if (dalHelper != null)
                 {
-                    dalHelper.debugInfo.Length = 0;
-                    dalHelper.debugInfo.Append(value);
+                    dalHelper.DebugInfo.Length = 0;
+                    dalHelper.DebugInfo.Append(value);
                 }
             }
         }
@@ -107,7 +107,7 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.dalType;
+                return dalHelper.DataBaseType;
             }
         }
         /// <summary>
@@ -140,7 +140,7 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.recordsAffected;
+                return dalHelper.RecordsAffected;
             }
         }
         /// <summary>
@@ -190,9 +190,9 @@ namespace CYQ.Data
         internal void SetIdentityInsertOn()
         {
             _setIdentityResult = true;
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.MsSql:
                     case DalType.Sybase:
@@ -203,10 +203,10 @@ namespace CYQ.Data
                                 string lastTable = Convert.ToString(CacheManage.LocalInstance.Get("MAction_IdentityInsertForSql"));
                                 if (!string.IsNullOrEmpty(lastTable))
                                 {
-                                    lastTable = "set identity_insert " + SqlFormat.Keyword(lastTable, dalHelper.dalType) + " off";
+                                    lastTable = "set identity_insert " + SqlFormat.Keyword(lastTable, dalHelper.DataBaseType) + " off";
                                     dalHelper.ExeNonQuery(lastTable, false);
                                 }
-                                _setIdentityResult = dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, dalHelper.dalType) + " on", false) > -2;
+                                _setIdentityResult = dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, dalHelper.DataBaseType) + " on", false) > -2;
                                 if (_setIdentityResult)
                                 {
                                     CacheManage.LocalInstance.Set("MAction_IdentityInsertForSql", _TableName, 30);
@@ -227,9 +227,9 @@ namespace CYQ.Data
         /// </summary>;
         internal void SetIdentityInsertOff()
         {
-            if (_setIdentityResult && dalHelper != null && dalHelper.isOpenTrans)
+            if (_setIdentityResult && dalHelper != null && dalHelper.IsOpenTrans)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.MsSql:
                     case DalType.Sybase:
@@ -387,17 +387,17 @@ namespace CYQ.Data
         private void InitRowSchema(MDataRow row, bool resetState)
         {
             _Data = row;
-            _TableName = SqlCompatible.Format(_sourceTableName, dalHelper.dalType);
-            _TableName = DBTool.GetMapTableName(dalHelper.useConnBean.ConnName, _TableName);//处理数据库映射兼容。
+            _TableName = SqlCompatible.Format(_sourceTableName, dalHelper.DataBaseType);
+            _TableName = DBTool.GetMapTableName(dalHelper.UsingConnBean.ConnName, _TableName);//处理数据库映射兼容。
             if (_Data.Count == 0)
             {
                 if (!TableSchema.FillTableSchema(ref _Data, ref dalHelper, _TableName, _sourceTableName))
                 {
                     if (!dalHelper.TestConn(AllowConnLevel.MaterBackupSlave))
                     {
-                        Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.debugInfo.ToString());
+                        Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
                     }
-                    Error.Throw(dalHelper.dalType + "." + dalHelper.DataBase + ":check the tablename  \"" + _TableName + "\" is exist?" + AppConst.NewLine + "error:" + dalHelper.debugInfo.ToString());
+                    Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBase + ":check the tablename  \"" + _TableName + "\" is exist?" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
                 }
             }
             else if (resetState)
@@ -458,15 +458,15 @@ namespace CYQ.Data
                 }
                 if (_noSqlAction != null)
                 {
-                    _noSqlAction.Reset(ref _Data, _TableName, dalHelper.Con.DataSource, dalHelper.dalType);
+                    _noSqlAction.Reset(ref _Data, _TableName, dalHelper.Con.DataSource, dalHelper.DataBaseType);
                 }
                 else if (allowCreate)
                 {
-                    switch (dalHelper.dalType)
+                    switch (dalHelper.DataBaseType)
                     {
                         case DalType.Txt:
                         case DalType.Xml:
-                            _noSqlAction = new NoSqlAction(ref _Data, _TableName, dalHelper.Con.DataSource, dalHelper.dalType);
+                            _noSqlAction = new NoSqlAction(ref _Data, _TableName, dalHelper.Con.DataSource, dalHelper.DataBaseType);
                             break;
                     }
                 }
@@ -487,25 +487,25 @@ namespace CYQ.Data
                 {
                     _isInsertCommand = false;
                     object ID;
-                    switch (dalHelper.dalType)
+                    switch (dalHelper.DataBaseType)
                     {
                         case DalType.MsSql:
                         case DalType.Sybase:
                         case DalType.PostgreSQL:
                             ID = dalHelper.ExeScalar(sqlCommandText, false);
-                            if (ID == null && AllowInsertID && dalHelper.recordsAffected > -2)
+                            if (ID == null && AllowInsertID && dalHelper.RecordsAffected > -2)
                             {
                                 ID = _Data.PrimaryCell.Value;
                             }
                             break;
                         default:
                             #region MyRegion
-                            bool isTrans = dalHelper.isOpenTrans;
+                            bool isTrans = dalHelper.IsOpenTrans;
                             int groupID = DataType.GetGroup(_Data.PrimaryCell.Struct.SqlType);
                             bool isNum = groupID == 1 && _Data.PrimaryCell.Struct.Scale <= 0;
                             if (!isTrans && (isNum || _Data.PrimaryCell.Struct.IsAutoIncrement) && (!AllowInsertID || _Data.PrimaryCell.IsNullOrEmpty)) // 数字自增加
                             {
-                                dalHelper.isOpenTrans = true;//开启事务。
+                                dalHelper.IsOpenTrans = true;//开启事务。
                                 dalHelper.TranLevel = IsolationLevel.ReadCommitted;//默认事务级别已是这个，还是设置一下，避免外部调整对此的影响。
                             }
                             ID = dalHelper.ExeNonQuery(sqlCommandText, false);//返回的是受影响的行数
@@ -534,7 +534,7 @@ namespace CYQ.Data
                             #endregion
                             break;
                     }
-                    if ((ID != null && Convert.ToString(ID) != "-2") || (dalHelper.recordsAffected > -2 && _option == InsertOp.None))
+                    if ((ID != null && Convert.ToString(ID) != "-2") || (dalHelper.RecordsAffected > -2 && _option == InsertOp.None))
                     {
                         if (_option != InsertOp.None)
                         {
@@ -549,12 +549,12 @@ namespace CYQ.Data
                 }
                 #endregion
             }
-            else if (!_isInsertCommand && _Data.GetState() == 1 && dalHelper.recordsAffected != -2) // 更新操作。
+            else if (!_isInsertCommand && _Data.GetState() == 1 && dalHelper.RecordsAffected != -2) // 更新操作。
             {
                 //输出警告信息
                 return true;
             }
-            else if (dalHelper.isOpenTrans && dalHelper.recordsAffected == -2) // 若事务中，则回滚
+            else if (dalHelper.IsOpenTrans && dalHelper.RecordsAffected == -2) // 若事务中，则回滚
             {
                 dalHelper.WriteError(_isInsertCommand ? "Insert" : "Update" + "():");
             }
@@ -604,17 +604,17 @@ namespace CYQ.Data
                 _aop.Para.Row = _Data;
                 _aop.Para.AutoSetValue = autoSetValue;
                 _aop.Para.InsertOp = option;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Insert);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
-                        _aop.Para.IsSuccess = _noSqlAction.Insert(dalHelper.isOpenTrans);
-                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
+                        _aop.Para.IsSuccess = _noSqlAction.Insert(dalHelper.IsOpenTrans);
+                        dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();
@@ -634,7 +634,7 @@ namespace CYQ.Data
             {
                 _aop.End(Aop.AopEnum.Insert);
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -691,18 +691,18 @@ namespace CYQ.Data
                 //_aop.Para.AopPara = aopPara;
                 _aop.Para.AutoSetValue = autoSetValue;
                 _aop.Para.UpdateExpression = _sqlCreate.updateExpression;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Update);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
                         int count;
                         _aop.Para.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where), out count);
-                        dalHelper.recordsAffected = count;
+                        dalHelper.RecordsAffected = count;
                         break;
                     default:
                         ClearParameters();
@@ -715,7 +715,7 @@ namespace CYQ.Data
             {
                 _aop.End(Aop.AopEnum.Update);
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -750,14 +750,14 @@ namespace CYQ.Data
                 _aop.Para.Row = _Data;
                 _aop.Para.Where = where;
                 //_aop.Para.AopPara = aopPara;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Delete);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
                 string deleteField = AppConfig.DB.DeleteField;
                 bool isToUpdate = !IsIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
@@ -772,7 +772,7 @@ namespace CYQ.Data
                         {
                             _aop.Para.IsSuccess = _noSqlAction.Delete(sqlWhere, out count);
                         }
-                        dalHelper.recordsAffected = count;
+                        dalHelper.RecordsAffected = count;
                         break;
                     default:
                         ClearParameters();
@@ -785,7 +785,7 @@ namespace CYQ.Data
             {
                 _aop.End(Aop.AopEnum.Delete);
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -844,18 +844,18 @@ namespace CYQ.Data
                 _aop.Para.Where = where;
                 _aop.Para.SelectColumns = _sqlCreate.selectColumns;
                 //_aop.Para.AopPara = aopPara;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Select);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                string primaryKey = SqlFormat.Keyword(_Data.Columns.FirstPrimary.ColumnName, dalHelper.dalType);//主键列名。
-                switch (dalHelper.dalType)
+                string primaryKey = SqlFormat.Keyword(_Data.Columns.FirstPrimary.ColumnName, dalHelper.DataBaseType);//主键列名。
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.Table = _noSqlAction.Select(pageIndex, pageSize, _sqlCreate.FormatWhere(where), out rowCount, _sqlCreate.selectColumns);
-                        dalHelper.recordsAffected = rowCount;
+                        dalHelper.RecordsAffected = rowCount;
                         break;
                     default:
                         _aop.Para.Table = new MDataTable(_TableName.Contains("(") ? "SysDefaultCustomTable" : _TableName);
@@ -869,15 +869,15 @@ namespace CYQ.Data
                         }
                         else
                         {
-                            whereSql = SqlFormat.Compatible(where, dalHelper.dalType, dalHelper.Com.Parameters.Count == 0);
+                            whereSql = SqlFormat.Compatible(where, dalHelper.DataBaseType, dalHelper.Com.Parameters.Count == 0);
                         }
                         bool byPager = pageIndex > 0 && pageSize > 0;//分页查询(第一页也要分页查询，因为要计算总数）
-                        if (byPager && AppConfig.DB.PagerBySelectBase && dalHelper.dalType == DalType.MsSql && !dalHelper.Version.StartsWith("08"))// || dalHelper.dalType == DalType.Oracle
+                        if (byPager && AppConfig.DB.PagerBySelectBase && dalHelper.DataBaseType == DalType.MsSql && !dalHelper.Version.StartsWith("08"))// || dalHelper.dalType == DalType.Oracle
                         {
                             #region 存储过程执行
                             if (dalHelper.Com.Parameters.Count > 0)
                             {
-                                dalHelper.debugInfo.Append(AppConst.HR + "error : select method deny call SetPara() method to add custom parameters!");
+                                dalHelper.DebugInfo.Append(AppConst.HR + "error : select method deny call SetPara() method to add custom parameters!");
                             }
                             dalHelper.AddParameters("@PageIndex", pageIndex, DbType.Int32, -1, ParameterDirection.Input);
                             dalHelper.AddParameters("@PageSize", pageSize, DbType.Int32, -1, ParameterDirection.Input);
@@ -901,7 +901,7 @@ namespace CYQ.Data
                             }
                             if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
                             {
-                                string sql = SqlCreateForPager.GetSql(dalHelper.dalType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.dalType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                                string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
                                 sdReader = dalHelper.ExeDataReader(sql, false);
                             }
                             else if (_sqlCreate.selectColumns != null)
@@ -918,7 +918,7 @@ namespace CYQ.Data
                             {
                                 rowCount = _aop.Para.Table.Rows.Count;
                             }
-                            else if (dalHelper.dalType == DalType.MsSql && AppConfig.DB.PagerBySelectBase)
+                            else if (dalHelper.DataBaseType == DalType.MsSql && AppConfig.DB.PagerBySelectBase)
                             {
                                 rowCount = dalHelper.ReturnValue;
                             }
@@ -988,17 +988,17 @@ namespace CYQ.Data
                 _aop.Para.Where = where;
                 _aop.Para.SelectColumns = _sqlCreate.selectColumns;
                 //_aop.Para.AopPara = aopPara;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Fill);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Fill(_sqlCreate.FormatWhere(where));
-                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
+                        dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();
@@ -1051,7 +1051,7 @@ namespace CYQ.Data
                     _Data.SetState(1, BreakOp.Null);//查询时，定位状态为1
                 }
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -1082,18 +1082,18 @@ namespace CYQ.Data
                 _aop.Para.TableName = _sourceTableName;
                 _aop.Para.Row = _Data;
                 _aop.Para.Where = where;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.GetCount);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
                         _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
-                        dalHelper.recordsAffected = _aop.Para.RowCount;
+                        dalHelper.RecordsAffected = _aop.Para.RowCount;
                         break;
                     default:
                         ClearParameters();//清除系统参数
@@ -1118,7 +1118,7 @@ namespace CYQ.Data
             {
                 _aop.End(Aop.AopEnum.GetCount);
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -1132,7 +1132,7 @@ namespace CYQ.Data
         {
             return Exists(null);
         }
-       
+
         /// <param name="where">Sql statement where the conditions: 88, "id = 88"
         /// <para>sql语句的where条件：88、"id=88"</para></param>
         public bool Exists(object where)
@@ -1150,24 +1150,24 @@ namespace CYQ.Data
                 _aop.Para.TableName = _sourceTableName;
                 _aop.Para.Row = _Data;
                 _aop.Para.Where = where;
-                _aop.Para.IsTransaction = dalHelper.isOpenTrans;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
                 aopResult = _aop.Begin(Aop.AopEnum.Exists);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.dalType)
+                switch (dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
                         _aop.Para.ExeResult = _aop.Para.IsSuccess;
-                        dalHelper.recordsAffected = _aop.Para.IsSuccess ? 1 : 0;
+                        dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
                     default:
                         ClearParameters();//清除系统参数
                         string countSql = _sqlCreate.GetExistsSql(where);
                         _aop.Para.ExeResult = Convert.ToString(dalHelper.ExeScalar(countSql, false)) == "1" ? true : false;
-                        _aop.Para.IsSuccess = dalHelper.recordsAffected != -2;
+                        _aop.Para.IsSuccess = dalHelper.RecordsAffected != -2;
                         break;
                 }
             }
@@ -1175,7 +1175,7 @@ namespace CYQ.Data
             {
                 _aop.End(Aop.AopEnum.Exists);
             }
-            if (dalHelper.recordsAffected == -2)
+            if (dalHelper.RecordsAffected == -2)
             {
                 OnError();
             }
@@ -1237,7 +1237,7 @@ namespace CYQ.Data
             }
             else
             {
-                dalHelper.debugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + key);
+                dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + key);
             }
             return this;
         }
@@ -1432,7 +1432,7 @@ namespace CYQ.Data
         /// </summary>
         public void BeginTransation()
         {
-            dalHelper.isOpenTrans = true;
+            dalHelper.IsOpenTrans = true;
         }
         /// <summary>
         /// Commit Transation
@@ -1440,7 +1440,7 @@ namespace CYQ.Data
         /// </summary>
         public bool EndTransation()
         {
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
                 return dalHelper.EndTransaction();
             }
@@ -1452,7 +1452,7 @@ namespace CYQ.Data
         /// </summary>
         public bool RollBack()
         {
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
                 return dalHelper.RollBack();
             }
@@ -1478,7 +1478,7 @@ namespace CYQ.Data
                 {
                     dalHelper.OnExceptionEvent -= new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
                 }
-                _debugInfo = dalHelper.debugInfo.ToString();
+                _debugInfo = dalHelper.DebugInfo.ToString();
                 dalHelper.Dispose();
                 if (!isOnError)
                 {
@@ -1504,7 +1504,7 @@ namespace CYQ.Data
         }
         internal void OnError()
         {
-            if (dalHelper != null && dalHelper.isOpenTrans)
+            if (dalHelper != null && dalHelper.IsOpenTrans)
             {
                 Dispose(true);
             }

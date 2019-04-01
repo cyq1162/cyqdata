@@ -15,7 +15,7 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal static class AutoCache
     {
-        private static CacheManage _MemCache = CacheManage.Instance;//有可能使用MemCache操作
+        private static CacheManage _AutoCache = CacheManage.Instance;//有可能使用MemCache操作
 
         internal static bool GetCache(AopEnum action, AopInfo aopInfo)//Begin
         {
@@ -34,7 +34,7 @@ namespace CYQ.Data.Cache
             string baseKey = GetBaseKey(aopInfo);
             //查看是否通知我移除
             string key = GetKey(action, aopInfo, baseKey);
-            object obj = _MemCache.Get(key);
+            object obj = _AutoCache.Get(key);
             switch (action)
             {
                 case AopEnum.ExeMDataTableList:
@@ -69,7 +69,7 @@ namespace CYQ.Data.Cache
                     if (obj != null)
                     {
                         MDataRow row = obj as MDataRow;
-                        if (_MemCache.CacheType == CacheType.LocalCache)
+                        if (_AutoCache.CacheType == CacheType.LocalCache)
                         {
                             row = row.Clone();
                         }
@@ -123,7 +123,7 @@ namespace CYQ.Data.Cache
             }
 
 
-            if (_MemCache.CacheType == CacheType.LocalCache && _MemCache.Count > 5000000)//数量超过500万
+            if (_AutoCache.CacheType == CacheType.LocalCache && _AutoCache.Count > 5000000)//数量超过500万
             {
                 return;
             }
@@ -137,7 +137,7 @@ namespace CYQ.Data.Cache
             double cacheTime = AppConfig.Cache.DefaultCacheTime;// Math.Abs(12 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存中午或到夜里1点
             if (flag == 1 || aopInfo.PageIndex > 2) // 后面的页数，缓存时间可以短一些
             {
-                cacheTime = 2;//未知道操作何表时，只缓存2分钟（比如存储过程等语句）
+                cacheTime = 1;//未知道操作何表时，只缓存1分钟（比如存储过程等语句）
             }
             switch (action)
             {
@@ -150,27 +150,27 @@ namespace CYQ.Data.Cache
                             js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode));
                         }
                         js.AddBr();
-                        _MemCache.Set(key, js.ToString(), cacheTime);
+                        _AutoCache.Set(key, js.ToString(), cacheTime);
                     }
                     break;
                 case AopEnum.Select:
                 case AopEnum.ExeMDataTable:
                     if (IsCanCache(aopInfo.Table))
                     {
-                        _MemCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                        _AutoCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
                     }
                     break;
                 case AopEnum.ExeScalar:
-                    _MemCache.Set(key, aopInfo.ExeResult, cacheTime);
+                    _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
                 case AopEnum.Fill:
-                    _MemCache.Set(key, aopInfo.Row.Clone(), cacheTime);
+                    _AutoCache.Set(key, aopInfo.Row.Clone(), cacheTime);
                     break;
                 case AopEnum.GetCount:
-                    _MemCache.Set(key, aopInfo.RowCount, cacheTime);
+                    _AutoCache.Set(key, aopInfo.RowCount, cacheTime);
                     break;
                 case AopEnum.Exists:
-                    _MemCache.Set(key, aopInfo.ExeResult, cacheTime);
+                    _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
             }
 
@@ -371,7 +371,7 @@ namespace CYQ.Data.Cache
         private static void SetBaseKey(string baseKey, string key)
         {
             //baseKey是表的，不包括视图和自定义语句
-            if (_MemCache.CacheType == CacheType.LocalCache)
+            if (_AutoCache.CacheType == CacheType.LocalCache)
             {
                 if (cacheKeys.ContainsKey(baseKey))
                 {
@@ -384,15 +384,15 @@ namespace CYQ.Data.Cache
             }
             else
             {
-                StringBuilder sb = _MemCache.Get<StringBuilder>(baseKey);
+                StringBuilder sb = _AutoCache.Get<StringBuilder>(baseKey);
                 if (sb == null)
                 {
-                    _MemCache.Set(baseKey, new StringBuilder(key));
+                    _AutoCache.Set(baseKey, new StringBuilder(key));
                 }
                 else
                 {
                     sb.Append("," + key);
-                    _MemCache.Set(baseKey, sb);
+                    _AutoCache.Set(baseKey, sb);
                 }
             }
         }
@@ -489,7 +489,7 @@ namespace CYQ.Data.Cache
                     }
                     string baseKey = GetBaseKey(para, tableName);
                     string delKey = "DeleteAutoCache:" + baseKey;
-                    if (_MemCache.Contains(delKey))
+                    if (_AutoCache.Contains(delKey))
                     {
                         return false;
                     }
@@ -591,7 +591,7 @@ namespace CYQ.Data.Cache
                 {
                     string baseKey = GetBaseKey(para, tableName);
                     string delKey = "DeleteAutoCache:" + baseKey;
-                    if (_MemCache.Contains(delKey))
+                    if (_AutoCache.Contains(delKey))
                     {
                         //说明此项不可缓存
                         flag = 2;
@@ -690,7 +690,7 @@ namespace CYQ.Data.Cache
         public static void ReadyForRemove(string baseKey)
         {
             string delKey = "DeleteAutoCache:" + baseKey;
-            if (!_MemCache.Contains(delKey))
+            if (!_AutoCache.Contains(delKey))
             {
                 if (!removeList.Contains(baseKey))
                 {
@@ -705,7 +705,7 @@ namespace CYQ.Data.Cache
 
                 }
             }
-            _MemCache.Set(delKey, 0, 0.1);//设置6秒时间
+            _AutoCache.Set(delKey, 0, 0.1);//设置6秒时间
         }
         public static void ClearCache(object threadID)
         {
@@ -772,7 +772,7 @@ namespace CYQ.Data.Cache
                 lock (lockObj)
                 {
                     string keys = string.Empty;
-                    if (_MemCache.CacheType == CacheType.LocalCache)
+                    if (_AutoCache.CacheType == CacheType.LocalCache)
                     {
                         if (cacheKeys.ContainsKey(baseKey))
                         {
@@ -782,13 +782,14 @@ namespace CYQ.Data.Cache
                     }
                     else
                     {
-                        keys = _MemCache.Get<string>(baseKey);
+                        keys = _AutoCache.Get<string>(baseKey);
                     }
                     if (!string.IsNullOrEmpty(keys))
                     {
                         foreach (string item in keys.Split(','))
                         {
-                            _MemCache.Remove(item);
+                            if (string.IsNullOrEmpty(item)) { continue; }
+                            _AutoCache.Remove(item);
                         }
                     }
                 }
@@ -803,7 +804,7 @@ namespace CYQ.Data.Cache
                 if (errTime == DateTime.MinValue || errTime.AddMinutes(10) < DateTime.Now) // 10分钟记录一次
                 {
                     errTime = DateTime.Now;
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Cache);
                 }
             }
         }
@@ -849,7 +850,7 @@ namespace CYQ.Data.Cache
                     {
                         _ActionInstance = new MAction(KeyTableName, AppConfig.Cache.AutoCacheConn);
                         _ActionInstance.SetAopState(AopOp.CloseAll);//关掉自动缓存和Aop
-                        _ActionInstance.dalHelper.isAllowInterWriteLog = false;
+                        _ActionInstance.dalHelper.IsWriteLogOnError = false;
                     }
                     return _ActionInstance;
                 }

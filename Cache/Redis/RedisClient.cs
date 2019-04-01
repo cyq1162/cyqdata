@@ -31,10 +31,10 @@ namespace CYQ.Data.Cache
 
         bool hostServer_OnAuthEvent(MSocket socket)
         {
-            if (!Auth(socket.SocketPool.Password, socket))
+            if (!Auth(socket.HostNode.Password, socket))
             {
-                string err = "Auth password fail : " + socket.SocketPool.Password;
-                socket.SocketPool.Error = err;
+                string err = "Auth password fail : " + socket.HostNode.Password;
+                socket.HostNode.Error = err;
                 Error.Throw(err);
             }
             return true;

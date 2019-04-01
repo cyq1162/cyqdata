@@ -309,8 +309,7 @@ namespace CYQ.Data.Xml
             }
             catch (Exception err)
             {
-                Log.WriteLog(err.Message + "filename : " + fileName);
-                Error.Throw(err.Message + "filename : " + fileName);
+                Error.Throw(err.Message + " FileName : " + fileName);
             }
             return false;
         }
@@ -361,7 +360,7 @@ namespace CYQ.Data.Xml
         {
             if (Path.GetFileName(fileName).IndexOfAny(AppConst.InvalidFileNameChars) > -1)//包含无效的路径字符。
             {
-                Log.WriteLogToTxt("XHtmlBase.Save : InvalidPath : " + fileName);
+                Log.Write("XHtmlBase.Save : InvalidPath : " + fileName, LogType.Error);
                 return false;
             }
             string xHtml = string.Empty;
@@ -389,14 +388,14 @@ namespace CYQ.Data.Xml
                         }
                         catch (Exception err)
                         {
-                            Log.WriteLogToTxt(err);
+                            Log.Write(err, LogType.Error);
                         }
                     }
                     //}
                 }
                 else
                 {
-                    Log.WriteLogToTxt("No exist path folder:" + fileName);
+                    Log.Write("No exist path folder:" + fileName, LogType.Error);
                 }
             }
             return false;
@@ -414,7 +413,7 @@ namespace CYQ.Data.Xml
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
                 newDoc.InnerXml = xDoc.InnerXml;
             }
             return newDoc;

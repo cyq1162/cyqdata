@@ -54,7 +54,7 @@ namespace CYQ.Data.Tool
 
                     if (times > 3)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                         return;
                     }
                     else if (times > 2)
@@ -85,7 +85,7 @@ namespace CYQ.Data.Tool
                 {
                     if (times > 3)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                         return false;
                     }
                     else if (times > 2)

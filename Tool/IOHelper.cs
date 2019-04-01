@@ -227,7 +227,7 @@ namespace CYQ.Data.Tool
                 {
                     if (writeLogOnError)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                     }
                     else
                     {

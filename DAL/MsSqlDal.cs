@@ -17,7 +17,7 @@ namespace CYQ.Data
             AddParameters("ReturnValue", null, DbType.Int32, 32, ParameterDirection.ReturnValue);
         }
 
-        internal override void AddCustomePara(string paraName, ParaType paraType, object value,string typeName)
+        internal override void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
         {
             if (Com.Parameters.Contains(paraName))
             {
@@ -60,9 +60,9 @@ namespace CYQ.Data
         {
             try
             {
-                IsAllowRecordSql = false;
+                IsRecordDebugInfo = false;
                 bool result = ExeScalar("select 1 from master..sysdatabases where [name]='" + dbName + "'", false) != null;
-                IsAllowRecordSql = true;
+                IsRecordDebugInfo = true;
                 return result;
             }
             catch
@@ -70,5 +70,14 @@ namespace CYQ.Data
                 return true;
             }
         }
+        //protected override string FormatConnString(string connString)
+        //{
+        //    SqlConnectionStringBuilder sb = new SqlConnectionStringBuilder(connString);
+        //    if (sb.Pooling && sb.MaxPoolSize == 100)
+        //    {
+        //        sb.MaxPoolSize = 512;
+        //    }
+        //    return connString;
+        //}
     }
 }

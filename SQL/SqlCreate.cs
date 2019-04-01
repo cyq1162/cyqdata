@@ -29,7 +29,7 @@ namespace CYQ.Data.SQL
                 if (!_autoIDItems.Contains(key))
                 {
                     //检测并自动创建。
-                    Tool.DBTool.CheckAndCreateOracleSequence(key, _action.dalHelper.conn, _action.Data.PrimaryCell.ColumnName, TableName);
+                    Tool.DBTool.CheckAndCreateOracleSequence(key, _action.dalHelper.ConnName, _action.Data.PrimaryCell.ColumnName, TableName);
                     _autoIDItems.Add(key);
                 }
                 return key;
@@ -118,8 +118,8 @@ namespace CYQ.Data.SQL
                 }
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
-                    _action.dalHelper.debugInfo.Append(AppConst.HR + string.Format("error : {0} {1} can't be null", TableName, cell.ColumnName) + AppConst.BR);
-                    _action.dalHelper.recordsAffected = -2;
+                    _action.dalHelper.DebugInfo.Append(AppConst.HR + string.Format("error : {0} {1} can't be null", TableName, cell.ColumnName) + AppConst.BR);
+                    _action.dalHelper.RecordsAffected = -2;
                     isCanDo = false;
                     break;
                 }
@@ -137,7 +137,7 @@ namespace CYQ.Data.SQL
                     isCanDo = true;
                 }
             }
-            switch (_action.dalHelper.dalType)
+            switch (_action.dalHelper.DataBaseType)
             {
                 case DalType.Oracle:
                     if (!_action.AllowInsertID && DataType.GetGroup(primaryCell.Struct.SqlType) == 1)
@@ -149,7 +149,7 @@ namespace CYQ.Data.SQL
             }
 
             string sql = _TempSql.ToString().TrimEnd(',') + _TempSql2.ToString().TrimEnd(',') + ")";
-            switch (_action.dalHelper.dalType)
+            switch (_action.dalHelper.DataBaseType)
             {
                 case DalType.PostgreSQL:
                     if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
@@ -171,11 +171,11 @@ namespace CYQ.Data.SQL
 
                     if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
                     {
-                        if (_action.dalHelper.dalType == DalType.Sybase)
+                        if (_action.dalHelper.DataBaseType == DalType.Sybase)
                         {
                             sql = sql + " select @@IDENTITY as OutPutValue";
                         }
-                        else if (_action.dalHelper.dalType == DalType.MsSql)
+                        else if (_action.dalHelper.DataBaseType == DalType.MsSql)
                         {
                             sql += " select cast(scope_Identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
                         }
@@ -184,9 +184,9 @@ namespace CYQ.Data.SQL
                     {
                         sql += string.Format(" select '{0}' as OutPutValue", primaryCell.Value);
                     }
-                    if (_action.AllowInsertID && !_action.dalHelper.isOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
+                    if (_action.AllowInsertID && !_action.dalHelper.IsOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
                     {
-                        sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.dalType) + " off";
+                        sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
                 //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
@@ -249,7 +249,7 @@ namespace CYQ.Data.SQL
             }
             if (!isCanDo)
             {
-                _action.dalHelper.debugInfo.Append(AppConst.HR + "warn : " + TableName + " can't find the data can be updated!");
+                _action.dalHelper.DebugInfo.Append(AppConst.HR + "warn : " + TableName + " can't find the data can be updated!");
             }
             //switch (_action.dalHelper.dalType)
             //{
@@ -287,7 +287,7 @@ namespace CYQ.Data.SQL
         private string GetTopOneSql(object whereObj, string customColumn)
         {
             string columnNames = !string.IsNullOrEmpty(customColumn) ? customColumn : GetColumnsSql();
-            switch (_action.dalHelper.dalType)
+            switch (_action.dalHelper.DataBaseType)
             {
                 case DalType.Sybase:
                 //return "set rowcount 1 select " + columnNames + " from " + TableName + " where " + FormatWhere(whereObj) + " set rowcount 0";
@@ -301,7 +301,7 @@ namespace CYQ.Data.SQL
                 case DalType.PostgreSQL:
                     return "select " + columnNames + " from " + TableName + " where " + FormatWhere(whereObj) + " limit 1";
             }
-            return (string)Error.Throw(string.Format("GetTopOneSql:{0} No Be Support Now!", _action.dalHelper.dalType.ToString()));
+            return (string)Error.Throw(string.Format("GetTopOneSql:{0} No Be Support Now!", _action.dalHelper.DataBaseType.ToString()));
         }
         internal string GetBindSql(object whereObj, object text, object value)
         {
@@ -316,7 +316,7 @@ namespace CYQ.Data.SQL
         }
         internal string GetMaxID()
         {
-            switch (_action.dalHelper.dalType)
+            switch (_action.dalHelper.DataBaseType)
             {
                 case DalType.Oracle:
                     return string.Format("select {0}.currval from dual", AutoID);
@@ -328,7 +328,7 @@ namespace CYQ.Data.SQL
                     //case DalType.Access:
                     string columnName = _action.Data.Columns.FirstPrimary.ColumnName;
                     string tableName = TableName;
-                    if (_action.dalHelper.dalType == DalType.PostgreSQL)
+                    if (_action.dalHelper.DataBaseType == DalType.PostgreSQL)
                     {
                         columnName = SqlFormat.Keyword(columnName, DalType.PostgreSQL);
                         tableName = SqlFormat.Keyword(tableName, DalType.PostgreSQL);
@@ -395,11 +395,11 @@ namespace CYQ.Data.SQL
                     int i = _action.Data.Columns.GetIndex(columnName);//兼容字段映射
                     if (i > -1)
                     {
-                        v_Columns += SqlFormat.Keyword(_action.Data.Columns[i].ColumnName, _action.dalHelper.dalType) + ",";
+                        v_Columns += SqlFormat.Keyword(_action.Data.Columns[i].ColumnName, _action.dalHelper.DataBaseType) + ",";
                     }
                     else
                     {
-                        _action.dalHelper.debugInfo.Append(AppConst.HR + "warn : " + TableName + " no contains column " + columnName + AppConst.BR);
+                        _action.dalHelper.DebugInfo.Append(AppConst.HR + "warn : " + TableName + " no contains column " + columnName + AppConst.BR);
                     }
                 }
             }
@@ -476,11 +476,11 @@ namespace CYQ.Data.SQL
                 if (cell.IsNullOrEmpty)
                 {
                     isCanDo = false;
-                    _action.dalHelper.recordsAffected = -2;
-                    _action.dalHelper.debugInfo.Append(AppConst.HR + "error : " + cell.ColumnName + " can't be null" + AppConst.BR);
+                    _action.dalHelper.RecordsAffected = -2;
+                    _action.dalHelper.DebugInfo.Append(AppConst.HR + "error : " + cell.ColumnName + " can't be null" + AppConst.BR);
                     return "1=2 and " + cell.ColumnName + " is null";
                 }
-                switch (_action.dalHelper.dalType)
+                switch (_action.dalHelper.DataBaseType)
                 {
                     case DalType.Txt:
                     case DalType.Xml:

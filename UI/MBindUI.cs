@@ -143,7 +143,7 @@ namespace CYQ.Data.UI
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
             }
         }
         private static void BindList(ListControl listControl, MDataTable source)

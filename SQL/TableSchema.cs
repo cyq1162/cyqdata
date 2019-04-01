@@ -30,7 +30,7 @@ namespace CYQ.Data.SQL
         internal static MDictionary<string, MDataColumn> columnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
         internal static string GetTableCacheKey(DbBase dbBase)
         {
-            return GetTableCacheKey(dbBase.dalType, dbBase.DataBase, dbBase.conn);
+            return GetTableCacheKey(dbBase.DataBaseType, dbBase.DataBase, dbBase.ConnName);
         }
         internal static string GetTableCacheKey(DalType dalType, string dataBase, string conn)
         {
@@ -213,12 +213,12 @@ namespace CYQ.Data.SQL
         public static MDataColumn GetColumns(string tableName, ref DbBase dbHelper)
         {
             tableName = Convert.ToString(SqlCreate.SqlToViewSql(tableName));
-            string key = GetSchemaKey(tableName, dbHelper.DataBase, dbHelper.dalType);
+            string key = GetSchemaKey(tableName, dbHelper.DataBase, dbHelper.DataBaseType);
             if (CacheManage.LocalInstance.Contains(key))//缓存里获取
             {
                 return CacheManage.LocalInstance.Get<MDataColumn>(key).Clone();
             }
-            DalType dalType = dbHelper.dalType;
+            DalType dalType = dbHelper.DataBaseType;
 
             #region 文本数据库处理。
             if (dalType == DalType.Txt || dalType == DalType.Xml)
@@ -238,7 +238,7 @@ namespace CYQ.Data.SQL
 
 
 
-            tableName = SqlFormat.Keyword(tableName, dbHelper.dalType);
+            tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);
 
             //switch (dalType)
             //{
@@ -256,7 +256,7 @@ namespace CYQ.Data.SQL
             //如果table和helper不在同一个库
             DbBase helper = dbHelper.ResetDbBase(tableName);
 
-            helper.IsAllowRecordSql = false;//内部系统，不记录SQL表结构语句。
+            helper.IsRecordDebugInfo = false;//内部系统，不记录SQL表结构语句。
             try
             {
                 bool isView = tableName.Contains(" ");//是否视图。
@@ -397,7 +397,7 @@ namespace CYQ.Data.SQL
                                 helper.Con.Open();
                             }
                             DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, SqlFormat.NotKeyword(tableName) });
-                            if (!helper.isOpenTrans)
+                            if (!helper.IsOpenTrans)
                             {
                                 helper.Con.Close();
                             }
@@ -512,11 +512,11 @@ namespace CYQ.Data.SQL
             }
             catch (Exception err)
             {
-                helper.debugInfo.Append(err.Message);
+                helper.DebugInfo.Append(err.Message);
             }
             finally
             {
-                helper.IsAllowRecordSql = true;//恢复记录SQL表结构语句。
+                helper.IsRecordDebugInfo = true;//恢复记录SQL表结构语句。
                 if (helper != dbHelper)
                 {
                     helper.Dispose();
@@ -657,7 +657,7 @@ namespace CYQ.Data.SQL
                 sdr.Close();
             }
             MDataColumn mdc = GetColumns(keyDt);
-            mdc.dalType = helper.dalType;
+            mdc.dalType = helper.DataBaseType;
             return mdc;
 
         }
@@ -693,9 +693,9 @@ namespace CYQ.Data.SQL
                         }
                         if (tables == null)
                         {
-                            helper.IsAllowRecordSql = false;
+                            helper.IsRecordDebugInfo = false;
                             string sql = string.Empty;
-                            switch (helper.dalType)
+                            switch (helper.DataBaseType)
                             {
                                 case DalType.MsSql:
                                     sql = GetMSSQLTables(helper.Version.StartsWith("08"));
@@ -725,7 +725,7 @@ namespace CYQ.Data.SQL
                                 case DalType.Sybase:
                                     #region 用ADO.NET属性拿数据
                                     string restrict = "TABLE";
-                                    if (helper.dalType == DalType.Sybase)
+                                    if (helper.DataBaseType == DalType.Sybase)
                                     {
                                         restrict = "BASE " + restrict;
                                     }
@@ -742,10 +742,6 @@ namespace CYQ.Data.SQL
                                             if (!tables.ContainsKey(tableName))
                                             {
                                                 tables.Add(tableName, string.Empty);
-                                            }
-                                            else
-                                            {
-                                                Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
                                             }
                                         }
                                         dt = null;
@@ -770,10 +766,6 @@ namespace CYQ.Data.SQL
                                             {
                                                 tables.Add(tableName, Convert.ToString(sdr["Description"]));
                                             }
-                                        }
-                                        else
-                                        {
-                                            Log.WriteLogToTxt("Dictionary Has The Same TableName：" + tableName);
                                         }
                                     }
                                     sdr.Close();
@@ -844,7 +836,7 @@ namespace CYQ.Data.SQL
         {
             bool returnResult = false;
 
-            string key = GetSchemaKey(tableName, dbBase.DataBase, dbBase.dalType);
+            string key = GetSchemaKey(tableName, dbBase.DataBase, dbBase.DataBaseType);
             if (CacheManage.LocalInstance.Contains(key))//缓存里获取
             {
                 try
@@ -854,7 +846,7 @@ namespace CYQ.Data.SQL
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.DataBase);
                 }
             }
             else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
@@ -884,7 +876,7 @@ namespace CYQ.Data.SQL
                 //    dbBase.tempSql = "view";//使用access方式加载列
                 //}
                 mdcs = GetColumns(tableName, ref dbBase);
-                if (dbBase != null && dbBase.Con != null && !dbBase.isOpenTrans && dbBase.Con.State != ConnectionState.Closed)
+                if (dbBase != null && dbBase.Con != null && !dbBase.IsOpenTrans && dbBase.Con.State != ConnectionState.Closed)
                 {
                     dbBase.Con.Close();//非事务下，链接先关闭
                 }
@@ -894,10 +886,10 @@ namespace CYQ.Data.SQL
                 }
                 row = mdcs.ToRow(sourceTableName);
                 row.TableName = sourceTableName;
-                string key = GetSchemaKey(tableName, dbBase.DataBase, dbBase.dalType);
+                string key = GetSchemaKey(tableName, dbBase.DataBase, dbBase.DataBaseType);
                 CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
 
-                switch (dbBase.dalType)//文本数据库不保存。
+                switch (dbBase.DataBaseType)//文本数据库不保存。
                 {
                     //case DalType.Access:
                     //case DalType.SQLite:
@@ -924,7 +916,7 @@ namespace CYQ.Data.SQL
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.DataBase);
                 return false;
             }
         }
@@ -947,9 +939,9 @@ namespace CYQ.Data.SQL
             }
             int result = 0;
             string exist = string.Empty;
-            helper.IsAllowRecordSql = false;
-            DalType dalType = helper.dalType;
-            name = SqlFormat.Keyword(name, helper.dalType);
+            helper.IsRecordDebugInfo = false;
+            DalType dalType = helper.DataBaseType;
+            name = SqlFormat.Keyword(name, helper.DataBaseType);
             switch (dalType)
             {
                 case DalType.Access:
@@ -974,7 +966,7 @@ namespace CYQ.Data.SQL
                     }
                     catch (Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.DataBase);
                     }
                     break;
                 case DalType.MySql:
@@ -1012,7 +1004,7 @@ namespace CYQ.Data.SQL
             }
             if (exist != string.Empty)
             {
-                helper.IsAllowRecordSql = false;
+                helper.IsRecordDebugInfo = false;
                 result = Convert.ToInt32(helper.ExeScalar(exist, false));
             }
             return result > 0;

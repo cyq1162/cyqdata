@@ -48,7 +48,7 @@ namespace CYQ.Data.Cache
         public bool IsEndPointDead = false;
         public DateTime DeadEndPointRetryTime;
         #endregion
-       
+
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
         /// </summary>
@@ -58,7 +58,7 @@ namespace CYQ.Data.Cache
         /// </summary>
         private DateTime socketDeadTime = DateTime.MinValue;
 
-        private int maxQueue = 64;
+        private int maxQueue = 128;
         private int minQueue = 2;
 
         /// <summary>
@@ -69,8 +69,7 @@ namespace CYQ.Data.Cache
         private int deadEndPointSecondsUntilRetry = 1;
         private const int maxDeadEndPointSecondsUntilRetry = 60 * 10; //10 minutes
         private HostServer hostServer;
-        private IPEndPoint endPoint;
-        private Queue<MSocket> socketQueue = new Queue<MSocket>();
+        private Queue<MSocket> socketQueue = new Queue<MSocket>(16);
 
         internal HostNode(HostServer hostServer, string host)
         {
@@ -81,44 +80,8 @@ namespace CYQ.Data.Cache
             {
                 Password = items[1].Trim();
             }
-            endPoint = GetEndPoint(Host);
         }
 
-        /// <summary>
-        /// This method parses the given string into an IPEndPoint.
-        /// If the string is malformed in some way, or if the host cannot be resolved, this method will throw an exception.
-        /// </summary>
-        private static IPEndPoint GetEndPoint(string host)
-        {
-            //Parse port, default to 11211.
-            int port = 11211;
-            if (host.Contains(":"))
-            {
-                string[] split = host.Split(new char[] { ':' });
-                if (!Int32.TryParse(split[1], out port))
-                {
-                    throw new ArgumentException("Unable to parse host: " + host);
-                }
-                host = split[0];
-            }
-
-            //Parse host string.
-            IPAddress address;
-            if (!IPAddress.TryParse(host, out address))
-            {
-                //See if we can resolve it as a hostname
-                try
-                {
-                    address = Dns.GetHostEntry(host).AddressList[0];
-                }
-                catch (Exception e)
-                {
-                    throw new ArgumentException("Unable to resolve host: " + host, e);
-                }
-            }
-
-            return new IPEndPoint(address, port);
-        }
 
         /// <summary>
         /// Gets a socket from the pool.
@@ -173,7 +136,8 @@ namespace CYQ.Data.Cache
             //Try to create a new socket. On failure, mark endpoint as dead and return null.
             try
             {
-                MSocket socket = new MSocket(this, endPoint);
+
+                MSocket socket = new MSocket(this, Host);
                 Interlocked.Increment(ref NewSockets);
                 //Reset retry timer on success.
                 //不抛异常，则正常链接。
@@ -187,7 +151,7 @@ namespace CYQ.Data.Cache
             catch (Exception e)
             {
                 Interlocked.Increment(ref FailedNewSockets);
-                logger.Error("Error connecting to: " + endPoint.Address, e);
+                logger.Error("Error connecting to: " + Host, e);
                 //Mark endpoint as dead
                 IsEndPointDead = true;
                 //Retry in 2 minutes

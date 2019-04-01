@@ -14,37 +14,141 @@ namespace CYQ.Data
 
     /// <summary>
     /// 数据库操作基类 （模板模式：Template Method）
+    /// 属性管理
     /// </summary>
-    internal abstract class DbBase : IDisposable
+    internal abstract partial class DbBase : IDisposable
     {
-        // private static MDictionary<string, bool> _dbOperator = new MDictionary<string, bool>();//数据库是否更新中
+        #region 对外公开的属性
         /// <summary>
         /// 记录SQL语句信息
         /// </summary>
-        internal System.Text.StringBuilder debugInfo = new System.Text.StringBuilder();
+        public System.Text.StringBuilder DebugInfo = new System.Text.StringBuilder();
+        /// <summary>
+        /// 执行命令时所受影响的行数（-2为发生异常）。
+        /// </summary>
+        public int RecordsAffected = 0;
+        /// <summary>
+        /// 当前是否开启事务
+        /// </summary>
+        public bool IsOpenTrans = false;
+        /// <summary>
+        /// 原生态传进来的配置名（或链接）
+        /// </summary>
+        public string ConnName
+        {
+            get
+            {
+                return !ConnObj.Master.IsBackup ? ConnObj.Master.ConnName : ConnObj.BackUp.ConnName;
+            }
+        }
+        /// <summary>
+        /// 数据库主从备链接管理对象;
+        /// </summary>
+        public ConnObject ConnObj;
 
         /// <summary>
-        /// 是否允许进入写日志中模块
+        /// 当前使用中的链接对象
         /// </summary>
-        internal bool isAllowInterWriteLog = true;
-        internal int recordsAffected = 0;//执行命令时所受影响的行数（-2为发生异常）。
-        internal bool isWriteLog = false;//默认不启用，由AppSetting中配置控制，出现是为不用配置文件，内部手动控制启用。
-        internal bool isUseUnsafeModeOnSqlite = false;
-        internal bool isOpenTrans = false;
-        internal DalType dalType = DalType.MsSql;
+        public ConnBean UsingConnBean;
+        /// <summary>
+        /// 获得链接的数据库名称
+        /// </summary>
+        public virtual string DataBase
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_con.Database))
+                {
+                    return _con.Database;
+                }
+                else if (DataBaseType == DalType.Oracle)
+                {
+                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = Aries)))
+                    int i = _con.DataSource.LastIndexOf('=') + 1;
+                    return _con.DataSource.Substring(i).Trim(' ', ')');
+                }
+                else
+                {
+                    return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
+                }
+            }
+        }
+        private static MDictionary<string, string> _VersionCache = new MDictionary<string, string>();
+        private string _Version = string.Empty;
+        /// <summary>
+        /// 数据库的版本号
+        /// </summary>
+        public string Version
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_Version))
+                {
+                    switch (DataBaseType)
+                    {
+                        case DalType.Txt:
+                            _Version = "txt2.0";
+                            break;
+                        case DalType.Xml:
+                            _Version = "xml2.0";
+                            break;
+                        default:
+                            if (_VersionCache.ContainsKey(ConnName))
+                            {
+                                _Version = _VersionCache[ConnName];
+                            }
+                            else
+                            {
+                                if (IsOpenTrans && UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+                                {
+                                    ResetConn(ConnObj.Master);
+                                }
+                                if (OpenCon(UsingConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
+                                {
+                                    _Version = _con.ServerVersion;
+                                    if (!_VersionCache.ContainsKey(ConnName))
+                                    {
+                                        _VersionCache.Set(ConnName, _Version);
+                                    }
+                                    if (!IsOpenTrans)//避免把事务给关闭了。
+                                    {
+                                        CloseCon();
+                                    }
+                                }
+                            }
+
+                            break;
+                    }
+
+
+                }
+                return _Version;
+            }
+        }
+        /// <summary>
+        /// 当前操作的数据库类型
+        /// </summary>
+        public DalType DataBaseType
+        {
+            get
+            {
+                return ConnObj.Master.ConnDalType;
+            }
+        }
+        #endregion
+
+
+        /// <summary>
+        /// 是否允许进入写日志中模块(默认true)
+        /// </summary>
+        public bool IsWriteLogOnError = true;
+
+        protected bool isUseUnsafeModeOnSqlite = false;
         private bool isAllowResetConn = true;//如果执行了非查询之后，为了数据的一致性，不允许切换到Slave数据库链接
+        private string tempSql = string.Empty;//附加信息，包括调试信息
 
-        internal string tempSql = string.Empty;//附加信息，包括调试信息
 
-        internal string conn = string.Empty;//原生态传进来的链接
-        /// <summary>
-        /// 数据库链接实体（创建的时候被赋值）;
-        /// </summary>
-        internal ConnObject connObject;
-        /// <summary>
-        /// 当前使用的链接对象
-        /// </summary>
-        internal ConnBean useConnBean;
+
         private IsolationLevel _TranLevel = IsolationLevel.ReadCommitted;
         internal IsolationLevel TranLevel
         {
@@ -74,81 +178,8 @@ namespace CYQ.Data
         internal DbTransaction _tran;
         private Stopwatch _watch;
 
-        /// <summary>
-        /// 获得链接的数据库名称
-        /// </summary>
-        public virtual string DataBase
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(_con.Database))
-                {
-                    return _con.Database;
-                }
-                else if (dalType == DalType.Oracle)
-                {
-                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = Aries)))
-                    int i = _con.DataSource.LastIndexOf('=') + 1;
-                    return _con.DataSource.Substring(i).Trim(' ', ')');
-                }
-                else
-                {
-                    return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
-                }
-            }
-        }
-        public static MDictionary<string, string> _VersionCache = new MDictionary<string, string>();
-        private string _Version = string.Empty;
-        /// <summary>
-        /// 数据库的版本号
-        /// </summary>
-        public string Version
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_Version))
-                {
-                    switch (dalType)
-                    {
-                        case DalType.Txt:
-                            _Version = "txt2.0";
-                            break;
-                        case DalType.Xml:
-                            _Version = "xml2.0";
-                            break;
-                        default:
-                            if (_VersionCache.ContainsKey(conn))
-                            {
-                                _Version = _VersionCache[conn];
-                            }
-                            else
-                            {
-                                if (isOpenTrans && useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
-                                {
-                                    ResetConn(connObject.Master);
-                                }
-                                if (OpenCon(useConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
-                                {
-                                    _Version = _con.ServerVersion;
-                                    if (!_VersionCache.ContainsKey(conn))
-                                    {
-                                        _VersionCache.Set(conn, _Version);
-                                    }
-                                    if (!isOpenTrans)//避免把事务给关闭了。
-                                    {
-                                        CloseCon();
-                                    }
-                                }
-                            }
-
-                            break;
-                    }
 
 
-                }
-                return _Version;
-            }
-        }
         public DbConnection Con
         {
             get
@@ -163,36 +194,34 @@ namespace CYQ.Data
                 return _com;
             }
         }
-        private bool _IsAllowRecordSql = true;
+        private bool _IsRecordDebugInfo = true;
         /// <summary>
         /// 是否允许记录SQL语句 (内部操作会关掉此值为False）
         /// </summary>
-        internal bool IsAllowRecordSql
+        public bool IsRecordDebugInfo
         {
             get
             {
-                return (AppConfig.Debug.OpenDebugInfo || AppConfig.Debug.SqlFilter > -1) && _IsAllowRecordSql;
+                return (AppConfig.Debug.OpenDebugInfo || AppConfig.Debug.SqlFilter > -1) && _IsRecordDebugInfo;
             }
             set
             {
-                _IsAllowRecordSql = value;
+                _IsRecordDebugInfo = value;
             }
         }
         public DbBase(ConnObject co)
         {
-            this.connObject = co;
-            this.useConnBean = co.Master;
-            this.conn = co.Master.ConnString;
-            dalType = co.Master.ConnDalType;
+            this.ConnObj = co;
+            this.UsingConnBean = co.Master;
             _fac = GetFactory();
             _con = _fac.CreateConnection();
             try
             {
-                _con.ConnectionString = conn;
+                _con.ConnectionString = co.Master.ConnString;
             }
             catch (Exception err)
             {
-                Error.Throw("check the connectionstring is be ok!" + AppConst.BR + "error:" + err.Message + AppConst.BR + conn);
+                Error.Throw("check the connectionstring is be ok!" + AppConst.BR + "error:" + err.Message + AppConst.BR + ConnName);
             }
 
             _com = _con.CreateCommand();
@@ -201,7 +230,7 @@ namespace CYQ.Data
                 _com.Connection = _con;
                 _com.CommandTimeout = AppConfig.DB.CommandTimeout;
             }
-            if (IsAllowRecordSql)//开启秒表计算
+            if (IsRecordDebugInfo)//开启秒表计算
             {
                 _watch = new Stopwatch();
             }
@@ -226,8 +255,6 @@ namespace CYQ.Data
         /// <summary>
         /// 切换数据库（修改数据库链接）
         /// </summary>
-        /// <param name="dbName"></param>
-        /// <returns></returns>
         internal DbResetResult ChangeDatabase(string dbName)
         {
             if (_con.State == ConnectionState.Closed)//事务中。。不允许切换
@@ -236,11 +263,10 @@ namespace CYQ.Data
                 {
                     if (IsExistsDbNameWithCache(dbName))//新的数据库不存在。。不允许切换
                     {
-                        conn = GetNewConn(dbName);
-                        _con.ConnectionString = ConnBean.RemoveConnProvider(dalType, conn);
-                        connObject = ConnObject.Create(dbName + "Conn");
-                        connObject.Master.ConnName = dbName + "Conn";
-                        connObject.Master.ConnString = conn;
+                        _con.ConnectionString = GetConnString(dbName);
+                        ConnObj = ConnObject.Create(dbName + "Conn");
+                        ConnObj.Master.ConnName = dbName + "Conn";
+                        ConnObj.Master.ConnString = _con.ConnectionString;
                         return DbResetResult.Yes;
                     }
                     else
@@ -250,7 +276,7 @@ namespace CYQ.Data
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.DataBase);
                 }
 
             }
@@ -275,7 +301,7 @@ namespace CYQ.Data
                 if (_con.State != ConnectionState.Closed)//事务中。。创建新链接切换
                 {
                     string dbName = dbTableName.Split('.')[0];
-                    return DalCreate.CreateDal(GetNewConn(dbName));
+                    return DalCreate.CreateDal(GetConnString(dbName));
                 }
 
             }
@@ -293,7 +319,7 @@ namespace CYQ.Data
             {
 
                 string dbName = dbTableName.Split('.')[0];
-                if (string.Compare(DataBase, dbName, StringComparison.OrdinalIgnoreCase) != 0 && conn.IndexOf(DataBase) == conn.LastIndexOf(DataBase))
+                if (string.Compare(DataBase, dbName, StringComparison.OrdinalIgnoreCase) != 0 && ConnName.IndexOf(DataBase) == ConnName.LastIndexOf(DataBase))
                 {
                     return true;
                 }
@@ -301,14 +327,14 @@ namespace CYQ.Data
             }
             return false;
         }
-        protected string GetNewConn(string dbName)
+        protected string GetConnString(string dbName)
         {
             string newConn = AppConfig.GetConn(dbName + "Conn");
             if (!string.IsNullOrEmpty(newConn))
             {
-                return newConn;
+                return ConnBean.Create(newConn).ConnString;
             }
-            return conn.Replace(DataBase, dbName);
+            return UsingConnBean.ConnString.Replace(DataBase, dbName);
         }
 
         static MDictionary<string, bool> dbList = new MDictionary<string, bool>(3);
@@ -316,7 +342,7 @@ namespace CYQ.Data
         {
             try
             {
-                string key = dalType.ToString() + "." + dbName;
+                string key = DataBaseType.ToString() + "." + dbName;
                 if (dbList.ContainsKey(key))
                 {
                     return dbList[key];
@@ -331,7 +357,6 @@ namespace CYQ.Data
             }
         }
         protected abstract bool IsExistsDbName(string dbName);
-
         #endregion
 
         private int returnValue = -1;
@@ -400,61 +425,395 @@ namespace CYQ.Data
             }
         }
 
-        #region 执行
+
+        #region 参数化管理
+
+        public bool AddParameters(string parameterName, object value)
+        {
+            return AddParameters(parameterName, value, DbType.String, -1, ParameterDirection.Input);
+        }
+        public virtual bool AddParameters(string parameterName, object value, DbType dbType, int size, ParameterDirection direction)
+        {
+            if (DataBaseType == DalType.Oracle)
+            {
+                parameterName = parameterName.Replace(":", "").Replace("@", "");
+                if (dbType == DbType.String && size > 4000)
+                {
+                    AddCustomePara(parameterName, size == int.MaxValue ? ParaType.CLOB : ParaType.NCLOB, value, null);
+                    return true;
+                }
+            }
+            else
+            {
+                parameterName = parameterName.Substring(0, 1) == Pre.ToString() ? parameterName : Pre + parameterName;
+            }
+            if (Com.Parameters.Contains(parameterName))//已经存在，不添加
+            {
+                return false;
+            }
+            DbParameter para = _fac.CreateParameter();
+            para.ParameterName = parameterName;
+            para.Value = value == null ? DBNull.Value : value;
+            if (dbType == DbType.Time)// && dalType != DalType.MySql
+            {
+                para.DbType = DbType.String;
+            }
+            else
+            {
+                if (dbType == DbType.DateTime && value != null)
+                {
+                    string time = Convert.ToString(value);
+                    if (DataBaseType == DalType.MsSql && time == DateTime.MinValue.ToString())
+                    {
+                        para.Value = SqlDateTime.MinValue;
+                    }
+                    else if (DataBaseType == DalType.MySql && (time == SqlDateTime.MinValue.ToString() || time == DateTime.MinValue.ToString()))
+                    {
+                        para.Value = DateTime.MinValue;
+                    }
+                }
+                para.DbType = dbType;
+            }
+            if (dbType == DbType.Binary && DataBaseType == DalType.MySql)//（mysql不能设定长度，否则会报索引超出了数组界限错误【已过时，旧版本的MySql.Data.dll不能指定长度】）。
+            {
+                if (value != null)
+                {
+                    byte[] bytes = value as byte[];
+                    para.Size = bytes.Length;//新版本的MySql.Data.dll 修正了长度指定（不指定就没数据进去），所以又要指定长度，Shit
+                }
+                else
+                {
+                    para.Size = -1;
+                }
+            }
+            else if (dbType != DbType.Binary && size > -1)
+            {
+                if (size != para.Size)
+                {
+                    para.Size = size;
+                }
+            }
+            para.Direction = direction;
+
+            Com.Parameters.Add(para);
+            return true;
+        }
+        internal virtual void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
+        {
+            switch (paraType)
+            {
+
+                case ParaType.OutPut:
+                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.Output);
+                    break;
+                case ParaType.InputOutput:
+                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.InputOutput);
+                    break;
+                case ParaType.ReturnValue:
+                    AddParameters(paraName, null, DbType.Int32, 32, ParameterDirection.ReturnValue);
+                    break;
+            }
+        }
+        //internal virtual void AddCustomePara(string paraName, ParaType paraType, object value)
+        //{
+        //}
+        //public abstract DbParameter GetNewParameter();
+
+        public void ClearParameters()
+        {
+            if (_com != null && _com.Parameters != null)
+            {
+                _com.Parameters.Clear();
+            }
+        }
         /// <summary>
-        /// 并发操作检测
+        /// 处理内置的MSSQL和Oracle两种存储过程分页
+        /// </summary>
+        protected virtual void AddReturnPara() { }
+
+        private void SetCommandText(string commandText, bool isProc)
+        {
+            if (OracleDal.clientType > 0)
+            {
+                Type t = _com.GetType();
+                System.Reflection.PropertyInfo pi = t.GetProperty("BindByName");
+                if (pi != null)
+                {
+                    pi.SetValue(_com, true, null);
+                }
+            }
+            _com.CommandText = isProc ? commandText : SqlFormat.Compatible(commandText, DataBaseType, false);
+            if (!isProc && DataBaseType == DalType.SQLite && _com.CommandText.Contains("charindex"))
+            {
+                _com.CommandText += " COLLATE NOCASE";//忽略大小写
+            }
+            //else if (isProc && dalType == DalType.MySql)
+            //{
+            //    _com.CommandText = "Call " + _com.CommandText;
+            //}
+            _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
+            if (isProc)
+            {
+                if (commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
+                {
+                    AddReturnPara();
+                    //检测是否存在分页存储过程，若不存在，则创建。
+                    Tool.DBTool.CreateSelectBaseProc(DataBaseType, ConnName);//内部分检测是否已创建过。
+                }
+            }
+            else
+            {
+                //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
+                if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
+                {
+                    bool needToReplace = (DataBaseType == DalType.Oracle || DataBaseType == DalType.MySql) && _com.CommandText.Contains("@");
+                    string paraName;
+                    for (int i = 0; i < _com.Parameters.Count; i++)
+                    {
+                        paraName = _com.Parameters[i].ParameterName.TrimStart(Pre);//默认自带前缀的，取消再判断
+                        if (needToReplace && _com.CommandText.IndexOf("@" + paraName) > -1)
+                        {
+                            //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
+                            switch (DataBaseType)
+                            {
+                                case DalType.Oracle:
+                                case DalType.MySql:
+                                    _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
+                                    break;
+                            }
+                        }
+                        if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
+                        {
+                            _com.Parameters.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            }
+            //else
+            //{
+            //    string checkText = commandText.ToLower();
+            //    //int index=
+            //    //if (checkText.IndexOf("table") > -1 && (checkText.IndexOf("delete") > -1 || checkText.IndexOf("drop") > -1 || checkText.IndexOf("truncate") > -1))
+            //    //{
+            //    //    Log.WriteLog(commandText);
+            //    //}
+            //}
+            if (IsRecordDebugInfo)
+            {
+                tempSql = GetParaInfo(_com.CommandText) + AppConst.BR + "execute time is: ";
+            }
+        }
+        #endregion
+
+        #region 调试信息管理
+
+        private string GetParaInfo(string commandText)
+        {
+            string paraInfo = DataBaseType + "." + DataBase + ".SQL: " + AppConst.BR + commandText;
+            foreach (DbParameter item in _com.Parameters)
+            {
+                paraInfo += AppConst.BR + "Para: " + item.ParameterName + "-> " + (item.Value == DBNull.Value ? "DBNull.Value" : item.Value);
+            }
+            return paraInfo;
+        }
+
+        /// <summary>
+        /// 记录执行时间
+        /// </summary>
+        private void WriteTime()
+        {
+            if (IsRecordDebugInfo && _watch != null)
+            {
+                _watch.Stop();
+                double ms = _watch.Elapsed.TotalMilliseconds;
+                tempSql += ms + " (ms)" + AppConst.HR;
+                if (AppConfig.Debug.OpenDebugInfo)
+                {
+                    DebugInfo.Append(tempSql);
+                    if (AppDebug.IsRecording && ms >= AppConfig.Debug.InfoFilter)
+                    {
+                        AppDebug.Add(tempSql);
+                    }
+                }
+                if (AppConfig.Debug.SqlFilter >= 0 && ms >= AppConfig.Debug.SqlFilter)
+                {
+                    Log.Write(tempSql, LogType.Debug);
+                }
+                _watch.Reset();
+                tempSql = null;
+            }
+        }
+        #endregion
+
+        #region 事务管理
+
+
+        public bool EndTransaction()
+        {
+            IsOpenTrans = false;
+            if (_tran != null)
+            {
+                try
+                {
+                    if (_tran.Connection == null)
+                    {
+                        return false;//上一个执行语句发生了异常（特殊情况在ExeReader guid='xxx' 但不抛异常)
+                    }
+                    _tran.Commit();
+
+                }
+                catch (Exception err)
+                {
+                    RollBack();
+                    WriteError("EndTransaction():" + err.Message);
+                    return false;
+                }
+                finally
+                {
+                    _tran = null;
+                    CloseCon();
+                }
+            }
+            return true;
+        }
+        /// <summary>
+        /// 事务（有则）回滚
         /// </summary>
         /// <returns></returns>
-        //private bool CheckIsConcurrent()
-        //{
-        //    int waitTimes = 500;//5秒
-        //    while (_dbOperator.ContainsKey(DataBase) && _dbOperator[DataBase] && waitTimes > -1)
-        //    {
-        //        waitTimes--;
-        //        System.Threading.Thread.Sleep(10);
-        //        if (waitTimes == 0)
-        //        {
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
+        public bool RollBack()
+        {
+            if (_tran != null)
+            {
+                try
+                {
+                    if (_tran.Connection != null)
+                    {
+                        _tran.Rollback();
+                    }
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+                finally
+                {
+                    _tran = null;//以便重启事务，避免无法二次回滚。
+                }
+            }
+            return true;
+        }
+
+        #endregion
+
+        #region 异常处理
+
+        internal delegate void OnException(string msg);
+        internal event OnException OnExceptionEvent;
+        internal bool IsOnExceptionEventNull
+        {
+            get
+            {
+                return OnExceptionEvent == null;
+            }
+        }
+        /// <summary>
+        /// 输出错误（若事务中，回滚事务）
+        /// </summary>
+        /// <param name="err"></param>
+        internal void WriteError(string err)
+        {
+            err = DataBaseType + " Call Function::" + err;
+            if (_watch != null && _watch.IsRunning)
+            {
+                _watch.Stop();
+                _watch.Reset();
+            }
+            RollBack();
+            if (IsWriteLogOnError)
+            {
+                Log.Write(err + AppConst.BR + DebugInfo, LogType.DataBase);
+            }
+            if (OnExceptionEvent != null)
+            {
+                try
+                {
+                    OnExceptionEvent(err);
+                }
+                catch
+                {
+
+                }
+            }
+            if (IsOpenTrans)
+            {
+                Dispose();//事务中发生语句语法错误，直接关掉资源，避免因后续代码继续执行。
+            }
+        }
+
+        #endregion
+
+        public void Dispose()
+        {
+            if (_con != null)
+            {
+                CloseCon();
+                _con = null;
+            }
+            if (_com != null)
+            {
+                _com = null;
+            }
+            if (_watch != null)
+            {
+                _watch = null;
+            }
+            tempSql = null;
+            DebugInfo = null;
+        }
+    }
+
+    /// <summary>
+    /// 执行管理
+    /// </summary>
+    internal abstract partial class DbBase
+    {
         private DbDataReader ExeDataReaderSQL(string cmdText, bool isProc)
         {
             DbDataReader sdr = null;
             ConnBean coSlave = null;
-            if (!isOpenTrans)// && _IsAllowRecordSql
+            if (!IsOpenTrans)// && _IsAllowRecordSql
             {
-                coSlave = connObject.GetSlave();
+                coSlave = ConnObj.GetSlave();
             }
-            else if (useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+            else if (UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
             {
-                ResetConn(connObject.Master);
+                ResetConn(ConnObj.Master);
             }
             if (OpenCon(coSlave, AllowConnLevel.MaterBackupSlave))
             {
                 try
                 {
                     CommandBehavior cb = CommandBehavior.CloseConnection;
-                    if (_IsAllowRecordSql)//外部SQL，带表结构返回
+                    if (_IsRecordDebugInfo)//外部SQL，带表结构返回
                     {
-                        cb = isOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo;
+                        cb = IsOpenTrans ? CommandBehavior.KeyInfo : CommandBehavior.CloseConnection | CommandBehavior.KeyInfo;
                     }
-                    else if (isOpenTrans)
+                    else if (IsOpenTrans)
                     {
                         cb = CommandBehavior.Default;//避免事务时第一次拿表结构链接被关闭。
                     }
                     sdr = _com.ExecuteReader(cb);
                     if (sdr != null)
                     {
-                        recordsAffected = sdr.RecordsAffected;
+                        RecordsAffected = sdr.RecordsAffected;
                     }
                 }
                 catch (DbException err)
                 {
                     string msg = "ExeDataReader():" + err.Message;
-                    debugInfo.Append(msg + AppConst.BR);
-                    recordsAffected = -2;
+                    DebugInfo.Append(msg + AppConst.BR);
+                    RecordsAffected = -2;
                     WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                 }
                 //finally
@@ -491,48 +850,48 @@ namespace CYQ.Data
         }
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
-            recordsAffected = -2;
-            if (isOpenTrans && useConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+            RecordsAffected = -2;
+            if (IsOpenTrans && UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
             {
-                ResetConn(connObject.Master);
+                ResetConn(ConnObj.Master);
             }
             if (OpenCon())//这里也会切库了，同时设置了10秒切到主库。
             {
                 try
                 {
-                    if (useConnBean.ConnString != connObject.Master.ConnString)
+                    if (UsingConnBean.ConnString != ConnObj.Master.ConnString)
                     {
                         // recordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeNonQuerySQL() on Slave DataBase!";
-                        debugInfo.Append(msg + AppConst.BR);
+                        DebugInfo.Append(msg + AppConst.BR);
                         WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                     }
                     else
                     {
-                        if (isUseUnsafeModeOnSqlite && !isProc && dalType == DalType.SQLite && !isOpenTrans)
+                        if (isUseUnsafeModeOnSqlite && !isProc && DataBaseType == DalType.SQLite && !IsOpenTrans)
                         {
                             _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
                         }
-                        recordsAffected = _com.ExecuteNonQuery();
+                        RecordsAffected = _com.ExecuteNonQuery();
                     }
                 }
                 catch (DbException err)
                 {
 
                     string msg = "ExeNonQuery():" + err.Message;
-                    debugInfo.Append(msg + AppConst.BR);
+                    DebugInfo.Append(msg + AppConst.BR);
                     //recordsAffected = -2;
                     WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                 }
                 finally
                 {
-                    if (!isOpenTrans)
+                    if (!IsOpenTrans)
                     {
                         CloseCon();
                     }
                 }
             }
-            return recordsAffected;
+            return RecordsAffected;
         }
         public int ExeNonQuery(string cmdText, bool isProc)
         {
@@ -559,18 +918,18 @@ namespace CYQ.Data
             object returnValue = null;
             ConnBean coSlave = null;
             //mssql 有 insert into ...select 操作。
-            bool isSelectSql = !isOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
+            bool isSelectSql = !IsOpenTrans && !cmdText.ToLower().TrimStart().StartsWith("insert ");//&& _IsAllowRecordSql
             bool isOpenOK;
             if (isSelectSql)
             {
-                coSlave = connObject.GetSlave();
+                coSlave = ConnObj.GetSlave();
                 isOpenOK = OpenCon(coSlave, AllowConnLevel.MaterBackupSlave);
             }
             else
             {
-                if (useConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
+                if (UsingConnBean.IsSlave) // 如果是在从库，切回主库。(insert ...select 操作)
                 {
-                    ResetConn(connObject.Master);
+                    ResetConn(ConnObj.Master);
                 }
                 isOpenOK = OpenCon();
             }
@@ -578,29 +937,29 @@ namespace CYQ.Data
             {
                 try
                 {
-                    if (!isSelectSql && useConnBean.ConnString != connObject.Master.ConnString)
+                    if (!isSelectSql && UsingConnBean.ConnString != ConnObj.Master.ConnString)
                     {
-                        recordsAffected = -2;//从库不允许执行非查询操作。
+                        RecordsAffected = -2;//从库不允许执行非查询操作。
                         string msg = "You can't do ExeScalarSQL(with transaction or insert) on Slave DataBase!";
-                        debugInfo.Append(msg + AppConst.BR);
+                        DebugInfo.Append(msg + AppConst.BR);
                         WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                     }
                     else
                     {
                         returnValue = _com.ExecuteScalar();
-                        recordsAffected = returnValue == null ? 0 : 1;
+                        RecordsAffected = returnValue == null ? 0 : 1;
                     }
                 }
                 catch (DbException err)
                 {
                     string msg = "ExeScalar():" + err.Message;
-                    debugInfo.Append(msg + AppConst.BR);
-                    recordsAffected = -2;
+                    DebugInfo.Append(msg + AppConst.BR);
+                    RecordsAffected = -2;
                     WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                 }
                 finally
                 {
-                    if (!isOpenTrans)
+                    if (!IsOpenTrans)
                     {
                         CloseCon();
                     }
@@ -674,238 +1033,12 @@ namespace CYQ.Data
             return dataTable;
         }
         */
-        #endregion
-        public bool AddParameters(string parameterName, object value)
-        {
-            return AddParameters(parameterName, value, DbType.String, -1, ParameterDirection.Input);
-        }
-        public virtual bool AddParameters(string parameterName, object value, DbType dbType, int size, ParameterDirection direction)
-        {
-            if (dalType == DalType.Oracle)
-            {
-                parameterName = parameterName.Replace(":", "").Replace("@", "");
-                if (dbType == DbType.String && size > 4000)
-                {
-                    AddCustomePara(parameterName, size == int.MaxValue ? ParaType.CLOB : ParaType.NCLOB, value, null);
-                    return true;
-                }
-            }
-            else
-            {
-                parameterName = parameterName.Substring(0, 1) == Pre.ToString() ? parameterName : Pre + parameterName;
-            }
-            if (Com.Parameters.Contains(parameterName))//已经存在，不添加
-            {
-                return false;
-            }
-            DbParameter para = _fac.CreateParameter();
-            para.ParameterName = parameterName;
-            para.Value = value == null ? DBNull.Value : value;
-            if (dbType == DbType.Time)// && dalType != DalType.MySql
-            {
-                para.DbType = DbType.String;
-            }
-            else
-            {
-                if (dbType == DbType.DateTime && value != null)
-                {
-                    string time = Convert.ToString(value);
-                    if (dalType == DalType.MsSql && time == DateTime.MinValue.ToString())
-                    {
-                        para.Value = SqlDateTime.MinValue;
-                    }
-                    else if (dalType == DalType.MySql && (time == SqlDateTime.MinValue.ToString() || time == DateTime.MinValue.ToString()))
-                    {
-                        para.Value = DateTime.MinValue;
-                    }
-                }
-                para.DbType = dbType;
-            }
-            if (dbType == DbType.Binary && dalType == DalType.MySql)//（mysql不能设定长度，否则会报索引超出了数组界限错误【已过时，旧版本的MySql.Data.dll不能指定长度】）。
-            {
-                if (value != null)
-                {
-                    byte[] bytes = value as byte[];
-                    para.Size = bytes.Length;//新版本的MySql.Data.dll 修正了长度指定（不指定就没数据进去），所以又要指定长度，Shit
-                }
-                else
-                {
-                    para.Size = -1;
-                }
-            }
-            else if (dbType != DbType.Binary && size > -1)
-            {
-                if (size != para.Size)
-                {
-                    para.Size = size;
-                }
-            }
-            para.Direction = direction;
-
-            Com.Parameters.Add(para);
-            return true;
-        }
-        internal virtual void AddCustomePara(string paraName, ParaType paraType, object value, string typeName)
-        {
-            switch (paraType)
-            {
-
-                case ParaType.OutPut:
-                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.Output);
-                    break;
-                case ParaType.InputOutput:
-                    AddParameters(paraName, null, DbType.String, 2000, ParameterDirection.InputOutput);
-                    break;
-                case ParaType.ReturnValue:
-                    AddParameters(paraName, null, DbType.Int32, 32, ParameterDirection.ReturnValue);
-                    break;
-            }
-        }
-        //internal virtual void AddCustomePara(string paraName, ParaType paraType, object value)
-        //{
-        //}
-        //public abstract DbParameter GetNewParameter();
-
-        public void ClearParameters()
-        {
-            if (_com != null && _com.Parameters != null)
-            {
-                _com.Parameters.Clear();
-            }
-        }
-        /// <summary>
-        /// 处理内置的MSSQL和Oracle两种存储过程分页
-        /// </summary>
-        protected virtual void AddReturnPara() { }
-
-        private void SetCommandText(string commandText, bool isProc)
-        {
-            if (OracleDal.clientType > 0)
-            {
-                Type t = _com.GetType();
-                System.Reflection.PropertyInfo pi = t.GetProperty("BindByName");
-                if (pi != null)
-                {
-                    pi.SetValue(_com, true, null);
-                }
-            }
-            _com.CommandText = isProc ? commandText : SqlFormat.Compatible(commandText, dalType, false);
-            if (!isProc && dalType == DalType.SQLite && _com.CommandText.Contains("charindex"))
-            {
-                _com.CommandText += " COLLATE NOCASE";//忽略大小写
-            }
-            //else if (isProc && dalType == DalType.MySql)
-            //{
-            //    _com.CommandText = "Call " + _com.CommandText;
-            //}
-            _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
-            if (isProc)
-            {
-                if (commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
-                {
-                    AddReturnPara();
-                    //检测是否存在分页存储过程，若不存在，则创建。
-                    Tool.DBTool.CreateSelectBaseProc(dalType, conn);//内部分检测是否已创建过。
-                }
-            }
-            else
-            {
-                //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
-                if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
-                {
-                    bool needToReplace = (dalType == DalType.Oracle || dalType == DalType.MySql) && _com.CommandText.Contains("@");
-                    string paraName;
-                    for (int i = 0; i < _com.Parameters.Count; i++)
-                    {
-                        paraName = _com.Parameters[i].ParameterName.TrimStart(Pre);//默认自带前缀的，取消再判断
-                        if (needToReplace && _com.CommandText.IndexOf("@" + paraName) > -1)
-                        {
-                            //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
-                            switch (dalType)
-                            {
-                                case DalType.Oracle:
-                                case DalType.MySql:
-                                    _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
-                                    break;
-                            }
-                        }
-                        if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
-                        {
-                            _com.Parameters.RemoveAt(i);
-                            i--;
-                        }
-                    }
-                }
-            }
-            //else
-            //{
-            //    string checkText = commandText.ToLower();
-            //    //int index=
-            //    //if (checkText.IndexOf("table") > -1 && (checkText.IndexOf("delete") > -1 || checkText.IndexOf("drop") > -1 || checkText.IndexOf("truncate") > -1))
-            //    //{
-            //    //    Log.WriteLog(commandText);
-            //    //}
-            //}
-            if (IsAllowRecordSql)
-            {
-                tempSql = GetParaInfo(_com.CommandText) + AppConst.BR + "execute time is: ";
-            }
-        }
-        private string GetParaInfo(string commandText)
-        {
-            string paraInfo = dalType + "." + DataBase + ".SQL: " + AppConst.BR + commandText;
-            foreach (DbParameter item in _com.Parameters)
-            {
-                paraInfo += AppConst.BR + "Para: " + item.ParameterName + "-> " + (item.Value == DBNull.Value ? "DBNull.Value" : item.Value);
-            }
-            return paraInfo;
-        }
-
-        /// <summary>
-        /// 记录执行时间
-        /// </summary>
-        private void WriteTime()
-        {
-            if (IsAllowRecordSql && _watch != null)
-            {
-                _watch.Stop();
-                double ms = _watch.Elapsed.TotalMilliseconds;
-                tempSql += ms + " (ms)" + AppConst.HR;
-                if (AppConfig.Debug.OpenDebugInfo)
-                {
-                    debugInfo.Append(tempSql);
-                    if (AppDebug.IsRecording && ms >= AppConfig.Debug.InfoFilter)
-                    {
-                        AppDebug.Add(tempSql);
-                    }
-                }
-                if (AppConfig.Debug.SqlFilter >= 0 && ms >= AppConfig.Debug.SqlFilter)
-                {
-                    Log.WriteLogToTxt(tempSql, "SqlFilter_");
-                }
-                _watch.Reset();
-                tempSql = null;
-            }
-        }
-
-        #region IDisposable 成员
-
-        public void Dispose()
-        {
-            if (_con != null)
-            {
-                CloseCon();
-                _con = null;
-            }
-            if (_com != null)
-            {
-                _com = null;
-            }
-            if (_watch != null)
-            {
-                _watch = null;
-            }
-        }
+    }
+    /// <summary>
+    /// 链接管理
+    /// </summary>
+    internal abstract partial class DbBase
+    {
         int threadCount = 0;
         /// <summary>
         /// 测试链接
@@ -916,7 +1049,7 @@ namespace CYQ.Data
         {
             threadCount = 0;
             openOKFlag = -1;
-            ConnObject obj = connObject;
+            ConnObject obj = ConnObj;
             if (obj.Master != null && obj.Master.IsOK && (int)allowLevel >= 1)
             {
                 threadCount++;
@@ -976,7 +1109,7 @@ namespace CYQ.Data
                 else
                 {
                     errorCount++;
-                    debugInfo.Append(connBean.ErrorMsg);
+                    DebugInfo.Append(connBean.ErrorMsg);
                 }
             }
         }
@@ -984,14 +1117,12 @@ namespace CYQ.Data
         /// <summary>
         /// 切换链接
         /// </summary>
-        /// <param name="cb"></param>
         private bool ResetConn(ConnBean cb)//, bool isAllowReset
         {
-            if (cb != null && cb.IsOK && _con != null && _con.State != ConnectionState.Open && conn != cb.ConnString)
+            if (cb != null && cb.IsOK && _con != null && _con.State != ConnectionState.Open && UsingConnBean.ConnString != cb.ConnString)
             {
-                useConnBean = cb;
-                conn = cb.ConnString;//切换。
-                _con.ConnectionString = conn;
+                UsingConnBean = cb;
+                _con.ConnectionString = cb.ConnString;
                 return true;
             }
             return false;
@@ -1002,18 +1133,18 @@ namespace CYQ.Data
         /// <returns></returns>
         internal bool OpenCon()
         {
-            ConnBean master = connObject.Master;
-            if (!master.IsOK && connObject.BackUp != null && connObject.BackUp.IsOK)
+            ConnBean master = ConnObj.Master;
+            if (!master.IsOK && ConnObj.BackUp != null && ConnObj.BackUp.IsOK)
             {
-                master = connObject.BackUp;
-                connObject.InterChange();//主从换位置
+                master = ConnObj.BackUp;
+                ConnObj.InterChange();//主从换位置
             }
-            if (master.IsOK || (connObject.BackUp != null && connObject.BackUp.IsOK))
+            if (master.IsOK || (ConnObj.BackUp != null && ConnObj.BackUp.IsOK))
             {
                 bool result = OpenCon(master, AllowConnLevel.MasterBackup);
-                if (result && _IsAllowRecordSql)
+                if (result && _IsRecordDebugInfo)
                 {
-                    connObject.SetFocusOnMaster();
+                    ConnObj.SetFocusOnMaster();
                     isAllowResetConn = false;
                 }
                 return result;
@@ -1029,25 +1160,25 @@ namespace CYQ.Data
             {
                 if (cb == null)
                 {
-                    cb = useConnBean;
-                    if (isOpenTrans && cb.IsSlave)
+                    cb = UsingConnBean;
+                    if (IsOpenTrans && cb.IsSlave)
                     {
-                        ResetConn(connObject.Master);
+                        ResetConn(ConnObj.Master);
 
                     }
                 }
                 if (!cb.IsOK)
                 {
-                    if ((int)leve > 1 && connObject.BackUp != null && connObject.BackUp.IsOK)
+                    if ((int)leve > 1 && ConnObj.BackUp != null && ConnObj.BackUp.IsOK)
                     {
-                        ResetConn(connObject.BackUp);//重置链接。
-                        connObject.InterChange();//主从换位置
-                        return OpenCon(connObject.Master, leve);
+                        ResetConn(ConnObj.BackUp);//重置链接。
+                        ConnObj.InterChange();//主从换位置
+                        return OpenCon(ConnObj.Master, leve);
                     }
                     else if ((int)leve > 2)
                     {
                         //主挂了，备也挂了（因为备会替主）
-                        ConnBean nextSlaveBean = connObject.GetSlave();
+                        ConnBean nextSlaveBean = ConnObj.GetSlave();
                         if (nextSlaveBean != null)
                         {
                             ResetConn(nextSlaveBean);//重置链接。
@@ -1055,28 +1186,28 @@ namespace CYQ.Data
                         }
                     }
                 }
-                else if (!isOpenTrans && cb != useConnBean && isAllowResetConn && connObject.IsAllowSlave())
+                else if (!IsOpenTrans && cb != UsingConnBean && isAllowResetConn && ConnObj.IsAllowSlave())
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
-                if (useConnBean.IsOK)
+                if (UsingConnBean.IsOK)
                 {
                     Open();//异常抛
                 }
                 else
                 {
-                    WriteError("OpenCon():" + useConnBean.ErrorMsg);
+                    WriteError("OpenCon():" + UsingConnBean.ErrorMsg);
                 }
-                if (IsAllowRecordSql)
+                if (IsRecordDebugInfo)
                 {
                     _watch.Start();
                 }
-                return useConnBean.IsOK;
+                return UsingConnBean.IsOK;
             }
             catch (DbException err)
             {
-                useConnBean.IsOK = false;
-                useConnBean.ErrorMsg = err.Message;
+                UsingConnBean.IsOK = false;
+                UsingConnBean.ErrorMsg = err.Message;
                 return OpenCon(null, leve);
 
             }
@@ -1085,7 +1216,7 @@ namespace CYQ.Data
         {
             if (_con.State == ConnectionState.Closed)
             {
-                if (dalType == DalType.Sybase)
+                if (DataBaseType == DalType.Sybase)
                 {
                     _com.Connection = _con;//重新赋值（Sybase每次Close后命令的Con都丢失）
                 }
@@ -1095,7 +1226,7 @@ namespace CYQ.Data
                 //System.Console.WriteLine(useConnBean.ConfigName);
                 //}
             }
-            if (isOpenTrans)
+            if (IsOpenTrans)
             {
                 if (_tran == null)
                 {
@@ -1106,7 +1237,7 @@ namespace CYQ.Data
                 {
                     //ADO.NET Bug：在 guid='123' 时不抛异常，但自动关闭链接，不关闭对象，会引发后续的业务不在事务中。
                     Dispose();
-                    Error.Throw("Transation：Last execute command has syntax error：" + debugInfo.ToString());
+                    Error.Throw("Transation：Last execute command has syntax error：" + DebugInfo.ToString());
                 }
             }
         }
@@ -1148,7 +1279,7 @@ namespace CYQ.Data
                 {
                     if (_tran != null)
                     {
-                        isOpenTrans = false;
+                        IsOpenTrans = false;
                         if (_tran.Connection != null)
                         {
                             _tran.Commit();
@@ -1164,103 +1295,6 @@ namespace CYQ.Data
             }
 
         }
-        public bool EndTransaction()
-        {
-            isOpenTrans = false;
-            if (_tran != null)
-            {
-                try
-                {
-                    if (_tran.Connection == null)
-                    {
-                        return false;//上一个执行语句发生了异常（特殊情况在ExeReader guid='xxx' 但不抛异常)
-                    }
-                    _tran.Commit();
-
-                }
-                catch (Exception err)
-                {
-                    RollBack();
-                    WriteError("EndTransaction():" + err.Message);
-                    return false;
-                }
-                finally
-                {
-                    _tran = null;
-                    CloseCon();
-                }
-            }
-            return true;
-        }
-        /// <summary>
-        /// 事务（有则）回滚
-        /// </summary>
-        /// <returns></returns>
-        public bool RollBack()
-        {
-            if (_tran != null)
-            {
-                try
-                {
-                    if (_tran.Connection != null)
-                    {
-                        _tran.Rollback();
-                    }
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
-                finally
-                {
-                    _tran = null;//以便重启事务，避免无法二次回滚。
-                }
-            }
-            return true;
-        }
-        internal delegate void OnException(string msg);
-        internal event OnException OnExceptionEvent;
-        internal bool IsOnExceptionEventNull
-        {
-            get
-            {
-                return OnExceptionEvent == null;
-            }
-        }
-        /// <summary>
-        /// 输出错误（若事务中，回滚事务）
-        /// </summary>
-        /// <param name="err"></param>
-        internal void WriteError(string err)
-        {
-            err = dalType + " Call Function::" + err;
-            if (_watch != null && _watch.IsRunning)
-            {
-                _watch.Stop();
-                _watch.Reset();
-            }
-            RollBack();
-            if (isAllowInterWriteLog)
-            {
-                Log.WriteLog(isWriteLog, err + AppConst.BR + debugInfo);
-            }
-            if (OnExceptionEvent != null)
-            {
-                try
-                {
-                    OnExceptionEvent(err);
-                }
-                catch
-                {
-
-                }
-            }
-            if (isOpenTrans)
-            {
-                Dispose();//事务中发生语句语法错误，直接关掉资源，避免因后续代码继续执行。
-            }
-        }
-        #endregion
     }
 
 }

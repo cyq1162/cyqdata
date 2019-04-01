@@ -60,9 +60,9 @@ namespace CYQ.Data
         {
             try
             {
-                IsAllowRecordSql = false;
+                IsRecordDebugInfo = false;
                 bool result = ExeScalar("show databases like '" + dbName + "'", false) != null;
-                IsAllowRecordSql = true;
+                IsRecordDebugInfo = true;
                 return result;
             }
             catch

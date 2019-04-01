@@ -34,14 +34,14 @@ namespace CYQ.Data
             //ABCConn
             DbBase db = GetDbBaseBy(ConnObject.Create(connNameOrString));
 
-            if (db.connObject.Master.ConnName != connNameOrString && connNameOrString.EndsWith("Conn"))//需要切换配置。
+            if (db.ConnObj.Master.ConnName != connNameOrString && connNameOrString.EndsWith("Conn"))//需要切换配置。
             {
                 //Conn  A库
                 //BConn  xxx 找不到时，找默认库。
                 DbResetResult result = db.ChangeDatabase(connNameOrString.Substring(0, connNameOrString.Length - 4));
                 if (result == DbResetResult.Yes) // 写入缓存
                 {
-                    db.connObject.SaveToCache(connNameOrString);
+                    db.ConnObj.SaveToCache(connNameOrString);
                 }
             }
             return db;

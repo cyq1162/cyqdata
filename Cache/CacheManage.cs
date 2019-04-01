@@ -41,7 +41,7 @@ namespace CYQ.Data.Cache
                 else
                 {
                     return LocalShell.instance;
-                    
+
                 }
             }
         }
@@ -98,7 +98,7 @@ namespace CYQ.Data.Cache
                     }
                 }
                 return _RedisInstance;
-               
+
             }
         }
         class LocalShell
@@ -130,7 +130,7 @@ namespace CYQ.Data.Cache
         public abstract bool Set(string key, object value);
         public abstract bool Set(string key, object value, double cacheMinutes);
         public abstract bool Set(string key, object value, double cacheMinutes, string fileName);
-        
+
         /// <summary>
         /// 清除所有缓存
         /// </summary>
@@ -159,13 +159,13 @@ namespace CYQ.Data.Cache
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Cache);
                     return default(T);
                 }
             }
             return default(T);
         }
-      
+
         /// <summary>
         /// 删除一个Cache对象
         /// </summary>
@@ -237,22 +237,22 @@ namespace CYQ.Data.Cache
         }
         private static void LoadDBSchemaCache(object connObj)
         {
-          
-                string conn = Convert.ToString(connObj);
-                Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
-                if (dic != null && dic.Count > 0)
+
+            string conn = Convert.ToString(connObj);
+            Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
+            if (dic != null && dic.Count > 0)
+            {
+                DbBase helper = DalCreate.CreateDal(conn);
+                if (helper.DataBaseType != DalType.Txt && helper.DataBaseType != DalType.Xml)
                 {
-                    DbBase helper = DalCreate.CreateDal(conn);
-                    if (helper.dalType != DalType.Txt && helper.dalType != DalType.Xml)
+                    foreach (string key in dic.Keys)
                     {
-                        foreach (string key in dic.Keys)
-                        {
-                            TableSchema.GetColumns(key, ref helper);
-                        }
+                        TableSchema.GetColumns(key, ref helper);
                     }
-                    helper.Dispose();
                 }
-            
+                helper.Dispose();
+            }
+
         }
     }
     /// <summary>

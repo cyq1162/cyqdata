@@ -312,7 +312,7 @@ namespace CYQ.Data.SQL
                 helper.Dispose();
                 return sql;
             }
-            DalType dalType = helper.dalType;
+            DalType dalType = helper.DataBaseType;
             string version = helper.Version;
             MDataColumn dbColumn = TableSchema.GetColumns(tableName, ref helper);//获取数据库的列结构
             helper.Dispose();

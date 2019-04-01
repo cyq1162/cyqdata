@@ -723,7 +723,7 @@ namespace CYQ.Data.Table
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
             }
             finally
             {

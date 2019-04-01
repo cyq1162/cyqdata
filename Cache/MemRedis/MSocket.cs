@@ -13,54 +13,25 @@ namespace CYQ.Data.Cache
     {
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
 
-        private HostNode socketPool;
+        private HostNode hostNode;
         /// <summary>
         /// 挂载的Socket池。
         /// </summary>
-        public HostNode SocketPool
+        public HostNode HostNode
         {
             get
             {
-                return socketPool;
+                return hostNode;
             }
         }
         private Socket socket;
         private Stream stream;
         public readonly DateTime CreateTime;
-        /// <summary>
-        /// 额外扩展的属性（用于Redis）
-        /// </summary>
-        public uint DB = 0;
-        private int sendReceiveTimeout = 5000;
-        private int connectTimeout = 3000;
-        public MSocket(HostNode socketPool, IPEndPoint endPoint)
+        public MSocket(HostNode socketPool, string host)
         {
-            this.socketPool = socketPool;
+            this.hostNode = socketPool;
             CreateTime = DateTime.Now;
-
-            //Set up the socket.
-            socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.NoDelay, true);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, sendReceiveTimeout);
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, sendReceiveTimeout);
-            socket.ReceiveTimeout = sendReceiveTimeout;
-            socket.SendTimeout = sendReceiveTimeout;
-
-            //socket.SendBufferSize = 1024 * 1024;
-
-            //Do not use Nagle's Algorithm
-            //socket.NoDelay = true;
-
-            //Establish connection asynchronously to enable connect timeout.
-            IAsyncResult result = socket.BeginConnect(endPoint, null, null);
-            bool success = result.AsyncWaitHandle.WaitOne(connectTimeout, false);
-            if (!success)
-            {
-                try { socket.Close(); }
-                catch { }
-                throw new SocketException();
-            }
-            socket.EndConnect(result);
+            socket = SocketCreate.New(host);
 
             //Wraps two layers of streams around the socket for communication.
             stream = new BufferedStream(new NetworkStream(socket, false));
@@ -71,9 +42,9 @@ namespace CYQ.Data.Cache
         /// </summary>
         public void ReturnPool()
         {
-            if (socketPool != null)
+            if (hostNode != null)
             {
-                socketPool.Return(this);
+                hostNode.Return(this);
             }
         }
 
@@ -91,7 +62,7 @@ namespace CYQ.Data.Cache
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Error closing stream: " + socketPool.Host, e);
+                    logger.Error("Error closing stream: " + hostNode.Host, e);
                 }
                 stream = null;
             }
@@ -111,7 +82,7 @@ namespace CYQ.Data.Cache
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Error closing socket: " + socketPool.Host, e);
+                    logger.Error("Error closing socket: " + hostNode.Host, e);
                 }
                 socket = null;
             }
@@ -140,8 +111,17 @@ namespace CYQ.Data.Cache
         {
             try
             {
-                //stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
-                stream.Write(bytes, 0, bytes.Length);
+                if (stream != null && stream.CanWrite)
+                {
+                    stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
+                    stream.Write(bytes, 0, bytes.Length);
+                    //IAsyncResult result = stream.BeginWrite(bytes, 0, bytes.Length, null, null);
+                    //stream.EndWrite(result);
+                    //if (result.AsyncWaitHandle.WaitOne(3000))
+                    //{
+                    //    stream.EndWrite(result);
+                    //}
+                }
 
             }
             catch (Exception e)

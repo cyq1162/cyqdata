@@ -38,17 +38,20 @@ namespace CYQ.Data.Orm
     {
         internal MDataColumn Columns = null;
         /// <summary>
-        /// 标识是否允许写日志。
+        /// 标识是否允许写日志(默认true)
         /// </summary>
-        internal bool AllowWriteLog
+        internal bool IsWriteLogOnError
         {
             set
             {
-                Action.dalHelper.isAllowInterWriteLog = value;
+                if (Action != null && Action.dalHelper != null)
+                {
+                    Action.dalHelper.IsWriteLogOnError = value;
+                }
             }
         }
         /// <summary>
-        /// 是否启用了AOP拦截设置字段值同步。
+        /// 是否启用了AOP拦截设置字段值同步(默认false)
         /// </summary>
         internal bool IsUseAop = false;
         private static FieldSource _FieldSource = FieldSource.BothOfAll;
@@ -139,7 +142,11 @@ namespace CYQ.Data.Orm
         /// </summary>
         private void SetDelayInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
-            conn = string.IsNullOrEmpty(conn) ? AppConfig.DB.DefaultConn : conn;
+            if (string.IsNullOrEmpty(conn))
+            {
+                //不设置链接，则忽略（当成普通的实体类）
+                return;
+            }
             entity = entityInstance;
             typeInfo = entity.GetType();
             try
@@ -217,7 +224,7 @@ namespace CYQ.Data.Orm
             {
                 if (typeInfo.Name != "SysLogs")
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.DataBase);
                 }
                 throw;
             }

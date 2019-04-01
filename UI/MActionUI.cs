@@ -115,7 +115,7 @@ namespace CYQ.Data.UI
         {
             string sql = _SqlCreate.GetBindSql(where, text, value);
             MDataTable mTable = null;
-            switch (_DbBase.dalType)
+            switch (_DbBase.DataBaseType)
             {
                 case DalType.Txt:
                 case DalType.Xml:
@@ -397,7 +397,7 @@ namespace CYQ.Data.UI
             catch (Exception err)
             {
 
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
             }
         }
         /// <summary>
@@ -505,7 +505,7 @@ namespace CYQ.Data.UI
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
             }
             return propName;
         }

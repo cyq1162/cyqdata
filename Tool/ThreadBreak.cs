@@ -29,7 +29,7 @@ namespace CYQ.Data.Tool
                 }
                 catch (Exception err)
                 {
-                    Log.WriteLogToTxt(err);
+                    Log.Write(err, LogType.Error);
                 }
                 hadThreadBreak = true;
             }
@@ -127,7 +127,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err, LogType.Error);
             }
         }
         */
@@ -163,7 +163,7 @@ namespace CYQ.Data.Tool
                     }
                     catch (Exception err)
                     {
-                        Log.WriteLogToTxt(err);
+                        Log.Write(err, LogType.Error);
                     }
                 }
             }
