@@ -260,7 +260,13 @@ namespace CYQ.Data.Orm
         {
             return sob.Select(pageIndex, pageSize, where, out count);
         }
-
+        /// <summary>
+        /// 获取记录总数
+        /// </summary>
+        public int GetCount()
+        {
+            return sob.GetCount();
+        }
         /// <summary>
         /// 获取记录总数
         /// </summary>

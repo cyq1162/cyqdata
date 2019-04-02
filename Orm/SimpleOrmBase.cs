@@ -441,6 +441,13 @@ namespace CYQ.Data.Orm
         /// <summary>
         /// 获取记录总数
         /// </summary>
+        public int GetCount()
+        {
+            return Action.GetCount();
+        }
+        /// <summary>
+        /// 获取记录总数
+        /// </summary>
         public int GetCount(object where)
         {
             return Action.GetCount(where);
