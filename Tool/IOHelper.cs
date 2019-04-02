@@ -9,7 +9,7 @@ namespace CYQ.Data.Tool
     /// <summary>
     /// 文件读取类（能自动识别文件编码）
     /// </summary>
-    public static class IOHelper
+    public static partial class IOHelper
     {
         private static CacheManage cache = CacheManage.LocalInstance;
         internal static Encoding DefaultEncoding = Encoding.Default;
@@ -811,6 +811,50 @@ namespace CYQ.Data.Tool
 
             }
 
+        }
+    }
+
+
+    internal class IOWatch
+    {
+        /// <summary>
+        /// 监控中的列表。
+        /// </summary>
+        private static MList<string> watchPathList = new MList<string>();
+        private IOWatch()
+        {
+
+        }
+        public static void On(string fileName, WatchDelegate watch)
+        {
+            if (!watchPathList.Contains(fileName))
+            {
+                watchPathList.Add(fileName);
+                IOWatch fileWatch = new IOWatch();
+                fileWatch.WatchOn(fileName, watch);
+            }
+        }
+        public delegate void WatchDelegate(FileSystemEventArgs e);
+        private WatchDelegate watch;
+        public void WatchOn(string fileName,WatchDelegate watch)
+        {
+            this.watch = watch;
+            FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), Path.GetFileName(fileName));
+            fsy.EnableRaisingEvents = true;
+            fsy.IncludeSubdirectories = false;
+            fsy.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
+            fsy.Changed += new FileSystemEventHandler(fsy_Changed);
+        }
+        private static readonly object obj = new object();
+        private void fsy_Changed(object sender, FileSystemEventArgs e)
+        {
+            lock (obj)
+            {
+                if (watch != null)
+                {
+                    watch(e);
+                }
+            }
         }
     }
 }

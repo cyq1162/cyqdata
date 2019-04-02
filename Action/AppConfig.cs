@@ -16,6 +16,11 @@ namespace CYQ.Data
         #region 基方法
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        internal static void Clear()
+        {
+            appConfigs.Clear();
+            connConfigs.Clear();
+        }
         /// <summary>
         /// 设置Web.config或App.config的值 value为null时移除缓存。
         /// </summary>

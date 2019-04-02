@@ -16,13 +16,12 @@ namespace CYQ.Data
         /// 监控列表。
         /// </summary>
         private static MDictionary<string, string> watchList = new MDictionary<string, string>();
-       // private static List<FileSystemWatcher> list = new List<FileSystemWatcher>();
         private static readonly object o = new object();
         /// <summary>
         /// 开启加载一个配置。
         /// </summary>
         /// <param name="connName">Conn的名称</param>
-        /// <param name="connString">Conn指向的路径</param>
+        /// <param name="connPath">Conn指向的路径</param>
         /// <returns></returns>
         public static string Start(string connName, string connPath)
         {
@@ -51,7 +50,10 @@ namespace CYQ.Data
                     }
                     if (!watchList.ContainsValue(connPath))
                     {
-                        StartFileSystemWatcher(path);
+                        IOWatch.On(path, delegate (FileSystemEventArgs e)
+                        {
+                            fsy_Changed(e);
+                        });
                     }
                     if (!watchList.ContainsKey(connName))
                     {
@@ -63,39 +65,25 @@ namespace CYQ.Data
             }
             return connName;
         }
-
-        private static void StartFileSystemWatcher(string fileName)
+        private static void fsy_Changed(FileSystemEventArgs e)
         {
-            FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), Path.GetFileName(fileName));
-            //list.Add(fsy);
-            fsy.EnableRaisingEvents = true;
-            fsy.IncludeSubdirectories = false;
-            fsy.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
-            fsy.Changed += new FileSystemEventHandler(fsy_Changed);
-           
-        }
-        private static void fsy_Changed(object sender, FileSystemEventArgs e)
-        {
-            lock (o)
+            string json = JsonHelper.ReadJson(e.FullPath);
+            Dictionary<string, string> dic = JsonHelper.Split(json);
+            if (dic != null && dic.Count > 0)
             {
-                string json = JsonHelper.ReadJson(e.FullPath);
-                Dictionary<string, string> dic = JsonHelper.Split(json);
-                if (dic != null && dic.Count > 0)
+                foreach (KeyValuePair<string, string> item in dic)
                 {
-                    foreach (KeyValuePair<string, string> item in dic)
+                    //移除所有缓存的Key
+                    AppConfig.SetConn(item.Key, null);
+                    AppConfig.SetConn(item.Key + "_Bak", null);
+                    for (int i = 1; i < 10000; i++)
                     {
-                        //移除所有缓存的Key
-                        AppConfig.SetConn(item.Key, null);
-                        AppConfig.SetConn(item.Key + "_Bak", null);
-                        for (int i = 1; i < 10000; i++)
+                        if (!AppConfig.SetConn(item.Key + "_Slave" + i, null))
                         {
-                            if (!AppConfig.SetConn(item.Key + "_Slave" + i, null))
-                            {
-                                break;
-                            }
+                            break;
                         }
-                        ConnObject.ClearCache(item.Key);
                     }
+                    ConnObject.ClearCache(item.Key);
                 }
             }
         }

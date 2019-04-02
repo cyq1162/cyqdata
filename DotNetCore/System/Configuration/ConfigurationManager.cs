@@ -18,10 +18,11 @@ namespace System.Configuration
             {
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);//注册编码
                 IOHelper.DefaultEncoding = Encoding.GetEncoding("gb2312");
+
             }
             catch (Exception err)
             {
-                Log.Write(err,LogType.Error);
+                Log.Write(err, LogType.Error);
             }
         }
         static ConfigurationManager()
@@ -29,7 +30,19 @@ namespace System.Configuration
             AppConfig.IsAspNetCore = true;
             ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
             string filePath = AppConfig.RunPath + "appsettings.json";
+            ReInitConfig(filePath);
+            IOWatch.On(filePath, delegate (FileSystemEventArgs e)
+            {
+                Thread.Sleep(500);
+                ReInitConfig(e.FullPath);
+            });
+        }
+        static void ReInitConfig(string filePath)
+        {
             appSettingJson = JsonHelper.ReadJson(filePath);
+            _AppSettings = null;
+            _ConnectionStrings = null;
+            AppConfig.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。
         }
         private static NameValueCollection _AppSettings;
@@ -95,20 +108,29 @@ namespace System.Configuration
                 {
                     foreach (string item in items)
                     {
-                        string json = JsonHelper.ReadJson(AppConfig.RunPath + item);
+                        string path = AppConfig.RunPath + item;
+                        string json = JsonHelper.ReadJson(path);
                         if (string.IsNullOrEmpty(json))
                         {
                             continue;
                         }
-                        Dictionary<string, string> dic = JsonHelper.Split(json);
-                        if (dic != null && dic.Count > 0)
+                        IOWatch.On(path, delegate (FileSystemEventArgs e)
                         {
-                            foreach (KeyValuePair<string, string> keyValue in dic)
-                            {
-                                AppConfig.SetApp(keyValue.Key, keyValue.Value);
-                            }
-                        }
+                            SetKeyValue(JsonHelper.ReadJson(e.FullPath));
+                        });
+                        SetKeyValue(json);
                     }
+                }
+            }
+        }
+        private static void SetKeyValue(string json)
+        {
+            Dictionary<string, string> dic = JsonHelper.Split(json);
+            if (dic != null && dic.Count > 0)
+            {
+                foreach (KeyValuePair<string, string> keyValue in dic)
+                {
+                    AppConfig.SetApp(keyValue.Key, keyValue.Value);
                 }
             }
         }

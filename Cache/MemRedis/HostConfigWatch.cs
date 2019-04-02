@@ -37,25 +37,21 @@ namespace CYQ.Data.Cache
         public MList<string> HostRemoveList = new MList<string>();
 
 
-        private void StartFileSystemWatcher(string fileName)
-        {
-            FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), Path.GetFileName(fileName));
-            fsy.EnableRaisingEvents = true;
-            fsy.IncludeSubdirectories = false;
-            fsy.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
-            fsy.Changed += new FileSystemEventHandler(fsy_Changed);
-        }
+        //private void StartFileSystemWatcher(string fileName)
+        //{
+        //    FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), Path.GetFileName(fileName));
+        //    fsy.EnableRaisingEvents = true;
+        //    fsy.IncludeSubdirectories = false;
+        //    fsy.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
+        //    fsy.Changed += new FileSystemEventHandler(fsy_Changed);
+        //}
+        //
+        //private void fsy_Changed(object sender, FileSystemEventArgs e)
+        //{
+
+
+        //}
         private static readonly object obj2 = new object();
-        private void fsy_Changed(object sender, FileSystemEventArgs e)
-        {
-
-            ResetHostListByConfig(false);
-            if (OnConfigChangedEvent != null)
-            {
-                OnConfigChangedEvent();
-            }
-        }
-
         private void ResetHostListByConfig(bool isNeedStartWatch)
         {
             lock (obj2)
@@ -69,7 +65,13 @@ namespace CYQ.Data.Cache
                     {
                         if (isNeedStartWatch)
                         {
-                            StartFileSystemWatcher(path);
+                            IOWatch.On(path, delegate (FileSystemEventArgs e) {
+                                ResetHostListByConfig(false);
+                                if (OnConfigChangedEvent != null)
+                                {
+                                    OnConfigChangedEvent();
+                                }
+                            });
                         }
 
                         hostItems = IOHelper.ReadAllLines(path);
