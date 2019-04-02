@@ -301,6 +301,9 @@ namespace CYQ.Data.SQL
             int groupID = DataType.GetGroup(sqlDbType);
             if (flag == 0)
             {
+                #region 转标准值
+
+
                 if (groupID == 2)//日期的标准值
                 {
                     return SqlValue.GetDate;
@@ -331,6 +334,7 @@ namespace CYQ.Data.SQL
                     case "uuid":
                         return SqlValue.Guid;
                 }
+                #endregion
             }
             else
             {
@@ -341,6 +345,7 @@ namespace CYQ.Data.SQL
                         case DalType.MsSql:
                         case DalType.Oracle:
                         case DalType.Sybase:
+                        case DalType.PostgreSQL:
                             return SqlCompatible.FormatGUID(defaultValue, dalType);
                         default:
                             return "";
@@ -429,6 +434,33 @@ namespace CYQ.Data.SQL
                         if (groupID == 0)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
+                        }
+                    }
+                    break;
+                case DalType.PostgreSQL:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim('"');
+                        if (groupID == 0)
+                        {
+                            defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
+                        }
+                        if (groupID > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        {
+                            defaultValue = defaultValue.Trim('\'');
+                        }
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "now()").Replace("\"", "\"\"");
+                        if (groupID == 0)
+                        {
+                            defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
+                            defaultValue = "'" + defaultValue.Trim('\'') + "'";
+                        }
+                        else if (groupID == 3) // bool
+                        {
+                            defaultValue = defaultValue.Replace("1", "true").Replace("0", "false");
                         }
                     }
                     break;
