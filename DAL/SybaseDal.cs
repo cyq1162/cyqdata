@@ -20,30 +20,22 @@ namespace CYQ.Data
             object ass = CacheManage.LocalInstance.Get("Sybase_Assembly");
             if (ass == null)
             {
-                try
+                string name = string.Empty;
+                if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet2.AseClient.dll"))
                 {
-                    string name = string.Empty;
-                    if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet2.AseClient.dll"))
-                    {
-                        name = "Sybase.AdoNet2.AseClient";
-                    }
-                    else if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet4.AseClient.dll"))
-                    {
-                        name = "Sybase.AdoNet4.AseClient";
-                    }
-                    else
-                    {
-                        name = "Can't find the Sybase.AdoNet2.AseClient.dll";
-                        Error.Throw(name);
-                    }
-                    ass = Assembly.Load(name);
-                    CacheManage.LocalInstance.Set("Sybase_Assembly", ass, 10080);
+                    name = "Sybase.AdoNet2.AseClient";
                 }
-                catch (Exception err)
+                else if (File.Exists(AppConst.AssemblyPath + "Sybase.AdoNet4.AseClient.dll"))
                 {
-                    string errMsg = err.Message;
-                    Error.Throw(errMsg);
+                    name = "Sybase.AdoNet4.AseClient";
                 }
+                else
+                {
+                    name = "Can't find the Sybase.AdoNet2.AseClient.dll";
+                    Error.Throw(name);
+                }
+                ass = Assembly.Load(name);
+                CacheManage.LocalInstance.Set("Sybase_Assembly", ass, 10080);
             }
             return ass as Assembly;
         }

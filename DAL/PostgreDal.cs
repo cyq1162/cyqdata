@@ -20,26 +20,19 @@ namespace CYQ.Data
             object ass = CacheManage.LocalInstance.Get("Postgre_Assembly");
             if (ass == null)
             {
-                try
+                string name = string.Empty;
+                if (File.Exists(AppConst.AssemblyPath + "Npgsql.dll"))
                 {
-                    string name = string.Empty;
-                    if (File.Exists(AppConst.AssemblyPath + "Npgsql.dll"))
-                    {
-                        name = "Npgsql";
-                    }
-                    else
-                    {
-                        name = "Can't find the Npgsql.dll";
-                        Error.Throw(name);
-                    }
-                    ass = Assembly.Load(name);
-                    CacheManage.LocalInstance.Set("Postgre_Assembly", ass, 10080);
+                    name = "Npgsql";
                 }
-                catch (Exception err)
+                else
                 {
-                    string errMsg = err.Message;
-                    Error.Throw(errMsg);
+                    name = "Can't find the Npgsql.dll";
+                    Error.Throw(name);
                 }
+                ass = Assembly.Load(name);
+                CacheManage.LocalInstance.Set("Postgre_Assembly", ass, 10080);
+
             }
             return ass as Assembly;
         }
@@ -50,7 +43,7 @@ namespace CYQ.Data
             {
                 Assembly ass = GetAssembly();
                 factory = ass.GetType("Npgsql.NpgsqlFactory").GetField("Instance").GetValue(null);
-               // factory = ass.CreateInstance("Npgsql.NpgsqlFactory.Instance");
+                // factory = ass.CreateInstance("Npgsql.NpgsqlFactory.Instance");
                 if (factory == null)
                 {
                     throw new System.Exception("Can't Create  NpgsqlFactory in Npgsql.dll");

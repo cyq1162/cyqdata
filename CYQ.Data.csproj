@@ -82,7 +82,7 @@
     <Compile Include="Action\MProc.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Action\NoSqlAction.cs" />
+    <Compile Include="DAL\NoSql\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
     <Compile Include="Cache\AutoCache.cs" />
     <Compile Include="Cache\CacheManage.cs" />
