@@ -242,7 +242,15 @@ namespace CYQ.Data
                             ConnObject obj = connDicCache[key];
                             if (obj != null)
                             {
-                                if (!obj.Master.IsOK) { obj.Master.TryTestConn(); }
+                                if (!obj.Master.IsOK) 
+                                {
+                                    if (obj.Master.ConnName == obj.Master.ConnString)
+                                    {
+                                        connDicCache.Remove(key);//ÒÆ³ý´íÎóµÄÁ´½Ó¡£
+                                        continue;
+                                    }
+                                    obj.Master.TryTestConn(); 
+                                }
                                 if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
                                 if (obj.Slave != null && obj.Slave.Count > 0)
                                 {
