@@ -137,6 +137,7 @@ namespace CYQ.Data
             #region 先处理容易判断规则的
             if (connString.Contains("server=") && !connString.Contains("port="))
             {
+                //server=.;database=xx;uid=xx;pwd=xx;
                 return DalType.MsSql;
             }
             if (connString.Contains("txtpath="))
@@ -163,6 +164,7 @@ namespace CYQ.Data
             if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
                || connString.Contains("description=") || connString.Contains("fororacle"))
             {
+                //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = orcl)));User ID=sa;password=123456
                 return DalType.Oracle;
             }
 
@@ -176,10 +178,12 @@ namespace CYQ.Data
             }
             if (connString.Contains("port=5432"))
             {
+                ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
                 return DalType.PostgreSQL;
             }
             if (connString.Contains("port=3306"))
             {
+                //host=127.0.0.1;Port=3306;Database=mysql;uid=sa;pwd=12346
                 return DalType.MySql;
             }
             #endregion
