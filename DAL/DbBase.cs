@@ -768,8 +768,6 @@ namespace CYQ.Data
             {
                 _watch = null;
             }
-            tempSql = null;
-            DebugInfo = null;
         }
     }
 
