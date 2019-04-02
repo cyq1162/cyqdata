@@ -183,7 +183,7 @@ namespace CYQ.Data
             }
             if (connString.Contains("port=3306"))
             {
-                //host=127.0.0.1;Port=3306;Database=mysql;uid=sa;pwd=12346
+                //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
                 return DalType.MySql;
             }
             #endregion
