@@ -1,4 +1,5 @@
 
+using CYQ.Data.Tool;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -25,10 +26,13 @@ namespace CYQ.Data.Cache
         ULong = 12,
         Float = 13,
         Double = 14,
+        ObjectJson = 15,
+
 
         CompressedByteArray = 50,
         CompressedObject = 51,
         CompressedString = 52,
+        CompressedObjectJson = 53,
     }
 
     internal class Serializer
@@ -120,18 +124,39 @@ namespace CYQ.Data.Cache
             }
             else
             {
-                //Object
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    new BinaryFormatter().Serialize(ms, value);
-                    bytes = ms.ToArray();
-                    type = SerializedType.Object;
+                //if (value.GetType().GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0)
+                //{
+                //    //可序列化 List<object> 如果 object 不支持序列化，会挂。
+                //    type = SerializedType.Object;
+                //    ////Object
+                //    using (MemoryStream ms = new MemoryStream())
+                //    {
+                //        new BinaryFormatter().Serialize(ms, value);
+                //        bytes = ms.ToArray();
+                //        if (bytes.Length > compressionThreshold)
+                //        {
+                //            bytes = compress(bytes);
+                //            type = SerializedType.CompressedObject;
+                //        }
+                //    }
+                //}
+                //else
+                //{
+                    type = SerializedType.ObjectJson;
+                    string json = JsonHelper.ToJson(value);
+                    bytes = Encoding.UTF8.GetBytes(json);
                     if (bytes.Length > compressionThreshold)
                     {
                         bytes = compress(bytes);
-                        type = SerializedType.CompressedObject;
+                        type = SerializedType.CompressedObjectJson;
                     }
-                }
+               // }
+
+
+
+
+
+
             }
             return bytes;
         }
@@ -203,12 +228,16 @@ namespace CYQ.Data.Cache
                     {
                         return new BinaryFormatter().Deserialize(ms);
                     }
+                case SerializedType.ObjectJson:
+                    return Encoding.UTF8.GetString(bytes);
                 case SerializedType.CompressedByteArray:
                     return DeSerialize(decompress(bytes), SerializedType.ByteArray);
                 case SerializedType.CompressedString:
                     return DeSerialize(decompress(bytes), SerializedType.String);
                 case SerializedType.CompressedObject:
                     return DeSerialize(decompress(bytes), SerializedType.Object);
+                case SerializedType.CompressedObjectJson:
+                    return DeSerialize(decompress(bytes), SerializedType.ObjectJson);
                 case SerializedType.ByteArray:
                 default:
                     return bytes;

@@ -1142,12 +1142,19 @@ namespace CYQ.Data.Tool
                     }
                     #endregion
                 }
-                else if (mdc != null && mdc.Count == 1)
+                else 
                 {
-                    string[] items = json.Trim('[', ']').Split(',');
-                    foreach (string item in items)
+                    List<string> items = JsonSplit.SplitEscapeArray(json);
+                    if (items != null && items.Count > 0)
                     {
-                        table.NewRow(true).Set(0, item.Trim('"', '\''));
+                        if (mdc == null)
+                        {
+                            table.Columns.Add("Key");
+                        }
+                        foreach (string item in items)
+                        {
+                            table.NewRow(true).Set(0, item.Trim('"', '\''));
+                        }
                     }
                 }
                 #endregion

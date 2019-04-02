@@ -899,6 +899,10 @@ namespace CYQ.Data.Table
         }
         internal object ToEntity(Type t)
         {
+            if (t.Name == "MDataRow")
+            {
+                return this;
+            }
             switch (StaticTool.GetSystemType(ref t))
             {
                 case SysType.Base:
