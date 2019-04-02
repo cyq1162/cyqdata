@@ -124,25 +124,35 @@ namespace CYQ.Data.Cache
             }
             else
             {
-                //if (value.GetType().GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0)
-                //{
-                //    //可序列化 List<object> 如果 object 不支持序列化，会挂。
-                //    type = SerializedType.Object;
-                //    ////Object
-                //    using (MemoryStream ms = new MemoryStream())
-                //    {
-                //        new BinaryFormatter().Serialize(ms, value);
-                //        bytes = ms.ToArray();
-                //        if (bytes.Length > compressionThreshold)
-                //        {
-                //            bytes = compress(bytes);
-                //            type = SerializedType.CompressedObject;
-                //        }
-                //    }
-                //}
-                //else
-                //{
-                    type = SerializedType.ObjectJson;
+                type = SerializedType.ObjectJson;
+                Type t = value.GetType();
+                switch (StaticTool.GetSystemType(ref t))
+                {
+                    case SysType.Base:
+                    case SysType.Enum:
+                    case SysType.Custom:
+                        if (t.GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0)
+                        {
+                            type = SerializedType.Object;
+                        }
+                        break;
+                }
+                if (type == SerializedType.Object)
+                {
+                    //可序列化 List<object> 如果 object 不支持序列化，会挂。
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        new BinaryFormatter().Serialize(ms, value);
+                        bytes = ms.ToArray();
+                        if (bytes.Length > compressionThreshold)
+                        {
+                            bytes = compress(bytes);
+                            type = SerializedType.CompressedObject;
+                        }
+                    }
+                }
+                else
+                {
                     string json = JsonHelper.ToJson(value);
                     bytes = Encoding.UTF8.GetBytes(json);
                     if (bytes.Length > compressionThreshold)
@@ -150,7 +160,7 @@ namespace CYQ.Data.Cache
                         bytes = compress(bytes);
                         type = SerializedType.CompressedObjectJson;
                     }
-               // }
+                }
 
 
 
