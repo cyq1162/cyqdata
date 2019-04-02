@@ -29,10 +29,16 @@
 
   <ItemGroup>
     <Compile Remove="DotNetCore\CYQ.Data.Core\**" />
+    <Compile Remove="DotNetCore\System\Data\Common\**" />
+    <Compile Remove="单元测试\**" />
     <Compile Remove="文档\**" />
     <EmbeddedResource Remove="DotNetCore\CYQ.Data.Core\**" />
+    <EmbeddedResource Remove="DotNetCore\System\Data\Common\**" />
+    <EmbeddedResource Remove="单元测试\**" />
     <EmbeddedResource Remove="文档\**" />
     <None Remove="DotNetCore\CYQ.Data.Core\**" />
+    <None Remove="DotNetCore\System\Data\Common\**" />
+    <None Remove="单元测试\**" />
     <None Remove="文档\**" />
   </ItemGroup>
 

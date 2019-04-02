@@ -21,7 +21,7 @@ namespace System.Configuration
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.Write(err,LogType.Error);
             }
         }
         static ConfigurationManager()

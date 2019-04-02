@@ -56,7 +56,7 @@ namespace System.Web
             }
             else
             {
-                Log.WriteLog("Response.Headers.IsReadOnly,Can't Set Cookie : " + key + "," + value);
+                Log.Write("Response.Headers.IsReadOnly,Can't Set Cookie : " + key + "," + value,LogType.Error);
             }
         }
 
