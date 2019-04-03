@@ -2,7 +2,7 @@
 <br/>Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、Redis、MemCache。
 <hr />
 
-Demo(入门教程)：https://github.com/cyq1162/CYQ.Data.Demo <br/>
+Demo(入门)：https://github.com/cyq1162/CYQ.Data.Demo <br/>
 开篇介绍：http://www.cnblogs.com/cyq1162/p/5634414.html <br />
 更多文章：http://www.cnblogs.com/cyq1162/category/852300.html<br />
 
@@ -151,7 +151,7 @@ CYQ.Data 最近汇总了一下教程，放个人微信公众号里了，有需�
 <p><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">In fact, MDataRow is the core implementation layer, but it is relatively low-key.</span></span></p>
 <h1><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">Supplement important address:</span></span></h1>
 <p><strong><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">1: Source SVN address: </span></span><a href="https://github.com/cyq1162/cyqdata" target="_blank"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">https://github.com/cyq1162/cyqdata.git</span></span></a></strong></p>
-<p><strong><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">2: Project Demo example SVN address: </span></span><a href="http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/" target="_blank"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/</span></span></a></strong></p>
+<p><strong><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">2: Project Demo example SVN address: </span></span><a href="http://code.taobao.org/p/cyqopen/src/trunk/CYQ.Data.GettingStarted/" target="_blank"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">https://github.com/cyq1162/CYQ.Data.Demo</span></span></a></strong></p>
 <p><strong><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">3: Framework download address:</span></span></strong></p>
 <p><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">1: VS high version: search for cyqdata on Nuget</span></span></p>
 <p><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">2: VS low version: </span></span><a href="http://www.cyqdata.com/download/article-detail-426" target="_blank"><span style="vertical-align: inherit;"><span style="vertical-align: inherit;">http://www.cyqdata.com/download/article-detail-426</span></span></a></p>
