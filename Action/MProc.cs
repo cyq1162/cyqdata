@@ -18,6 +18,7 @@ namespace CYQ.Data
     /// </summary>
     public class MProc : IDisposable
     {
+        #region 隐式转换
         /// <summary>
         /// Change MAction to MProc
         /// <para>将一个MAction 转换成一个MProc。</para>
@@ -27,6 +28,23 @@ namespace CYQ.Data
             return new MProc(action.dalHelper);
         }
 
+        public static implicit operator MProc(Orm.SimpleOrmBase orm)
+        {
+            if (orm.Action != null)
+            {
+                return new MProc(orm.Action.dalHelper);
+            }
+            return null;
+        }
+        public static implicit operator MProc(Orm.OrmBase orm)
+        {
+            if (orm.Action != null)
+            {
+                return new MProc(orm.Action.dalHelper);
+            }
+            return null;
+        }
+        #endregion
         internal DbBase dalHelper;
         private NoSqlCommand _noSqlCommand;
         private InterAop _aop = new InterAop();

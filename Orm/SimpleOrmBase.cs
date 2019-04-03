@@ -174,12 +174,13 @@ namespace CYQ.Data.Orm
                             Error.Throw(errMsg);
                         }
                         Columns = TableSchema.GetColumns(typeInfo);
-                        if (!DBTool.ExistsTable(tableName, conn))
+                        ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
+                        if (!DBTool.ExistsTable(tableName, connBean.ConnString))
                         {
                             DBTool.ErrorMsg = null;
-                            if (!DBTool.CreateTable(tableName, Columns, conn))
+                            if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
                             {
-                                Error.Throw("SimpleOrmBase ：Create Table Error:" + tableName + DBTool.ErrorMsg);
+                                Error.Throw("SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg);
                             }
                         }
                     }

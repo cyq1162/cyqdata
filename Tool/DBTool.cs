@@ -241,31 +241,32 @@ namespace CYQ.Data.Tool
                             proc.SetAopState(Aop.AopOp.CloseAll);
                             proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DalType, proc.DalVersion));//.Replace("\n", string.Empty)
                             result = proc.ExeNonQuery() > -2;
-
-                            //获取扩展说明
-                            string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DalType).Replace("\r\n", " ").Trim(' ', ';');
-                            if (!string.IsNullOrEmpty(descriptionSql))
+                            if (result)
                             {
-                                if (proc.DalType == DalType.Oracle)
+                                //获取扩展说明
+                                string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DalType).Replace("\r\n", " ").Trim(' ', ';');
+                                if (!string.IsNullOrEmpty(descriptionSql))
                                 {
-                                    foreach (string sql in descriptionSql.Split(';'))
+                                    if (proc.DalType == DalType.Oracle)
                                     {
-                                        proc.ResetProc(sql);
-                                        if (proc.ExeNonQuery() == -2)
+                                        foreach (string sql in descriptionSql.Split(';'))
                                         {
-                                            break;
+                                            proc.ResetProc(sql);
+                                            if (proc.ExeNonQuery() == -2)
+                                            {
+                                                break;
+                                            }
+
+
                                         }
-
-
+                                    }
+                                    else
+                                    {
+                                        proc.ResetProc(descriptionSql);
+                                        proc.ExeNonQuery();
                                     }
                                 }
-                                else
-                                {
-                                    proc.ResetProc(descriptionSql);
-                                    proc.ExeNonQuery();
-                                }
                             }
-
 
                         }
                         catch (Exception err)
@@ -276,7 +277,7 @@ namespace CYQ.Data.Tool
                         {
                             if (proc.RecordsAffected == -2)
                             {
-                                _ErrorMsg.AppendLine("CreateTable:" + proc.DebugInfo);
+                                _ErrorMsg.AppendLine("CreateTable:" +proc.DebugInfo);
                             }
                         }
                     }

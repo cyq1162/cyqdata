@@ -1147,6 +1147,10 @@ namespace CYQ.Data
                 }
                 return result;
             }
+            if (!DebugInfo.ToString().EndsWith(master.ErrorMsg))
+            {
+                DebugInfo.Append(master.ErrorMsg);
+            }
             return false;
         }
         /// <summary>

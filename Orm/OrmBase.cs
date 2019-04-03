@@ -40,7 +40,7 @@ namespace CYQ.Data.Orm
 
         //Object entity;//实体对象
         //Type typeInfo;//实体对象类型
-        MAction action
+        internal MAction Action
         {
             get
             {
@@ -306,7 +306,7 @@ namespace CYQ.Data.Orm
         /// <param name="jsonOrEntity">json字符串或实体对象</param>
         public void LoadFrom(object jsonOrEntity)
         {
-            action.Data.LoadFrom(jsonOrEntity);
+            Action.Data.LoadFrom(jsonOrEntity);
             sob.SetValueToEntity();
         }
         /// <summary>
@@ -316,7 +316,7 @@ namespace CYQ.Data.Orm
         /// <param name="columnNames">可设置多个列名[调用Fill或Select后,本参数将被清除]</param>
         public void SetSelectColumns(params object[] columnNames)
         {
-            action.SetSelectColumns(columnNames);
+            Action.SetSelectColumns(columnNames);
         }
         /// <summary>
         /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]
@@ -326,14 +326,14 @@ namespace CYQ.Data.Orm
         /// <param name="dbType">参数类型</param>
         public void SetPara(object paraName, object value, DbType dbType)
         {
-            action.SetPara(paraName, value, dbType);
+            Action.SetPara(paraName, value, dbType);
         }
         /// <summary>
         /// 清除(SetPara设置的)自定义参数
         /// </summary>
         public void ClearPara()
         {
-            action.ClearPara();
+            Action.ClearPara();
         }
         /// <summary>
         /// 更新操作的自定义表达式设置。
@@ -341,7 +341,7 @@ namespace CYQ.Data.Orm
         /// <param name="updateExpression">例如a字段值自加1："a=a+1"</param>
         public void SetExpression(string updateExpression)
         {
-            action.SetExpression(updateExpression);
+            Action.SetExpression(updateExpression);
         }
 
         /// <summary>
@@ -351,9 +351,9 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                return action.AllowInsertID;
+                return Action.AllowInsertID;
             }
-            set { action.AllowInsertID = value; }
+            set { Action.AllowInsertID = value; }
         }
 
         /// <summary>
@@ -363,17 +363,17 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                if (action != null)
+                if (Action != null)
                 {
-                    return action.TableName;
+                    return Action.TableName;
                 }
                 return string.Empty;
             }
             set
             {
-                if (action != null)
+                if (Action != null)
                 {
-                    action.TableName = value;
+                    Action.TableName = value;
                 }
             }
         }
@@ -395,7 +395,7 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                return action.DebugInfo;
+                return Action.DebugInfo;
             }
         }
         /// <summary>
@@ -405,7 +405,7 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                return action.DalType;
+                return Action.DalType;
             }
         }
         /// <summary>
@@ -415,7 +415,7 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                return action.Data;
+                return Action.Data;
             }
         }
         /// <summary>
@@ -425,11 +425,11 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                if (action.UI.IsOnAfterGetFromEventNull)
+                if (Action.UI.IsOnAfterGetFromEventNull)
                 {
-                    action.UI.OnAfterGetFromEvent += new CYQ.Data.UI.MActionUI.OnAfterGetFrom(UI_OnAfterGetFromEvent);
+                    Action.UI.OnAfterGetFromEvent += new CYQ.Data.UI.MActionUI.OnAfterGetFrom(UI_OnAfterGetFromEvent);
                 }
-                return action.UI;
+                return Action.UI;
             }
         }
 

@@ -777,3 +777,4 @@
 561：Redis、MemCache：序列化处理（对Object类型进行Json转换处理）(2019-04-02)
 562：Postgre：优化。(2019-04-02)
 563：AppConfig：NetCore下对配置文件变化的进行监控。(2019-04-03)
+563：MAction、MProc：增加对Orm的隐式转换。(2019-04-03)

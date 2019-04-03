@@ -1142,7 +1142,7 @@ namespace CYQ.Data.Tool
                     }
                     #endregion
                 }
-                else 
+                else
                 {
                     List<string> items = JsonSplit.SplitEscapeArray(json);
                     if (items != null && items.Count > 0)
@@ -1505,9 +1505,9 @@ namespace CYQ.Data.Tool
                         StringBuilder sb = new StringBuilder();
                         foreach (string item in items)
                         {
-                            if (!item.TrimStart(' ', '\r').StartsWith("//"))
+                            if (!item.TrimStart(' ', '\r', '\t').StartsWith("//"))
                             {
-                                sb.Append(item.Trim(' ', '\r'));
+                                sb.Append(item.Trim(' ', '\r', '\t'));
                             }
                         }
                         json = sb.ToString();

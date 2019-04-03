@@ -22,6 +22,24 @@ namespace CYQ.Data
     /// </summary>
     public partial class MAction : IDisposable
     {
+        #region 隐式转换
+        public static implicit operator MAction(Orm.SimpleOrmBase orm)
+        {
+            if (orm.Action != null)
+            {
+                return orm.Action;
+            }
+            return null;
+        }
+        public static implicit operator MAction(Orm.OrmBase orm)
+        {
+            if (orm.Action != null)
+            {
+                return orm.Action;
+            }
+            return null;
+        }
+        #endregion
         #region 全局变量
 
         internal DbBase dalHelper;//数据操作
