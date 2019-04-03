@@ -1,5 +1,6 @@
 # cyq.data is not only a orm,but also a data access layer,it's very special and different from others,who use who love it.
 <hr />
+Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、Redis、MemCache。<br/>
 Demo(入门教程)：https://github.com/cyq1162/CYQ.Data.Demo <br/>
 开篇介绍：http://www.cnblogs.com/cyq1162/p/5634414.html <br />
 更多文章：http://www.cnblogs.com/cyq1162/category/852300.html<br />
