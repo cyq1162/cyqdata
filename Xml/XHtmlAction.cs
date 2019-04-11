@@ -248,7 +248,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 移除子节点
         /// </summary>
-        /// <param name="id">节点的ID</param>
+        /// <param name="id">节点的id</param>
         /// <param name="start">从第几个子节点开始删除[索引从0开始]</param>
         public void RemoveChild(string idOrName, int start)
         {
@@ -1276,7 +1276,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 为节点设置值，通常在LoadData后使用。
         /// </summary>
-        /// <param name="id">节点的ID</param>
+        /// <param name="id">节点的id</param>
         public void SetFor(string idOrName)
         {
             SetFor(idOrName, SetType.InnerXml);

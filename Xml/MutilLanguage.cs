@@ -102,7 +102,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 获取多语言节点值
         /// </summary>
-        /// <param name="lanID">Xml节点ID</param>
+        /// <param name="lanID">Xml节点id</param>
         public string Get(object lanID)
         {
             return Get(lanID, LanKey);
@@ -110,7 +110,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 获取多语言节点值
         /// </summary>
-        /// <param name="lanID">Xml节点ID</param>
+        /// <param name="lanID">Xml节点id</param>
         /// <param name="lanKeyID">LanguageKey对应的数字</param>
         public string Get(object lanID, int lanKeyID)
         {
@@ -123,12 +123,12 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 获取多语言节点值
         /// </summary>
-        /// <param name="lanID">Xml节点ID</param>
+        /// <param name="lanID">Xml节点id</param>
         /// <param name="lanEnum">获取的语言</param>
         /// <returns></returns>
         public string Get(object lanID, LanguageKey lanEnum)
         {
-            XmlNode node = helper.GetByID(Convert.ToString(lanID));
+            XmlNode node = helper.GetByid(Convert.ToString(lanID));
             if (node != null)
             {
                 switch (lanEnum)
