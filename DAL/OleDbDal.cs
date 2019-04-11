@@ -7,7 +7,7 @@ using System.IO;
 using System.Data.Common;
 namespace CYQ.Data
 {
-    internal class OleDbDal : DbBase
+    internal partial class OleDbDal : DalBase
     {
         public OleDbDal(ConnObject co)
             : base(co)
@@ -65,6 +65,49 @@ namespace CYQ.Data
         protected override bool IsExistsDbName(string dbName)
         {
             return File.Exists(Con.DataSource.Replace(DataBase, dbName));
+        }
+    }
+
+    internal partial class OleDbDal
+    {
+        public override Dictionary<string, string> GetTables()
+        {
+            return GetSchemaDic("U");
+        }
+        public override Dictionary<string, string> GetViews()
+        {
+            return GetSchemaDic("V");
+        }
+        private Dictionary<string, string> GetSchemaDic(string type)
+        {
+            #region 用ADO.NET属性拿数据
+            DataTable dt = null;
+            Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Con.Open();
+            if (type == "U")
+            {
+                dt = Con.GetSchema("Tables", new string[] { null, null, null, "Table" });
+            }
+            else
+            {
+                dt = Con.GetSchema("Views");
+            }
+            Con.Close();
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                string tableName = string.Empty;
+                foreach (DataRow row in dt.Rows)
+                {
+                    tableName = Convert.ToString(row["TABLE_NAME"]);
+                    if (!tables.ContainsKey(tableName))
+                    {
+                        tables.Add(tableName, string.Empty);
+                    }
+                }
+                dt = null;
+            }
+            return tables;
+            #endregion
         }
     }
 }

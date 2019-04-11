@@ -84,7 +84,7 @@ namespace CYQ.Data.SQL
         /// 数据库函数 Case 分支语句，其它Case 一起的关键字也需要包含。
         /// <example>
         /// <code>
-        /// 示例： [#CASE] [#WHEN] languageID={1} [#THEN] {2} [#ELSE] 0 [#END]
+        /// 示例： [#CASE] [#WHEN] languageid={1} [#THEN] {2} [#ELSE] 0 [#END]
         /// </code>
         /// </example>
         /// </summary>
@@ -93,7 +93,7 @@ namespace CYQ.Data.SQL
         /// 数据库函数 Case When 分支语句，其它Case 一起的关键字也需要包含。
         /// <example>
         /// <code>
-        /// 示例： [#CASE#WHEN] languageID={0} [#THEN] 1000000 [#ELSE] 0 [#END]
+        /// 示例： [#CASE#WHEN] languageid={0} [#THEN] 1000000 [#ELSE] 0 [#END]
         /// </code>
         /// </example>
         /// </summary>

@@ -85,17 +85,17 @@ namespace CYQ.Data
         {
             if (Slave.Count > 0)
             {
-                string id = GetIdentity();//获取当前的标识
+                string id = Getidentity();//获取当前的标识
                 Cache.CacheManage.LocalInstance.Set(id, 1, AppConfig.DB.MasterSlaveTime / 60.0);
             }
         }
         public bool IsAllowSlave()
         {
             if (Slave.Count == 0) { return false; }
-            string id = GetIdentity();//获取当前的标识
+            string id = Getidentity();//获取当前的标识
             return !Cache.CacheManage.LocalInstance.Contains(id);
         }
-        private string GetIdentity()
+        private string Getidentity()
         {
             string id = string.Empty;
             if (HttpContext.Current != null)
@@ -112,13 +112,13 @@ namespace CYQ.Data
                 {
                     id = HttpContext.Current.Request.Headers["Token"];
                 }
-                else if (HttpContext.Current.Request["MasterSlaveID"] != null)
+                else if (HttpContext.Current.Request["MasterSlaveid"] != null)
                 {
-                    id = HttpContext.Current.Request["MasterSlaveID"];
+                    id = HttpContext.Current.Request["MasterSlaveid"];
                 }
                 if (string.IsNullOrEmpty(id))
                 {
-                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveID"];
+                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveid"];
                     if (cookie != null)
                     {
                         id = cookie.Value;
@@ -126,7 +126,7 @@ namespace CYQ.Data
                     else
                     {
                         id = Guid.NewGuid().ToString().Replace("-", "");
-                        cookie = new HttpCookie("MasterSlaveID", id);
+                        cookie = new HttpCookie("MasterSlaveid", id);
                         cookie.Expires = DateTime.Now.AddMonths(1);
                         HttpContext.Current.Response.Cookies.Add(cookie);
                     }
@@ -225,8 +225,8 @@ namespace CYQ.Data
         /// <summary>
         /// 定时检测异常的链接是否恢复。
         /// </summary>
-        /// <param name="threadID"></param>
-        public static void CheckConnIsOk(object threadID)
+        /// <param name="threadid"></param>
+        public static void CheckConnIsOk(object threadid)
         {
             while (true)
             {

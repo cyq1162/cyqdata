@@ -7,7 +7,7 @@ using System;
 using System.IO;
 namespace CYQ.Data
 {
-    internal class MySQLDal : DbBase
+    internal partial class MySQLDal : DalBase
     {
         private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
         public MySQLDal(ConnObject co)
@@ -75,6 +75,25 @@ namespace CYQ.Data
             get
             {
                 return '?';
+            }
+        }
+    }
+    internal partial class MySQLDal
+    {
+        protected override string GetSchemaSql(string type)
+        {
+            if (type == "P")
+            {
+                return "select ROUTINE_NAME as name,'P' as xtype from information_schema.ROUTINES where ROUTINE_SCHEMA='" + DataBase + "'";
+            }
+            else
+            {
+                if (type == "U") { type = "BASE TABLE"; }
+                else if (type == "V")
+                {
+                    type = "VIEW";
+                }
+                return string.Format("select TABLE_NAME as TableName,TABLE_COMMENT as Description from `information_schema`.`TABLES`  where TABLE_SCHEMA='{0}' and TABLE_TYPE='{1}'", DataBase, type);
             }
         }
     }

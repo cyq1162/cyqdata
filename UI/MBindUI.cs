@@ -161,7 +161,7 @@ namespace CYQ.Data.UI
             Type t = ct.GetType();
             if (t.FullName.IndexOf('.') != t.FullName.LastIndexOf('.'))
             {
-                PropertyInfo p = t.GetProperty(t.FullName.Contains(".Web.") ? "ID" : "Name");
+                PropertyInfo p = t.GetProperty(t.FullName.Contains(".Web.") ? "id" : "Name");
                 if (p == null)
                 {
                     return string.Empty;

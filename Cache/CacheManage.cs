@@ -4,6 +4,8 @@ using CYQ.Data.Table;
 using CYQ.Data.Tool;
 using System;
 using CYQ.Data.SQL;
+using System.Configuration;
+using System.Threading;
 namespace CYQ.Data.Cache
 {
     /// <summary>
@@ -183,76 +185,21 @@ namespace CYQ.Data.Cache
         /// </summary>
         public static string GetKey(CacheKeyType ckt, string tableName)
         {
-            return GetKey(ckt, tableName, AppConfig.DB.DefaultDataBase, AppConfig.DB.DefaultDalType);
+            return GetKey(ckt, tableName, AppConfig.DB.DefaultConn);
         }
         /// <summary>
         /// 获取系统内部缓存Key
         /// </summary>
-        public static string GetKey(CacheKeyType ckt, string tableName, string dbName, DalType dalType)
+        public static string GetKey(CacheKeyType ckt, string tableName, string conn)
         {
             switch (ckt)
             {
                 case CacheKeyType.Schema:
-                    return TableSchema.GetSchemaKey(tableName, dbName, dalType);
+                    return ColumnSchema.GetSchemaKey(tableName, AppConfig.GetConn(conn));
                 case CacheKeyType.AutoCache:
-                    return AutoCache.GetBaseKey(dalType, dbName, tableName);
+                    return AutoCache.GetBaseKey(tableName, AppConfig.GetConn(conn));
             }
             return string.Empty;
-        }
-    }
-    public abstract partial class CacheManage
-    {
-        /// <summary>
-        /// 通过该方法可以预先加载整个数据库的表结构缓存
-        /// </summary>
-        public static void PreLoadDBSchemaToCache()
-        {
-            PreLoadDBSchemaToCache(AppConfig.DB.DefaultConn, true);
-        }
-        private static readonly object obj = new object();
-        /// <summary>
-        /// 通过该方法可以预先加载整个数据库的表结构缓存(异常会抛，外层Try Catch)
-        /// </summary>
-        /// <param name="conn">指定数据链接</param>
-        /// <param name="isUseThread">是否开启线程</param>
-        public static void PreLoadDBSchemaToCache(string conn, bool isUseThread)
-        {
-            if (TableSchema.tableCache == null || TableSchema.tableCache.Count == 0)
-            {
-                lock (obj)
-                {
-                    if (TableSchema.tableCache == null || TableSchema.tableCache.Count == 0)
-                    {
-                        if (isUseThread)
-                        {
-                            ThreadBreak.AddGlobalThread(new System.Threading.ParameterizedThreadStart(LoadDBSchemaCache), conn);
-                        }
-                        else
-                        {
-                            LoadDBSchemaCache(conn);
-                        }
-                    }
-                }
-            }
-        }
-        private static void LoadDBSchemaCache(object connObj)
-        {
-
-            string conn = Convert.ToString(connObj);
-            Dictionary<string, string> dic = DBTool.GetTables(Convert.ToString(conn));
-            if (dic != null && dic.Count > 0)
-            {
-                DbBase helper = DalCreate.CreateDal(conn);
-                if (helper.DataBaseType != DalType.Txt && helper.DataBaseType != DalType.Xml)
-                {
-                    foreach (string key in dic.Keys)
-                    {
-                        TableSchema.GetColumns(key, ref helper);
-                    }
-                }
-                helper.Dispose();
-            }
-
         }
     }
     /// <summary>

@@ -79,7 +79,7 @@ namespace CYQ.Data.Cache
         }
         int taskCount = 0, taskInterval = 5;//5分钟清一次缓存。
         private static DateTime errTime = DateTime.MinValue;
-        private void ClearState(object threadID)
+        private void ClearState(object threadid)
         {
             startTime = DateTime.Now;
             while (true)
@@ -400,8 +400,9 @@ namespace CYQ.Data.Cache
             {
                 lock (lockObj)
                 {
-                    TableSchema.tableCache.Clear();
-                    TableSchema.columnCache.Clear();
+                    DBSchema.Clear();
+                    TableSchema.Clear();
+                    ColumnSchema.Clear();
 
                     theCache.Clear();
                     theTime.Clear();

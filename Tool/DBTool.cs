@@ -73,7 +73,7 @@ namespace CYQ.Data.Tool
             bool result = false;
             try
             {
-                DbBase helper = DalCreate.CreateDal(conn);
+                DalBase helper = DalCreate.CreateDal(conn);
                 result = helper.TestConn(AllowConnLevel.Master);
                 if (result)
                 {
@@ -122,22 +122,20 @@ namespace CYQ.Data.Tool
         public static Dictionary<string, string> GetTables(string conn, out string dbName, out string errInfo)
         {
             errInfo = string.Empty;
-            DbBase helper = DalCreate.CreateDal(conn);
-            helper.IsRecordDebugInfo = false;
-            dbName = helper.DataBase;
-            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
+            using (DalBase helper = DalCreate.CreateDal(conn))
             {
-                errInfo = helper.DebugInfo.ToString();
-                if (string.IsNullOrEmpty(errInfo))
+                dbName = helper.DataBase;
+                if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
                 {
-                    errInfo = "Open database fail : " + dbName;
+                    errInfo = helper.DebugInfo.ToString();
+                    if (string.IsNullOrEmpty(errInfo))
+                    {
+                        errInfo = helper.DataBaseType + " Open database fail : " + dbName;
+                    }
+                    return null;
                 }
-                helper.Dispose();
-                return null;
             }
-            Dictionary<string, string> tables = TableSchema.GetTables(ref helper);//内部有缓存
-            helper.Dispose();
-            return tables;
+            return TableSchema.GetTables(conn);//内部有缓存
         }
         #endregion
 
@@ -184,12 +182,12 @@ namespace CYQ.Data.Tool
             {
                 return false;
             }
-            DbBase helper = DalCreate.CreateDal(conn);
-            dalType = helper.DataBaseType;
-            database = helper.DataBase;
-            bool result = TableSchema.Exists("U", tableName, ref helper);
-            helper.Dispose();
-            return result;
+            using (DalBase helper = DalCreate.CreateDal(conn))
+            {
+                dalType = helper.DataBaseType;
+                database = helper.DataBase;
+            }
+            return TableSchema.Exists(tableName, "U", conn);
         }
         #endregion
 
@@ -277,7 +275,7 @@ namespace CYQ.Data.Tool
                         {
                             if (proc.RecordsAffected == -2)
                             {
-                                _ErrorMsg.AppendLine("CreateTable:" +proc.DebugInfo);
+                                _ErrorMsg.AppendLine("CreateTable:" + proc.DebugInfo);
                             }
                         }
                     }
@@ -287,16 +285,7 @@ namespace CYQ.Data.Tool
             }
             if (result)
             {
-                //处理表缓存
-                string key = TableSchema.GetTableCacheKey(dalType, dataBase, conn);
-                if (TableSchema.tableCache.ContainsKey(key))
-                {
-                    Dictionary<string, string> tableDic = TableSchema.tableCache[key];
-                    if (!tableDic.ContainsKey(tableName))
-                    {
-                        tableDic.Add(tableName, "");
-                    }
-                }
+                TableSchema.Add(tableName, "U", conn);//修改缓存。
             }
             return result;
         }
@@ -317,7 +306,7 @@ namespace CYQ.Data.Tool
         internal static void CheckAndCreateOracleSequence(string seqName, string conn, string primaryKey, string tableName)
         {
             seqName = seqName.ToUpper();
-            using (DbBase db = DalCreate.CreateDal(conn))
+            using (DalBase db = DalCreate.CreateDal(conn))
             {
                 object o = db.ExeScalar(string.Format(TableSchema.ExistOracleSequence, seqName), false);
                 if (db.RecordsAffected != -2 && (o == null || Convert.ToString(o) == "0"))
@@ -421,7 +410,7 @@ namespace CYQ.Data.Tool
                     }
                     proc.EndTransation();
                 }
-                RemoveCache(tableName, database, dalType);
+                RemoveCache(tableName, conn);
                 return true;
             }
             return false;
@@ -445,9 +434,8 @@ namespace CYQ.Data.Tool
         {
             bool result = false;
             string key = string.Empty;
-            using (DbBase helper = DalCreate.CreateDal(conn))
+            using (DalBase helper = DalCreate.CreateDal(conn))
             {
-                key = TableSchema.GetTableCacheKey(helper);
                 DalType dalType = helper.DataBaseType;
                 switch (dalType)
                 {
@@ -477,7 +465,7 @@ namespace CYQ.Data.Tool
                         if (result)
                         {
                             //处理表相关的元数据和数据缓存。
-                            RemoveCache(tableName, helper.DataBase, dalType);
+                            RemoveCache(tableName, conn);
                         }
                         break;
                 }
@@ -489,14 +477,7 @@ namespace CYQ.Data.Tool
             if (result)
             {
                 //处理数据库表字典缓存
-                if (TableSchema.tableCache.ContainsKey(key))
-                {
-                    Dictionary<string, string> tableDic = TableSchema.tableCache[key];
-                    if (tableDic.ContainsKey(tableName))
-                    {
-                        tableDic.Remove(tableName);
-                    }
-                }
+                TableSchema.Remove(tableName, "U", conn);
             }
             return result;
         }
@@ -515,7 +496,7 @@ namespace CYQ.Data.Tool
         /// <param name="restrictionValues">为指定的架构返回一组限制值</param>
         public static DataTable GetSchema(string conn, string connectionName, string[] restrictionValues)
         {
-            DbBase helper = DalCreate.CreateDal(conn);
+            DalBase helper = DalCreate.CreateDal(conn);
             if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
             {
                 return null;
@@ -532,33 +513,20 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static MDataColumn GetColumns(Type typeInfo)
         {
-            return TableSchema.GetColumns(typeInfo);
+            return ColumnSchema.GetColumns(typeInfo);
         }
         /// <summary>
         /// 获取表列架构
         /// </summary>
         /// <param name="tableName">表名</param>
-        public static MDataColumn GetColumns(object tableName)
+        public static MDataColumn GetColumns(object tableNameObj)
         {
-            string dbName = StaticTool.GetDbName(ref tableName);
             string conn = string.Empty;
-            string tName = tableName.ToString();
-            if (string.IsNullOrEmpty(dbName))
+            if (tableNameObj is Enum)
             {
-                conn = AppConfig.DB.DefaultConn;
+                conn = CrossDB.GetConnByEnum(tableNameObj as Enum);
             }
-            else
-            {
-                conn = dbName + "Conn";
-                if (tName.IndexOfAny(new char[] { '(' }) == -1)
-                {
-                    tName = SqlFormat.NotKeyword(tName);
-                    //tName = dbName + "." + tName;//单表
-                }
-
-            }
-
-            return GetColumns(tName, conn);
+            return GetColumns(Convert.ToString(tableNameObj), conn);
         }
         /// <summary>
         /// 获取表列架构（链接错误时，抛异常）
@@ -570,36 +538,16 @@ namespace CYQ.Data.Tool
         public static MDataColumn GetColumns(string tableName, string conn, out string errInfo)
         {
             errInfo = string.Empty;
-            DbBase helper = DalCreate.CreateDal(conn);
-            DbResetResult result = helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
-            switch (result)
+            try
             {
-                case DbResetResult.No_DBNoExists:
-                    helper.Dispose();
-                    return null;
-                case DbResetResult.No_SaveDbName:
-                case DbResetResult.Yes:
-                    tableName = SqlFormat.NotKeyword(tableName);//same database no need database.tablename
-                    break;
+                return ColumnSchema.GetColumns(tableName, conn);
+
             }
-            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
+            catch(Exception err)
             {
-                errInfo = helper.DebugInfo.ToString();
-                if (string.IsNullOrEmpty(errInfo))
-                {
-                    errInfo = "Open database fail : " + tableName;
-                }
-                helper.Dispose();
-                Error.Throw(errInfo);
+                errInfo = err.Message;
                 return null;
             }
-            if (!tableName.Contains(" "))//
-            {
-                tableName = GetMapTableName(conn, tableName);
-            }
-            MDataColumn mdc = TableSchema.GetColumns(tableName, ref helper);
-            helper.Dispose();
-            return mdc;
         }
         /// <summary>
         /// 获取表列架构
@@ -616,63 +564,63 @@ namespace CYQ.Data.Tool
 
 
         #region 其它操作
-        private static List<string> flag = new List<string>(2);
-        internal static void CreateSelectBaseProc(DalType dal, string conn)
-        {
-            try
-            {
-                switch (dal)
-                {
-                    //case DalType.Oracle:
-                    //    if (!flag.Contains("oracle"))
-                    //    {
-                    //        flag.Add("oracle");
-                    //        using (DbBase db = DalCreate.CreateDal(conn))
-                    //        {
-                    //            db.AllowRecordSql = false;
-                    //            object o = db.ExeScalar(string.Format(ExistOracle.Replace("TABLE", "PROCEDURE"), "MyPackage.SelectBase"), false);
-                    //            if (o != null && Convert.ToInt32(o) < 1)
-                    //            {
-                    //                db.ExeNonQuery(SqlPager.GetPackageHeadForOracle(), false);
-                    //                db.ExeNonQuery(SqlPager.GetPackageBodyForOracle(), false);
-                    //            }
-                    //        }
-                    //    }
-                    //    break;
-                    case DalType.MsSql:
-                        if (!flag.Contains("sql"))
-                        {
-                            flag.Add("sql");//考虑到一个应用不太可能同时使用mssql的不同版本，只使用一个标识。
-                            using (DbBase db = DalCreate.CreateDal(conn))
-                            {
-                                db.IsRecordDebugInfo = false;
-                                object o = null;
-                                if (!db.Version.StartsWith("08"))
-                                {
-                                    //    o = db.ExeScalar(string.Format(Exist2000.Replace("U", "P"), "SelectBase"), false);
-                                    //    if (o != null && Convert.ToInt32(o) < 1)
-                                    //    {
-                                    //        db.ExeNonQuery(SqlPager.GetSelectBaseForSql2000(), false);
-                                    //    }
-                                    //}
-                                    //else
-                                    //{
-                                    o = db.ExeScalar(string.Format(TableSchema.Exist2005, "SelectBase", "P"), false);
-                                    if (o != null && Convert.ToInt32(o) < 1)
-                                    {
-                                        db.ExeNonQuery(SqlCreateForPager.GetSelectBaseForSql2005(), false);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                }
-            }
-            catch (Exception err)
-            {
-                Log.Write(err, LogType.DataBase);
-            }
-        }
+        //private static List<string> flag = new List<string>(2);
+        //internal static void CreateSelectBaseProc(DalType dal, string conn)
+        //{
+        //    try
+        //    {
+        //        switch (dal)
+        //        {
+        //            //case DalType.Oracle:
+        //            //    if (!flag.Contains("oracle"))
+        //            //    {
+        //            //        flag.Add("oracle");
+        //            //        using (DbBase db = DalCreate.CreateDal(conn))
+        //            //        {
+        //            //            db.AllowRecordSql = false;
+        //            //            object o = db.ExeScalar(string.Format(ExistOracle.Replace("TABLE", "PROCEDURE"), "MyPackage.SelectBase"), false);
+        //            //            if (o != null && Convert.ToInt32(o) < 1)
+        //            //            {
+        //            //                db.ExeNonQuery(SqlPager.GetPackageHeadForOracle(), false);
+        //            //                db.ExeNonQuery(SqlPager.GetPackageBodyForOracle(), false);
+        //            //            }
+        //            //        }
+        //            //    }
+        //            //    break;
+        //            case DalType.MsSql:
+        //                if (!flag.Contains("sql"))
+        //                {
+        //                    flag.Add("sql");//考虑到一个应用不太可能同时使用mssql的不同版本，只使用一个标识。
+        //                    using (DbBase db = DalCreate.CreateDal(conn))
+        //                    {
+        //                        db.IsRecordDebugInfo = false;
+        //                        object o = null;
+        //                        if (!db.Version.StartsWith("08"))
+        //                        {
+        //                            //    o = db.ExeScalar(string.Format(Exist2000.Replace("U", "P"), "SelectBase"), false);
+        //                            //    if (o != null && Convert.ToInt32(o) < 1)
+        //                            //    {
+        //                            //        db.ExeNonQuery(SqlPager.GetSelectBaseForSql2000(), false);
+        //                            //    }
+        //                            //}
+        //                            //else
+        //                            //{
+        //                            o = db.ExeScalar(string.Format(TableSchema.Exist2005, "SelectBase", "P"), false);
+        //                            if (o != null && Convert.ToInt32(o) < 1)
+        //                            {
+        //                                db.ExeNonQuery(SqlCreateForPager.GetSelectBaseForSql2005(), false);
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //                break;
+        //        }
+        //    }
+        //    catch (Exception err)
+        //    {
+        //        Log.Write(err, LogType.DataBase);
+        //    }
+        //}
 
         /// <summary>
         /// 为字段或表名添加关键字标签：如[],''等符号
@@ -706,51 +654,12 @@ namespace CYQ.Data.Tool
 
         #endregion
 
-        /// <summary>
-        /// 映射的表名
-        /// </summary>
-        internal static string GetMapTableName(string conn, string tableName)
-        {
-            Dictionary<string, string> mapTable = null;
-            string key = "MapTalbe:" + conn.GetHashCode();
-            if (Cache.CacheManage.LocalInstance.Contains(key))
-            {
-                mapTable = Cache.CacheManage.LocalInstance.Get<Dictionary<string, string>>(key);
-            }
-            else
-            {
-                Dictionary<string, string> list = GetTables(conn);
-                if (list != null && list.Count > 0)
-                {
-                    mapTable = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                    string mapName = string.Empty;
-                    foreach (string item in list.Keys)
-                    {
-                        mapName = item.Replace("_", "").Replace("-", "").Replace(" ", "");//有奇葩用-符号和空格的。
-                        //去掉原有的限制条件：(item != mapName 只存档带-," ",_等符号的表名 )，支持外部映射
-                        if (!mapTable.ContainsKey(mapName))//
-                        {
-                            mapTable.Add(mapName.ToLower(), item);
-                        }
-                    }
-                    Cache.CacheManage.LocalInstance.Set(key, mapTable, 1440);
-
-                }
-            }
-            key = tableName.Replace("_", "").Replace("-", "").Replace(" ", "").ToLower();
-            key = SqlFormat.NotKeyword(key);
-            if (mapTable != null && mapTable.Count > 0 && mapTable.ContainsKey(key))
-            {
-                return mapTable[key];
-            }
-            return tableName;
-        }
-        private static void RemoveCache(string tableName, string database, DalType dalType)
+        private static void RemoveCache(string tableName, string conn)
         {
             //清缓存
-            string key = Cache.CacheManage.GetKey(Cache.CacheKeyType.Schema, tableName, database, dalType);
+            string key = Cache.CacheManage.GetKey(Cache.CacheKeyType.Schema, tableName, conn);
             Cache.CacheManage.LocalInstance.Remove(key);
-            key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, database, dalType);
+            key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, conn);
             Cache.AutoCache.ReadyForRemove(key);
         }
     }

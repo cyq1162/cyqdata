@@ -94,13 +94,13 @@ namespace CYQ.Data.Orm
             sob.SetInit2(entityInstance, tableName, conn, op);
         }
         /// <summary>
-        /// 设置值,例如:[action.Set(TableName.ID,10);]
+        /// 设置值,例如:[action.Set(TableName.id,10);]
         /// </summary>
-        /// <param name="key">字段名称,可用枚举如:[TableName.ID]</param>
+        /// <param name="key">字段名称,可用枚举如:[TableName.id]</param>
         /// <param name="value">要设置给字段的值</param>
         /// <example><code>
         /// set示例：action.Set(Users.UserName,"路过秋天");
-        /// get示例：int id=action.Get&lt;int&gt;(Users.ID);
+        /// get示例：int id=action.Get&lt;int&gt;(Users.id);
         /// </code></example>
         protected void Set(object key, object value)
         {
@@ -345,7 +345,7 @@ namespace CYQ.Data.Orm
         }
 
         /// <summary>
-        /// 是否允许插入自增ID
+        /// 是否允许插入自增id
         /// </summary>
         public bool AllowInsertID
         {

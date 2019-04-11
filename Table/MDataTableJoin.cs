@@ -92,7 +92,7 @@ namespace CYQ.Data.Table
         }
         internal static MDataTable Join(MDataTable dtA, MDataTable dtB, params string[] columns)
         {
-            //记录 ID as PID 映射的列名，中间记录，修改dtB的列名，后面还原
+            //记录 id as Pid 映射的列名，中间记录，修改dtB的列名，后面还原
             Dictionary<string, string> mapName = new Dictionary<string, string>();
             #region 判断条件
             int aIndex = dtA.joinOnIndex;

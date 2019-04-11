@@ -12,17 +12,17 @@ namespace CYQ.Data
     {
         /// <summary>
         /// only insert,no return autoIncrement id
-        /// <para>使用此项：插入数据后[MSSQL会返回ID,其它数据库则不会返回ID]</para>
+        /// <para>使用此项：插入数据后[MSSQL会返回id,其它数据库则不会返回id]</para>
         /// </summary>
         None,
         /// <summary>
         /// insert and return autoincrement id (default option)
-        /// <para>使用此项：插入数据后会返回ID[默认选项]。</para>
+        /// <para>使用此项：插入数据后会返回id[默认选项]。</para>
         /// </summary>
         ID,
         /// <summary>
         /// insert and select top 1 data to fill row
-        /// <para>使用此项：插入数据后,会根据返回ID进行查询后填充数据行。</para>
+        /// <para>使用此项：插入数据后,会根据返回id进行查询后填充数据行。</para>
         /// </summary>
         Fill,
     }

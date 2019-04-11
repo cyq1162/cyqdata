@@ -49,5 +49,17 @@ namespace CYQ.Data
         /// Cache
         /// </summary>
         public const string Cache = "Cache";
+        /// <summary>
+        /// Aries Dev Framework
+        /// </summary>
+        public const string Aries = "Aries";
+        /// <summary>
+        /// Taurus Dev Framework
+        /// </summary>
+        public const string Taurus = "Taurus";
+        /// <summary>
+        /// Gemini Workflow Dev Framework
+        /// </summary>
+        public const string Gemini = "Gemini";
     }
 }

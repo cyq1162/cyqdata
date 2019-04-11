@@ -28,7 +28,7 @@ namespace CYQ.Data
         }
 
         NoSqlAction action = null;
-        public NoSqlCommand(string sqlText, DbBase dbBase)
+        public NoSqlCommand(string sqlText, DalBase dalBase)
         {
             try
             {
@@ -46,10 +46,10 @@ namespace CYQ.Data
             if (ss.IsSelect || ss.IsUpdate || ss.IsDelete || ss.IsInsert)
             {
                 MDataRow row = new MDataRow();
-                if (TableSchema.FillTableSchema(ref row, ref dbBase, ss.TableName, ss.TableName))
-                {
-                    row.Conn = dbBase.ConnName;
-                    action = new NoSqlAction(ref row, ss.TableName, dbBase.Con.DataSource, dbBase.DataBaseType);
+                row.Conn = dalBase.ConnName;
+                if (ColumnSchema.FillTableSchema(ref row, ss.TableName, ss.TableName))
+                { 
+                    action = new NoSqlAction(ref row, ss.TableName, dalBase.Con.DataSource, dalBase.DataBaseType);
                 }
             }
             else

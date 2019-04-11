@@ -50,7 +50,7 @@
 3：DataType：GetSqlType方法增加对ntext类型的转换,修改转换默认返回为SqlDbType.NVarChar
 
 从2010-09-04记录了：
-4：增加对Guid类型的ID的支持。
+4：增加对Guid类型的id的支持。
 5：MProc增加对SQL语句的支持
 6：OutPutData：优化代码，删除没用到的函数
 
@@ -75,7 +75,7 @@
 4：OutPutData：重新调整内部代码,增加支持Access,去掉输出枚举的说明。
 5：V1.6版本辅助工具出生，增加对Access枚举的生成支持。
 从2010-09-15记录了：
-6：DbBase：存储过程返回值不能走名称索引，只能走数字索引方式。
+6：DalBase：存储过程返回值不能走名称索引，只能走数字索引方式。
 7：MDataColumn：增加对列的删除。
 8：MDataTable：修改构造函数
 从2010-09-19记录了：
@@ -108,8 +108,8 @@
 -----------------------------V2.5版本开始-----------------------------
 从2010-10-02记录了：
 1：MAction增加Bind方法。
-2：修正MAction Debug属性[失败后自动调用Close,属性取不到DbBase错误信息]
-3：MProc 增加IDisponse接口实现
+2：修正MAction Debug属性[失败后自动调用Close,属性取不到DalBase错误信息]
+3：MProc 增加idisponse接口实现
 从2010-10-07记录了：
 4：MAction：Aop修改Fill返回id值
 
@@ -122,7 +122,7 @@
 1：MAction:对于Insert/Update/Delete/Fill/GetCount增加_DataSqlHelper.ClearParameters();
 2：增加Orm基类
 3：MDataTable增加ToList<T>泛型方法
-4：DbBase增加关闭事务机制
+4：DalBase增加关闭事务机制
 5：OrmBase默认不开启事务
 从2010-10-16记录了：
 6：MAction：在关闭事务时，默认操作失败不自动关闭链接
@@ -228,7 +228,7 @@
 
 14：启用二级数据库配置，当第一数据库链接失败时，转第二链接数据库(第二链接配置名为“第一配置名_bak“）；
 
-18：DbBase中的方法增加可配置的ExeNonQuery是否加锁
+18：DalBase中的方法增加可配置的ExeNonQuery是否加锁
 
 20：处理json类对单个，号分隔的bug,修正返加载无头部数据的bug,即"},{"的分隔符号
 21：准备增加框架扩展映射Xml内容功能
@@ -251,7 +251,7 @@
 40：对表名增加关键字处理。
 
 41：将表架构外置到txt中，节省一次查询。
-42：扩展SetType.Custom,可以传递多个属性，同时允许获取InnerText,InnerXml属性，如：Document.GetAttrValue(ID,"InnerText");
+42：扩展SetType.Custom,可以传递多个属性，同时允许获取InnerText,InnerXml属性，如：Document.GetAttrValue(id,"InnerText");
 43：对表架构获取，增加或去除表名的关键字符号。
 44：调整AOP功能，增加四种返回值,可以跳过AopEnd事件，并将默认Aop变为单例。
 
@@ -280,7 +280,7 @@
 
 75：MySql 的图片类型不能指定长度，修正兼容。(否则会报索引超出了数组界限错误。)
 76：修改XHtmlAction：增加无效字符的过滤，SetForeach的string.format不支持{$标签}{1}问题。
-77：MDataTable的指量插入，增加mssql的SqlBulkCopy处理，NoSql模式时，取消ID重复检测，以加快速度。
+77：MDataTable的指量插入，增加mssql的SqlBulkCopy处理，NoSql模式时，取消id重复检测，以加快速度。
 78：增加ODP.NET 组件的支持，并增加OracleBulkCopy处理，加快批量插入的速度。
 79：去掉ICommon接口，增加了Select方法的重截。
 80：文本数据库增加简单SQL语法支持（MProc可以执行SQL），同时优化MDataTable的内部查询。
@@ -296,10 +296,10 @@
 90：兼容文本数据库的表结构检测（允许从.txt或.xml读取结构）
 91：支持exists(UI取值判断)
 92：处理创建表结构时MySql的DateTime->Timestamp默认值问题。(2013-08-29)
-93：减少where 1=1和 and 1=1的存在，修正SQLite的ID表结构自增加ID创建问题。
+93：减少where 1=1和 and 1=1的存在，修正SQLite的id表结构自增加id创建问题。
 93：优化Oracle的自定义语句对分页存储过程的兼容。
 94：调整JsonHelper的个别字段名称，加强对easyui的交互。
-95：调整Json加载表结构（自增ID+默认日期）
+95：调整Json加载表结构（自增id+默认日期）
 96：增加DBFast类。（同时配置工具增加相应的生成纯实体的功能）(2013-10-01)
 97：数据库链接取法支持从名称空间的最后一位+Conn，如Web.Enum.Demo下的类的数据库链接为：DemoConn
 98：XmlAction增加自动批量赋值功能（CMS的标签功能）
@@ -311,7 +311,7 @@
 104：MDataTable 增加 List<MDataRow> 的隐式转换
 105：MDataTableFilter 增加In和Not In 查询支持。
 106：增加实体类后缀处理（避免与枚举生成同名）-配置工具同步更新（2013-11-15）
-107：处理Guid类型的Insert问题（GroupID从string【1】的值独立到4）。
+107：处理Guid类型的Insert问题（Groupid从string【1】的值独立到4）。
 108：强化JsonHelper，新增一些实用方法。（2013-12-23）
 109：MDataTable 增加GetChanges方法，ToJson增加重载方法，参数（RowOp）（2014-01-04）
 110：MSSQL数据转换增加对xml，varbinary等类型的等价转换。
@@ -331,7 +331,7 @@
 122：处理一些细节（UI的Get与Set异常不抛出，仅记录日志）NoSqlAction的插入行去掉静态属性，避免并发引发错误的插入。（2014-02-22）
 123：优化action.Bind(下拉列表）当文本和值为同一个时的情况，Sql语句优化为一个字段查询。（2014-03-02）
 124：MDataTable增加GetColumnItems<T>(string columnName) 方法，可以方便获取某一列的集合。（2014-03-09）
-125：Oracle的序列从整个库默认一个，变更为默认一个表一个序列。如果需要自定义，可以配置AppConfig.DB.AutoID参数。（2014-03-09）
+125：Oracle的序列从整个库默认一个，变更为默认一个表一个序列。如果需要自定义，可以配置AppConfig.DB.Autoid参数。（2014-03-09）
 126：JsonHelper输出ToString()时，若是Web环境（自动转义\t \n \r）（2014-03-17）
 126：JsonHelper 静态方法调整（2014-03-18）
 127：Emit转实体处理自动属性（自动属性的名称格式为 <id>k__BackingField ）（2014-03-25）
@@ -365,7 +365,7 @@
 155：增加AppConfig.DB.DeleteField 配置删除字段标识（可以将MAction的删除操作变更为Update标识操作）（2014-06-14）
 156：内置的ErrorLogs=》变更为开放的SysLogs，可以对外使用。（2014-06-14）
 157：MDataRow的批量设置值方式，统一方法名称为：LoadFrom(不同的重截【Json、字典、实体对象】）（2014-06-18）
-158：去掉：MAction的三个不常用方法：SetIdentityInsertOn、SetIdentityInsertOff、GetFromJson（这个可以由action.Data.LoadFrom(json)处理）（2014-06-18）
+158：去掉：MAction的三个不常用方法：SetidentityInsertOn、SetidentityInsertOff、GetFromJson（这个可以由action.Data.LoadFrom(json)处理）（2014-06-18）
 158：AOP去掉一个无需要实现的GetFromConfig接口、增加返回MAction、MProc自身引用的参数、是否事务中参数）（2014-06-26）
 159：MAction 可以隐式转换成 MProc（2014-06-26）
 160：增加Sybase数据库支持（2014-07-02）
@@ -386,7 +386,7 @@
 175：增加Oracle 12 的ODP.NET处理。（2014-11-19）
 176：MDataRow.Create(Hashtable) 转换的列头类型，按实际值的类型处理。（2014-11-19）
 177：自动取值，Post空值时，对非字符串转DBNull.Value。（2014-12-01,2014-12-11）
-178：GUID主键的批量插入，默认生成ID。（2014-12-05）
+178：GUID主键的批量插入，默认生成id。（2014-12-05）
 179：修正（事务中时）ResetTable(视图语句)的问题。（2015-01-02）
 180：MDataTable的批量操作（DynamicData属性允许接收外部的MProc或MAction，以便同一个事务中进行）（2015-01-08、2015-01-10）
 181：优化数据表结构生成语句的GUID函数问题。（2015-01-10）
@@ -584,9 +584,9 @@
 368：SqlCreate增加对GUID类型的检测（2016-09-20)
 369：OrmBase、SimpleOrmBase延迟加载初始化（2016-09-20)
 370：MAction在Insert时，对Oracle，Mysql等放置（获取最大值）事务（2016-09-20)
-371：MAction在Insert时的InsertOp默认选项变更为：ID，原来为（Fill)（2016-09-20)
+371：MAction在Insert时的InsertOp默认选项变更为：id，原来为（Fill)（2016-09-20)
 372：JsonHelper.ToJson增加对List<MDataTable>和List<DataTable>的支持（2016-09-20)
-373：DBBase处理Oracle下返回的DataBase名称问题。（2016-09-21)
+373：DalBase处理Oracle下返回的DataBase名称问题。（2016-09-21)
 374：Oracle的加载方式进行小细节优化（2016-09-22)
 375：StaticTool处理ChangeType中对于Guid的转换（2016-09-22)
 376：SqlCompatible增加对（+ ||）、Left和Right函数的处理（2016-09-24)
@@ -613,7 +613,7 @@
 397：MDataTable 优化批量更新问题。（2016-10-18)
 398：MDataRow和MDataColumn 的ToTable() 调整适应(新增智能提示)（2016-10-19)
 399：MySql 处理存储过程Out值。（2016-10-19）
-400：MySql 批量方法解决了Bit类型和空表时自增ID被置为1的问题（2016-10-20）
+400：MySql 批量方法解决了Bit类型和空表时自增id被置为1的问题（2016-10-20）
 401：JsonHelper、NoSqlAction小优化调整（2016-10-20）
 402：MDataTable的AcceptChanges新增加Truncate属性（2016-10-20）
 403：JsonHelper的GetJosnValue（json写错顺理）变更名称为GetValue（2016-10-21）
@@ -675,7 +675,7 @@
 460：优化CacheManage中MemCache和Redis从预先加载的单例模式改成延迟加载的方式。(2017-01-17）
 461：DBTool的AlterTable 方法枚举支持组合操作 mCellStruct.AlterOp = AlterOp.AddOrModify| AlterOp.Rename;(2017-01-17）
 462：DBTool.StaticTool.ChangeType 增加对浮点到int类型的转换支持(2017-01-18）
-463：MDataTable Join 方法，增加对as的支持dt.Join(dt2, "ID  as PID", "Name as PName");(2017-01-18）
+463：MDataTable Join 方法，增加对as的支持dt.Join(dt2, "id  as Pid", "Name as PName");(2017-01-18）
 464：MDataTable 重写（简化）方法Avg、Sum、Max、Min(2017-01-18）
 465：MDataColumn 增加Set方法（为所有行赋值）(2017-01-18）
 466：DBFast的Insert、Update，默认对实体的加载忽略Null值(2017-01-19）
@@ -687,7 +687,7 @@
 472：CacheManage的Redis修正对Contains的返回判断（2017-02-20）
 473：MActionUI 增加对HtmlTextArea标签支持（2017-03-24）
 474：MAction SetSelectColumns 处理对Sqlite视图字段带双引号问题（2017-03-27）
-475：DbBase对GetDataReader的参数进行一下小优化（2017-04-08）
+475：DalBase对GetDataReader的参数进行一下小优化（2017-04-08）
 476：SchemaMapPath配置项增加对DBTool.GetTables方法的支持（加快第一次表结构预热问题）（2017-04-08）
 477：优化存储过程的返回值参数（取消了存储过程参数在最后一个设置的约束）（2017-04-12）
 478：AutoCache处理检测在事务时，不读缓存（2017-04-12）
@@ -709,7 +709,7 @@
 494: AopPara参数的DalType和DataBase属性改成只读（避免ResetTable切换数据库时语句相同造成的读取相同缓存）（2017-07-25）
 495: 增加JsonEscape转义配置项（2017-10-18）
 496：JsonHelper只改一行代码优化输出体验（2017-10-22）
-497：DataType修正Numeric为主键自增没有返回ID的问题。（2017-10-30）
+497：DataType修正Numeric为主键自增没有返回id的问题。（2017-10-30）
 498：SqlCreate.FormatterWhere，增强对“xxxx order by abc desc"这样的语句解析。（2017-11-01）
 499：优化主从备机制（2017-11-14）
 500：TableSchema 修正多数据库模式下获取表结构的问题。（2017-12-02）
@@ -723,7 +723,7 @@
 507: 修正分页（最后一页，当排序条件不在查询列中的问题）（2018-04-17）
 508：DBTool.AlterTable 修正移除列时约速表名错误问题。（2018-04-24）
 509：MAction 修正ResetTable后action.Data.Conn属性值问题。（2018-04-25）
-510：DbBase 修正主备切换的判断问题。（2018-05-15）
+510：DalBase 修正主备切换的判断问题。（2018-05-15）
 511：扩展.NET Core 支持。（2018-05-18）
 512：修正Access下的IIF函数（错写成iff)。（2018-05-22）
 513：D调整分布式缓存的默认时间。（2018-05-24）
@@ -731,7 +731,7 @@
 515：JsonSplit 修正数组的判断问题（2018-06-04）
 516：JsonHelper ToJson 修正返回MDataTable和DataTable数组的判断问题（2018-06-06）
 517：IOHelper 增强对文件编码的检测（增加TextEncodingDetect类）（2018-06-24）
-518：DbBase 主从切换细节优化（在从库时，遇到事务或insert..select主动切回主库）。（2018-07-06）
+518：DalBase 主从切换细节优化（在从库时，遇到事务或insert..select主动切回主库）。（2018-07-06）
 519：MDataTable ToXml 方法归还旧版本的重载参数。（2018-07-06）
 520：MDataCell 修正新的延时机制下Clear方法未清除旧值的问题。（2018-07-10）
 521：将UI默认前缀（txt,chb,ddl)改成全局可配置AppConfig.UI.AutoPrefixs（2018-08-06）
@@ -758,7 +758,7 @@
 542：MDataTableBatchAction：修正在NetCore下的批量更新问题。(2019-03-10)
 543：TableSchema：兼容Mysql8版本上的表结构语句。(2019-03-11)
 544：修正：DotNetCore在Linux下部署的路径问题(2019-03-12)
-545：DbBase：优化主从在插入时的延时定位主库问题(2019-03-12)
+545：DalBase：优化主从在插入时的延时定位主库问题(2019-03-12)
 546：AppConfig：增加CacheTables属性，可以配置仅需要自动缓存的表(2019-03-14)
 547：RedisCommand：听说redis verstion 2.8 不支持参数分开发送，所以改成打包一起发送。(2019-03-15)
 548：EncryptHelper：新增加的类(2019-03-17)
@@ -777,4 +777,6 @@
 561：Redis、MemCache：序列化处理（对Object类型进行Json转换处理）(2019-04-02)
 562：Postgre：优化。(2019-04-02)
 563：AppConfig：NetCore下对配置文件变化的进行监控。(2019-04-03)
-563：MAction、MProc：增加对Orm的隐式转换。(2019-04-03)
+564：MAction、MProc：增加对Orm的隐式转换。(2019-04-03)
+565：Txt:调整表结构的说明输出。(2019-04-08)
+567：整体：增加自动寻库支持、内部代码重构。（(2019-04-10)

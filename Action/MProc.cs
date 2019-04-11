@@ -45,7 +45,7 @@ namespace CYQ.Data
             return null;
         }
         #endregion
-        internal DbBase dalHelper;
+        internal DalBase dalHelper;
         private NoSqlCommand _noSqlCommand;
         private InterAop _aop = new InterAop();
         // private AopInfo _aopInfo = new AopInfo();
@@ -76,7 +76,11 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.DataBaseType;
+                if (dalHelper != null)
+                {
+                    return dalHelper.DataBaseType;
+                }
+                return AppConfig.DB.DefaultDalType;
             }
         }
         /// <summary>
@@ -87,7 +91,11 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.DataBase;
+                if (dalHelper != null)
+                {
+                    return dalHelper.DataBase;
+                }
+                return AppConfig.DB.DefaultDataBase;
             }
         }
         /// <summary>
@@ -98,7 +106,11 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.Version;
+                if (dalHelper != null)
+                {
+                    return dalHelper.Version;
+                }
+                return "";
             }
         }
         /// <summary>
@@ -109,7 +121,11 @@ namespace CYQ.Data
         {
             get
             {
-                return dalHelper.RecordsAffected;
+                if (dalHelper != null)
+                {
+                    return dalHelper.RecordsAffected;
+                }
+                return 0;
             }
         }
         /// <summary>
@@ -122,7 +138,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.Con.ConnectionString;
+                    return dalHelper.UsingConnBean.ConnString;
                 }
                 return string.Empty;
             }
@@ -135,7 +151,7 @@ namespace CYQ.Data
         {
             get
             {
-                if (dalHelper.Com != null)
+                if (dalHelper != null && dalHelper.Com != null)
                 {
                     return dalHelper.Com.CommandTimeout;
                 }
@@ -143,7 +159,7 @@ namespace CYQ.Data
             }
             set
             {
-                if (dalHelper.Com != null)
+                if (dalHelper != null && dalHelper.Com != null)
                 {
                     dalHelper.Com.CommandTimeout = value;
                 }
@@ -158,66 +174,72 @@ namespace CYQ.Data
         /// <para>参数：SQL语句或存储过程名称</para></param>
         public MProc(object procNameOrSql)
         {
-            Init(procNameOrSql, AppConfig.DB.DefaultConn);
+            Init(procNameOrSql, null, false);
         }
 
         public MProc(object procNameOrSql, string conn)
         {
-            Init(procNameOrSql, conn);
+            Init(procNameOrSql, conn, false);
         }
-        internal MProc(DbBase dbBase)
+        internal MProc(DalBase dalBase)
         {
             _procName = string.Empty;
-            SetDbBase(dbBase);
+            SetDalBase(dalBase, false);
 
         }
-        private void Init(object procNameOrSql, string conn)
+        private void Init(object procNameOrSql, string conn, bool isClearPara)
         {
             #region 分析是Sql或者存储过程
             if (procNameOrSql != null)
             {
-                if (procNameOrSql is Enum)
+                if (string.IsNullOrEmpty(conn))
                 {
-                    Type t = procNameOrSql.GetType();
-                    string enumName = t.Name;
-                    if (enumName != "ProcNames")
+                    if (procNameOrSql is Enum)
                     {
-                        if (enumName.Length > 1 && enumName[1] == '_')
-                        {
-                            conn = enumName.Substring(2).Replace("Enum", "Conn");
-                        }
-                        else
-                        {
-                            string[] items = t.FullName.Split('.');
-                            if (items.Length > 1)
-                            {
-                                conn = items[items.Length - 2] + "Conn";
-                                items = null;
-                            }
-                        }
+                        conn = CrossDB.GetConnByEnum(procNameOrSql as Enum);
                     }
-                    t = null;
+                    else if (procNameOrSql is String)
+                    {
+                        string fixName;
+                        conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName);
+                    }
                 }
                 _procName = procNameOrSql.ToString().Trim();
                 _isProc = _procName.IndexOf(' ') == -1;//不包含空格
 
             }
             #endregion
-            SetDbBase(DalCreate.CreateDal(conn));
-        }
-        private void SetDbBase(DbBase dbBase)
-        {
-            dalHelper = dbBase;
-            if (dalHelper.IsOnExceptionEventNull)
+            DalBase dalBase = null;
+            if (conn != null && dalHelper == null)
             {
-                dalHelper.OnExceptionEvent += new DbBase.OnException(helper_OnExceptionEvent);
+                dalBase = DalCreate.CreateDal(conn);
             }
-            switch (dalHelper.DataBaseType)
+            SetDalBase(dalBase, isClearPara);
+        }
+        private void SetDalBase(DalBase dalBase, bool isClearPara)
+        {
+            if (dalHelper == null && dalBase != null)
             {
-                case DalType.Txt:
-                case DalType.Xml:
-                    _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
-                    break;
+                dalHelper = dalBase;
+                if (dalHelper.IsOnExceptionEventNull)
+                {
+                    dalHelper.OnExceptionEvent += new DalBase.OnException(helper_OnExceptionEvent);
+                }
+            }
+            else if (isClearPara && dalHelper != null)
+            {
+                dalHelper.ClearParameters();
+            }
+            if (dalHelper != null)
+            {
+                switch (dalHelper.DataBaseType)
+                {
+                    case DalType.Txt:
+                    case DalType.Xml:
+                        _noSqlCommand = null;
+                        _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
+                        break;
+                }
             }
             //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
             //if (myAop != null)
@@ -231,20 +253,7 @@ namespace CYQ.Data
         /// </summary>
         public void ResetProc(object procNameOrSql, bool isClearPara)
         {
-            _procName = procNameOrSql.ToString().Trim();
-            if (isClearPara)
-            {
-                dalHelper.ClearParameters();
-            }
-            _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-            switch (dalHelper.DataBaseType)
-            {
-                case DalType.Txt:
-                case DalType.Xml:
-                    _noSqlCommand = null;
-                    _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
-                    break;
-            }
+            Init(procNameOrSql, null, isClearPara);
         }
 
         ///<summary>
@@ -629,7 +638,7 @@ namespace CYQ.Data
             {
                 if (!dalHelper.IsOnExceptionEventNull)
                 {
-                    dalHelper.OnExceptionEvent -= new DbBase.OnException(helper_OnExceptionEvent);
+                    dalHelper.OnExceptionEvent -= new DalBase.OnException(helper_OnExceptionEvent);
                 }
                 _debugInfo = dalHelper.DebugInfo.ToString();
                 dalHelper.Dispose();

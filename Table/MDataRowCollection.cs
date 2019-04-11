@@ -250,13 +250,13 @@ namespace CYQ.Data.Table
             }
             int cellIndex = index;
             bool cellIsAsc = isAsc;
-            int cellGroupID = groupID;
+            int cellGroupid = groupID;
             if (useLastIndexState == 1)//出于多重排序的需要这么使用。
             {
                 cellIndex = lastIndex;
                 cellIsAsc = lastIsAsc;
                 useLastIndexState = 2;
-                cellGroupID = DataType.GetGroup(x[cellIndex].Struct.SqlType);
+                cellGroupid = DataType.GetGroup(x[cellIndex].Struct.SqlType);
             }
             else if (useLastIndexState == 2)
             {
@@ -277,12 +277,12 @@ namespace CYQ.Data.Table
             }
             object objAValue = x[cellIndex].Value;
             object objBValue = y[cellIndex].Value;
-            switch (cellGroupID)
+            switch (cellGroupid)
             {
                 case 1:
                 case 3:
                     double vA, vB;
-                    if (cellGroupID == 1)
+                    if (cellGroupid == 1)
                     {
                         double.TryParse(objAValue.ToString(), out vA);
                         double.TryParse(objBValue.ToString(), out vB);

@@ -42,7 +42,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 内部操作对象（需要同一个事务处理）。
         /// </summary>
-        private DbBase _dalHelper;
+        private DalBase _dalHelper;
 
         public MDataTableBatchAction(MDataTable mTable)
         {
@@ -102,9 +102,9 @@ namespace CYQ.Data.Table
             {
                 Error.Throw("After fix table columns, length can't be zero");
             }
-            SetDbBaseForTransaction();
+            SetDalBaseForTransaction();
         }
-        private void SetDbBaseForTransaction()
+        private void SetDalBaseForTransaction()
         {
             if (mdt.DynamicData != null)
             {
@@ -211,35 +211,35 @@ namespace CYQ.Data.Table
             }
         }
 
-        internal bool Insert(bool keepID)
+        internal bool Insert(bool keepid)
         {
             try
             {
                 if (dalTypeTo == DalType.MsSql)
                 {
-                    return MsSqlBulkCopyInsert(keepID);
+                    return MsSqlBulkCopyInsert(keepid);
                 }
                 else if (dalTypeTo == DalType.Oracle && _dalHelper == null && !IsTruncate)
                 {
-                    if (OracleDal.clientType == 1 && keepID)
+                    if (OracleDal.clientType == 1 && keepid)
                     {
                         return OracleBulkCopyInsert();//不支持外部事务合并（因为参数只能传链接字符串。）
                     }
                     //else if (IsAllowBulkCopy(DalType.Oracle))
                     //{
-                    //    return LoadDataInsert(dalTypeTo, keepID);
+                    //    return LoadDataInsert(dalTypeTo, keepid);
                     //}
                 }
                 else if (dalTypeTo == DalType.MySql && IsAllowBulkCopy(DalType.MySql))
                 {
-                    return LoadDataInsert(dalTypeTo, keepID);
+                    return LoadDataInsert(dalTypeTo, keepid);
                 }
 
                 //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
                 //{
                 //    NoSqlAction.ResetStaticVar();//重置一下缓存
                 //}
-                return NomalInsert(keepID);
+                return NomalInsert(keepid);
 
             }
             catch (Exception err)
@@ -288,7 +288,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;
@@ -337,8 +337,8 @@ namespace CYQ.Data.Table
                             {
                                 MDataTable insertTable = dt2[1];
                                 insertTable.DynamicData = action;
-                                bool keepID = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
-                                result = insertTable.AcceptChanges((keepID ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
+                                bool keepid = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
+                                result = insertTable.AcceptChanges((keepid ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
                                 if (!result)
                                 {
                                     sourceTable.DynamicData = insertTable.DynamicData;
@@ -452,7 +452,7 @@ namespace CYQ.Data.Table
 
 
         #region 批量插入
-        internal bool MsSqlBulkCopyInsert(bool keepID)
+        internal bool MsSqlBulkCopyInsert(bool keepid)
         {
             SqlTransaction sqlTran = null;
             SqlConnection con = null;
@@ -496,7 +496,7 @@ namespace CYQ.Data.Table
                 }
                 if (isGoOn)
                 {
-                    using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
+                    using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepid ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
                     {
                         sbc.BatchSize = 100000;
                         sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
@@ -620,7 +620,7 @@ namespace CYQ.Data.Table
             }
             return false;
         }
-        internal bool LoadDataInsert(DalType dalType, bool keepID)
+        internal bool LoadDataInsert(DalType dalType, bool keepid)
         {
             bool fillGUID = CheckGUIDAndDateTime(dalType);
             bool isNeedCreateDal = (_dalHelper == null);
@@ -629,14 +629,14 @@ namespace CYQ.Data.Table
                 _dalHelper = DalCreate.CreateDal(_Conn);
                 _dalHelper.IsWriteLogOnError = false;
             }
-            string path = MDataTableToFile(mdt, fillGUID ? true : keepID, dalType);
+            string path = MDataTableToFile(mdt, fillGUID ? true : keepid, dalType);
             string formatSql = dalType == DalType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
             string sql = string.Format(formatSql, path, SqlFormat.Keyword(mdt.TableName, dalType),
-                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepID, dalType));
+                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepid, dalType));
             if (dalType == DalType.Oracle)
             {
                 string ctlPath = CreateCTL(sql, path);
-                sql = string.Format(SqlCreate.OracleSqlIDR, "sa/123456@ORCL", ctlPath);//只能用进程处理
+                sql = string.Format(SqlCreate.OracleSqlidR, "sa/123456@ORCL", ctlPath);//只能用进程处理
             }
             try
             {
@@ -687,7 +687,7 @@ namespace CYQ.Data.Table
             IOHelper.Write(path, sql);
             return path;
         }
-        private static string MDataTableToFile(MDataTable dt, bool keepID, DalType dalType)
+        private static string MDataTableToFile(MDataTable dt, bool keepid, DalType dalType)
         {
             string path = Path.GetTempPath() + dt.TableName + ".csv";
             using (StreamWriter sw = new StreamWriter(path, false, new UTF8Encoding(false)))
@@ -700,7 +700,7 @@ namespace CYQ.Data.Table
                     {
                         #region 设置值
                         ms = dt.Columns[i];
-                        if (!keepID && ms.IsAutoIncrement)
+                        if (!keepid && ms.IsAutoIncrement)
                         {
                             continue;
                         }
@@ -809,7 +809,7 @@ namespace CYQ.Data.Table
                     pageSize = 1000;
                 }
                 count = mdt.Rows.Count / pageSize + 1;
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;
@@ -876,7 +876,7 @@ namespace CYQ.Data.Table
                     pageSize = 1000;
                 }
                 count = mdt.Rows.Count / pageSize + 1;
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;
@@ -932,7 +932,7 @@ namespace CYQ.Data.Table
             // string a, b, c;
             string conn = DalCreate.FormatConn(DalType.Sybase, AppConfig.GetConn(_Conn));
 
-            using (Sybase.Data.AseClient.AseBulkCopy sbc = new Sybase.Data.AseClient.AseBulkCopy(conn, Sybase.Data.AseClient.AseBulkCopyOptions.KeepIdentity))
+            using (Sybase.Data.AseClient.AseBulkCopy sbc = new Sybase.Data.AseClient.AseBulkCopy(conn, Sybase.Data.AseClient.AseBulkCopyOptions.Keepidentity))
             {
                 sbc.BatchSize = 100000;
                 sbc.DestinationTableName = mdt.TableName;
@@ -983,12 +983,12 @@ namespace CYQ.Data.Table
         */
         #endregion
 
-        internal bool NomalInsert(bool keepID)
+        internal bool NomalInsert(bool keepid)
         {
             bool result = true;
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 action.SetAopState(Aop.AopOp.CloseAll);
                 if (_dalHelper != null)
                 {
@@ -999,9 +999,9 @@ namespace CYQ.Data.Table
                     action.BeginTransation();//事务由外部控制
                 }
                 action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
-                if (keepID)
+                if (keepid)
                 {
-                    action.SetIdentityInsertOn();
+                    action.SetidentityInsertOn();
                 }
                 bool isGoOn = true;
                 if (IsTruncate)
@@ -1036,9 +1036,9 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                if (keepID)
+                if (keepid)
                 {
-                    action.SetIdentityInsertOff();
+                    action.SetidentityInsertOff();
                 }
                 if (_dalHelper == null)
                 {
@@ -1056,7 +1056,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;
@@ -1121,7 +1121,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
-                DbBase sourceHelper = action.dalHelper;
+                DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
                     action.dalHelper = _dalHelper;

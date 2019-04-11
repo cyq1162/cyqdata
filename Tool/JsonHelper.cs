@@ -193,6 +193,7 @@ namespace CYQ.Data.Tool
             jsonItems.Add(brFlag);
             rowCount++;
         }
+        StringBuilder headText = new StringBuilder();
         StringBuilder footText = new StringBuilder();
         /// <summary>
         /// attach json data (AddHead must be true)
@@ -284,12 +285,19 @@ namespace CYQ.Data.Tool
 
             if (_AddHead)
             {
-                sb.Append("{");
-                sb.Append("\"rowcount\":" + rowCount + ",");
-                sb.Append("\"total\":" + Total + ",");
-                sb.Append("\"errorMsg\":\"" + errorMsg + "\",");
-                sb.Append("\"success\":" + Success.ToString().ToLower() + ",");
-                sb.Append("\"rows\":");
+                if (headText.Length == 0)
+                {
+                    sb.Append("{");
+                    sb.Append("\"rowcount\":" + rowCount + ",");
+                    sb.Append("\"total\":" + Total + ",");
+                    sb.Append("\"errorMsg\":\"" + errorMsg + "\",");
+                    sb.Append("\"success\":" + Success.ToString().ToLower() + ",");
+                    sb.Append("\"rows\":");
+                }
+                else
+                {
+                    sb.Append(headText.ToString());
+                }
             }
             if (jsonItems.Count == 0)
             {
@@ -828,7 +836,7 @@ namespace CYQ.Data.Tool
                                 {
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
-                                        MDataRow oRow = new MDataRow(TableSchema.GetColumns(t));
+                                        MDataRow oRow = new MDataRow(ColumnSchema.GetColumns(t));
                                         oRow.LoadFrom(cell.Value);
                                         value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
@@ -868,6 +876,14 @@ namespace CYQ.Data.Tool
 
             if (isFullSchema)
             {
+                if (!string.IsNullOrEmpty(column.TableName))
+                {
+                    _AddHead = true;
+                    headText.Append("{");
+                    headText.Append("\"TableName\":\"" + column.TableName + "\",");
+                    headText.Append("\"Description\":\"" + column.Description + "\",");
+                    headText.Append("\"Columns\":");
+                }
                 foreach (MCellStruct item in column)
                 {
                     Add("ColumnName", item.ColumnName);
@@ -1066,14 +1082,27 @@ namespace CYQ.Data.Tool
                 if (result != null && result.Count > 0)
                 {
                     #region 加载数据
-                    if (result.Count == 1 && result[0].ContainsKey("total") && result[0].ContainsKey("rows"))
+                    if (result.Count == 1)
                     {
-                        int count = 0;
-                        if (int.TryParse(result[0]["total"], out count))
+                        Dictionary<string,string> dic=result[0];
+                        if (dic.ContainsKey("total") && dic.ContainsKey("rows"))
                         {
-                            table.RecordsAffected = count;//还原记录总数。
+                            int count = 0;
+                            if (int.TryParse(dic["total"], out count))
+                            {
+                                table.RecordsAffected = count;//还原记录总数。
+                            }
+                            result = SplitArray(dic["rows"]);
                         }
-                        result = SplitArray(result[0]["rows"]);
+                        else if (dic.ContainsKey("TableName") && dic.ContainsKey("Columns"))
+                        {
+                            table.TableName = dic["TableName"];
+                            if (dic.ContainsKey("Description"))
+                            {
+                                table.Description = dic["Description"];
+                            }
+                            result = SplitArray(dic["Columns"]);
+                        }
                     }
                     if (result != null && result.Count > 0)
                     {
@@ -1243,7 +1272,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                MDataRow row = new MDataRow(TableSchema.GetColumns(t));
+                MDataRow row = new MDataRow(ColumnSchema.GetColumns(t));
                 row.LoadFrom(json);
                 return row.ToEntity<T>();
             }
@@ -1259,7 +1288,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, TableSchema.GetColumns(typeof(T)), op).ToList<T>();
+            return ToMDataTable(json, ColumnSchema.GetColumns(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json

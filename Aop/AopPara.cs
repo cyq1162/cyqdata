@@ -73,11 +73,11 @@ namespace CYQ.Data.Aop
             get {
                 if (MAction != null)
                 {
-                    return MAction.dalHelper.DataBase;
+                    return MAction.DataBase;
                 }
                 else if (MProc != null)
                 {
-                    return MProc.dalHelper.DataBase;
+                    return MProc.DataBase;
                 }
                 return string.Empty;
                 //if (string.IsNullOrEmpty(_DataBase))
@@ -95,7 +95,25 @@ namespace CYQ.Data.Aop
             }
            // set { _DataBase = value; }
         }
-
+        /// <summary>
+        /// 数据库链接（只读）
+        /// </summary>
+        public string ConnectionString
+        {
+            get
+            {
+                if (MAction != null)
+                {
+                    return MAction.ConnectionString;
+                }
+                else if (MProc != null)
+                {
+                    return MProc.ConnectionString;
+                }
+                return string.Empty;
+                
+            }
+        }
 
         private object _AopPara;
         /// <summary>

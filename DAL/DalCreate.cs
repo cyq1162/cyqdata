@@ -27,19 +27,17 @@ namespace CYQ.Data
         /// <summary>
         /// 简单工厂（Factory Method）
         /// </summary>
-        /// <param name="dbConn"></param>
-        /// <returns></returns>
-        public static DbBase CreateDal(string connNameOrString)
+        public static DalBase CreateDal(string connNameOrString)
         {
             //ABCConn
-            DbBase db = GetDbBaseBy(ConnObject.Create(connNameOrString));
+            DalBase db = GetDalBaseBy(ConnObject.Create(connNameOrString));
 
             if (db.ConnObj.Master.ConnName != connNameOrString && connNameOrString.EndsWith("Conn"))//需要切换配置。
             {
                 //Conn  A库
                 //BConn  xxx 找不到时，找默认库。
-                DbResetResult result = db.ChangeDatabase(connNameOrString.Substring(0, connNameOrString.Length - 4));
-                if (result == DbResetResult.Yes) // 写入缓存
+                DBResetResult result = db.ChangeDatabase(connNameOrString.Substring(0, connNameOrString.Length - 4));
+                if (result == DBResetResult.Yes) // 写入缓存
                 {
                     db.ConnObj.SaveToCache(connNameOrString);
                 }
@@ -48,7 +46,7 @@ namespace CYQ.Data
 
         }
 
-        private static DbBase GetDbBaseBy(ConnObject co)
+        private static DalBase GetDalBaseBy(ConnObject co)
         {
             DalType dalType = co.Master.ConnDalType;
             //License.Check(providerName);//框架模块授权检测。
@@ -72,7 +70,7 @@ namespace CYQ.Data
                 case DalType.Xml:
                     return new NoSqlDal(co);
             }
-            return (DbBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", dalType.ToString()));
+            return (DalBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", dalType.ToString()));
         }
 
         public static DalType GetDalTypeByReaderName(string typeName)

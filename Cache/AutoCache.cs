@@ -511,30 +511,11 @@ namespace CYQ.Data.Cache
         {
             return GetBaseKey(para, null);
         }
-        internal static string GetBaseKey(DalType dalType, string database, string tableName)
+        internal static string GetBaseKey(string tableName, string connString)
         {
-            return "AutoCache:" + dalType + "." + database + "." + tableName;
+            return "AutoCache:" + ConnBean.GetHashCode(connString) + "." + tableName;
         }
-        private static List<string> GetRelationTables(AopInfo para)
-        {
-            List<string> tables = null;
-            if (para.MAction != null)
-            {
-                tables = para.MAction.Data.Columns.relationTables;
-            }
-            else if (para.MProc != null && !para.IsProc)
-            {
-                if (para.Table != null)
-                {
-                    tables = para.Table.Columns.relationTables;
-                }
-                else
-                {
-                    tables = SqlFormat.GetTableNamesFromSql(para.ProcName);
-                }
-            }
-            return tables;
-        }
+
         private static string GetBaseKey(AopInfo para, string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
@@ -553,7 +534,7 @@ namespace CYQ.Data.Cache
                     {
                         if (para.TableName.Contains(" "))
                         {
-                            tableName = "View_" + Math.Abs(para.TableName.GetHashCode());
+                            tableName = "View_" +TableSchema.GetTableHash(para.TableName);
                         }
                         else
                         {
@@ -578,7 +559,7 @@ namespace CYQ.Data.Cache
                     }
                 }
             }
-            return GetBaseKey(para.DalType, para.DataBase, tableName);
+            return GetBaseKey(tableName, para.ConnectionString);
         }
         private static List<string> GetBaseKeys(AopInfo para, out int flag)
         {
@@ -680,6 +661,27 @@ namespace CYQ.Data.Cache
 
             return StaticTool.GetHashKey(sb.ToString());
         }
+        private static List<string> GetRelationTables(AopInfo para)
+        {
+            List<string> tables = null;
+            if (para.MAction != null)
+            {
+                tables = para.MAction.Data.Columns.relationTables;
+            }
+            else if (para.MProc != null && !para.IsProc)
+            {
+                if (para.Table != null)
+                {
+                    tables = para.Table.Columns.relationTables;
+                }
+                else
+                {
+                    tables = SqlFormat.GetTableNamesFromSql(para.ProcName);
+                }
+            }
+            return tables;
+        }
+
         #endregion
 
         #region 定时清理Cache机制
@@ -707,7 +709,7 @@ namespace CYQ.Data.Cache
             }
             _AutoCache.Set(delKey, 0, 0.1);//设置6秒时间
         }
-        public static void ClearCache(object threadID)
+        public static void ClearCache(object threadid)
         {
             try
             {
@@ -738,7 +740,7 @@ namespace CYQ.Data.Cache
             {
             }
         }
-        public static void AutoCacheKeyTask(object threadID)
+        public static void AutoCacheKeyTask(object threadid)
         {
 
             while (true)//定时扫描数据库

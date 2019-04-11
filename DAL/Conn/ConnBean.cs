@@ -62,7 +62,7 @@ namespace CYQ.Data
             //err = string.Empty;
             if (!string.IsNullOrEmpty(ConnName))
             {
-                DbBase helper = DalCreate.CreateDal(ConnName);
+                DalBase helper = DalCreate.CreateDal(ConnName);
                 try
                 {
 
@@ -89,9 +89,17 @@ namespace CYQ.Data
             }
             return IsOK;
         }
+        public override int GetHashCode()
+        {
+            return Math.Abs(ConnString.Replace(" ", "").ToLower().GetHashCode());
+        }
     }
     internal partial class ConnBean
     {
+        public static int GetHashCode(string conn)
+        {
+            return Create(conn).GetHashCode();
+        }
         /// <summary>
         /// 创建一个实例。
         /// </summary>
@@ -164,7 +172,7 @@ namespace CYQ.Data
             if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
                || connString.Contains("description=") || connString.Contains("fororacle"))
             {
-                //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = orcl)));User ID=sa;password=123456
+                //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
                 return DalType.Oracle;
             }
 
@@ -193,7 +201,7 @@ namespace CYQ.Data
                 return DalType.MySql;
             }
 
-            if (connString.Contains("datasource") && 
+            if (connString.Contains("datasource") &&
                 (File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet2.AseClient.dll") || File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet4.AseClient.dll")))
             {
                 return DalType.Sybase;

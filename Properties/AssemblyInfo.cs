@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyDescription("论坛：http://www.cyqdata.com/cyqdata")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("路过秋天 （2019-04-02）")]
+[assembly: AssemblyCompany("路过秋天 （2019-04-10）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2020")]
 [assembly: AssemblyTrademark("CYQ.Data")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 // 则将该类型上的 ComVisible 属性设置为 true。
 [assembly: ComVisible(false)]
 
-// 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
+// 如果此项目向 COM 公开，则下列 GUID 用于类型库的 id
 [assembly: Guid("e4fed1c4-823e-4fb6-8046-704cef199e1f")]
 
 // 程序集的版本信息由下面四个值组成:
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有这些值，也可以使用“修订号”和“内部版本号”的默认值，
 // 方法是按如下所示使用“*”:
-[assembly: AssemblyVersion("5.8.1.0")]
-[assembly: AssemblyFileVersion("5.8.1.0")]
+[assembly: AssemblyVersion("5.8.2.0")]
+[assembly: AssemblyFileVersion("5.8.2.0")]

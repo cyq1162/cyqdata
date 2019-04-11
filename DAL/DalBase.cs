@@ -16,7 +16,7 @@ namespace CYQ.Data
     /// 数据库操作基类 （模板模式：Template Method）
     /// 属性管理
     /// </summary>
-    internal abstract partial class DbBase : IDisposable
+    internal abstract partial class DalBase : IDisposable
     {
         #region 对外公开的属性
         /// <summary>
@@ -63,7 +63,7 @@ namespace CYQ.Data
                 }
                 else if (DataBaseType == DalType.Oracle)
                 {
-                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = Aries)))
+                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = Aries)))
                     int i = _con.DataSource.LastIndexOf('=') + 1;
                     return _con.DataSource.Substring(i).Trim(' ', ')');
                 }
@@ -209,7 +209,7 @@ namespace CYQ.Data
                 _IsRecordDebugInfo = value;
             }
         }
-        public DbBase(ConnObject co)
+        public DalBase(ConnObject co)
         {
             this.ConnObj = co;
             this.UsingConnBean = co.Master;
@@ -251,11 +251,54 @@ namespace CYQ.Data
             //_com.CommandTimeout = 1;
         }
         protected abstract DbProviderFactory GetFactory();
+        #region 拿表、视图、存储过程等元数据。
+        public virtual Dictionary<string, string> GetTables()
+        {
+            return GetSchemaDic(GetSchemaSql("U"));
+        }
+        public virtual Dictionary<string, string> GetViews()
+        {
+            return GetSchemaDic(GetSchemaSql("V"));
+        }
+        public virtual Dictionary<string, string> GetProcs()
+        {
+            return GetSchemaDic(GetSchemaSql("P"));
+        }
+        protected Dictionary<string, string> GetSchemaDic(string sql)
+        {
+            if (string.IsNullOrEmpty(sql))
+            {
+                return null;
+            }
+            Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            DbDataReader sdr = ExeDataReader(sql, false);
+            if (sdr != null)
+            {
+                string tableName = string.Empty;
+                while (sdr.Read())
+                {
+                    tableName = Convert.ToString(sdr["TableName"]);
+                    if (!dic.ContainsKey(tableName))
+                    {
+                        dic.Add(tableName, Convert.ToString(sdr["Description"]));
+                    }
+                }
+                sdr.Close();
+                sdr = null;
+            }
+            return dic;
+        }
+       
+        protected virtual string GetSchemaSql(string type)
+        {
+            return "";
+        }
+        #endregion
         #region 数据库链接切换相关逻辑
         /// <summary>
         /// 切换数据库（修改数据库链接）
         /// </summary>
-        internal DbResetResult ChangeDatabase(string dbName)
+        internal DBResetResult ChangeDatabase(string dbName)
         {
             if (_con.State == ConnectionState.Closed)//事务中。。不允许切换
             {
@@ -267,11 +310,11 @@ namespace CYQ.Data
                         ConnObj = ConnObject.Create(dbName + "Conn");
                         ConnObj.Master.ConnName = dbName + "Conn";
                         ConnObj.Master.ConnString = _con.ConnectionString;
-                        return DbResetResult.Yes;
+                        return DBResetResult.Yes;
                     }
                     else
                     {
-                        return DbResetResult.No_DBNoExists;
+                        return DBResetResult.No_DBNoExists;
                     }
                 }
                 catch (Exception err)
@@ -280,11 +323,11 @@ namespace CYQ.Data
                 }
 
             }
-            return DbResetResult.No_Transationing;
+            return DBResetResult.No_Transationing;
         }
 
         //检测并切换数据库链接。
-        internal DbResetResult ChangeDatabaseWithCheck(string dbTableName)//----------
+        internal DBResetResult ChangeDatabaseWithCheck(string dbTableName)//----------
         {
             if (IsOwnerOtherDb(dbTableName))//数据库名称变化了。
             {
@@ -292,9 +335,9 @@ namespace CYQ.Data
                 return ChangeDatabase(dbName);
 
             }
-            return DbResetResult.No_SaveDbName;
+            return DBResetResult.No_SaveDbName;
         }
-        internal DbBase ResetDbBase(string dbTableName)
+        internal DalBase ResetDalBase(string dbTableName)
         {
             if (IsOwnerOtherDb(dbTableName))//是其它数据库名称。
             {
@@ -552,44 +595,44 @@ namespace CYQ.Data
             //    _com.CommandText = "Call " + _com.CommandText;
             //}
             _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
-            if (isProc)
+            //if (isProc)
+            //{
+            //    if (commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
+            //    {
+            //        AddReturnPara();
+            //        //检测是否存在分页存储过程，若不存在，则创建。
+            //        Tool.DBTool.CreateSelectBaseProc(DataBaseType, ConnName);//内部分检测是否已创建过。
+            //    }
+            //}
+            //else
+            //{
+            //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
+            if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
             {
-                if (commandText.Contains("SelectBase") && !_com.Parameters.Contains("ReturnValue"))
+                bool needToReplace = (DataBaseType == DalType.Oracle || DataBaseType == DalType.MySql) && _com.CommandText.Contains("@");
+                string paraName;
+                for (int i = 0; i < _com.Parameters.Count; i++)
                 {
-                    AddReturnPara();
-                    //检测是否存在分页存储过程，若不存在，则创建。
-                    Tool.DBTool.CreateSelectBaseProc(DataBaseType, ConnName);//内部分检测是否已创建过。
-                }
-            }
-            else
-            {
-                //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
-                if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
-                {
-                    bool needToReplace = (DataBaseType == DalType.Oracle || DataBaseType == DalType.MySql) && _com.CommandText.Contains("@");
-                    string paraName;
-                    for (int i = 0; i < _com.Parameters.Count; i++)
+                    paraName = _com.Parameters[i].ParameterName.TrimStart(Pre);//默认自带前缀的，取消再判断
+                    if (needToReplace && _com.CommandText.IndexOf("@" + paraName) > -1)
                     {
-                        paraName = _com.Parameters[i].ParameterName.TrimStart(Pre);//默认自带前缀的，取消再判断
-                        if (needToReplace && _com.CommandText.IndexOf("@" + paraName) > -1)
+                        //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
+                        switch (DataBaseType)
                         {
-                            //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
-                            switch (DataBaseType)
-                            {
-                                case DalType.Oracle:
-                                case DalType.MySql:
-                                    _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
-                                    break;
-                            }
+                            case DalType.Oracle:
+                            case DalType.MySql:
+                                _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
+                                break;
                         }
-                        if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
-                        {
-                            _com.Parameters.RemoveAt(i);
-                            i--;
-                        }
+                    }
+                    if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        _com.Parameters.RemoveAt(i);
+                        i--;
                     }
                 }
             }
+            // }
             //else
             //{
             //    string checkText = commandText.ToLower();
@@ -774,7 +817,7 @@ namespace CYQ.Data
     /// <summary>
     /// 执行管理
     /// </summary>
-    internal abstract partial class DbBase
+    internal abstract partial class DalBase
     {
         private DbDataReader ExeDataReaderSQL(string cmdText, bool isProc)
         {
@@ -1035,7 +1078,7 @@ namespace CYQ.Data
     /// <summary>
     /// 链接管理
     /// </summary>
-    internal abstract partial class DbBase
+    internal abstract partial class DalBase
     {
         int threadCount = 0;
         /// <summary>
@@ -1198,7 +1241,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    WriteError("OpenCon():" + UsingConnBean.ErrorMsg);
+                    WriteError(UsingConnBean.ConnDalType + ".OpenCon():" + UsingConnBean.ErrorMsg);
                 }
                 if (IsRecordDebugInfo)
                 {

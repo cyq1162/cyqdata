@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Table;
+using CYQ.Data.SQL;
 
 
 namespace CYQ.Data.Orm
@@ -136,13 +137,13 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
         /// <returns></returns>
-        public static bool Insert<T>(T t, InsertOp op, bool insertID)
+        public static bool Insert<T>(T t, InsertOp op, bool insertid)
         {
             bool result = false;
             MDataRow row = null;
             using (MAction action = GetMAction<T>())
             {
-                action.AllowInsertID = insertID;
+                action.AllowInsertID = insertid;
                 action.Data.LoadFrom(t, BreakOp.Null);
                 result = action.Insert(op);
                 if (result && op != InsertOp.None)
@@ -216,7 +217,7 @@ namespace CYQ.Data.Orm
             {
                 tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
             }
-            tName = CYQ.Data.Tool.DBTool.GetMapTableName(conn, tName);
+            tName = CrossDB.GetFixName(tName, conn);
             return tName;
         }
     }

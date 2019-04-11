@@ -42,6 +42,7 @@ namespace CYQ.Data.SQL
                 case DalType.MsSql:
                 case DalType.Oracle:
                 case DalType.PostgreSQL:
+                case DalType.MySql:
                     StringBuilder sb = new StringBuilder();
                     foreach (MCellStruct mcs in columns)
                     {
@@ -75,6 +76,10 @@ namespace CYQ.Data.SQL
                     {
                         sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
                                 SqlFormat.Keyword(tableName, DalType.PostgreSQL), columns.Description);
+                    }
+                    else if (dalType == DalType.MySql)
+                    {
+                        sb.AppendFormat("comment = '{0}';\r\n", columns.Description);
                     }
                     result = sb.ToString().TrimEnd(';');
                     break;
@@ -168,7 +173,7 @@ namespace CYQ.Data.SQL
                     case DalType.MsSql:
                         if (column.IsAutoIncrement)
                         {
-                            key += " IDENTITY(1,1)";
+                            key += " idENTITY(1,1)";
                         }
                         else
                         {
@@ -187,7 +192,7 @@ namespace CYQ.Data.SQL
                     case DalType.Sybase:
                         if (column.IsAutoIncrement)
                         {
-                            key += " IDENTITY";
+                            key += " idENTITY";
                         }
                         else
                         {
@@ -304,18 +309,21 @@ namespace CYQ.Data.SQL
         public static List<string> AlterTableSql(string tableName, MDataColumn columns, string conn)
         {
             List<string> sql = new List<string>();
-
-            DbBase helper = DalCreate.CreateDal(conn);
-            helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
-            if (!helper.TestConn(AllowConnLevel.Master))
+            string version = null;
+            DalType dalType;
+            using (DalBase helper = DalCreate.CreateDal(conn))
             {
-                helper.Dispose();
-                return sql;
+                helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
+                if (!helper.TestConn(AllowConnLevel.Master))
+                {
+                    helper.Dispose();
+                    return sql;
+                }
+                dalType = helper.DataBaseType;
+                version = helper.Version;
             }
-            DalType dalType = helper.DataBaseType;
-            string version = helper.Version;
-            MDataColumn dbColumn = TableSchema.GetColumns(tableName, ref helper);//获取数据库的列结构
-            helper.Dispose();
+            MDataColumn dbColumn = ColumnSchema.GetColumns(tableName, conn);//获取数据库的列结构
+            if (dbColumn == null || dbColumn.Count == 0) { return sql; }
 
             //开始比较异同
             List<MCellStruct> primaryKeyList = new List<MCellStruct>();

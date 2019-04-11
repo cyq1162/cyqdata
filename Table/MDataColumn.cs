@@ -93,10 +93,6 @@ namespace CYQ.Data.Table
         {
             get
             {
-                if (string.IsNullOrEmpty(_Description) && _Table != null)
-                {
-                    return _Table.Description;
-                }
                 return _Description;
             }
             set
@@ -104,7 +100,21 @@ namespace CYQ.Data.Table
                 _Description = value;
             }
         }
-
+        private string _TableName = string.Empty;
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName
+        {
+            get
+            {
+                return _TableName;
+            }
+            set
+            {
+                _TableName = value;
+            }
+        }
 
 
 
@@ -114,6 +124,8 @@ namespace CYQ.Data.Table
             mcs.dalType = dalType;
             mcs.CheckDuplicate = false;
             mcs.isViewOwner = isViewOwner;
+            mcs.TableName = TableName;
+            mcs.Description = Description;
             foreach (string item in relationTables)
             {
                 mcs.AddRelateionTableName(item);
@@ -414,7 +426,7 @@ namespace CYQ.Data.Table
         {
             Add(columnName, sqlType, false, true, -1, false, null);
         }
-        /// <param name="isAutoIncrement">是否自增ID列</param>
+        /// <param name="isAutoIncrement">是否自增id列</param>
         public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement)
         {
             Add(columnName, sqlType, isAutoIncrement, !isAutoIncrement, -1, isAutoIncrement, null);
@@ -681,6 +693,7 @@ namespace CYQ.Data.Table
                                 json = IOHelper.ReadAllText(jsonOrFileName);
                             }
                         }
+
                         break;
                     default:
                         json = jsonOrFileName;
@@ -689,6 +702,10 @@ namespace CYQ.Data.Table
                 if (!string.IsNullOrEmpty(json))
                 {
                     dt = MDataTable.CreateFrom(json);
+                    if (json != jsonOrFileName)
+                    {
+                        dt.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
+                    }
                     if (dt.Columns.Count > 0)
                     {
                         if (isTxtOrXml)
@@ -711,12 +728,15 @@ namespace CYQ.Data.Table
 
 
                                 //新增属性
+                                cs.Description = row.Get<string>("Description");
                                 cs.TableName = row.Get<string>("TableName");
                                 cs.IsUniqueKey = row.Get<bool>("IsUniqueKey", false);
                                 cs.IsForeignKey = row.Get<bool>("IsForeignKey", false);
                                 cs.FKTableName = row.Get<string>("FKTableName");
                                 mdc.Add(cs);
                             }
+                            mdc.TableName = dt.TableName;
+                            mdc.Description = dt.Description;
                         }
                     }
                 }

@@ -128,7 +128,7 @@ namespace CYQ.Data.Xml
         /// <returns></returns>
         public string Get(object lanID, LanguageKey lanEnum)
         {
-            XmlNode node = helper.GetByid(Convert.ToString(lanID));
+            XmlNode node = helper.GetByID(Convert.ToString(lanID));
             if (node != null)
             {
                 switch (lanEnum)

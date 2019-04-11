@@ -17,20 +17,20 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class SqlCreate
     {
-        private static List<string> _autoIDItems = new List<string>();
+        private static List<string> _autoidItems = new List<string>();
         /// <summary>
         /// oracle序列名称
         /// </summary>
-        public string AutoID
+        internal string AutoID
         {
             get
             {
                 string key = string.Format(AppConfig.DB.AutoID, TableName);
-                if (!_autoIDItems.Contains(key))
+                if (!_autoidItems.Contains(key))
                 {
                     //检测并自动创建。
                     Tool.DBTool.CheckAndCreateOracleSequence(key, _action.dalHelper.ConnName, _action.Data.PrimaryCell.ColumnName, TableName);
-                    _autoIDItems.Add(key);
+                    _autoidItems.Add(key);
                 }
                 return key;
             }
@@ -55,7 +55,7 @@ namespace CYQ.Data.SQL
             }
         }
         private MAction _action;
-        public SqlCreate(MAction action)
+        internal SqlCreate(MAction action)
         {
             _action = action;
         }
@@ -92,7 +92,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 返回插入的字符串
         /// </summary>
-        /// <returns>结果如:insert into tableName(ID,Name,Value) values(@ID,@Name,@Value)</returns>
+        /// <returns>结果如:insert into tableName(id,Name,Value) values(@id,@Name,@Value)</returns>
         internal string GetInsertSql()
         {
             isCanDo = false;
@@ -173,11 +173,11 @@ namespace CYQ.Data.SQL
                     {
                         if (_action.dalHelper.DataBaseType == DalType.Sybase)
                         {
-                            sql = sql + " select @@IDENTITY as OutPutValue";
+                            sql = sql + " select @@idENTITY as OutPutValue";
                         }
                         else if (_action.dalHelper.DataBaseType == DalType.MsSql)
                         {
-                            sql += " select cast(scope_Identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
+                            sql += " select cast(scope_identity() as bigint) as OutPutValue";//改成bigint避免转换数据溢出
                         }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
@@ -189,12 +189,12 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入ID的，跳过，主操作会自动返回ID。
+                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
                 //{
-                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_Identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
                 //}
                 //case DalType.Oracle:
-                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", AutoID);
+                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
                 //    break;
             }
             return sql;
@@ -314,7 +314,7 @@ namespace CYQ.Data.SQL
             string key = t != v ? (v + "," + t) : t;
             return string.Format("select distinct {0} from {1} {2}", key, TableName, FormatWhere(whereObj));
         }
-        internal string GetMaxID()
+        internal string GetMaxid()
         {
             switch (_action.dalHelper.DataBaseType)
             {
@@ -336,7 +336,7 @@ namespace CYQ.Data.SQL
                     return string.Format("select max({0}) from {1}", columnName, tableName);
 
             }
-            // return (string)Error.Throw(string.Format("GetMaxID:{0} No Be Support Now!", _action.dalHelper.dalType.ToString()));
+            // return (string)Error.Throw(string.Format("GetMaxid:{0} No Be Support Now!", _action.dalHelper.dalType.ToString()));
         }
         internal string GetSelectTableName(ref string where)
         {
@@ -586,8 +586,8 @@ namespace CYQ.Data.SQL
                     if (items.Length == 1)
                     {
                         //只处理单个值的情况
-                        int primaryGroupID = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                        switch (primaryGroupID)
+                        int primaryGroupid = DataType.GetGroup(ms.SqlType);//优先匹配主键
+                        switch (primaryGroupid)
                         {
                             case 4:
                                 bool isOK = false;
@@ -826,22 +826,22 @@ namespace CYQ.Data.SQL
 
         internal static string MySqlBulkCopySql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE {1} CHARACTER SET utf8 FIELDS TERMINATED BY '{2}' LINES TERMINATED BY '|\r\n|' {3}";
         internal static string OracleBulkCopySql = "LOAD DATA INFILE '{0}' APPEND INTO TABLE {1} FIELDS TERMINATED BY '{2}' OPTIONALLY ENCLOSED BY '\"' {3}";
-        internal static string OracleSqlIDR = " userid={0} control='{1}'";//sqlldr   
+        internal static string OracleSqlidR = " userid={0} control='{1}'";//sqlldr   
         internal static string TruncateTable = "truncate table {0}";
         /// <summary>
         /// 获得批量导入的列名。
         /// </summary>
         /// <param name="mdc"></param>
-        /// <param name="keepID"></param>
+        /// <param name="keepid"></param>
         /// <param name="dalType"></param>
         /// <returns></returns>
-        internal static string GetColumnName(MDataColumn mdc, bool keepID, DalType dalType)
+        internal static string GetColumnName(MDataColumn mdc, bool keepid, DalType dalType)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("(");
             foreach (MCellStruct ms in mdc)
             {
-                if (!keepID && ms.IsAutoIncrement)
+                if (!keepid && ms.IsAutoIncrement)
                 {
                     continue;
                 }
@@ -856,15 +856,12 @@ namespace CYQ.Data.SQL
             return sb.ToString().TrimEnd(',') + ")";
         }
 
-        internal static object SqlToViewSql(object sqlObj)
+        internal static string SqlToViewSql(string sqlObj)
         {
-            if (sqlObj is String)
+            string sql = sqlObj.ToLower().Trim();
+            if (sql.StartsWith("select ") || (sql.Contains(" ") && sql[0] != '('))
             {
-                string sql = Convert.ToString(sqlObj).ToLower().Trim();
-                if (sql.StartsWith("select ") || (sql.Contains(" ") && sql[0] != '('))
-                {
-                    sqlObj = "(" + sqlObj + ") v";
-                }
+                sqlObj = "(" + sqlObj + ") v";
             }
             return sqlObj;
         }

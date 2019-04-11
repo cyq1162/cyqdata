@@ -93,6 +93,14 @@ namespace CYQ.Data
                 return ConnectionState.Closed;
             }
         }
+        public override DataTable GetSchema()
+        {
+            return GetSchema("Tables", null);
+        }
+        public override DataTable GetSchema(string collectionName)
+        {
+            return GetSchema(collectionName, null);
+        }
         public override DataTable GetSchema(string collectionName, string[] restrictionValues)
         {
             DataTable dt = new DataTable(collectionName);
@@ -100,6 +108,9 @@ namespace CYQ.Data
             switch (collectionName.ToLower())
             {
                 case "tables":
+                    #region tables
+
+                   
                     string[] tsList = Directory.GetFiles(DataSource, "*.ts", SearchOption.TopDirectoryOnly);
                     if (tsList != null && tsList.Length > 0)
                     {
@@ -130,10 +141,14 @@ namespace CYQ.Data
 
                         }
                     }
+                     #endregion
                     break;
                 case "columns":
+                    #region columns
+
+                    
                     dt.Columns.Add("COLUMN_NAME");
-                    dt.Columns.Add("COLUMN_LCID", typeof(int));
+                    dt.Columns.Add("COLUMN_LCid", typeof(int));
                     dt.Columns.Add("DATA_TYPE", typeof(int));
                     dt.Columns.Add("TABLE_MaxSize", typeof(int));
                     dt.Columns.Add("COLUMN_ISREADONLY", typeof(bool));
@@ -168,6 +183,7 @@ namespace CYQ.Data
                             }
                         }
                     }
+                    #endregion
                     break;
             }
             return dt;

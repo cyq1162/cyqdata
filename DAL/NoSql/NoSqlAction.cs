@@ -21,8 +21,8 @@ namespace CYQ.Data
             _tableList = null;//静态字典置为Null才能释放内存。
             _tableList = new MDictionary<string, MDataTable>(5, StringComparer.OrdinalIgnoreCase);//重新初始化。
             //_needToSaveState.Clear();
-            //_lockNextIDObj.Clear();
-            //_maxID.Clear();
+            //_lockNextidObj.Clear();
+            //_maxid.Clear();
         }
         private static MDictionary<string, MDataTable> _tableList = new MDictionary<string, MDataTable>(5, StringComparer.OrdinalIgnoreCase);//内存数据库
         // private static readonly object _lockTableListObj = new object();
@@ -30,9 +30,9 @@ namespace CYQ.Data
         ///  是否需要更新：0未更新；1仅插入[往后面插数据]；2更新删除或插入[重新保存],//需要更新[全局的可以有效处理并发]
         /// </summary>
         private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);
-        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//自增加ID锁
-        private static MDictionary<string, int> _maxID = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大ID
-        private static MDictionary<string, DateTime> _lastWriteTimeList = new MDictionary<string, DateTime>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大ID
+        private static MDictionary<string, object> _lockNextidObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//自增加id锁
+        private static MDictionary<string, int> _maxid = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大id
+        private static MDictionary<string, DateTime> _lastWriteTimeList = new MDictionary<string, DateTime>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大id
         // private static MDictionary<string, object> _lockOperatorObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//增删改时的互锁
         private List<MDataRow> _insertRows = new List<MDataRow>();//新插入的集合，仅是引用MDataTable的索引
         private static List<string> _isDeleteAll = new List<string>(5);
@@ -55,9 +55,9 @@ namespace CYQ.Data
                     _Table = _tableList[_FileFullName];
                     if (_Table.Rows.Count == 0 && !_isDeleteAll.Contains(_FileFullName))
                     {
-                        if (_maxID.ContainsKey(_FileFullName))
+                        if (_maxid.ContainsKey(_FileFullName))
                         {
-                            _maxID.Remove(_FileFullName);
+                            _maxid.Remove(_FileFullName);
                         }
                         _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题(已修正该问题，所以可开放)。
                     }
@@ -116,30 +116,30 @@ namespace CYQ.Data
             }
         }
 
-        private int maxID
+        private int maxid
         {
             get
             {
-                if (!_maxID.ContainsKey(_FileFullName))
+                if (!_maxid.ContainsKey(_FileFullName))
                 {
-                    _maxID.Add(_FileFullName, 0);
+                    _maxid.Add(_FileFullName, 0);
                 }
-                return _maxID[_FileFullName];
+                return _maxid[_FileFullName];
             }
             set
             {
-                _maxID[_FileFullName] = value;
+                _maxid[_FileFullName] = value;
             }
         }
-        private object lockNextIDobj
+        private object lockNextidobj
         {
             get
             {
-                if (!_lockNextIDObj.ContainsKey(_FileFullName))
+                if (!_lockNextidObj.ContainsKey(_FileFullName))
                 {
-                    _lockNextIDObj.Add(_FileFullName, new object());
+                    _lockNextidObj.Add(_FileFullName, new object());
                 }
-                return _lockNextIDObj[_FileFullName];
+                return _lockNextidObj[_FileFullName];
             }
         }
         private int needToSaveState
@@ -160,19 +160,19 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 下一个自增加ID
+        /// 下一个自增加id
         /// </summary>
-        private int NextID
+        private int Nextid
         {
             get
             {
-                lock (lockNextIDobj)
+                lock (lockNextidobj)
                 {
-                    if (maxID > 0)
+                    if (maxid > 0)
                     {
-                        maxID++;
+                        maxid++;
                     }
-                    else if (DataType.GetGroup(Table.Columns.FirstPrimary.SqlType) == 1)//自增ID仅对int有效
+                    else if (DataType.GetGroup(Table.Columns.FirstPrimary.SqlType) == 1)//自增id仅对int有效
                     {
                         try
                         {
@@ -190,21 +190,21 @@ namespace CYQ.Data
                                         }
                                         else
                                         {
-                                            maxID = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
+                                            maxid = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
                                         }
                                     }
                                     else
                                     {
-                                        maxID = 1;
+                                        maxid = 1;
                                     }
                                 }
-                                while (maxID == 0);
+                                while (maxid == 0);
                                 #endregion
 
                             }
                             else
                             {
-                                maxID = 1;
+                                maxid = 1;
                             }
                         }
                         catch
@@ -217,7 +217,7 @@ namespace CYQ.Data
                     }
 
                 }
-                return maxID;
+                return maxid;
             }
         }
         /// <summary>
@@ -333,18 +333,18 @@ namespace CYQ.Data
             MDataCell cell = _Row.PrimaryCell;
             if (IsCanDoInsertCheck((cell.IsNullOrEmpty || cell.Struct.IsAutoIncrement || cell.Struct.IsPrimaryKey) ? 1 : 0))
             {
-                //判断是否需要增加自增加ID
+                //判断是否需要增加自增加id
                 if (!cell.Struct.IsCanNull && (cell.Struct.IsAutoIncrement || cell.Struct.IsPrimaryKey))
                 {
                     #region 给主键赋值
                     int groupID = DataType.GetGroup(cell.Struct.SqlType);
                     string existWhere = cell.ColumnName + (groupID == 1 ? "={0}" : "='{0}'");
-                    if (cell.IsNull || cell.State == 0 || cell.StringValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免ID重复
+                    if (cell.IsNull || cell.State == 0 || cell.StringValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免id重复
                     {
                         switch (groupID)
                         {
                             case 1:
-                                cell.Value = NextID;
+                                cell.Value = Nextid;
                                 break;
                             case 4:
                                 cell.Value = Guid.NewGuid();
@@ -358,13 +358,13 @@ namespace CYQ.Data
                     }
                     if (groupID == 1 || groupID == 4)//再检测是否已存在
                     {
-                        if (!isOpenTrans && Exists(string.Format(existWhere, cell.Value)))//事务时，由于自动补ID，避开检测，提升性能
+                        if (!isOpenTrans && Exists(string.Format(existWhere, cell.Value)))//事务时，由于自动补id，避开检测，提升性能
                         {
                             Error.Throw("first column value must be unique:(" + cell.ColumnName + ":" + cell.Value + ")");
                         }
                         else if (groupID == 1)
                         {
-                            maxID = (int)cell.Value;
+                            maxid = (int)cell.Value;
                         }
                     }
                     #endregion

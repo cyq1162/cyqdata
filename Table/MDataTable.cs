@@ -163,6 +163,10 @@ namespace CYQ.Data.Table
         {
             get
             {
+                if (string.IsNullOrEmpty(_TableName) && Columns != null)
+                {
+                    _TableName = Columns.TableName;
+                }
                 return _TableName;
             }
             set
@@ -178,13 +182,9 @@ namespace CYQ.Data.Table
         {
             get
             {
-                if (string.IsNullOrEmpty(_Description))
+                if (string.IsNullOrEmpty(_Description) && Columns != null)
                 {
-                    _Description = TableSchema.GetTableDescription(Conn, _TableName);
-                    if (string.IsNullOrEmpty(_Description))
-                    {
-                        _Description = _TableName;
-                    }
+                    _Description = Columns.Description;
                 }
                 return _Description;
             }
@@ -511,10 +511,10 @@ namespace CYQ.Data.Table
         /// 将数据表绑定到列表控件
         /// </summary>
         /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
-        /// <param name="nodeID">当Control为XHtmlAction对象时，需要指定绑定的节点ID</param>
-        public void Bind(object control, string nodeID)
+        /// <param name="nodeid">当Control为XHtmlAction对象时，需要指定绑定的节点id</param>
+        public void Bind(object control, string nodeid)
         {
-            MBindUI.Bind(control, this, nodeID);
+            MBindUI.Bind(control, this, nodeid);
         }
         /// <summary>
         /// 将新表的行放到原表的下面。
@@ -593,7 +593,7 @@ namespace CYQ.Data.Table
             if (Rows != null && Rows.Count > 0)
             {
                 Type[] paraTypeList = null;
-                Type listObjType=listObj.GetType();
+                Type listObjType = listObj.GetType();
                 StaticTool.GetArgumentLength(ref listObjType, out paraTypeList);
                 MethodInfo method = listObjType.GetMethod("Add");
                 foreach (MDataRow row in Rows)
@@ -650,7 +650,7 @@ namespace CYQ.Data.Table
             if (result && AppConfig.Cache.IsAutoCache)
             {
                 //取消AOP缓存。
-                AutoCache.ReadyForRemove(AutoCache.GetBaseKey(action.dalTypeTo, action.database, TableName));
+                AutoCache.ReadyForRemove(AutoCache.GetBaseKey(TableName, newConn));
             }
             return result;
         }
@@ -1203,8 +1203,8 @@ namespace CYQ.Data.Table
                 }
                 else if (dt != null && dt.Rows.Count > 0)
                 {
-                    TableSchema.FixTableSchemaType(sdr, dt);
-                    mTable.Columns = TableSchema.GetColumns(dt);
+                    ColumnSchema.FixTableSchemaType(sdr, dt);
+                    mTable.Columns = ColumnSchema.GetColumns(dt);
                     mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                 }
                 #endregion
@@ -1305,7 +1305,7 @@ namespace CYQ.Data.Table
                             else
                             {
                                 dt.TableName = objType.Name;
-                                dt.Columns = TableSchema.GetColumns(objType);
+                                dt.Columns = ColumnSchema.GetColumns(objType);
                             }
                         }
                         #endregion
@@ -1402,7 +1402,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 从Json或Xml字符串反加载成MDataTable
         /// </summary>
-        public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc,EscapeOp op)
+        public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc, EscapeOp op)
         {
             if (!string.IsNullOrEmpty(jsonOrXml))
             {
@@ -1412,7 +1412,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    return JsonHelper.ToMDataTable(jsonOrXml, mdc,op);
+                    return JsonHelper.ToMDataTable(jsonOrXml, mdc, op);
                 }
             }
             return new MDataTable();
@@ -1442,7 +1442,7 @@ namespace CYQ.Data.Table
                         doc.Load(xmlOrFileName);
                         loadOk = true;
                     }
-                    catch(Exception err)
+                    catch (Exception err)
                     {
                         Log.Write(err, LogType.Error);
                     }
@@ -1757,7 +1757,7 @@ namespace CYQ.Data.Table
             return dt;
         }
         /// <summary>
-        /// 快速创建表架构（无ID列名时，系统自动创建自增型的ID列到首列。）
+        /// 快速创建表架构（无id列名时，系统自动创建自增型的id列到首列。）
         /// </summary>
         /// <param name="fileName">文件名</param>
         /// <param name="overwrite">指定的文件存在时，是否允许复盖</param>
@@ -1790,7 +1790,7 @@ namespace CYQ.Data.Table
                     }
                     if (mdc[0].ColumnName.ToLower() != "id")
                     {
-                        MCellStruct cellStruct = new MCellStruct("ID", SqlDbType.Int, true, false, -1);
+                        MCellStruct cellStruct = new MCellStruct("id", SqlDbType.Int, true, false, -1);
                         cellStruct.IsPrimaryKey = true;
                         mdc.Insert(0, cellStruct);
                     }

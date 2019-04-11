@@ -9,7 +9,7 @@ using CYQ.Data.Cache;
 
 namespace CYQ.Data
 {
-    internal class OracleDal : DbBase
+    internal partial class OracleDal : DalBase
     {
         /// <summary>
         /// 区分Oracle11和Oracle12的Dll名称。
@@ -223,6 +223,26 @@ namespace CYQ.Data
         protected override bool IsExistsDbName(string dbName)
         {
             return DBTool.TestConn(GetConnString(dbName));
+        }
+    }
+
+    internal partial class OracleDal
+    {
+        protected override string GetSchemaSql(string type)
+        {
+            if (type == "U")
+            {
+                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='TABLE' and TABLE_NAME not like 'BIN$%'";
+            }
+            else if (type == "V")
+            {
+                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='VIEW'";
+            }
+            else if (type == "P")
+            {
+                return "select object_name as TableName,'' as Description from user_objects where object_type = 'PROCEDURE'";
+            }
+            return "";
         }
     }
 

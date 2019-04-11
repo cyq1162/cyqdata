@@ -18,7 +18,7 @@ namespace CYQ.Data.UI
         /// </summary>
         bool MEnabled { get;set;}
         /// <summary>
-        /// 控件的名称（Name）或ID
+        /// 控件的名称（Name）或id
         /// </summary>
         string MID { get;}
     }

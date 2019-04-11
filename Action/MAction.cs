@@ -42,8 +42,8 @@ namespace CYQ.Data
         #endregion
         #region 全局变量
 
-        internal DbBase dalHelper;//数据操作
-        private SqlCreate _sqlCreate;
+        internal DalBase dalHelper;//数据操作
+        
         private InsertOp _option = InsertOp.ID;
         private NoSqlAction _noSqlAction = null;
         private MDataRow _Data;//表示一行
@@ -88,7 +88,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.Con.ConnectionString;
+                    return dalHelper.UsingConnBean.ConnString;
                 }
                 return string.Empty;
             }
@@ -185,8 +185,8 @@ namespace CYQ.Data
         }
         private bool _AllowInsertID = false;
         /// <summary>
-        /// Whether to allow manual insertion of IDs for self-incrementing primary key identification
-        ///<para>自增主键标识的，是否允许手动插入ID</para> 
+        /// Whether to allow manual insertion of ids for self-incrementing primary key identification
+        ///<para>自增主键标识的，是否允许手动插入id</para> 
         /// </summary>
         public bool AllowInsertID
         {
@@ -203,9 +203,9 @@ namespace CYQ.Data
 
         private bool _setIdentityResult = true;
         /// <summary>
-        /// MSSQL插入标识ID时开启此选项[事务开启时有效]
+        /// MSSQL插入标识id时开启此选项[事务开启时有效]
         /// </summary>
-        internal void SetIdentityInsertOn()
+        internal void SetidentityInsertOn()
         {
             _setIdentityResult = true;
             if (dalHelper != null && dalHelper.IsOpenTrans)
@@ -218,7 +218,7 @@ namespace CYQ.Data
                         {
                             try
                             {
-                                string lastTable = Convert.ToString(CacheManage.LocalInstance.Get("MAction_IdentityInsertForSql"));
+                                string lastTable = Convert.ToString(CacheManage.LocalInstance.Get("MAction_identityInsertForSql"));
                                 if (!string.IsNullOrEmpty(lastTable))
                                 {
                                     lastTable = "set identity_insert " + SqlFormat.Keyword(lastTable, dalHelper.DataBaseType) + " off";
@@ -227,7 +227,7 @@ namespace CYQ.Data
                                 _setIdentityResult = dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, dalHelper.DataBaseType) + " on", false) > -2;
                                 if (_setIdentityResult)
                                 {
-                                    CacheManage.LocalInstance.Set("MAction_IdentityInsertForSql", _TableName, 30);
+                                    CacheManage.LocalInstance.Set("MAction_identityInsertForSql", _TableName, 30);
                                 }
                             }
                             catch
@@ -241,9 +241,9 @@ namespace CYQ.Data
             _AllowInsertID = true;
         }
         /// <summary>
-        /// MSSQL插入标识ID后关闭此选项[事务开启时有效]
+        /// MSSQL插入标识id后关闭此选项[事务开启时有效]
         /// </summary>;
-        internal void SetIdentityInsertOff()
+        internal void SetidentityInsertOff()
         {
             if (_setIdentityResult && dalHelper != null && dalHelper.IsOpenTrans)
             {
@@ -258,7 +258,7 @@ namespace CYQ.Data
                                 if (dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, DalType.MsSql) + " off", false) > -2)
                                 {
                                     _setIdentityResult = false;
-                                    CacheManage.LocalInstance.Remove("MAction_IdentityInsertForSql");
+                                    CacheManage.LocalInstance.Remove("MAction_identityInsertForSql");
                                 }
                             }
                             catch
@@ -287,47 +287,69 @@ namespace CYQ.Data
         /// <para>参数：表名、视图、自定义语句、MDataRow</para></param>
         public MAction(object tableNamesEnum)
         {
-            Init(tableNamesEnum, AppConfig.DB.DefaultConn);
+            Init(tableNamesEnum, null, true, null, true);
         }
 
         /// <param name="conn">Database connection statement or configuration key
         /// <para>数据库链接语句或配置Key</para></param>
         public MAction(object tableNamesEnum, string conn)
         {
-            Init(tableNamesEnum, conn);
+            Init(tableNamesEnum, conn, true, null, true);
         }
         #endregion
 
         #region 初始化
 
-        private void Init(object tableObj, string conn)
+        private void Init(object tableObj, string conn, bool resetState, string newDbName, bool isFirstInit)
         {
-            tableObj = SqlCreate.SqlToViewSql(tableObj);
-            string dbName = StaticTool.GetDbName(ref tableObj);
-            if (conn == AppConfig.DB.DefaultConn && !string.IsNullOrEmpty(dbName))
+            string tableName = Convert.ToString(tableObj);
+            if (tableName == "") { Error.Throw("tableObj can't be null or empty!"); }
+
+            //if is Enum
+            if (string.IsNullOrEmpty(conn))
             {
-                if (dbName.ToLower().EndsWith("conn") && !string.IsNullOrEmpty(AppConfig.GetConn(dbName)))
+                if (tableObj is Enum)
                 {
-                    conn = dbName;
+                    conn = CrossDB.GetConnByEnum(tableObj as Enum);
                 }
-                else
+                else if (tableObj is String)
                 {
-                    conn = dbName + "Conn";
+                    string fixName;
+                    conn = CrossDB.GetConn(tableName, out fixName);
+                    tableObj = fixName;
                 }
             }
-            MDataRow newRow;
-            InitConn(tableObj, conn, out newRow);//尝试从MDataRow提取新的Conn链接
-            InitSqlHelper(newRow, dbName);
-            InitRowSchema(newRow, true);
-            InitGlobalObject(true);
+            //string dbName = null;
+            //if (tableObj is String)
+            //{
+            //    if (string.IsNullOrEmpty(conn))//不指定Conn时。
+            //    {
+            //        string conn = CrossDB.GetConn(tableObj);
+            //        tableObj = CrossDB.GetTableName(tableObj, conn);
+            //        tableObj = SqlCreate.SqlToViewSql(tableObj);
+            //        dbName = CrossDB.GetDBName(ref tableObj);
+            //        if (conn == AppConfig.DB.DefaultConn && !string.IsNullOrEmpty(dbName))
+            //        {
+            //            if (!string.IsNullOrEmpty(AppConfig.GetConn(dbName + "Conn")))
+            //            {
+            //                conn = dbName + "Conn";
+            //            }
+            //        }
+            //    }
+            //}
+            MDataRow newRow = CreateRow(tableObj, conn);//尝试从MDataRow提取新的Conn链接
+            InitDalHelper(newRow, newDbName);
+            InitRowSchema(newRow, resetState);
+            InitGlobalObject(isFirstInit);
             //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
             //if (myAop != null)
             //{
             //    SetAop(myAop);
             //}
         }
-        private void InitConn(object tableObj, string conn, out MDataRow newRow)
+        private MDataRow CreateRow(object tableObj, string conn)
         {
+            MDataRow newRow = null;
             if (tableObj is MDataRow)
             {
                 newRow = tableObj as MDataRow;
@@ -346,8 +368,9 @@ namespace CYQ.Data
                 newRow.Conn = _Data.Conn;
             }
             _sourceTableName = newRow.TableName;
+            return newRow;
         }
-        private void InitSqlHelper(MDataRow newRow, string newDbName)
+        private void InitDalHelper(MDataRow newRow, string newDbName)
         {
             if (dalHelper == null)// || newCreate
             {
@@ -355,7 +378,7 @@ namespace CYQ.Data
                 //创建错误事件。
                 if (dalHelper.IsOnExceptionEventNull)
                 {
-                    dalHelper.OnExceptionEvent += new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
+                    dalHelper.OnExceptionEvent += new DalBase.OnException(_DataSqlHelper_OnExceptionEvent);
                 }
             }
             else
@@ -375,18 +398,18 @@ namespace CYQ.Data
                         bool isWithDbName = newRow.TableName.Contains(".");//是否DBName.TableName
                         string fullTableName = isWithDbName ? newRow.TableName : newDbName + "." + newRow.TableName;
                         string sourceDbName = dalHelper.DataBase;
-                        DbResetResult result = dalHelper.ChangeDatabaseWithCheck(fullTableName);
+                        DBResetResult result = dalHelper.ChangeDatabaseWithCheck(fullTableName);
                         switch (result)
                         {
-                            case DbResetResult.Yes://数据库切换了 (不需要前缀）
-                            case DbResetResult.No_SaveDbName:
-                            case DbResetResult.No_DBNoExists:
+                            case DBResetResult.Yes://数据库切换了 (不需要前缀）
+                            case DBResetResult.No_SaveDbName:
+                            case DBResetResult.No_DBNoExists:
                                 if (isWithDbName) //带有前缀的，取消前缀
                                 {
                                     _sourceTableName = newRow.TableName = SqlFormat.NotKeyword(fullTableName);
                                 }
                                 break;
-                            case DbResetResult.No_Transationing:
+                            case DBResetResult.No_Transationing:
                                 if (!isWithDbName)//如果不同的数据库，需要带有数据库前缀
                                 {
                                     _sourceTableName = newRow.TableName = fullTableName;
@@ -401,15 +424,15 @@ namespace CYQ.Data
         {
             _aop.OnError(msg);
         }
-        private static DateTime lastGCTime = DateTime.Now;
+        // private static DateTime lastGCTime = DateTime.Now;
         private void InitRowSchema(MDataRow row, bool resetState)
         {
             _Data = row;
             _TableName = SqlCompatible.Format(_sourceTableName, dalHelper.DataBaseType);
-            _TableName = DBTool.GetMapTableName(dalHelper.UsingConnBean.ConnName, _TableName);//处理数据库映射兼容。
+            // _TableName = DBTool.GetMapTableName(dalHelper.UsingConnBean.ConnName, _TableName);//处理数据库映射兼容。
             if (_Data.Count == 0)
             {
-                if (!TableSchema.FillTableSchema(ref _Data, ref dalHelper, _TableName, _sourceTableName))
+                if (!ColumnSchema.FillTableSchema(ref _Data, _TableName, _sourceTableName))
                 {
                     if (!dalHelper.TestConn(AllowConnLevel.MaterBackupSlave))
                     {
@@ -447,15 +470,7 @@ namespace CYQ.Data
         /// <para>其它数据库名称</para></param>
         public void ResetTable(object tableObj, bool resetState, string newDbName)
         {
-            tableObj = SqlCreate.SqlToViewSql(tableObj);
-            newDbName = newDbName ?? StaticTool.GetDbName(ref tableObj);
-            MDataRow newRow;
-            InitConn(tableObj, string.Empty, out newRow);
-
-            //newRow.Conn = newDbName;//除非指定链接，否则不切换数据库
-            InitSqlHelper(newRow, newDbName);
-            InitRowSchema(newRow, resetState);
-            InitGlobalObject(false);
+            Init(tableObj, null, resetState, newDbName, false);
         }
 
         private void InitGlobalObject(bool allowCreate)
@@ -504,16 +519,16 @@ namespace CYQ.Data
                 if (_isInsertCommand) //插入
                 {
                     _isInsertCommand = false;
-                    object ID;
+                    object id;
                     switch (dalHelper.DataBaseType)
                     {
                         case DalType.MsSql:
                         case DalType.Sybase:
                         case DalType.PostgreSQL:
-                            ID = dalHelper.ExeScalar(sqlCommandText, false);
-                            if (ID == null && AllowInsertID && dalHelper.RecordsAffected > -2)
+                            id = dalHelper.ExeScalar(sqlCommandText, false);
+                            if (id == null && AllowInsertID && dalHelper.RecordsAffected > -2)
                             {
-                                ID = _Data.PrimaryCell.Value;
+                                id = _Data.PrimaryCell.Value;
                             }
                             break;
                         default:
@@ -526,21 +541,21 @@ namespace CYQ.Data
                                 dalHelper.IsOpenTrans = true;//开启事务。
                                 dalHelper.TranLevel = IsolationLevel.ReadCommitted;//默认事务级别已是这个，还是设置一下，避免外部调整对此的影响。
                             }
-                            ID = dalHelper.ExeNonQuery(sqlCommandText, false);//返回的是受影响的行数
-                            if (_option != InsertOp.None && ID != null && Convert.ToInt32(ID) > 0)
+                            id = dalHelper.ExeNonQuery(sqlCommandText, false);//返回的是受影响的行数
+                            if (_option != InsertOp.None && id != null && Convert.ToInt32(id) > 0)
                             {
-                                if (AllowInsertID && !_Data.PrimaryCell.IsNullOrEmpty)//手工插ID
+                                if (AllowInsertID && !_Data.PrimaryCell.IsNullOrEmpty)//手工插id
                                 {
-                                    ID = _Data.PrimaryCell.Value;
+                                    id = _Data.PrimaryCell.Value;
                                 }
                                 else if (isNum)
                                 {
                                     ClearParameters();
-                                    ID = dalHelper.ExeScalar(_sqlCreate.GetMaxID(), false);
+                                    id = dalHelper.ExeScalar(_sqlCreate.GetMaxid(), false);
                                 }
                                 else
                                 {
-                                    ID = null;
+                                    id = null;
                                     returnResult = true;
                                 }
 
@@ -552,13 +567,13 @@ namespace CYQ.Data
                             #endregion
                             break;
                     }
-                    if ((ID != null && Convert.ToString(ID) != "-2") || (dalHelper.RecordsAffected > -2 && _option == InsertOp.None))
+                    if ((id != null && Convert.ToString(id) != "-2") || (dalHelper.RecordsAffected > -2 && _option == InsertOp.None))
                     {
                         if (_option != InsertOp.None)
                         {
-                            _Data.PrimaryCell.Value = ID;
+                            _Data.PrimaryCell.Value = id;
                         }
-                        returnResult = (_option == InsertOp.Fill) ? Fill(ID) : true;
+                        returnResult = (_option == InsertOp.Fill) ? Fill(id) : true;
                     }
                 }
                 else //更新
@@ -612,7 +627,7 @@ namespace CYQ.Data
             if (CheckDisposed()) { return false; }
             if (autoSetValue)
             {
-                _UI.GetAll(!AllowInsertID);//允许插入ID时，也需要获取主键。
+                _UI.GetAll(!AllowInsertID);//允许插入id时，也需要获取主键。
             }
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
@@ -890,44 +905,44 @@ namespace CYQ.Data
                             whereSql = SqlFormat.Compatible(where, dalHelper.DataBaseType, dalHelper.Com.Parameters.Count == 0);
                         }
                         bool byPager = pageIndex > 0 && pageSize > 0;//分页查询(第一页也要分页查询，因为要计算总数）
-                        if (byPager && AppConfig.DB.PagerBySelectBase && dalHelper.DataBaseType == DalType.MsSql && !dalHelper.Version.StartsWith("08"))// || dalHelper.dalType == DalType.Oracle
-                        {
-                            #region 存储过程执行
-                            if (dalHelper.Com.Parameters.Count > 0)
-                            {
-                                dalHelper.DebugInfo.Append(AppConst.HR + "error : select method deny call SetPara() method to add custom parameters!");
-                            }
-                            dalHelper.AddParameters("@PageIndex", pageIndex, DbType.Int32, -1, ParameterDirection.Input);
-                            dalHelper.AddParameters("@PageSize", pageSize, DbType.Int32, -1, ParameterDirection.Input);
-                            dalHelper.AddParameters("@TableName", _sqlCreate.GetSelectTableName(ref whereSql), DbType.String, -1, ParameterDirection.Input);
+                        //if (byPager && AppConfig.DB.PagerBySelectBase && dalHelper.DataBaseType == DalType.MsSql && !dalHelper.Version.StartsWith("08"))// || dalHelper.dalType == DalType.Oracle
+                        //{
+                        //    #region 存储过程执行
+                        //    if (dalHelper.Com.Parameters.Count > 0)
+                        //    {
+                        //        dalHelper.DebugInfo.Append(AppConst.HR + "error : select method deny call SetPara() method to add custom parameters!");
+                        //    }
+                        //    dalHelper.AddParameters("@PageIndex", pageIndex, DbType.Int32, -1, ParameterDirection.Input);
+                        //    dalHelper.AddParameters("@PageSize", pageSize, DbType.Int32, -1, ParameterDirection.Input);
+                        //    dalHelper.AddParameters("@TableName", _sqlCreate.GetSelectTableName(ref whereSql), DbType.String, -1, ParameterDirection.Input);
 
-                            whereSql = _sqlCreate.AddOrderByWithCheck(whereSql, primaryKey);
+                        //    whereSql = _sqlCreate.AddOrderByWithCheck(whereSql, primaryKey);
 
-                            dalHelper.AddParameters("@Where", whereSql, DbType.String, -1, ParameterDirection.Input);
-                            sdReader = dalHelper.ExeDataReader("SelectBase", true);
-                            #endregion
-                        }
-                        else
+                        //    dalHelper.AddParameters("@Where", whereSql, DbType.String, -1, ParameterDirection.Input);
+                        //    sdReader = dalHelper.ExeDataReader("SelectBase", true);
+                        //    #endregion
+                        //}
+                        //else
+                        //{
+                        #region SQL语句分页执行
+                        if (byPager)
                         {
-                            #region SQL语句分页执行
-                            if (byPager)
-                            {
-                                rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
-                                _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
-                                _aop.isHasCache = false;//不能影响Select的后续操作。
-                                //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
-                            }
-                            if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
-                            {
-                                string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
-                                sdReader = dalHelper.ExeDataReader(sql, false);
-                            }
-                            else if (_sqlCreate.selectColumns != null)
-                            {
-                                _aop.Para.Table = _aop.Para.Table.Select(0, 0, null, _sqlCreate.selectColumns);
-                            }
-                            #endregion
+                            rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                            _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
+                            _aop.isHasCache = false;//不能影响Select的后续操作。
+                            //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
                         }
+                        if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
+                        {
+                            string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                            sdReader = dalHelper.ExeDataReader(sql, false);
+                        }
+                        else if (_sqlCreate.selectColumns != null)
+                        {
+                            _aop.Para.Table = _aop.Para.Table.Select(0, 0, null, _sqlCreate.selectColumns);
+                        }
+                        #endregion
+                        //}
                         if (sdReader != null)
                         {
                             // _aop.Para.Table.ReadFromDbDataReader(sdReader);//内部有关闭。
@@ -936,10 +951,10 @@ namespace CYQ.Data
                             {
                                 rowCount = _aop.Para.Table.Rows.Count;
                             }
-                            else if (dalHelper.DataBaseType == DalType.MsSql && AppConfig.DB.PagerBySelectBase)
-                            {
-                                rowCount = dalHelper.ReturnValue;
-                            }
+                            //else if (dalHelper.DataBaseType == DalType.MsSql && AppConfig.DB.PagerBySelectBase)
+                            //{
+                            //    rowCount = dalHelper.ReturnValue;
+                            //}
                             _aop.Para.Table.RecordsAffected = rowCount;
                         }
                         else
@@ -1494,7 +1509,7 @@ namespace CYQ.Data
             {
                 if (!dalHelper.IsOnExceptionEventNull)
                 {
-                    dalHelper.OnExceptionEvent -= new DbBase.OnException(_DataSqlHelper_OnExceptionEvent);
+                    dalHelper.OnExceptionEvent -= new DalBase.OnException(_DataSqlHelper_OnExceptionEvent);
                 }
                 _debugInfo = dalHelper.DebugInfo.ToString();
                 dalHelper.Dispose();
@@ -1580,6 +1595,18 @@ namespace CYQ.Data
             get
             {
                 return _UI;
+            }
+        }
+        private SqlCreate _sqlCreate;
+        /// <summary>
+        /// for build where sql easyer
+        /// <para>UI操作</para>
+        /// </summary>
+        internal SqlCreate Sql
+        {
+            get
+            {
+                return _sqlCreate;
             }
         }
     }

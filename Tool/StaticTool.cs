@@ -256,60 +256,7 @@ namespace CYQ.Data.Tool
             return BitConverter.ToString(new Guid(guid).ToByteArray()).Replace("-", "");
         }
 
-        /// <summary>
-        /// 获取约定枚举的数据库名称
-        /// </summary>
-        /// <param name="tableNamesEnum">表枚举或表名</param>
-        /// <returns></returns>
-        internal static string GetDbName(ref object tableNamesEnum)
-        {
-            string dbName = string.Empty;
-            if (tableNamesEnum is Enum)
-            {
-                Type t = tableNamesEnum.GetType();
-                string enumName = t.Name;
-                if (enumName != "TableNames" && enumName != "ViewNames")
-                {
-                    if (enumName.Length > 1 && enumName[1] == '_')
-                    {
-                        dbName = enumName.Substring(2, enumName.Length - 6);//.Replace("Enum", "Conn");
-                    }
-                    else
-                    {
-                        string[] items = t.FullName.Split('.');
-                        if (items.Length > 1)
-                        {
-                            dbName = items[items.Length - 2];// +"Conn";
-                            items = null;
-                        }
-                    }
-                }
-                t = null;
-            }
-            else if (tableNamesEnum is string)
-            {
-                string tName = tableNamesEnum.ToString();
-                int index = tName.LastIndexOf(')');
-                if (index > 0) // 视图
-                {
-                    string viewSQL = tName;
-                    string a = tName.Substring(0, index + 1);//a部分
-                    tName = tName.Substring(index + 1).Trim();//b部分。ddd.v_xxx
-                    //修改原对像
-
-                    if (tName.Contains("."))
-                    {
-                        tableNamesEnum = a + " " + tName.Substring(tName.LastIndexOf('.') + 1);
-                    }
-                }
-                if (tName.Contains(".") && !tName.Trim().Contains(" "))
-                {
-                    dbName = tName.Split('.')[0];
-                }
-
-            }
-            return dbName;
-        }
+       
 
         /// <summary>
         /// 类型转换(精准强大)

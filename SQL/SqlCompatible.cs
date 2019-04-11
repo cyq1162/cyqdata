@@ -48,7 +48,7 @@ namespace CYQ.Data.SQL
         {
             switch (dalType)
             {
-                //substr(MAX(SheetId),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetId)length(MAX(SheetId))-4,4) 
+                //substr(MAX(SheetID),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetID)length(MAX(SheetID))-4,4) 
                 case DalType.Oracle:
                     int index = text.IndexOf(SqlValue.Left, StringComparison.OrdinalIgnoreCase);//left(a,4) =>to_char(substr(a,1,4))
                     if (index > -1)
@@ -80,7 +80,7 @@ namespace CYQ.Data.SQL
                     {
                         do
                         {
-                            ////substr(MAX(SheetId),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetId)length(MAX(SheetId))-4,4) 
+                            ////substr(MAX(SheetID),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetID)length(MAX(SheetID))-4,4) 
                             index = text.IndexOf('(', index);
                             int end = text.IndexOf(',', index);
                             string key = text.Substring(index + 1, end - index - 1);//’“µΩ a
@@ -154,7 +154,7 @@ namespace CYQ.Data.SQL
                 case DalType.Access:
                     return Replace(text, SqlValue.Guid, "GenGUID()");
                 case DalType.MySql:
-                    return Replace(text, SqlValue.Guid, "UUID()");
+                    return Replace(text, SqlValue.Guid, "UUid()");
                 case DalType.MsSql:
                 case DalType.Sybase:
                     return Replace(text, SqlValue.Guid, "newid()");
@@ -503,7 +503,7 @@ namespace CYQ.Data.SQL
         }
         private static string FormatCaseWhen(string text, DalType dalType)
         {
-            //CASE when languageID=1 THEN 1000 ELSE 10 End
+            //CASE when languageid=1 THEN 1000 ELSE 10 End
 
             switch (dalType)
             {

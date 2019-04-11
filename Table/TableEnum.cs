@@ -11,12 +11,12 @@ namespace CYQ.Data.Table
     public enum AcceptOp
     {
         /// <summary>
-        /// 批量插入（由系统产生自增加ID）
+        /// 批量插入（由系统产生自增加id）
         /// 该执行会开启事务。
         /// </summary>
         Insert = 1,
         /// <summary>
-        /// 批量插入（由用户指定ID插入）
+        /// 批量插入（由用户指定id插入）
         /// 该执行会开启事务。
         /// </summary>
         InsertWithID = 2,

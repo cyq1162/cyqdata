@@ -7,7 +7,7 @@ using System.Data.Common;
 
 namespace CYQ.Data
 {
-    internal class MsSqlDal : DbBase
+    internal partial class MsSqlDal : DalBase
     {
         public MsSqlDal(ConnObject co)
             : base(co)
@@ -79,5 +79,15 @@ namespace CYQ.Data
         //    }
         //    return connString;
         //}
+    }
+
+    internal partial class MsSqlDal
+    {
+        protected override string GetSchemaSql(string type)
+        {
+            bool for2000 = Version.StartsWith("08");
+            return @"Select o.name as TableName, p.value as Description from sysobjects o " + (for2000 ? "left join sysproperties p on p.id = o.id and smallid = 0" : "left join sys.extended_properties p on p.major_id = o.id and minor_id = 0")
+               + " and p.name = 'MS_Description' where o.type = '" + type + "' AND o.name<>'dtproperties' AND o.name<>'sysdiagrams'" + (for2000 ? "" : " and category=0");
+        }
     }
 }

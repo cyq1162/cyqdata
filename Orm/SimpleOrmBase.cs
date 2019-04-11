@@ -173,7 +173,7 @@ namespace CYQ.Data.Orm
                         {
                             Error.Throw(errMsg);
                         }
-                        Columns = TableSchema.GetColumns(typeInfo);
+                        Columns = ColumnSchema.GetColumns(typeInfo);
                         ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
                         if (!DBTool.ExistsTable(tableName, connBean.ConnString))
                         {
@@ -188,7 +188,7 @@ namespace CYQ.Data.Orm
                     {
                         if (FieldSource != FieldSource.Data)
                         {
-                            MDataColumn c2 = TableSchema.GetColumns(typeInfo);
+                            MDataColumn c2 = ColumnSchema.GetColumns(typeInfo);
                             if (FieldSource == FieldSource.BothOfAll)
                             {
                                 Columns.AddRange(c2);
@@ -266,10 +266,10 @@ namespace CYQ.Data.Orm
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="insertID">插入主键</param>
-        public bool Insert(InsertOp option, bool insertID)
+        /// <param name="insertid">插入主键</param>
+        public bool Insert(InsertOp option, bool insertid)
         {
-            return Insert(false, option, insertID);
+            return Insert(false, option, insertid);
         }
         /*
         /// <summary>
@@ -289,15 +289,15 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <param name="autoSetValue">自动从控制获取值</param>
         /// <param name="option">插入选项</param>
-        /// <param name="insertID">插入主键</param>
-        internal bool Insert(bool autoSetValue, InsertOp option, bool insertID)
+        /// <param name="insertid">插入主键</param>
+        internal bool Insert(bool autoSetValue, InsertOp option, bool insertid)
         {
             if (autoSetValue)
             {
-                Action.UI.GetAll(!insertID);
+                Action.UI.GetAll(!insertid);
             }
             GetValueFromEntity();
-            Action.AllowInsertID = insertID;
+            Action.AllowInsertID = insertid;
             bool result = Action.Insert(false, option);
             if (autoSetValue || option != InsertOp.None)
             {

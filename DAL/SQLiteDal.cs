@@ -4,9 +4,10 @@ using CYQ.Data.Cache;
 using System.Reflection;
 using System;
 using System.IO;
+using System.Collections.Generic;
 namespace CYQ.Data
 {
-    internal class SQLiteDal : DbBase
+    internal partial class SQLiteDal : DalBase
     {
         private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
         public SQLiteDal(ConnObject co)
@@ -136,5 +137,20 @@ namespace CYQ.Data
         //    //return para as DbParameter;
 
         //}
+    }
+
+    internal partial class SQLiteDal
+    {
+        protected override string GetSchemaSql(string type)
+        {
+            switch (type)
+            {
+                case "U":
+                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='table'";
+                case "V":
+                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='view'";
+            }
+            return "";
+        }
     }
 }

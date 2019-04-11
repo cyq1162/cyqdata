@@ -108,23 +108,23 @@ namespace CYQ.Data.UI
         /// 绑定下拉等列表,控件需要继承自：ListControl。
         /// </summary>
         /// <param name="control">DropDown/CheckBoxList/RadioButtonList等</param>
-        /// <param name="where">对表的数据进行过滤如:"ID>15 and Url='cyqdata.com'"</param>
-        /// <param name="text">绑定时显示的字段名[默认字段名取自控件的ID(去掉前三个字母前缀)]</param>
-        /// <param name="value">绑定时显示字段对应的值[默认值的字段名为:ID]</param>
+        /// <param name="where">对表的数据进行过滤如:"id>15 and Url='cyqdata.com'"</param>
+        /// <param name="text">绑定时显示的字段名[默认字段名取自控件的id(去掉前三个字母前缀)]</param>
+        /// <param name="value">绑定时显示字段对应的值[默认值的字段名为:id]</param>
         public void Bind(object control, object where, object text, object value)
         {
             string sql = _SqlCreate.GetBindSql(where, text, value);
             MDataTable mTable = null;
-            switch (_DbBase.DataBaseType)
+            switch (_DalBase.DataBaseType)
             {
                 case DalType.Txt:
                 case DalType.Xml:
-                    NoSqlCommand cmd = new NoSqlCommand(sql, _DbBase);
+                    NoSqlCommand cmd = new NoSqlCommand(sql, _DalBase);
                     mTable = cmd.ExeMDataTable();
                     cmd.Dispose();
                     break;
                 default:
-                    mTable = _DbBase.ExeDataReader(sql, false);
+                    mTable = _DalBase.ExeDataReader(sql, false);
                     // dalHelper.ResetConn();//重置Slave
                     break;
             }
@@ -204,16 +204,16 @@ namespace CYQ.Data.UI
         private List<string> autoPrefixList;//调用插入和更新,自动获取控件名的前缀（Web使用）
         private List<object> autoParentList;//调用插入和更新，自动获取控件的父控件（Win使用）
         internal MDataRow _Data;
-        internal DbBase _DbBase;
+        internal DalBase _DalBase;
         internal SqlCreate _SqlCreate;
         private MActionUI()
         {
 
         }
-        internal MActionUI(ref MDataRow row, DbBase dbBase, SqlCreate sqlCreate)
+        internal MActionUI(ref MDataRow row, DalBase dalBase, SqlCreate sqlCreate)
         {
             _Data = row;
-            _DbBase = dbBase;
+            _DalBase = dalBase;
             _SqlCreate = sqlCreate;
             autoPrefixList = new List<string>(3);
         }
@@ -259,7 +259,7 @@ namespace CYQ.Data.UI
                     Type t = ct.GetType();
                     int sysValue = GetSysValue(t);//web,win,wpf
                     PropertyInfo p;
-                    if (sysValue == 4)//第三方控件，不知道会搞ID还是Name
+                    if (sysValue == 4)//第三方控件，不知道会搞id还是Name
                     {
                         p = GetProperty(t, true, "ID", "Name");
                     }
@@ -419,7 +419,7 @@ namespace CYQ.Data.UI
                     Type t = ct.GetType();
                     int sysValue = GetSysValue(t);//web,win,wpf
                     PropertyInfo p;
-                    if (sysValue == 4)//第三方控件，不知道会搞ID还是Name
+                    if (sysValue == 4)//第三方控件，不知道会搞id还是Name
                     {
                         p = GetProperty(t, true, "ID", "Name");
                     }
@@ -799,7 +799,7 @@ namespace CYQ.Data.UI
 
                             foreach (Control ct in ctParent.Controls)
                             {
-                                if (!string.IsNullOrEmpty(ct.ID) && ct.ID.Length > 3)
+                                if (!string.IsNullOrEmpty(ct.id) && ct.ID.Length > 3)
                                 {
                                     columnName = ct.ID.Substring(3);
                                     if (_Row.Columns.Contains(columnName))//包含列名。

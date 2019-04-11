@@ -1255,7 +1255,7 @@ namespace CYQ.Data.Table
                 Type t = entity.GetType();
                 if (Columns.Count == 0)
                 {
-                    MDataColumn mcs = TableSchema.GetColumns(t);
+                    MDataColumn mcs = ColumnSchema.GetColumns(t);
                     MCellStruct ms = null;
                     for (int i = 0; i < mcs.Count; i++)
                     {
@@ -1535,7 +1535,7 @@ namespace CYQ.Data.Table
                     #endregion
                     break;
                 case SysType.Custom://¼ÌÐøµÝ¹é
-                    MDataRow mr = new MDataRow(TableSchema.GetColumns(propType));
+                    MDataRow mr = new MDataRow(ColumnSchema.GetColumns(propType));
                     mr.LoadFrom(value);
                     returnObj = Activator.CreateInstance(propType);
                     SetToEntity(ref returnObj, mr);

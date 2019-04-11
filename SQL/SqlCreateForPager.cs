@@ -10,7 +10,7 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class SqlCreateForPager
     {
-        public static string GetSql(DalType dalType, string version, int pageIndex, int pageSize, object objWhere, string tableName, int rowCount, string columns, string primaryKey, bool primaryKeyIsIdentity)
+        public static string GetSql(DalType dalType, string version, int pageIndex, int pageSize, object objWhere, string tableName, int rowCount, string columns, string primaryKey, bool primaryKeyIsidentity)
         {
             if (string.IsNullOrEmpty(columns))
             {
@@ -100,7 +100,7 @@ namespace CYQ.Data.SQL
                     return string.Format(rowNumberPager, GetOrderBy(where, false, primaryKey), (columns == "*" ? "t.*" : columns), tableName, onlyWhere, v, rowStart, rowEnd);
                 case DalType.Sybase:
                 temtable:
-                    if (primaryKeyIsIdentity)
+                    if (primaryKeyIsidentity)
                     {
                         bool isOk = columns == "*";
                         if (!isOk)
@@ -129,7 +129,7 @@ namespace CYQ.Data.SQL
                         if (isOk)
                         {
 
-                            return string.Format(tempTablePagerWithIdentity, DateTime.Now.Millisecond, topN, primaryKey, tableName, where, pageSize, columns, rowStart, rowEnd, orderBy);
+                            return string.Format(tempTablePagerWithidentity, DateTime.Now.Millisecond, topN, primaryKey, tableName, where, pageSize, columns, rowStart, rowEnd, orderBy);
                         }
                     }
                     return string.Format(tempTablePager, DateTime.Now.Millisecond, pageIndex * pageSize + " " + columns, tableName, where, pageSize, rowStart, rowEnd, orderBy);
@@ -143,7 +143,7 @@ namespace CYQ.Data.SQL
                 case DalType.SQLite:
                 case DalType.MySql:
                 case DalType.PostgreSQL:
-                    if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
+                    if (max > 500000 && primaryKeyIsidentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
                     {
                         where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);
                         return string.Format(top1Pager, columns, tableName, where);
@@ -180,7 +180,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 临时表分页（带自增加序列）
         /// </summary>
-        private const string tempTablePagerWithIdentity = @"select top {1} cast({2} as int) cyqrowid,cyqrownum=identity(int) into #tmp{0} from {3} where {4} select top {5} {6} from #tmp{0} left join {3} on {2}=cyqrowid where cyqrownum between {7} and {8} {9} drop table #tmp{0}";
+        private const string tempTablePagerWithidentity = @"select top {1} cast({2} as int) cyqrowid,cyqrownum=identity(int) into #tmp{0} from {3} where {4} select top {5} {6} from #tmp{0} left join {3} on {2}=cyqrowid where cyqrownum between {7} and {8} {9} drop table #tmp{0}";
 
         ///// <summary>
         ///// 格式化where，需要有order by

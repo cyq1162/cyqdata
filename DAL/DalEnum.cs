@@ -74,7 +74,7 @@ namespace CYQ.Data
     /// <summary>
     /// 重置数据库的结果
     /// </summary>
-    internal enum DbResetResult
+    internal enum DBResetResult
     {
         /// <summary>
         ///  成功切换 数据库链接

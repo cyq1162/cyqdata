@@ -8,7 +8,7 @@ using System.IO;
 
 namespace CYQ.Data
 {
-    internal class SybaseDal : DbBase
+    internal partial class SybaseDal : DalBase
     {
         public SybaseDal(ConnObject co)
             : base(co)
@@ -73,6 +73,15 @@ namespace CYQ.Data
             {
                 return true;
             }
+        }
+    }
+
+    internal partial class SybaseDal
+    {
+
+        protected override string GetSchemaSql(string type)
+        {
+            return "SELECT name as TableName,'' as Description FROM sysobjects where type='" + type + "'";
         }
     }
 }

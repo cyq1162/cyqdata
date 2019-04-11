@@ -4,6 +4,7 @@ using CYQ.Data.SQL;
 using CYQ.Data.Tool;
 using System.Web;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace CYQ.Data
 {
@@ -13,6 +14,11 @@ namespace CYQ.Data
     /// </summary>
     public static partial class AppConfig
     {
+        static AppConfig()
+        {
+            //这个比较常用，只好把这里当成应用程序入口最早的调用处
+            ThreadPool.QueueUserWorkItem(new WaitCallback(DBSchema.InitDBSchemasForCache));
+        }
         #region 基方法
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -108,7 +114,7 @@ namespace CYQ.Data
         {
             if (string.IsNullOrEmpty(name))
             {
-                name = "Conn";
+                name = DB.DefaultConn;
             }
             if (name.Trim().Contains(" "))
             {
@@ -605,7 +611,7 @@ namespace CYQ.Data
             }
             private static void SetDefault()
             {
-                DbBase db = DalCreate.CreateDal(DefaultConn);
+                DalBase db = DalCreate.CreateDal(DefaultConn);
                 if (db != null)
                 {
                     _DefaultDataBase = db.DataBase;
@@ -613,20 +619,20 @@ namespace CYQ.Data
                     db.Dispose();
                 }
             }
-            /// <summary>
-            /// MSSQL是否启用分页存储过程SelectBase，默认false
-            /// </summary>
-            public static bool PagerBySelectBase
-            {
-                get
-                {
-                    return GetAppBool("PagerBySelectBase", false);
-                }
-                set
-                {
-                    SetApp("PagerBySelectBase", value.ToString());
-                }
-            }
+            ///// <summary>
+            ///// MSSQL是否启用分页存储过程SelectBase，默认false
+            ///// </summary>
+            //public static bool PagerBySelectBase
+            //{
+            //    get
+            //    {
+            //        return GetAppBool("PagerBySelectBase", false);
+            //    }
+            //    set
+            //    {
+            //        SetApp("PagerBySelectBase", value.ToString());
+            //    }
+            //}
             /// <summary>
             /// 配置此项时，会对：插入/更新/删除的操作进行Lock[请适当使用]
             /// </summary>
@@ -682,7 +688,7 @@ namespace CYQ.Data
             }
              */
             /// <summary>
-            /// MAction 操作 Oracle 时自增加int类型ID所需要配置的序列ID，Guid为ID则不用。
+            /// MAction 操作 Oracle 时自增加int类型id所需要配置的序列id，Guid为id则不用。
             /// 如果需要为每个表都配置一个序列号，可以使用：SEQ_{0} 其中{0}会自动配对成表名，如果没有{0}，则为整个数据库共用一个序列。
             /// 默认参数值：SEQ_{0}
             /// </summary>

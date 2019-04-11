@@ -538,7 +538,7 @@ namespace CYQ.Data.Table
                     Type t = Value.GetType();
                     if (!t.FullName.StartsWith("System."))//∆’Õ®∂‘œÛ°£
                     {
-                        row = new MDataRow(TableSchema.GetColumns(t));
+                        row = new MDataRow(ColumnSchema.GetColumns(t));
                         row.LoadFrom(Value);
                     }
                     else if (Value is IEnumerable)
