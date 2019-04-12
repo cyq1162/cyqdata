@@ -483,6 +483,11 @@ namespace CYQ.Data.Table
         public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp escapeOp)
         {
             JsonHelper helper = new JsonHelper(addHead, addSchema);
+            if (DynamicData != null && DynamicData is MDictionary<int, int>)
+            {
+                helper.LoopCheckList = DynamicData as MDictionary<int, int>;//继承父的数据，避免循环引用父
+                helper.Level = helper.LoopCheckList[helper.LoopCheckList.Count - 1] + 1;
+            }
             helper.Escape = escapeOp;
             helper.IsConvertNameToLower = isConvertNameToLower;
             helper.RowOp = rowOp;

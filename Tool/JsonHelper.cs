@@ -49,6 +49,7 @@ namespace CYQ.Data.Tool
                 return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.JsonEscape);
             }
         }
+
         #region 实例属性
 
         public JsonHelper()
@@ -711,6 +712,14 @@ namespace CYQ.Data.Tool
     public partial class JsonHelper
     {
         /// <summary>
+        /// 用于控制自循环的层级判断。
+        /// </summary>
+        internal int Level = 1;
+        /// <summary>
+        /// 用于自循环检测列表。
+        /// </summary>
+        internal MDictionary<int, int> LoopCheckList = new MDictionary<int, int>();
+        /// <summary>
         /// Fill obj and get json from  ToString() method
         /// <para>从数据表中取数据填充,最终可输出json字符串</para>
         /// </summary>
@@ -789,6 +798,25 @@ namespace CYQ.Data.Tool
                         }
                         else if (groupID == 999)
                         {
+                            int hash = cell.Value.GetHashCode();
+                            //检测是否循环引用
+                            if (LoopCheckList.ContainsKey(hash))
+                            {
+                                //continue;
+                                int level = LoopCheckList[hash];
+                                if (level < Level)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    LoopCheckList[hash] = Level;//更新级别
+                                }
+                            }
+                            else
+                            {
+                                LoopCheckList.Add(hash, Level);
+                            }
                             Type t = cell.Struct.ValueType;
                             if (t.FullName == "System.Object")
                             {
@@ -807,9 +835,11 @@ namespace CYQ.Data.Tool
                                 if (cell.Value is IEnumerable)
                                 {
                                     int len = StaticTool.GetArgumentLength(ref t);
-                                    if (len <= 1)
+                                    if (len <= 1)//List<T>
                                     {
                                         JsonHelper js = new JsonHelper(false, false);
+                                        js.Level = Level + 1;
+                                        js.LoopCheckList = LoopCheckList;
                                         js.Escape = Escape;
                                         js._RowOp = _RowOp;
                                         js.DateTimeFormatter = DateTimeFormatter;
@@ -826,9 +856,11 @@ namespace CYQ.Data.Tool
                                         value = js.ToString(true);
                                         noQuot = true;
                                     }
-                                    else if (len == 2)
+                                    else if (len == 2)//Dictionary<T,K>
                                     {
-                                        value = MDataRow.CreateFrom(cell.Value).ToJson(RowOp, IsConvertNameToLower, Escape);
+                                        MDataRow dicRow = MDataRow.CreateFrom(cell.Value);
+                                        dicRow.DynamicData = LoopCheckList;
+                                        value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
                                     }
                                 }
@@ -837,6 +869,7 @@ namespace CYQ.Data.Tool
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
                                         MDataRow oRow = new MDataRow(ColumnSchema.GetColumns(t));
+                                        oRow.DynamicData = LoopCheckList;
                                         oRow.LoadFrom(cell.Value);
                                         value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
@@ -844,6 +877,7 @@ namespace CYQ.Data.Tool
                                     else if (t.FullName == "System.Data.DataTable")
                                     {
                                         MDataTable dt = cell.Value as DataTable;
+                                        dt.DynamicData = LoopCheckList;
                                         value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
                                         noQuot = true;
                                     }
@@ -1084,7 +1118,7 @@ namespace CYQ.Data.Tool
                     #region 加载数据
                     if (result.Count == 1)
                     {
-                        Dictionary<string,string> dic=result[0];
+                        Dictionary<string, string> dic = result[0];
                         if (dic.ContainsKey("total") && dic.ContainsKey("rows"))
                         {
                             int count = 0;
@@ -1325,7 +1359,9 @@ namespace CYQ.Data.Tool
                     return text;
                 }
             }
+
             JsonHelper js = new JsonHelper();
+            js.LoopCheckList.Add(obj.GetHashCode(), 0);
             js.Escape = escapeOp;
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = rowOp;

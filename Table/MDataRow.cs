@@ -146,6 +146,16 @@ namespace CYQ.Data.Table
                 }
             }
         }
+        [NonSerialized]
+        private object _DynamicData;
+        /// <summary>
+        /// 动态存储数据
+        /// </summary>
+        public object DynamicData
+        {
+            get { return _DynamicData; }
+            set { _DynamicData = value; }
+        }
         /// <summary>
         /// 输入枚举型数据
         /// </summary>
@@ -850,6 +860,11 @@ namespace CYQ.Data.Table
         public string ToJson(RowOp op, bool isConvertNameToLower, EscapeOp escapeOp)
         {
             JsonHelper helper = new JsonHelper();
+            if (DynamicData != null && DynamicData is MDictionary<int, int>)
+            {
+                helper.LoopCheckList = DynamicData as MDictionary<int, int>;//继承父的数据，避免循环引用父
+                helper.Level = helper.LoopCheckList[helper.LoopCheckList.Count - 1] + 1;
+            }
             helper.IsConvertNameToLower = isConvertNameToLower;
             helper.Escape = escapeOp;
             helper.RowOp = op;
