@@ -54,7 +54,8 @@ namespace CYQ.Data
 
         protected override DbProviderFactory GetFactory()
         {
-            return DbProviderFactories.GetFactory("System.Data.SqlClient");
+            return SqlClientFactory.Instance;
+            //return DbProviderFactories.GetFactory("System.Data.SqlClient");
         }
         protected override bool IsExistsDbName(string dbName)
         {

@@ -85,17 +85,17 @@ namespace CYQ.Data
         {
             if (Slave.Count > 0)
             {
-                string id = Getidentity();//获取当前的标识
+                string id = GetIdentity();//获取当前的标识
                 Cache.CacheManage.LocalInstance.Set(id, 1, AppConfig.DB.MasterSlaveTime / 60.0);
             }
         }
         public bool IsAllowSlave()
         {
             if (Slave.Count == 0) { return false; }
-            string id = Getidentity();//获取当前的标识
+            string id = GetIdentity();//获取当前的标识
             return !Cache.CacheManage.LocalInstance.Contains(id);
         }
-        private string Getidentity()
+        private string GetIdentity()
         {
             string id = string.Empty;
             if (HttpContext.Current != null)
