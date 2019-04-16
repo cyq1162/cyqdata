@@ -78,8 +78,9 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static List<PropertyInfo> GetPropertyInfo(Type t)
         {
+            bool isAnonymousType = t.Name.Contains("f__AnonymousType");//忽略匿名类型
             string key = t.GUID.ToString();
-            if (propCache.ContainsKey(key))
+            if (!isAnonymousType && propCache.ContainsKey(key))
             {
                 return propCache[key];
             }
@@ -92,7 +93,10 @@ namespace CYQ.Data.Tool
                 {
 
                     list.AddRange(pInfo);
-                    propCache.Set(key, list);
+                    if (!isAnonymousType)
+                    {
+                        propCache.Set(key, list);
+                    }
                 }
                 catch (Exception err)
                 {
@@ -256,7 +260,7 @@ namespace CYQ.Data.Tool
             return BitConverter.ToString(new Guid(guid).ToByteArray()).Replace("-", "");
         }
 
-       
+
 
         /// <summary>
         /// 类型转换(精准强大)

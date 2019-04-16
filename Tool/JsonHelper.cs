@@ -228,7 +228,7 @@ namespace CYQ.Data.Tool
         {
             jsonItems.Add(Format(name, value, noQuotes));
         }
-        private void Add(string name, object value)
+        public void Add(string name, object value)
         {
             if (value != null)
             {
