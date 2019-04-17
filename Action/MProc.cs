@@ -206,7 +206,10 @@ namespace CYQ.Data
                 }
                 _procName = procNameOrSql.ToString().Trim();
                 _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-
+                if (string.IsNullOrEmpty(conn) && dalHelper == null)
+                {
+                    conn = AppConfig.DB.DefaultConn;
+                }
             }
             #endregion
             DalBase dalBase = null;
