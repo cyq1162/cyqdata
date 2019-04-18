@@ -340,11 +340,12 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                if (strValue != t.FullName)
+                if (value.GetType().FullName != t.FullName)
                 {
                     switch (GetSystemType(ref t))
                     {
                         case SysType.Custom:
+
                             return MDataRow.CreateFrom(strValue).ToEntity(t);
                         case SysType.Generic:
                             if (t.Name.StartsWith("List"))
