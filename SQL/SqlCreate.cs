@@ -129,9 +129,16 @@ namespace CYQ.Data.SQL
                     _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
-                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.StringValue == "" && !cell.Struct.IsCanNull)
+                    if (dbType == DbType.String && cell.StringValue == "")
                     {
-                        value = " ";
+                        if (_action.DalType == DalType.Oracle && !cell.Struct.IsCanNull)
+                        {
+                            value = " ";//Oracle not null 字段，不允许设置空值。
+                        }
+                        if (_action.DalType == DalType.MySql && cell.Struct.MaxSize == 36)
+                        {
+                            value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                        }
                     }
                     _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
                     isCanDo = true;
@@ -237,11 +244,17 @@ namespace CYQ.Data.SQL
                     }
                     object value = cell.Value;
                     DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DalType);
-                    if (_action.DalType == DalType.Oracle && dbType == DbType.String && cell.StringValue == "" && !cell.Struct.IsCanNull)
+                    if (dbType == DbType.String && cell.StringValue == "")
                     {
-                        value = " ";//Oracle not null 字段，不允许设置空值。
+                        if (_action.DalType == DalType.Oracle && !cell.Struct.IsCanNull)
+                        {
+                            value = " ";//Oracle not null 字段，不允许设置空值。
+                        }
+                        if (_action.DalType == DalType.MySql && cell.Struct.MaxSize == 36)
+                        {
+                            value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                        }
                     }
-
                     _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
                     _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DalType) + "=" + _action.dalHelper.Pre + cell.ColumnName + ",");
                     isCanDo = true;
