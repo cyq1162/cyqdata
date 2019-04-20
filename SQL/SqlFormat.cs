@@ -380,7 +380,10 @@ namespace CYQ.Data.SQL
                         {
                             defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
                         }
-                        defaultValue = defaultValue.Trim('N', '\'');//'(', ')',
+                        if (defaultValue.StartsWith("N'")) {
+                            defaultValue = defaultValue.TrimStart('N');
+                        }
+                        defaultValue = defaultValue.Trim('\'');//'(', ')',
                     }
                     else
                     {
