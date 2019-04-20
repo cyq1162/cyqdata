@@ -209,15 +209,27 @@ namespace CYQ.Data.Orm
             if (items.Length > 1)
             {
                 conn = items[items.Length - 2] + "Conn";
+                if (string.IsNullOrEmpty(AppConfig.GetConn(conn)))
+                {
+                    conn = null;
+                }
                 items = null;
             }
             string tName = t.Name;
-            t = null;
-            if (tName.EndsWith(AppConfig.EntitySuffix))
+            object[] names=t.GetCustomAttributes(typeof(TableNameAttribute), false);
+            if (names != null && names.Length > 0)
             {
-                tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
+                tName = ((TableNameAttribute)names[0]).TableName;
             }
-            tName = CrossDB.GetFixName(tName, conn);
+            else
+            {
+                t = null;
+                if (tName.EndsWith(AppConfig.EntitySuffix))
+                {
+                    tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
+                }
+                tName = CrossDB.GetFixName(tName, conn);
+            }
             return tName;
         }
     }

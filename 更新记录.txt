@@ -783,3 +783,4 @@
 568：JsonHelper：ToJson方法：自动规避循环引用。(2019-04-12)
 569：StaticTool：反射属性的缓存忽略匿名类型。(2019-04-16)
 570：SqlCreate：MySql对char(36）处理，不能为空，只能为null。(2019-04-19)
+571：ORM：增加TableNameAttribute。(2019-04-20)

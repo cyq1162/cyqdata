@@ -151,12 +151,12 @@ namespace CYQ.Data
         internal string GetFormatterText()
         {
             string title = string.Format("V{0} Record On : {1} : {2}",
-                AppConfig.Version, DateTime.Now.ToString(), PageUrl??"");// + Log.Url;
+                AppConfig.Version, DateTime.Now.ToString(), PageUrl ?? "");// + Log.Url;
             if (!string.IsNullOrEmpty(RefererUrl))
             {
                 title += AppConst.NewLine + AppConst.NewLine + "Referer : " + RefererUrl;
             }
-            string body = title + AppConst.NewLine + AppConst.NewLine + Message + AppConst.NewLine + AppConst.NewLine;
+            string body = title + AppConst.NewLine + AppConst.NewLine + Message.Replace("<br />", AppConst.NewLine) + AppConst.NewLine + AppConst.NewLine;
             body += "---------------------------------------" + AppConst.NewLine + AppConst.NewLine;
             return body;
         }

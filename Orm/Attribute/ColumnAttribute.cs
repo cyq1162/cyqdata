@@ -84,7 +84,7 @@ namespace CYQ.Data.Orm
                 IsCanNull = false;
             }
         }
-        public KeyAttribute(bool isAutoIncrement, bool isPrimaryKey,bool isCanNull)
+        public KeyAttribute(bool isAutoIncrement, bool isPrimaryKey, bool isCanNull)
         {
             _IsPrimaryKey = isPrimaryKey;
             _IsAutoIncrement = isAutoIncrement;
@@ -125,6 +125,25 @@ namespace CYQ.Data.Orm
         public DescriptionAttribute(string description)
         {
             _Description = description;
+        }
+    }
+
+    /// <summary>
+    /// 数据库：表名或字段名称
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public class TableNameAttribute : Attribute
+    {
+        private string _TableName;
+
+        public string TableName
+        {
+            get { return _TableName; }
+            set { _TableName = value; }
+        }
+        public TableNameAttribute(string tableName)
+        {
+            _TableName = tableName;
         }
     }
 }
