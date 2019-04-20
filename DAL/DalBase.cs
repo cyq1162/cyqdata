@@ -288,7 +288,7 @@ namespace CYQ.Data
             }
             return dic;
         }
-       
+
         protected virtual string GetSchemaSql(string type)
         {
             return "";
@@ -306,10 +306,11 @@ namespace CYQ.Data
                 {
                     if (IsExistsDbNameWithCache(dbName))//新的数据库不存在。。不允许切换
                     {
-                        _con.ConnectionString = GetConnString(dbName);
+                        string newConnString = GetConnString(dbName);
+                        _con.ConnectionString = newConnString;
                         ConnObj = ConnObject.Create(dbName + "Conn");
                         ConnObj.Master.ConnName = dbName + "Conn";
-                        ConnObj.Master.ConnString = _con.ConnectionString;
+                        ConnObj.Master.ConnString = newConnString;
                         return DBResetResult.Yes;
                     }
                     else
