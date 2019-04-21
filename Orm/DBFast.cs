@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
+using CYQ.Data.Tool;
 
 
 namespace CYQ.Data.Orm
@@ -216,12 +217,20 @@ namespace CYQ.Data.Orm
                 items = null;
             }
             string tName = t.Name;
-            object[] names=t.GetCustomAttributes(typeof(TableNameAttribute), false);
+            object[] names = StaticTool.GetAttributes(t);
             if (names != null && names.Length > 0)
             {
-                tName = ((TableNameAttribute)names[0]).TableName;
+                foreach (object item in names)
+                {
+                    if (item is TableNameAttribute)
+                    {
+                        tName = ((TableNameAttribute)item).TableName;
+                        break;
+                    }
+                }
+                
             }
-            else
+            if (string.IsNullOrEmpty(tName))
             {
                 t = null;
                 if (tName.EndsWith(AppConfig.EntitySuffix))
