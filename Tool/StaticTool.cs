@@ -27,40 +27,7 @@ namespace CYQ.Data.Tool
             return StaticTool.ChangeType(value, t);
         }
     }
-    /// <summary>
-    /// 反射工具（带缓存）
-    /// </summary>
-    public static class ReflectTool
-    {
-        /// <summary>
-        /// 获取泛型参数的长度
-        /// </summary>
-        public static int GetGenericArgumentLength(ref Type t)
-        {
-            return StaticTool.GetArgumentLength(ref t);
-        }
-        /// <summary>
-        /// 获取泛型参数的长度（和类型）
-        /// </summary>
-        public static int GetGenericArgumentLength(ref Type t, out Type[] argTypes)
-        {
-            return StaticTool.GetArgumentLength(ref t, out argTypes);
-        }
-        /// <summary>
-        /// 获得反射属性（内部有缓存）
-        /// </summary>
-        public static List<PropertyInfo> GetPropertys(Type t)
-        {
-            return StaticTool.GetPropertyInfo(t);
-        }
-        /// <summary>
-        /// 获取系统类型，若是Nullable类型，则转为基础类型。
-        ///  </summary>
-        public static SysType GetSystemType(ref Type t)
-        {
-            return StaticTool.GetSystemType(ref t);
-        }
-    }
+
     /// <summary>
     /// 静态方法工具类
     /// </summary>
@@ -71,6 +38,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         static MDictionary<string, List<PropertyInfo>> propCache = new MDictionary<string, List<PropertyInfo>>();
         static MDictionary<string, List<FieldInfo>> fieldCache = new MDictionary<string, List<FieldInfo>>();
+        static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
         /// <summary>
         /// 获取属性列表
         /// </summary>
@@ -208,6 +176,32 @@ namespace CYQ.Data.Tool
         }
 
         /// <summary>
+        /// 获取特性列表
+        /// </summary>
+        public static object[] GetAttributes(Type t)
+        {
+            string key = t.GUID.ToString();
+            if (attrCache.ContainsKey(key))
+            {
+                return attrCache[key];
+            }
+            else
+            {
+                try
+                {
+                    object[] items = t.GetCustomAttributes(false);
+                    attrCache.Add(key, items);
+                    return items;
+                }
+                catch (Exception err)
+                {
+                    Log.Write(err, LogType.Error);
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 获取系统类型，若是Nullable类型，则转为基础类型。
         ///  </summary>
         public static SysType GetSystemType(ref Type t)
@@ -250,6 +244,7 @@ namespace CYQ.Data.Tool
                 return SysType.Custom;
             }
         }
+
 
         /// <summary>
         /// 将GUID转成16字节字符串
