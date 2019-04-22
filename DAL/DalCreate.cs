@@ -32,7 +32,7 @@ namespace CYQ.Data
             //ABCConn
             DalBase db = GetDalBaseBy(ConnObject.Create(connNameOrString));
 
-            if (db.ConnObj.Master.ConnName.ToLower() != connNameOrString.ToLower() && connNameOrString.EndsWith("Conn"))//需要切换配置。
+            if (!string.IsNullOrEmpty(connNameOrString) && db.ConnObj.Master.ConnName.ToLower() != connNameOrString.ToLower() && connNameOrString.EndsWith("Conn"))//需要切换配置。
             {
                 //Conn  A库
                 //BConn  xxx 找不到时，找默认库。

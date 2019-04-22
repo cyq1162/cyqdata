@@ -201,11 +201,14 @@ namespace CYQ.Data.Orm
             //action.SetAopState(CYQ.Data.Aop.AopOp.CloseAll);
             return action;
         }
-        private static string GetTableName<T>(out string conn)
+        internal static string GetTableName<T>(out string conn)
+        {
+            Type t = typeof(T);
+            return GetTableName(t, out conn);
+        }
+        internal static string GetTableName(Type t, out string conn)
         {
             conn = string.Empty;
-            Type t = typeof(T);
-
             string[] items = t.FullName.Split('.');
             if (items.Length > 1)
             {
@@ -228,7 +231,7 @@ namespace CYQ.Data.Orm
                         break;
                     }
                 }
-                
+
             }
             if (string.IsNullOrEmpty(tName))
             {

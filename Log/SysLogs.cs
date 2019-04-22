@@ -9,7 +9,7 @@ namespace CYQ.Data
     /// A class for you to Write log to database
     /// <para>日志记录到数据库（需要配置LogConn链接后方有效）</para>
     /// </summary>
-    public partial class SysLogs : Orm.SimpleOrmBase
+    public partial class SysLogs : SimpleOrmBase
     {
 
         public SysLogs()

@@ -209,7 +209,17 @@ namespace CYQ.Data.Orm
         {
             return sob.Fill(where);
         }
-
+        /// <summary>
+        /// 查询1条数据并返回新的一行
+        /// </summary>
+        public MDataRow Get(object where)
+        {
+            if (sob.Fill(where))
+            {
+                return sob.Action.Data.Clone();
+            }
+            return null;
+        }
         /// <summary>
         /// 列表查询
         /// </summary>

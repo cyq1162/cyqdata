@@ -34,6 +34,40 @@ namespace CYQ.Data.Orm
     /// <summary>
     /// 简单ORM基类（纯数据交互功能）
     /// </summary>
+    public class SimpleOrmBase<T> : SimpleOrmBase
+    {
+        public new T Get(object where)
+        {
+            return base.Get<T>(where);
+        }
+        public new List<T> Select()
+        {
+            return base.Select<T>();
+        }
+        public new List<T> Select(int pageIndex, int pageSize)
+        {
+            return base.Select<T>(pageIndex, pageSize);
+        }
+        public new List<T> Select(int topN, string where)
+        {
+            return base.Select<T>(topN, where);
+        }
+        public new List<T> Select(string where)
+        {
+            return base.Select<T>(where);
+        }
+        public new List<T> Select(int pageIndex, int pageSize, string where)
+        {
+            return base.Select<T>(pageIndex, pageSize, where);
+        }
+        public new List<T> Select(int pageIndex, int pageSize, string where, out int count)
+        {
+            return base.Select<T>(pageIndex, pageSize, where, out count);
+        }
+    }
+    /// <summary>
+    /// 简单ORM基类（纯数据交互功能）
+    /// </summary>
     public class SimpleOrmBase : IDisposable
     {
         internal MDataColumn Columns = null;
@@ -142,22 +176,22 @@ namespace CYQ.Data.Orm
         /// </summary>
         private void SetDelayInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
-            if (string.IsNullOrEmpty(conn))
-            {
-                //不设置链接，则忽略（当成普通的实体类）
-                return;
-            }
+            //if (string.IsNullOrEmpty(conn))
+            //{
+            //    //不设置链接，则忽略（当成普通的实体类）
+            //    return;
+            //}
+            if (entityInstance == null) { entityInstance = this; }
             entity = entityInstance;
             typeInfo = entity.GetType();
             try
             {
-                if (string.IsNullOrEmpty(tableName))
+                if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(conn))
                 {
-                    tableName = typeInfo.Name;
-                    if (tableName.EndsWith(AppConfig.EntitySuffix))
-                    {
-                        tableName = tableName.Substring(0, tableName.Length - AppConfig.EntitySuffix.Length);
-                    }
+                    string tName, tConn;
+                    tName = DBFast.GetTableName(typeInfo, out tConn);
+                    if (string.IsNullOrEmpty(tableName)) { tableName = tName; }
+                    if (string.IsNullOrEmpty(tableName)) { conn = tConn; }
                 }
 
                 string key = tableName + StaticTool.GetHashKey(conn);
@@ -384,11 +418,24 @@ namespace CYQ.Data.Orm
             }
             return result;
         }
-
+        /// <summary>
+        /// 查询一条数据并返回一个新的实例
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public virtual T Get<T>(object where)
+        {
+            bool result = Action.Fill(where);
+            if (result)
+            {
+                return Action.Data.ToEntity<T>();
+            }
+            return default(T);
+        }
         /// <summary>
         /// 列表查询
         /// </summary>
-        public List<T> Select<T>()
+        public virtual List<T> Select<T>()
         {
             int count = 0;
             return Select<T>(0, 0, null, out count);
@@ -398,7 +445,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public List<T> Select<T>(string where)
+        public virtual List<T> Select<T>(string where)
         {
             int count = 0;
             return Select<T>(0, 0, where, out count);
@@ -409,17 +456,17 @@ namespace CYQ.Data.Orm
         /// <param name="topN">查询几条</param>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public List<T> Select<T>(int topN, string where)
+        public virtual List<T> Select<T>(int topN, string where)
         {
             int count = 0;
             return Select<T>(0, topN, where, out count);
         }
-        public List<T> Select<T>(int pageIndex, int pageSize)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize)
         {
             int count = 0;
             return Select<T>(pageIndex, pageSize, null, out count);
         }
-        public List<T> Select<T>(int pageIndex, int pageSize, string where)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where)
         {
             int count = 0;
             return Select<T>(pageIndex, pageSize, where, out count);
@@ -431,7 +478,7 @@ namespace CYQ.Data.Orm
         /// <param name="pageSize">每页数量[为0时默认选择所有]</param>
         /// <param name="where"> 查询条件[可附带 order by 语句]</param>
         /// <param name="count">返回的记录总数</param>
-        public List<T> Select<T>(int pageIndex, int pageSize, string where, out int count)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count)
         {
             return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
         }

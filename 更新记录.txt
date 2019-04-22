@@ -784,3 +784,4 @@
 569：StaticTool：反射属性的缓存忽略匿名类型。(2019-04-16)
 570：SqlCreate：MySql对char(36）处理，不能为空，只能为null。(2019-04-19)
 571：ORM：增加TableNameAttribute。(2019-04-20)
+572：ORM：支持跨库检测、增加SimpleOrm<T>和Get<T>方法。(2019-04-22)
