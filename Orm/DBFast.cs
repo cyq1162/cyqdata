@@ -220,7 +220,7 @@ namespace CYQ.Data.Orm
                 items = null;
             }
             string tName = t.Name;
-            object[] names = StaticTool.GetAttributes(t);
+            object[] names = StaticTool.GetAttributes(t, typeof(TableNameAttribute));
             if (names != null && names.Length > 0)
             {
                 foreach (object item in names)
@@ -240,6 +240,20 @@ namespace CYQ.Data.Orm
                 {
                     tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
                 }
+
+            }
+
+            if (string.IsNullOrEmpty(conn))
+            {
+                string fixName;
+                conn = CrossDB.GetConn(tName, out fixName);
+                if (!string.IsNullOrEmpty(fixName))
+                {
+                    tName = fixName;
+                }
+            }
+            else
+            {
                 tName = CrossDB.GetFixName(tName, conn);
             }
             return tName;

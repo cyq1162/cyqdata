@@ -43,9 +43,9 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static object[] GetAttributes(Type t)
+        public static object[] GetAttributes(Type t, Type searchType)
         {
-            return StaticTool.GetAttributes(t);
+            return StaticTool.GetAttributes(t, searchType);
         }
     }
 }

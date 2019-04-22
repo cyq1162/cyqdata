@@ -178,9 +178,9 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取特性列表
         /// </summary>
-        public static object[] GetAttributes(Type t)
+        public static object[] GetAttributes(Type t, Type searchType)
         {
-            string key = t.GUID.ToString();
+            string key = t.GUID.ToString() + (searchType == null ? "" : searchType.Name);
             if (attrCache.ContainsKey(key))
             {
                 return attrCache[key];
@@ -189,7 +189,7 @@ namespace CYQ.Data.Tool
             {
                 try
                 {
-                    object[] items = t.GetCustomAttributes(false);
+                    object[] items = searchType == null ? t.GetCustomAttributes(false) : t.GetCustomAttributes(searchType, true);
                     attrCache.Add(key, items);
                     return items;
                 }

@@ -191,7 +191,7 @@ namespace CYQ.Data.Orm
                     string tName, tConn;
                     tName = DBFast.GetTableName(typeInfo, out tConn);
                     if (string.IsNullOrEmpty(tableName)) { tableName = tName; }
-                    if (string.IsNullOrEmpty(tableName)) { conn = tConn; }
+                    if (string.IsNullOrEmpty(conn)) { conn = tConn; }
                 }
 
                 string key = tableName + StaticTool.GetHashKey(conn);
@@ -347,7 +347,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Update()
         {
-            return Update(null, false);
+            return Update(null, false, null);
         }
         /// <summary>
         ///  更新数据
@@ -355,20 +355,42 @@ namespace CYQ.Data.Orm
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         public bool Update(object where)
         {
-            return Update(where, false);
+            return Update(where, false, null);
+        }
+        /// <param name="onlyUpdateColumns">指定仅更新的列名，多个用逗号分隔</param>
+        /// <returns></returns>
+        public bool Update(object where, string onlyUpdateColumns)
+        {
+            return Update(where, false, onlyUpdateColumns);
+        }
+        internal bool Update(object where, bool autoSetValue)
+        {
+            return Update(where, autoSetValue, null);
         }
         /// <summary>
         ///  更新数据
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Update(object where, bool autoSetValue)
+        internal bool Update(object where, bool autoSetValue, string onlyUpdateColumns)
         {
             if (autoSetValue)
             {
                 Action.UI.GetAll(false);
             }
             GetValueFromEntity();
+            if (!string.IsNullOrEmpty(onlyUpdateColumns))
+            {
+                Action.Data.SetState(0);
+                foreach (string item in onlyUpdateColumns.Split(','))
+                {
+                    MDataCell cell = Action.Data[item];
+                    if (cell != null)
+                    {
+                        cell.State = 2;
+                    }
+                }
+            }
             bool result = Action.Update(where);
             if (autoSetValue)
             {
