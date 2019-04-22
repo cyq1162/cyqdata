@@ -300,10 +300,10 @@ namespace CYQ.Data.Orm
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="insertid">插入主键</param>
-        public bool Insert(InsertOp option, bool insertid)
+        /// <param name="insertID">插入主键</param>
+        public bool Insert(InsertOp option, bool insertID)
         {
-            return Insert(false, option, insertid);
+            return Insert(false, option, insertID);
         }
         /*
         /// <summary>
@@ -323,15 +323,15 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <param name="autoSetValue">自动从控制获取值</param>
         /// <param name="option">插入选项</param>
-        /// <param name="insertid">插入主键</param>
-        internal bool Insert(bool autoSetValue, InsertOp option, bool insertid)
+        /// <param name="insertID">插入主键</param>
+        internal bool Insert(bool autoSetValue, InsertOp option, bool insertID)
         {
             if (autoSetValue)
             {
-                Action.UI.GetAll(!insertid);
+                Action.UI.GetAll(!insertID);
             }
             GetValueFromEntity();
-            Action.AllowInsertID = insertid;
+            Action.AllowInsertID = insertID;
             bool result = Action.Insert(false, option);
             if (autoSetValue || option != InsertOp.None)
             {

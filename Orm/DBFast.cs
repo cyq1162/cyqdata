@@ -138,13 +138,13 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
         /// <returns></returns>
-        public static bool Insert<T>(T t, InsertOp op, bool insertid)
+        public static bool Insert<T>(T t, InsertOp op, bool insertID)
         {
             bool result = false;
             MDataRow row = null;
             using (MAction action = GetMAction<T>())
             {
-                action.AllowInsertID = insertid;
+                action.AllowInsertID = insertID;
                 action.Data.LoadFrom(t, BreakOp.Null);
                 result = action.Insert(op);
                 if (result && op != InsertOp.None)
