@@ -23,7 +23,7 @@ namespace CYQ.Data
     /// LogType
     /// <para>日志类型</para>
     /// </summary>
-    public class LogType
+    public static class LogType
     {
         /// <summary>
         /// 调试

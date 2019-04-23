@@ -5,7 +5,7 @@ using System.Text;
 namespace CYQ.Data.Extension
 {
     /// <summary>
-    /// 实现此接口，来扩展自定义IField语法
+    /// 实现此接口，来扩展自定义IField语法(已过期)
     /// </summary>
     public interface IField
     {

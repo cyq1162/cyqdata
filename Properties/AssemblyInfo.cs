@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("路过秋天 （2019-04-23）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 V5 版本")]
-[assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2020")]
+[assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2110")]
 [assembly: AssemblyTrademark("CYQ.Data")]
 [assembly: AssemblyCulture("")]
 
