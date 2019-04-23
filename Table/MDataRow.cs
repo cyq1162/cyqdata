@@ -1369,7 +1369,10 @@ namespace CYQ.Data.Table
                 {
                     foreach (PropertyInfo p in pis)//±ιΐϊΚµΜε
                     {
-                        SetValueToPropertyOrField(ref obj, row, p, null, out cellName);
+                        if (p.CanWrite)
+                        {
+                            SetValueToPropertyOrField(ref obj, row, p, null, out cellName);
+                        }
                     }
                 }
                 else
