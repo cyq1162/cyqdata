@@ -785,3 +785,4 @@
 570：SqlCreate：MySql对char(36）处理，不能为空，只能为null。(2019-04-19)
 571：ORM：增加TableNameAttribute。(2019-04-20)
 572：ORM：支持跨库检测、增加SimpleOrm<T>和Get<T>方法。(2019-04-22)
+573：MDataRow：Json转实体时，过滤掉到没有Set属性的参数(2019-04-23)

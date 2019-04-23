@@ -161,12 +161,6 @@ namespace CYQ.Data.Cache
                         type = SerializedType.CompressedObjectJson;
                     }
                 }
-
-
-
-
-
-
             }
             return bytes;
         }
