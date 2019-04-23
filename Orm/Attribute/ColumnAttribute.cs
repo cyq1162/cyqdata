@@ -129,9 +129,28 @@ namespace CYQ.Data.Orm
     }
 
     /// <summary>
-    /// 数据库：表名或字段名称
+    /// 数据库：字段名称
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    public class ColumnNameAttribute : Attribute
+    {
+        private string _ColumnName;
+
+        public string ColumneName
+        {
+            get { return _ColumnName; }
+            set { _ColumnName = value; }
+        }
+        public ColumnNameAttribute(string columnName)
+        {
+            _ColumnName = columnName;
+        }
+    }
+
+    /// <summary>
+    /// 数据库：表名
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class TableNameAttribute : Attribute
     {
         private string _TableName;
