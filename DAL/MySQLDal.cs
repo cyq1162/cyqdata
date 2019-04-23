@@ -84,7 +84,7 @@ namespace CYQ.Data
         {
             if (type == "P")
             {
-                return "select ROUTINE_NAME as name,'P' as xtype from information_schema.ROUTINES where ROUTINE_SCHEMA='" + DataBase + "'";
+                return "select ROUTINE_NAME as TableName,'P' as Description from information_schema.ROUTINES where ROUTINE_SCHEMA='" + DataBase + "'";
             }
             else
             {
