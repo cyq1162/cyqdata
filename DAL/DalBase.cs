@@ -607,8 +607,8 @@ namespace CYQ.Data
             //}
             //else
             //{
-            //取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
-            if (_com != null && _com.Parameters != null && _com.Parameters.Count > 0)
+            //上面if代码被注释了，下面代码忘了加!isProc判断，现补上。 取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
+            if (!isProc && _com != null && _com.Parameters != null && _com.Parameters.Count > 0)
             {
                 bool needToReplace = (DataBaseType == DalType.Oracle || DataBaseType == DalType.MySql) && _com.CommandText.Contains("@");
                 string paraName;
@@ -626,7 +626,7 @@ namespace CYQ.Data
                                 break;
                         }
                     }
-                    if (!isProc && _com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
+                    if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
                     {
                         _com.Parameters.RemoveAt(i);
                         i--;
