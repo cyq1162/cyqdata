@@ -8,11 +8,12 @@ namespace CYQ.Data.SQL
 {
     internal partial class DBSchema
     {
-        private static Dictionary<int, DBInfo> _DBScheams = new Dictionary<int, DBInfo>();
+        private static Dictionary<int, DBInfo> _DBScheams;
         public static Dictionary<int, DBInfo> DBScheams
         {
             get
             {
+                InitDBSchemasForCache(null);
                 return _DBScheams;
             }
         }
@@ -88,25 +89,39 @@ namespace CYQ.Data.SQL
         {
             _DBScheams.Clear();
         }
+        private static readonly object oo = new object();
         /// <summary>
         /// 预先把结构缓存起来。
         /// </summary>
         /// <param name="para"></param>
         public static void InitDBSchemasForCache(object para)
         {
-            List<string> connNames = new List<string>();
-            foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
+            if (_DBScheams == null)
             {
-                if (!string.IsNullOrEmpty(item.Name) && item.Name.ToLower().EndsWith("conn"))
+                lock (oo)
                 {
-                    connNames.Add(item.Name);
-                }
-            }
-            if (connNames.Count > 0)
-            {
-                foreach (string item in connNames)
-                {
-                    GetSchema(item);
+                    if (_DBScheams == null)
+                    {
+                        List<string> connNames = new List<string>();
+                        foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
+                        {
+                            if (!string.IsNullOrEmpty(item.Name) && item.Name.ToLower().EndsWith("conn"))
+                            {
+                                connNames.Add(item.Name);
+                            }
+                        }
+                        if (_DBScheams == null)
+                        {
+                            _DBScheams = new Dictionary<int, DBInfo>(connNames.Count);
+                        }
+                        if (connNames.Count > 0)
+                        {
+                            foreach (string item in connNames)
+                            {
+                                GetSchema(item);
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -626,7 +626,7 @@ namespace CYQ.Data
                                 break;
                         }
                     }
-                    if (_com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
+                    if (!isProc && _com.CommandText.IndexOf(Pre + paraName, StringComparison.OrdinalIgnoreCase) == -1)
                     {
                         _com.Parameters.RemoveAt(i);
                         i--;
