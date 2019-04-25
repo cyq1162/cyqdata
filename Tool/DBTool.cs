@@ -135,7 +135,7 @@ namespace CYQ.Data.Tool
                     return null;
                 }
             }
-            return TableSchema.GetTables(conn, true);//内部有缓存
+            return TableSchema.GetTables(conn);//内部有缓存
         }
         #endregion
 

@@ -23,7 +23,7 @@ namespace CYQ.Data.SQL
     {
         static readonly object ot = new object();
 
-        internal static Dictionary<string, string> GetSchemas(string conn, string type, bool withDBSchema)
+        internal static Dictionary<string, string> GetSchemas(string conn, string type)
         {
             ConnBean connBean = ConnBean.Create(conn);
             int hash = connBean.GetHashCode();
@@ -98,26 +98,21 @@ namespace CYQ.Data.SQL
             if (!schemaDic.ContainsKey(hash) && tables != null && tables.Count > 0)//读不到表不缓存。
             {
                 schemaDic.Add(hash, tables);
-                if (withDBSchema)
-                {
-                    DBSchema.GetSchema(conn);
-                }
-
             }
             #endregion
             return tables;
         }
-        public static Dictionary<string, string> GetTables(string conn, bool withDBSchema)
+        public static Dictionary<string, string> GetTables(string conn)
         {
-            return GetSchemas(conn, "U", withDBSchema);
+            return GetSchemas(conn, "U");
         }
-        public static Dictionary<string, string> GetViews(string conn, bool withDBSchema)
+        public static Dictionary<string, string> GetViews(string conn)
         {
-            return GetSchemas(conn, "V", withDBSchema);
+            return GetSchemas(conn, "V");
         }
-        public static Dictionary<string, string> GetProcs(string conn, bool withDBSchema)
+        public static Dictionary<string, string> GetProcs(string conn)
         {
-            return GetSchemas(conn, "P", withDBSchema);
+            return GetSchemas(conn, "P");
         }
         /// <summary>
         /// 全局表名缓存（只缓存表名和表名的描述）

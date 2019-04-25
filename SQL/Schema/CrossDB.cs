@@ -137,18 +137,30 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static TableInfo GetTableInfoByName(string name, string conn)
         {
-            if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
+            if (!string.IsNullOrEmpty(name))
             {
                 int tableHash = TableSchema.GetTableHash(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
-                    if (DBSchema.DBScheams.ContainsKey(dbHash))
+                    if (DBSchema.DBScheams.Count > 0 && DBSchema.DBScheams.ContainsKey(dbHash))
                     {
                         TableInfo info = DBSchema.DBScheams[dbHash].GetTableInfo(tableHash);
                         if (info != null)
                         {
                             return info;
+                        }
+                    }
+                    else
+                    {
+                        DBInfo dbInfo = DBSchema.GetSchema(conn);
+                        if (dbInfo != null)
+                        {
+                            TableInfo info = dbInfo.GetTableInfo(tableHash);
+                            if (info != null)
+                            {
+                                return info;
+                            }
                         }
                     }
                 }
@@ -205,7 +217,7 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
                 int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type, false);
+                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
                 if (dic != null && dic.ContainsKey(name))
                 {
                     dic.Remove(name);
@@ -237,7 +249,7 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
                 int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type, false);
+                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
                 if (dic != null && !dic.ContainsKey(name))
                 {
                     dic.Add(name, name);

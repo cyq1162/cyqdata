@@ -8,12 +8,11 @@ namespace CYQ.Data.SQL
 {
     internal partial class DBSchema
     {
-        private static Dictionary<int, DBInfo> _DBScheams;
+        private static Dictionary<int, DBInfo> _DBScheams = new Dictionary<int, DBInfo>();
         public static Dictionary<int, DBInfo> DBScheams
         {
             get
             {
-                InitDBSchemasForCache(null);
                 return _DBScheams;
             }
         }
@@ -50,7 +49,7 @@ namespace CYQ.Data.SQL
             info.ConnName = dal.ConnObj.Master.ConnName;
             info.ConnString = dal.ConnObj.Master.ConnString;
             info.DataBaseName = dal.DataBase;
-            Dictionary<string, string> tables = TableSchema.GetTables(conn, false);
+            Dictionary<string, string> tables = TableSchema.GetTables(conn);
             if (tables != null && tables.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
@@ -61,7 +60,7 @@ namespace CYQ.Data.SQL
                 info.Tables = dic;
             }
 
-            Dictionary<string, string> views = TableSchema.GetViews(conn, false);
+            Dictionary<string, string> views = TableSchema.GetViews(conn);
             if (views != null && views.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
@@ -71,7 +70,7 @@ namespace CYQ.Data.SQL
                 }
                 info.Views = dic;
             }
-            Dictionary<string, string> procs = TableSchema.GetProcs(conn, false);
+            Dictionary<string, string> procs = TableSchema.GetProcs(conn);
             if (procs != null && procs.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
@@ -96,11 +95,11 @@ namespace CYQ.Data.SQL
         /// <param name="para"></param>
         public static void InitDBSchemasForCache(object para)
         {
-            if (_DBScheams == null)
+            if (_DBScheams.Count == 0)
             {
                 lock (oo)
                 {
-                    if (_DBScheams == null)
+                    if (_DBScheams.Count == 0)
                     {
                         List<string> connNames = new List<string>();
                         foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
@@ -109,10 +108,6 @@ namespace CYQ.Data.SQL
                             {
                                 connNames.Add(item.Name);
                             }
-                        }
-                        if (_DBScheams == null)
-                        {
-                            _DBScheams = new Dictionary<int, DBInfo>(connNames.Count);
                         }
                         if (connNames.Count > 0)
                         {
