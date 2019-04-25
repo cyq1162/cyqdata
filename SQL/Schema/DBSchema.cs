@@ -19,7 +19,7 @@ namespace CYQ.Data.SQL
         }
         private static readonly object o = new object();
         /// <summary>
-        /// 获取数据库的“表、视图、存储过程”名称列表。
+        /// 获取(并缓存)数据库的“表、视图、存储过程”名称列表。
         /// </summary>
         public static DBInfo GetSchema(string conn)
         {

@@ -97,6 +97,8 @@ namespace CYQ.Data.SQL
             if (!schemaDic.ContainsKey(hash) && tables != null && tables.Count > 0)//读不到表不缓存。
             {
                 schemaDic.Add(hash, tables);
+                DBSchema.GetSchema(conn);
+
             }
             #endregion
             return tables;
