@@ -135,7 +135,7 @@ namespace CYQ.Data.Tool
                     return null;
                 }
             }
-            return TableSchema.GetTables(conn);//内部有缓存
+            return TableSchema.GetTables(conn, true);//内部有缓存
         }
         #endregion
 
@@ -543,7 +543,7 @@ namespace CYQ.Data.Tool
                 return ColumnSchema.GetColumns(tableName, conn);
 
             }
-            catch(Exception err)
+            catch (Exception err)
             {
                 errInfo = err.Message;
                 return null;

@@ -205,7 +205,7 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
                 int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
+                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type, false);
                 if (dic != null && dic.ContainsKey(name))
                 {
                     dic.Remove(name);
@@ -237,7 +237,7 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
                 int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
+                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type, false);
                 if (dic != null && !dic.ContainsKey(name))
                 {
                     dic.Add(name, name);

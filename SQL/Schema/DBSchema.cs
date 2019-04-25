@@ -50,7 +50,7 @@ namespace CYQ.Data.SQL
             info.ConnName = dal.ConnObj.Master.ConnName;
             info.ConnString = dal.ConnObj.Master.ConnString;
             info.DataBaseName = dal.DataBase;
-            Dictionary<string, string> tables = TableSchema.GetTables(conn);
+            Dictionary<string, string> tables = TableSchema.GetTables(conn, false);
             if (tables != null && tables.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
@@ -61,7 +61,7 @@ namespace CYQ.Data.SQL
                 info.Tables = dic;
             }
 
-            Dictionary<string, string> views = TableSchema.GetViews(conn);
+            Dictionary<string, string> views = TableSchema.GetViews(conn, false);
             if (views != null && views.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
@@ -71,7 +71,7 @@ namespace CYQ.Data.SQL
                 }
                 info.Views = dic;
             }
-            Dictionary<string, string> procs = TableSchema.GetProcs(conn);
+            Dictionary<string, string> procs = TableSchema.GetProcs(conn, false);
             if (procs != null && procs.Count > 0)
             {
                 Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
