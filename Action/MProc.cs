@@ -143,6 +143,17 @@ namespace CYQ.Data
                 return string.Empty;
             }
         }
+        internal string ConnName
+        {
+            get
+            {
+                if (dalHelper != null && dalHelper.Con != null)
+                {
+                    return dalHelper.UsingConnBean.ConnName;
+                }
+                return string.Empty;
+            }
+        }
         /// <summary>
         /// Command Timeout[seconds]
         ///<para>命令超时设置[单位秒]</para>
@@ -201,7 +212,7 @@ namespace CYQ.Data
                     else if (procNameOrSql is String)
                     {
                         string fixName;
-                        conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName);
+                        conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName, ConnName);
                     }
                 }
                 _procName = procNameOrSql.ToString().Trim();

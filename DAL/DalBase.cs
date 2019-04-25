@@ -538,7 +538,10 @@ namespace CYQ.Data
                 }
             }
             para.Direction = direction;
-
+            if (para.DbType == DbType.String && para.Value != null)
+            {
+                para.Value = Convert.ToString(para.Value);
+            }
             Com.Parameters.Add(para);
             return true;
         }

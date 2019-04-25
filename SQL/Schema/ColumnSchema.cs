@@ -201,16 +201,10 @@ namespace CYQ.Data.SQL
             {
                 return CacheManage.LocalInstance.Get<MDataColumn>(key).Clone();
             }
-            if (string.IsNullOrEmpty(conn))
-            {
-                string fixName;
-                conn = CrossDB.GetConn(tableName, out fixName);
-                tableName = fixName;
-            }
-            else
-            {
-                tableName = Convert.ToString(SqlCreate.SqlToViewSql(tableName));
-            }
+            string fixName;
+            conn = CrossDB.GetConn(tableName, out fixName, conn);
+            tableName = fixName;
+
             MDataColumn mdcs = null;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {

@@ -42,7 +42,7 @@ namespace CYQ.Data.SQL
         /// </summary>
         /// <param name="nameOrSql">表名、视图名、存储过程名</param>
         /// <returns></returns>
-        public static string GetConn(string nameOrSql, out string fixName)
+        public static string GetConn(string nameOrSql, out string fixName, string priorityConn)
         {
             string firstTableName = null;
             string conn = null;
@@ -87,7 +87,7 @@ namespace CYQ.Data.SQL
             }
             if (!string.IsNullOrEmpty(firstTableName))
             {
-                TableInfo info = GetTableInfoByName(firstTableName);
+                TableInfo info = GetTableInfoByName(firstTableName, priorityConn);
                 if (info != null && info.Parent != null)
                 {
                     if (nameOrSql == firstTableName)

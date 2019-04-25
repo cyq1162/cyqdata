@@ -43,7 +43,7 @@ namespace CYQ.Data
         #region 全局变量
 
         internal DalBase dalHelper;//数据操作
-        
+
         private InsertOp _option = InsertOp.ID;
         private NoSqlAction _noSqlAction = null;
         private MDataRow _Data;//表示一行
@@ -89,6 +89,17 @@ namespace CYQ.Data
                 if (dalHelper != null && dalHelper.Con != null)
                 {
                     return dalHelper.UsingConnBean.ConnString;
+                }
+                return string.Empty;
+            }
+        }
+        internal string ConnName
+        {
+            get
+            {
+                if (dalHelper != null && dalHelper.Con != null)
+                {
+                    return dalHelper.UsingConnBean.ConnName;
                 }
                 return string.Empty;
             }
@@ -315,8 +326,9 @@ namespace CYQ.Data
                 else if (tableObj is String)
                 {
                     string fixName;
-                    conn = CrossDB.GetConn(tableName, out fixName);
+                    conn = CrossDB.GetConn(tableName, out fixName, ConnName);
                     tableObj = fixName;
+
                 }
             }
             //string dbName = null;

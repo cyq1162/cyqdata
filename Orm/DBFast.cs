@@ -243,19 +243,13 @@ namespace CYQ.Data.Orm
 
             }
 
-            if (string.IsNullOrEmpty(conn))
+            string fixName;
+            conn = CrossDB.GetConn(tName, out fixName, conn);
+            if (!string.IsNullOrEmpty(fixName))
             {
-                string fixName;
-                conn = CrossDB.GetConn(tName, out fixName);
-                if (!string.IsNullOrEmpty(fixName))
-                {
-                    tName = fixName;
-                }
+                tName = fixName;
             }
-            else
-            {
-                tName = CrossDB.GetFixName(tName, conn);
-            }
+
             return tName;
         }
     }
