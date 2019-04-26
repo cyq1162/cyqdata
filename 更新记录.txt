@@ -787,3 +787,4 @@
 572：ORM：支持跨库检测、增加SimpleOrm<T>和Get<T>方法。(2019-04-22)
 573：MDataRow：Json转实体时，过滤掉到没有Set属性的参数(2019-04-23)
 574：DalBase：修正存储过程参数被移除的问题(2019-04-24)
+575：DBTool 开放 DataBases 属性和GetDBInfo方法(2019-04-26)

@@ -511,9 +511,13 @@ namespace CYQ.Data.Cache
         {
             return GetBaseKey(para, null);
         }
-        internal static string GetBaseKey(string tableName, string connString)
+        internal static string GetBaseKey(string tableName, string conn)
         {
-            return "AutoCache:" + ConnBean.GetHashCode(connString) + "." + tableName;
+            if (string.IsNullOrEmpty(conn))
+            {
+                conn = CrossDB.GetConn(tableName, out tableName, conn);
+            }
+            return "AutoCache:" + ConnBean.GetHashCode(conn) + "." + tableName;
         }
 
         private static string GetBaseKey(AopInfo para, string tableName)

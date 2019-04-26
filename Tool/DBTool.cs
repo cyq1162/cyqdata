@@ -12,7 +12,7 @@ namespace CYQ.Data.Tool
     /// <summary>
     /// 数据库工具类[都是静态方法]
     /// </summary>
-    public static class DBTool
+    public static partial class DBTool
     {
 
         private static StringBuilder _ErrorMsg = new StringBuilder();
@@ -661,6 +661,28 @@ namespace CYQ.Data.Tool
             Cache.CacheManage.LocalInstance.Remove(key);
             key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, conn);
             Cache.AutoCache.ReadyForRemove(key);
+        }
+    }
+    public static partial class DBTool
+    {
+        /// <summary>
+        /// 获取配置项中所有的数据库列表
+        /// </summary>
+        public static Dictionary<int, DBInfo> DataBases
+        {
+            get
+            {
+                return DBSchema.DBScheams;
+
+            }
+        }
+        /// <summary>
+        /// 获取单个数据库信息
+        /// </summary>
+        /// <returns></returns>
+        public static DBInfo GetDBInfo(string conn)
+        {
+            return DBSchema.GetSchema(conn);
         }
     }
 }

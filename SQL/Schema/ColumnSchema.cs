@@ -681,6 +681,10 @@ namespace CYQ.Data.SQL
             //{
             //    key = SqlFormat.NotKeyword(key);
             //}
+            if (string.IsNullOrEmpty(conn))
+            {
+                conn = CrossDB.GetConn(tableName, out tableName, conn);
+            }
             return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableSchema.GetTableHash(tableName);
         }
         private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)

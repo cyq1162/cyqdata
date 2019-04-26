@@ -157,6 +157,7 @@
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
+    <Compile Include="Tool\DBEntity\DBEntity.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />

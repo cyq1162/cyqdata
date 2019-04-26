@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CYQ.Data.Tool;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

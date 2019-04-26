@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CYQ.Data.Tool;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.Common;
@@ -13,6 +14,10 @@ namespace CYQ.Data.SQL
         {
             get
             {
+                if (_DBScheams.Count == 0)
+                {
+                    InitDBSchemasForCache(null);
+                }
                 return _DBScheams;
             }
         }
@@ -38,6 +43,10 @@ namespace CYQ.Data.SQL
                         return dbSchema;
                     }
                 }
+            }
+            if (_DBScheams.ContainsKey(hash))
+            {
+                return _DBScheams[hash];
             }
             return null;
         }
@@ -132,86 +141,5 @@ namespace CYQ.Data.SQL
         public string Conn;
         public bool IsGetColumn;
     }
-    internal class DBInfo
-    {
-        public string ConnName;
-        public string ConnString;
-        public string DataBaseName;
-        public Dictionary<int, TableInfo> Tables;
-        public Dictionary<int, TableInfo> Views;
-        public Dictionary<int, TableInfo> Procs;
-        public TableInfo GetTableInfo(int tableHash)
-        {
-            return GetTableInfo(tableHash, null);
-        }
-        public TableInfo GetTableInfo(int tableHash, string type)
-        {
-            if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
-            {
-                return Tables[tableHash];
-            }
-            if (Views != null && (type == null || type == "V") && Views.ContainsKey(tableHash))
-            {
-                return Views[tableHash];
-            }
-            if (Procs != null && (type == null || type == "P") && Procs.ContainsKey(tableHash))
-            {
-                return Procs[tableHash];
-            }
-            return null;
-        }
-        public bool Remove(int tableHash, string type)
-        {
-            if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
-            {
-                return Tables.Remove(tableHash);
-            }
-            if (Views != null && (type == null || type == "V") && Views.ContainsKey(tableHash))
-            {
-                return Views.Remove(tableHash);
-            }
-            if (Procs != null && (type == null || type == "P") && Procs.ContainsKey(tableHash))
-            {
-                return Procs.Remove(tableHash);
-            }
-            return false;
-        }
-        public bool Add(int tableHash, string type, string name)
-        {
-            try
-            {
-                if (Tables != null && (type == null || type == "U") && !Tables.ContainsKey(tableHash))
-                {
-                    Tables.Add(tableHash, new TableInfo(name, type, null, this));
-                }
-                if (Views != null && (type == null || type == "V") && !Views.ContainsKey(tableHash))
-                {
-                    Views.Add(tableHash, new TableInfo(name, type, null, this));
-                }
-                if (Procs != null && (type == null || type == "P") && !Procs.ContainsKey(tableHash))
-                {
-                    Procs.Add(tableHash, new TableInfo(name, type, null, this));
-                }
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-    }
-    internal class TableInfo
-    {
-        public TableInfo(string name, string type, string description, DBInfo parent)
-        {
-            this.Name = name;
-            this.Type = type;
-            this.Description = description;
-            this.Parent = parent;
-        }
-        public string Name;
-        public string Type;
-        public string Description;
-        public DBInfo Parent;
-    }
+
 }

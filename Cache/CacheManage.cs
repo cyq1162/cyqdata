@@ -185,7 +185,7 @@ namespace CYQ.Data.Cache
         /// </summary>
         public static string GetKey(CacheKeyType ckt, string tableName)
         {
-            return GetKey(ckt, tableName, AppConfig.DB.DefaultConn);
+            return GetKey(ckt, tableName, null);
         }
         /// <summary>
         /// 获取系统内部缓存Key
@@ -195,9 +195,9 @@ namespace CYQ.Data.Cache
             switch (ckt)
             {
                 case CacheKeyType.Schema:
-                    return ColumnSchema.GetSchemaKey(tableName, AppConfig.GetConn(conn));
+                    return ColumnSchema.GetSchemaKey(tableName, conn);
                 case CacheKeyType.AutoCache:
-                    return AutoCache.GetBaseKey(tableName, AppConfig.GetConn(conn));
+                    return AutoCache.GetBaseKey(tableName, conn);
             }
             return string.Empty;
         }
