@@ -1241,15 +1241,13 @@ namespace CYQ.Data.Tool
             Type t = typeof(T);
             if (t.FullName.StartsWith("System.Collections."))
             {
-                Dictionary<string, string> dic = Split(json);
+                Type[] ts;
+                int argLength = StaticTool.GetArgumentLength(ref t, out ts);
                 #region Dictionary
-                if (t.FullName.Contains("Dictionary"))
+                if (t.FullName.Contains("Dictionary") && argLength == 2 && ts[0].Name == "String" && ts[1].Name == "String")
                 {
-                    Type[] ts;
-                    if (StaticTool.GetArgumentLength(ref t, out ts) == 2 && ts[0].Name == "String" && ts[1].Name == "String")
-                    {
-                        return dic as T;
-                    }
+                    Dictionary<string, string> dic = Split(json);
+                    return dic as T;
                 }
 
                 T objT = Activator.CreateInstance<T>();
@@ -1269,9 +1267,27 @@ namespace CYQ.Data.Tool
                 }
                 if (mi != null)
                 {
-                    foreach (KeyValuePair<string, string> kv in dic)
+                    if (argLength == 1)
                     {
-                        mi.Invoke(objT, new object[] { kv.Key, UnEscape(kv.Value, op) });
+                        List<Dictionary<string, string>> items = JsonSplit.Split(json);
+                        if (items != null && items.Count > 0)
+                        {
+                            foreach (Dictionary<string, string> item in items)
+                            {
+                                mi.Invoke(objT, new object[] { MDataRow.CreateFrom(item).ToEntity(ts[0]) });
+                            }
+                        }
+                    }
+                    else if (argLength == 2)
+                    {
+                        Dictionary<string, string> dic = Split(json);
+                        if (dic != null && dic.Count > 0)
+                        {
+                            foreach (KeyValuePair<string, string> kv in dic)
+                            {
+                                mi.Invoke(objT, new object[] { kv.Key, UnEscape(kv.Value, op) });
+                            }
+                        }
                     }
                     return objT;
                 }

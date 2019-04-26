@@ -489,9 +489,9 @@ namespace CYQ.Data.Tool
             if (!string.IsNullOrEmpty(jsonArray))
             {
                 jsonArray = jsonArray.Trim(' ', '[', ']');//["a,","bbb,,"]
+                List<string> list = new List<string>();
                 if (jsonArray.Length > 0)
                 {
-                    List<string> list = new List<string>();
                     string[] items = jsonArray.Split(',');
                     string objStr = string.Empty;
                     foreach (string item in items)
@@ -514,9 +514,8 @@ namespace CYQ.Data.Tool
                             objStr = string.Empty;
                         }
                     }
-                    return list;
                 }
-
+                return list;
 
             }
             return null;
