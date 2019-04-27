@@ -147,7 +147,7 @@ namespace CYQ.Data.SQL
             {
                 //分成两半
                 string partA = "", partB = "";//分成两半是为了兼容子查询语句
-                int fromIndex = tableName.Replace("\n", " ").Replace("\r", " ").LastIndexOf(" from ");
+                int fromIndex = tableName.Replace("\n", " ").Replace("\r", " ").ToLower().LastIndexOf(" from ");
                 if (fromIndex > -1)
                 {
                     partA = tableName.Substring(0, fromIndex);
