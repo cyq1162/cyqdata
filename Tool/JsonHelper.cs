@@ -234,21 +234,30 @@ namespace CYQ.Data.Tool
             {
                 string v = null;
                 Type t = value.GetType();
-                int groupID = DataType.GetGroup(DataType.GetSqlType(t));
-                bool noQuotes = groupID == 1 || groupID == 3;
-                if (groupID == 999)
+                if (t.IsEnum)
                 {
-                    v = ToJson(value);
+                    value = (int)value;
+                    Add(name, value.ToString(),true);
                 }
                 else
                 {
-                    v = Convert.ToString(value);
-                    if (groupID == 3)
+                    int groupID = DataType.GetGroup(DataType.GetSqlType(t));
+                    bool noQuotes = groupID == 1 || groupID == 3;
+                    if (groupID == 999)
                     {
-                        v = v.ToLower();
+                        v = ToJson(value);
                     }
+                    else
+                    {
+                        v = Convert.ToString(value);
+                        if (groupID == 3)
+                        {
+                            v = v.ToLower();
+                        }
+                    }
+
+                    Add(name, v, noQuotes);
                 }
-                Add(name, v, noQuotes);
             }
             else
             {

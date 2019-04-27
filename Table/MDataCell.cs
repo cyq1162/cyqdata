@@ -250,7 +250,16 @@ namespace CYQ.Data.Table
                             break;
                     }
                 }
-                if (value.GetType() != convertionType)
+                Type valueType = value.GetType();
+                if (valueType.IsEnum && groupID == 1)
+                {
+                    if (convertionType.Name.StartsWith("Int"))
+                    {
+                        return (int)value;
+                    }
+                    return Convert.ChangeType((int)value, convertionType);
+                }
+                if (valueType != convertionType)
                 {
                     #region уш╣Ч
                     switch (groupID)

@@ -89,7 +89,7 @@ namespace CYQ.Data.SQL
             string name = type.Name.ToString();
             if (type.IsEnum)
             {
-                name = "string";
+                name = "string";//int
             }
             else if (type.IsGenericType)
             {

@@ -308,9 +308,16 @@ namespace CYQ.Data.Tool
                 {
                     return new Guid(strValue);
                 }
-                else if (t.Name.StartsWith("Int") && strValue.IndexOf('.') > -1)
+                else if (t.Name.StartsWith("Int"))
                 {
-                    strValue = strValue.Split('.')[0];
+                    if (strValue.IndexOf('.') > -1)
+                    {
+                        strValue = strValue.Split('.')[0];
+                    }
+                    else if (value.GetType().IsEnum)
+                    {
+                        return (int)value;
+                    }
                 }
                 else if (t.Name == "Boolean")
                 {
@@ -335,6 +342,8 @@ namespace CYQ.Data.Tool
             }
             else
             {
+                //Type valueType = value.GetType();
+                //if(valueType.IsEnum && t.is)
                 if (value.GetType().FullName != t.FullName)
                 {
                     switch (GetSystemType(ref t))
