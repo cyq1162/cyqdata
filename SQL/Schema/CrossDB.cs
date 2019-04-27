@@ -47,8 +47,8 @@ namespace CYQ.Data.SQL
         {
             string firstTableName = null;
             string conn = null;
+            nameOrSql = nameOrSql.Trim();
             fixName = nameOrSql;
-            int index = nameOrSql.LastIndexOf(')');
             if (nameOrSql.IndexOf(' ') == -1)//单表。
             {
                 #region 单表
@@ -64,26 +64,30 @@ namespace CYQ.Data.SQL
                 }
                 #endregion
             }
-            else if (index == -1)
+            else
             {
-                //sql 语句
-                firstTableName = GetFirstTableNameFromSql(nameOrSql);
-                fixName = SqlCreate.SqlToViewSql(nameOrSql);//Sql修正为视图
-            }
-            else// 视图
-            {
-                string viewSQL = nameOrSql;
-                string startSql = viewSQL.Substring(0, index + 1);//a部分
-                viewSQL = viewSQL.Substring(index + 1).Trim();//b部分。ddd.v_xxx
-                if (viewSQL.Contains(".") && !viewSQL.Contains(" "))//修改原对像
+                if (nameOrSql[0] == '(')  // 视图
                 {
-                    string[] items = viewSQL.Split('.');
-                    fixName = startSql + " " + items[items.Length - 1];
-                    conn = items[0] + "Conn";
+                    int index = nameOrSql.LastIndexOf(')');
+                    string viewSQL = nameOrSql;
+                    string startSql = viewSQL.Substring(0, index + 1);//a部分
+                    viewSQL = viewSQL.Substring(index + 1).Trim();//b部分。ddd.v_xxx
+                    if (viewSQL.Contains(".") && !viewSQL.Contains(" "))//修改原对像
+                    {
+                        string[] items = viewSQL.Split('.');
+                        fixName = startSql + " " + items[items.Length - 1];
+                        conn = items[0] + "Conn";
+                    }
+                    else
+                    {
+                        firstTableName = GetFirstTableNameFromSql(startSql);
+                    }
                 }
                 else
                 {
-                    firstTableName = GetFirstTableNameFromSql(startSql);
+                    //sql 语句
+                    firstTableName = GetFirstTableNameFromSql(nameOrSql);
+                    fixName = SqlCreate.SqlToViewSql(nameOrSql);//Sql修正为视图
                 }
             }
             if (!string.IsNullOrEmpty(firstTableName))
@@ -283,7 +287,18 @@ namespace CYQ.Data.SQL
                         }
                         else if (startFrom)
                         {
-                            if (item[0] == '(' || item.IndexOf('.') > -1) { startFrom = false; }
+                            if (item[0] == '(')
+                            {
+                                startFrom = false;
+                            }
+                            else if (item.IndexOf('.') > -1)
+                            {
+                                if (item.ToLower().StartsWith("dbo."))
+                                {
+                                    return item.Substring(4);
+                                }
+                                startFrom = false;
+                            }
                             else
                             {
                                 return item;

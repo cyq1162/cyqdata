@@ -876,7 +876,7 @@ namespace CYQ.Data.SQL
             {
                 sqlObj = "(" + sqlObj + ") v";
             }
-            return sqlObj;
+            return sqlObj.Trim();
         }
     }
 }

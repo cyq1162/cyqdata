@@ -141,26 +141,37 @@ namespace CYQ.Data.SQL
             if (tableName[0] == '(' && tableName.IndexOf(')') > -1)
             {
                 int end = tableName.LastIndexOf(')');
-                string sql = tableName.Substring(1, end - 1);//.Replace("\r\n", "\n").Replace('\n', ' '); 保留注释的换行。
-                string[] keys = new string[] { " where ", "\nwhere ", "\nwhere\r", "\nwhere\n" };
-                foreach (string key in keys)
+                tableName = tableName.Substring(1, end - 1);//.Replace("\r\n", "\n").Replace('\n', ' '); 保留注释的换行。
+            }
+            if (tableName.Contains(" "))
+            {
+                //分成两半
+                string partA = "", partB = "";//分成两半是为了兼容子查询语句
+                int fromIndex = tableName.Replace("\n", " ").Replace("\r", " ").LastIndexOf(" from ");
+                if (fromIndex > -1)
                 {
-                    if (sql.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                    partA = tableName.Substring(0, fromIndex);
+                    partB = tableName.Substring(fromIndex);
+                    string[] keys = new string[] { " where ", "\nwhere ", "\nwhere\r", "\nwhere\n" };
+                    foreach (string key in keys)
                     {
-                        return Regex.Replace(sql, key, " where 1=2 and ", RegexOptions.IgnoreCase);
+                        if (partB.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                        {
+                            return partA + Regex.Replace(partB, key, " where 1=2 and ", RegexOptions.IgnoreCase);
+                        }
+                    }
+                    //检测是否有group by
+                    keys = new string[] { " group by", "\ngroup by" };
+                    foreach (string key in keys)
+                    {
+                        if (partB.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                        {
+                            string newKey = key.Replace("group", "where 1=2 group");
+                            return partA + Regex.Replace(partB, key, newKey, RegexOptions.IgnoreCase);
+                        }
                     }
                 }
-                //检测是否有group by
-                keys = new string[] { " group by", "\ngroup by" };
-                foreach (string key in keys)
-                {
-                    if (sql.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
-                    {
-                        string newKey = key.Replace("group", "where 1=2 group");
-                        return Regex.Replace(sql, key, newKey, RegexOptions.IgnoreCase);
-                    }
-                }
-                return sql + " where 1=2";
+                return tableName + " where 1=2";
             }
             return string.Format("select * from {0} where 1=2", tableName);
         }
@@ -380,7 +391,8 @@ namespace CYQ.Data.SQL
                         {
                             defaultValue = defaultValue.Substring(1, defaultValue.Length - 2);
                         }
-                        if (defaultValue.StartsWith("N'")) {
+                        if (defaultValue.StartsWith("N'"))
+                        {
                             defaultValue = defaultValue.TrimStart('N');
                         }
                         defaultValue = defaultValue.Trim('\'');//'(', ')',
