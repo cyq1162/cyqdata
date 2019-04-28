@@ -305,7 +305,11 @@ namespace CYQ.Data.SQL
                 if (FieldItems.Count == 0)
                 {
                     string[] fields = fieldText.ToString().Split(',');
-                    FieldItems.AddRange(fields);
+                    foreach (string item in fields)
+                    {
+                        FieldItems.Add(item.Trim());
+                    }
+
                 }
                 fieldText.Length = 0;
             }
