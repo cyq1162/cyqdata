@@ -195,7 +195,7 @@ namespace CYQ.Data.Cache
             switch (ckt)
             {
                 case CacheKeyType.Schema:
-                    return ColumnSchema.GetSchemaKey(tableName, conn);
+                    return TableSchema.GetSchemaKey(tableName, conn);
                 case CacheKeyType.AutoCache:
                     return AutoCache.GetBaseKey(tableName, conn);
             }

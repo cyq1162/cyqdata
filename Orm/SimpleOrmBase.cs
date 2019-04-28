@@ -222,7 +222,7 @@ namespace CYQ.Data.Orm
                         {
                             Error.Throw(errMsg);
                         }
-                        Columns = ColumnSchema.GetColumns(typeInfo);
+                        Columns = TableSchema.GetColumnByType(typeInfo);
                         ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
                         if (!DBTool.Exists(tableName, connBean.ConnString))
                         {
@@ -237,7 +237,7 @@ namespace CYQ.Data.Orm
                     {
                         if (FieldSource != FieldSource.Data)
                         {
-                            MDataColumn c2 = ColumnSchema.GetColumns(typeInfo);
+                            MDataColumn c2 = TableSchema.GetColumnByType(typeInfo);
                             if (FieldSource == FieldSource.BothOfAll)
                             {
                                 Columns.AddRange(c2);

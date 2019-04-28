@@ -441,7 +441,7 @@ namespace CYQ.Data
             // _TableName = DBTool.GetMapTableName(dalHelper.UsingConnBean.ConnName, _TableName);//处理数据库映射兼容。
             if (_Data.Count == 0)
             {
-                if (!ColumnSchema.FillTableSchema(ref _Data, _TableName, _sourceTableName))
+                if (!TableSchema.FillTableSchema(ref _Data, _TableName, _sourceTableName))
                 {
                     if (!dalHelper.TestConn(AllowConnLevel.MaterBackupSlave))
                     {

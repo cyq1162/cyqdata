@@ -319,7 +319,7 @@ namespace CYQ.Data
                             break;
                         default:
                             _aop.Para.Table = dalHelper.ExeDataReader(_procName, _isProc);
-                            _aop.Para.Table.Columns.dalType = DataBaseType;
+                            _aop.Para.Table.Columns.DataBaseType = DataBaseType;
                             // dalHelper.ResetConn();//重置Slave
                             break;
                     }

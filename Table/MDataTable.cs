@@ -1211,9 +1211,8 @@ namespace CYQ.Data.Table
                 }
                 else if (dt != null && dt.Rows.Count > 0)
                 {
-                    ColumnSchema.FixTableSchemaType(sdr, dt);
-                    mTable.Columns = ColumnSchema.GetColumns(dt);
-                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
+                    mTable.Columns = TableSchema.GetColumnByTable(dt, sdr, false);
+                    mTable.Columns.DataBaseType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                 }
                 #endregion
                 if (sdr.HasRows)
@@ -1313,7 +1312,7 @@ namespace CYQ.Data.Table
                             else
                             {
                                 dt.TableName = objType.Name;
-                                dt.Columns = ColumnSchema.GetColumns(objType);
+                                dt.Columns = TableSchema.GetColumnByType(objType);
                             }
                         }
                         #endregion

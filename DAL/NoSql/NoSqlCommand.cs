@@ -47,7 +47,7 @@ namespace CYQ.Data
             {
                 MDataRow row = new MDataRow();
                 row.Conn = dalBase.ConnName;
-                if (ColumnSchema.FillTableSchema(ref row, ss.TableName, ss.TableName))
+                if (TableSchema.FillTableSchema(ref row, ss.TableName, ss.TableName))
                 { 
                     action = new NoSqlAction(ref row, ss.TableName, dalBase.Con.DataSource, dalBase.DataBaseType);
                 }

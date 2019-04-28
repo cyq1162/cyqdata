@@ -322,7 +322,7 @@ namespace CYQ.Data.SQL
                 dalType = helper.DataBaseType;
                 version = helper.Version;
             }
-            MDataColumn dbColumn = ColumnSchema.GetColumns(tableName, conn);//获取数据库的列结构
+            MDataColumn dbColumn = TableSchema.GetColumns(tableName, conn);//获取数据库的列结构
             if (dbColumn == null || dbColumn.Count == 0) { return sql; }
 
             //开始比较异同

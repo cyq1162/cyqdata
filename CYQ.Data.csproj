@@ -157,7 +157,8 @@
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
-    <Compile Include="Tool\DBEntity\DBEntity.cs" />
+    <Compile Include="Tool\DBEntity\TableInfo.cs" />
+    <Compile Include="Tool\DBEntity\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
@@ -194,9 +195,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SQL\SqlCreateForPager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SQL\Schema\TableSchema.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SQL\SqlCreate.cs">

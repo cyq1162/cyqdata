@@ -234,13 +234,13 @@ namespace CYQ.Data.Tool
             seqName = seqName.ToUpper();
             using (DalBase db = DalCreate.CreateDal(conn))
             {
-                object o = db.ExeScalar(string.Format(TableSchema.ExistOracleSequence, seqName), false);
+                object o = db.ExeScalar(string.Format(ExistOracleSequence, seqName), false);
                 if (db.RecordsAffected != -2 && (o == null || Convert.ToString(o) == "0"))
                 {
                     int startWith = 1;
                     if (!string.IsNullOrEmpty(primaryKey))
                     {
-                        o = db.ExeScalar(string.Format(TableSchema.GetOracleMaxID, primaryKey, tableName), false);
+                        o = db.ExeScalar(string.Format(GetOracleMaxID, primaryKey, tableName), false);
                         if (db.RecordsAffected != -2)
                         {
                             if (!int.TryParse(Convert.ToString(o), out startWith) || startWith < 1)
@@ -253,7 +253,7 @@ namespace CYQ.Data.Tool
                             }
                         }
                     }
-                    db.ExeNonQuery(string.Format(TableSchema.CreateOracleSequence, seqName, startWith), false);
+                    db.ExeNonQuery(string.Format(CreateOracleSequence, seqName, startWith), false);
                 }
                 if (db.RecordsAffected == -2)
                 {
@@ -414,13 +414,13 @@ namespace CYQ.Data.Tool
         #endregion
 
         #region 获取结构
-       
+
         /// <summary>
         /// 获取表列架构
         /// </summary>
         public static MDataColumn GetColumns(Type typeInfo)
         {
-            return ColumnSchema.GetColumns(typeInfo);
+            return TableSchema.GetColumnByType(typeInfo);
         }
         /// <summary>
         /// 获取表列架构
@@ -447,7 +447,7 @@ namespace CYQ.Data.Tool
             errInfo = string.Empty;
             try
             {
-                return ColumnSchema.GetColumns(tableName, conn);
+                return TableSchema.GetColumns(tableName, conn);
 
             }
             catch (Exception err)
@@ -599,5 +599,11 @@ namespace CYQ.Data.Tool
         {
             return CrossDB.GetTableInfoByName(tableName, conn);
         }
+    }
+    public static partial class DBTool
+    {
+        internal const string ExistOracleSequence = "SELECT count(*) FROM All_Sequences where Sequence_name='{0}'";
+        internal const string CreateOracleSequence = "create sequence {0} start with {1} increment by 1";
+        internal const string GetOracleMaxID = "select max({0}) from {1}";
     }
 }

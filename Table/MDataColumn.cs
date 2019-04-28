@@ -121,7 +121,7 @@ namespace CYQ.Data.Table
         public MDataColumn Clone()
         {
             MDataColumn mcs = new MDataColumn();
-            mcs.dalType = dalType;
+            mcs.DataBaseType = DataBaseType;
             mcs.CheckDuplicate = false;
             mcs.isViewOwner = isViewOwner;
             mcs.TableName = TableName;
@@ -246,7 +246,7 @@ namespace CYQ.Data.Table
             MDataRow row = new MDataRow(this);
             row.TableName = tableName;
             row.Columns.CheckDuplicate = CheckDuplicate;
-            row.Columns.dalType = dalType;
+            row.Columns.DataBaseType = DataBaseType;
             row.Columns.isViewOwner = isViewOwner;
             row.Columns.relationTables = relationTables;
             return row;
@@ -342,7 +342,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 当前的数据库类型。
         /// </summary>
-        internal DataBaseType dalType = DataBaseType.None;
+        internal DataBaseType DataBaseType = DataBaseType.None;
         /// <summary>
         /// 该结构是否由视图拥有
         /// </summary>
@@ -456,9 +456,9 @@ namespace CYQ.Data.Table
         {
             if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
             {
-                if (dalType == DataBaseType.None)
+                if (DataBaseType == DataBaseType.None)
                 {
-                    dalType = item.DalType;
+                    DataBaseType = item.DalType;
                 }
                 item.MDataColumn = this;
                 structList.Add(item);

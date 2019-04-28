@@ -443,7 +443,7 @@ namespace CYQ.Data.SQL
             DataBaseType dalFrom = DataBaseType.None;
             if (ms.MDataColumn != null)
             {
-                dalFrom = ms.MDataColumn.dalType;
+                dalFrom = ms.MDataColumn.DataBaseType;
             }
             bool isSameDalType = dalFrom == dalTo;//dalFrom == DalType.None || 从实体转列结构时DalType为None，不适合这种情况
 

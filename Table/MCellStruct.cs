@@ -173,7 +173,7 @@ namespace CYQ.Data.Table
             {
                 if (_MDataColumn != null)
                 {
-                    return _MDataColumn.dalType;
+                    return _MDataColumn.DataBaseType;
                 }
                 return dalType;
             }
