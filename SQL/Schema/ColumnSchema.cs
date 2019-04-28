@@ -240,11 +240,15 @@ namespace CYQ.Data.SQL
                     bool isView = tableName.Contains(" ");//是否视图。
                     if (!isView)
                     {
-                        isView = TableSchema.Exists(tableName, "V", conn);
+                        isView = CrossDB.Exists(tableName, "V", conn);
                     }
                     if (!isView)
                     {
-                        mdcs.Description = TableSchema.GetTableDescription(conn, mdcs.TableName);
+                        TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
+                        if (info != null)
+                        {
+                            mdcs.Description = info.Description;
+                        }
                     }
                     MCellStruct mStruct = null;
                     SqlDbType sqlType = SqlDbType.NVarChar;
@@ -685,7 +689,7 @@ namespace CYQ.Data.SQL
             {
                 conn = CrossDB.GetConn(tableName, out tableName, conn);
             }
-            return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableSchema.GetTableHash(tableName);
+            return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableInfo.GetHashCode(tableName);
         }
         private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
         {

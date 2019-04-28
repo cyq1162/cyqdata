@@ -52,44 +52,45 @@ namespace CYQ.Data.SQL
         }
         private static DBInfo GetSchemaDic(string conn)
         {
-            DalBase dal = DalCreate.CreateDal(conn);
-
             DBInfo info = new DBInfo();
-            info.ConnName = dal.ConnObj.Master.ConnName;
-            info.ConnString = dal.ConnObj.Master.ConnString;
-            info.DataBaseName = dal.DataBaseName;
-            info.DataBaseType = dal.DataBaseType;
-            info.DataBaseVersion = dal.Version;
-            Dictionary<string, string> tables = TableSchema.GetTables(conn);
-            if (tables != null && tables.Count > 0)
+            using (DalBase dal = DalCreate.CreateDal(conn))
             {
-                Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
-                foreach (KeyValuePair<string, string> item in tables)
+                info.ConnName = dal.ConnObj.Master.ConnName;
+                info.ConnString = dal.ConnObj.Master.ConnString;
+                info.DataBaseName = dal.DataBaseName;
+                info.DataBaseType = dal.DataBaseType;
+                info.DataBaseVersion = dal.Version;
+                Dictionary<string, string> tables = dal.GetTables();
+                if (tables != null && tables.Count > 0)
                 {
-                    dic.Add(TableSchema.GetTableHash(item.Key), new TableInfo(item.Key, "U", item.Value, info));
+                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    foreach (KeyValuePair<string, string> item in tables)
+                    {
+                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "U", item.Value, info));
+                    }
+                    info.Tables = dic;
                 }
-                info.Tables = dic;
-            }
 
-            Dictionary<string, string> views = TableSchema.GetViews(conn);
-            if (views != null && views.Count > 0)
-            {
-                Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
-                foreach (KeyValuePair<string, string> item in views)
+                Dictionary<string, string> views = dal.GetViews();
+                if (views != null && views.Count > 0)
                 {
-                    dic.Add(TableSchema.GetTableHash(item.Key), new TableInfo(item.Key, "V", item.Value, info));
+                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    foreach (KeyValuePair<string, string> item in views)
+                    {
+                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "V", item.Value, info));
+                    }
+                    info.Views = dic;
                 }
-                info.Views = dic;
-            }
-            Dictionary<string, string> procs = TableSchema.GetProcs(conn);
-            if (procs != null && procs.Count > 0)
-            {
-                Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
-                foreach (KeyValuePair<string, string> item in procs)
+                Dictionary<string, string> procs = dal.GetProcs();
+                if (procs != null && procs.Count > 0)
                 {
-                    dic.Add(TableSchema.GetTableHash(item.Key), new TableInfo(item.Key, "P", item.Value, info));
+                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    foreach (KeyValuePair<string, string> item in procs)
+                    {
+                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "P", item.Value, info));
+                    }
+                    info.Procs = dic;
                 }
-                info.Procs = dic;
             }
             return info;
 

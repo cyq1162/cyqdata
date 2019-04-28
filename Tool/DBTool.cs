@@ -96,99 +96,25 @@ namespace CYQ.Data.Tool
 
         #region 表的相关操作
 
-        #region 获取所有表
-        /// <summary>
-        /// 获取数据库表
-        /// </summary>
-        public static Dictionary<string, string> GetTables(string conn)
-        {
-            string dbName;
-            return GetTables(conn, out dbName);
-        }
-        /// <summary>
-        /// 获取数据库表
-        /// </summary>
-        public static Dictionary<string, string> GetTables(string conn, out string dbName)
-        {
-            string errInfo;
-            return GetTables(conn, out dbName, out errInfo);
-        }
-        /// <summary>
-        /// 获取所有表（表名+表说明）【链接错误时，抛异常】
-        /// </summary>
-        /// <param name="conn">数据库链接</param>
-        /// <param name="dbName">返回指定链接的数据库名称</param>
-        /// <param name="errInfo">链接错误时的信息信息</param>
-        public static Dictionary<string, string> GetTables(string conn, out string dbName, out string errInfo)
-        {
-            errInfo = string.Empty;
-            using (DalBase helper = DalCreate.CreateDal(conn))
-            {
-                dbName = helper.DataBaseName;
-                if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
-                {
-                    errInfo = helper.DebugInfo.ToString();
-                    if (string.IsNullOrEmpty(errInfo))
-                    {
-                        errInfo = helper.DataBaseType + " Open database fail : " + dbName;
-                    }
-                    return null;
-                }
-            }
-            return TableSchema.GetTables(conn);//内部有缓存
-        }
-        #endregion
-
         #region 表是否存在
         /// <summary>
-        /// 是否存在表
+        /// 是否存在（表 U、视图 V 存储过程 P）
         /// </summary>
-        public static bool ExistsTable(string tableName)
+        public static bool Exists(string name)
         {
-            return ExistsTable(tableName, AppConfig.DB.DefaultConn);
+            return Exists(name, null);
         }
-        /// <summary>
-        /// 是否存在指定的表
-        /// </summary>
-        /// <param name="tableName">表名[或文件名]</param>
-        /// <param name="conn">数据库链接</param>
-        public static bool ExistsTable(string tableName, string conn)
+        public static bool Exists(string name, string type)
         {
-            DataBaseType dal;
-            return ExistsTable(tableName, conn, out dal);
+            return Exists(name, type, null);
         }
-        /// <summary>
-        /// 检测表是否存在
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="conn">数据库链接</param>
-        /// <param name="dalType">数据库类型</param>
-        public static bool ExistsTable(string tableName, string conn, out DataBaseType dalType)
+
+        public static bool Exists(string name, string type, string conn)
         {
-            string database;
-            return ExistsTable(tableName, conn, out dalType, out database);
+            return CrossDB.Exists(name, type, conn);
+
         }
-        /// <summary>
-        /// 检测表是否存在
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="conn">数据库链接</param>
-        /// <param name="dalType">数据库类型</param>
-        public static bool ExistsTable(string tableName, string conn, out DataBaseType dalType, out string database)
-        {
-            dalType = DataBaseType.None;
-            database = string.Empty;
-            if (string.IsNullOrEmpty(tableName) || tableName.Contains("(") && tableName.Contains(")"))
-            {
-                return false;
-            }
-            using (DalBase helper = DalCreate.CreateDal(conn))
-            {
-                dalType = helper.DataBaseType;
-                database = helper.DataBaseName;
-            }
-            return TableSchema.Exists(tableName, "U", conn);
-        }
+
         #endregion
 
         #region 创建表语句
@@ -285,7 +211,7 @@ namespace CYQ.Data.Tool
             }
             if (result)
             {
-                TableSchema.Add(tableName, "U", conn);//修改缓存。
+                CrossDB.Add(tableName, "U", conn);//修改缓存。
             }
             return result;
         }
@@ -477,7 +403,7 @@ namespace CYQ.Data.Tool
             if (result)
             {
                 //处理数据库表字典缓存
-                TableSchema.Remove(tableName, "U", conn);
+                CrossDB.Remove(tableName, "U", conn);
             }
             return result;
         }
@@ -488,26 +414,7 @@ namespace CYQ.Data.Tool
         #endregion
 
         #region 获取结构
-        /// <summary>
-        /// 获取表架构
-        /// </summary>
-        /// <param name="conn">数据库链接</param>
-        /// <param name="connectionName">指定要返回架构的名称</param>
-        /// <param name="restrictionValues">为指定的架构返回一组限制值</param>
-        public static DataTable GetSchema(string conn, string connectionName, string[] restrictionValues)
-        {
-            DalBase helper = DalCreate.CreateDal(conn);
-            if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
-            {
-                return null;
-            }
-            helper.Con.Open();
-            DataTable dt = helper.Con.GetSchema(connectionName, restrictionValues);
-            helper.Con.Close();
-            helper.Dispose();
-            return dt;
-        }
-
+       
         /// <summary>
         /// 获取表列架构
         /// </summary>

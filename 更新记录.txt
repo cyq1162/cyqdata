@@ -792,3 +792,4 @@
 577：重命名 DataBase => DataBaseName、DalType =》 DataBaseType、DalVerion => DataBaseVersion (2019-04-28)
 578：DBInfo、TableInfo、MDataTable(Join方法）、MDataRow(Set方法）小细节调优(2019-04-28)
 579：MAction、SimpleOrm ：where 增加重载参数，SimpleOrm：开放SetPara参数化方法(2019-04-28)
+580：DBTool 去调GetTables方法、ExistsTable 更名：Exists (2019-04-28)

@@ -401,7 +401,6 @@ namespace CYQ.Data.Cache
                 lock (lockObj)
                 {
                     DBSchema.Clear();
-                    TableSchema.Clear();
                     ColumnSchema.Clear();
 
                     theCache.Clear();

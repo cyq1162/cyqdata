@@ -224,7 +224,7 @@ namespace CYQ.Data.Orm
                         }
                         Columns = ColumnSchema.GetColumns(typeInfo);
                         ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
-                        if (!DBTool.ExistsTable(tableName, connBean.ConnString))
+                        if (!DBTool.Exists(tableName, connBean.ConnString))
                         {
                             DBTool.ErrorMsg = null;
                             if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))

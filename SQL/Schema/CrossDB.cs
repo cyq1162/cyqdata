@@ -144,7 +144,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name))
             {
-                int tableHash = TableSchema.GetTableHash(name);
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -190,7 +190,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -221,12 +221,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
-                if (dic != null && dic.ContainsKey(name))
-                {
-                    dic.Remove(name);
-                }
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -253,12 +248,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
-                if (dic != null && !dic.ContainsKey(name))
-                {
-                    dic.Add(name, name);
-                }
+                int tableHash = TableInfo.GetHashCode(name);
                 int dbHash = ConnBean.GetHashCode(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))
                 {

@@ -226,7 +226,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static int GetHashCode(string name)
         {
-            return TableSchema.GetTableHash(name);
+            return TableInfo.GetHashCode(name);
         }
     }
 }

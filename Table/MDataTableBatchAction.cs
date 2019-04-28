@@ -88,7 +88,7 @@ namespace CYQ.Data.Table
                 }
             }
 
-            if (!DBTool.ExistsTable(mdt.TableName, _Conn, out dalTypeTo, out database))
+            if (!DBTool.Exists(mdt.TableName, "U", _Conn))
             {
                 DBTool.ErrorMsg = null;
                 if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn))
