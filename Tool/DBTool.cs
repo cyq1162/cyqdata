@@ -43,7 +43,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="conn">链接配置Key或数据库链接语句</param>
         /// <returns></returns>
-        public static DalType GetDalType(string conn)
+        public static DataBaseType GetDalType(string conn)
         {
             return ConnBean.Create(conn).ConnDalType;
         }
@@ -54,7 +54,7 @@ namespace CYQ.Data.Tool
         /// <param name="dalType">数据库类型</param>
         /// <param name="version">数据库版本号</param>
         /// <returns></returns>
-        public static string GetDataType(MCellStruct ms, DalType dalType, string version)
+        public static string GetDataType(MCellStruct ms, DataBaseType dalType, string version)
         {
             return DataType.GetDataType(ms, dalType, version);
         }
@@ -124,7 +124,7 @@ namespace CYQ.Data.Tool
             errInfo = string.Empty;
             using (DalBase helper = DalCreate.CreateDal(conn))
             {
-                dbName = helper.DataBase;
+                dbName = helper.DataBaseName;
                 if (!helper.TestConn(AllowConnLevel.MaterBackupSlave))
                 {
                     errInfo = helper.DebugInfo.ToString();
@@ -154,7 +154,7 @@ namespace CYQ.Data.Tool
         /// <param name="conn">数据库链接</param>
         public static bool ExistsTable(string tableName, string conn)
         {
-            DalType dal;
+            DataBaseType dal;
             return ExistsTable(tableName, conn, out dal);
         }
         /// <summary>
@@ -163,7 +163,7 @@ namespace CYQ.Data.Tool
         /// <param name="tableName">表名</param>
         /// <param name="conn">数据库链接</param>
         /// <param name="dalType">数据库类型</param>
-        public static bool ExistsTable(string tableName, string conn, out DalType dalType)
+        public static bool ExistsTable(string tableName, string conn, out DataBaseType dalType)
         {
             string database;
             return ExistsTable(tableName, conn, out dalType, out database);
@@ -174,9 +174,9 @@ namespace CYQ.Data.Tool
         /// <param name="tableName">表名</param>
         /// <param name="conn">数据库链接</param>
         /// <param name="dalType">数据库类型</param>
-        public static bool ExistsTable(string tableName, string conn, out DalType dalType, out string database)
+        public static bool ExistsTable(string tableName, string conn, out DataBaseType dalType, out string database)
         {
-            dalType = DalType.None;
+            dalType = DataBaseType.None;
             database = string.Empty;
             if (string.IsNullOrEmpty(tableName) || tableName.Contains("(") && tableName.Contains(")"))
             {
@@ -185,7 +185,7 @@ namespace CYQ.Data.Tool
             using (DalBase helper = DalCreate.CreateDal(conn))
             {
                 dalType = helper.DataBaseType;
-                database = helper.DataBase;
+                database = helper.DataBaseName;
             }
             return TableSchema.Exists(tableName, "U", conn);
         }
@@ -209,12 +209,12 @@ namespace CYQ.Data.Tool
                 return false;
             }
             bool result = false;
-            DalType dalType = GetDalType(conn);
+            DataBaseType dalType = GetDalType(conn);
             string dataBase = string.Empty;
             switch (dalType)
             {
-                case DalType.Txt:
-                case DalType.Xml:
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                     // string a, b, c;
                     conn = AppConfig.GetConn(conn);// CYQ.Data.DAL.DalCreate.GetConnString(conn, out a, out b, out c);
                     if (conn.ToLower().Contains(";ts=0"))//不写入表架构。
@@ -232,20 +232,20 @@ namespace CYQ.Data.Tool
                 default:
                     using (MProc proc = new MProc(null, conn))
                     {
-                        dataBase = proc.DataBase;
+                        dataBase = proc.DataBaseName;
                         try
                         {
                             proc.dalHelper.IsRecordDebugInfo = false;
                             proc.SetAopState(Aop.AopOp.CloseAll);
-                            proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DalType, proc.DalVersion));//.Replace("\n", string.Empty)
+                            proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DataBaseType, proc.DataBaseVersion));//.Replace("\n", string.Empty)
                             result = proc.ExeNonQuery() > -2;
                             if (result)
                             {
                                 //获取扩展说明
-                                string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DalType).Replace("\r\n", " ").Trim(' ', ';');
+                                string descriptionSql = GetCreateTableDescriptionSql(tableName, columns, proc.DataBaseType).Replace("\r\n", " ").Trim(' ', ';');
                                 if (!string.IsNullOrEmpty(descriptionSql))
                                 {
-                                    if (proc.DalType == DalType.Oracle)
+                                    if (proc.DataBaseType == DataBaseType.Oracle)
                                     {
                                         foreach (string sql in descriptionSql.Split(';'))
                                         {
@@ -292,14 +292,14 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)的说明语句
         /// </summary>
-        public static string GetCreateTableDescriptionSql(string tableName, MDataColumn columns, DalType dalType)
+        public static string GetCreateTableDescriptionSql(string tableName, MDataColumn columns, DataBaseType dalType)
         {
             return SqlCreateForSchema.CreateTableDescriptionSql(tableName, columns, dalType);
         }
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)的说明语句
         /// </summary>
-        public static string GetCreateTableSql(string tableName, MDataColumn columns, DalType dalType, string version)
+        public static string GetCreateTableSql(string tableName, MDataColumn columns, DataBaseType dalType, string version)
         {
             return SqlCreateForSchema.CreateTableSql(tableName, columns, dalType, version);
         }
@@ -384,15 +384,15 @@ namespace CYQ.Data.Tool
             List<string> sqls = SqlCreateForSchema.AlterTableSql(tableName, columns, conn);
             if (sqls.Count > 0)
             {
-                DalType dalType = DalType.None;
+                DataBaseType dalType = DataBaseType.None;
                 string database = string.Empty;
 
                 using (MProc proc = new MProc(null, conn))
                 {
-                    dalType = proc.DalType;
-                    database = proc.dalHelper.DataBase;
+                    dalType = proc.DataBaseType;
+                    database = proc.dalHelper.DataBaseName;
                     proc.SetAopState(Aop.AopOp.CloseAll);
-                    if (proc.DalType == DalType.MsSql)
+                    if (proc.DataBaseType == DataBaseType.MsSql)
                     {
                         proc.BeginTransation();//仅对mssql有效。
                     }
@@ -436,11 +436,11 @@ namespace CYQ.Data.Tool
             string key = string.Empty;
             using (DalBase helper = DalCreate.CreateDal(conn))
             {
-                DalType dalType = helper.DataBaseType;
+                DataBaseType dalType = helper.DataBaseType;
                 switch (dalType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         string folder = helper.Con.DataSource + Path.GetFileNameWithoutExtension(tableName);
                         string path = folder + ".ts";
                         try
@@ -449,7 +449,7 @@ namespace CYQ.Data.Tool
                             {
                                 result = IOHelper.Delete(path);
                             }
-                            path = folder + (dalType == DalType.Txt ? ".txt" : ".xml");
+                            path = folder + (dalType == DataBaseType.Txt ? ".txt" : ".xml");
                             if (File.Exists(path))
                             {
                                 result = IOHelper.Delete(path);
@@ -628,7 +628,7 @@ namespace CYQ.Data.Tool
         /// <param name="name">表名或字段名</param>
         /// <param name="dalType">数据类型</param>
         /// <returns></returns>
-        public static string Keyword(string name, DalType dalType)
+        public static string Keyword(string name, DataBaseType dalType)
         {
             return SqlFormat.Keyword(name, dalType);
         }
@@ -647,7 +647,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="flag">[0:转成标准值],[1:转成各数据库值]</param>
         /// <returns></returns>
-        public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
+        public static string FormatDefaultValue(DataBaseType dalType, object value, int flag, SqlDbType sqlDbType)
         {
             return SqlFormat.FormatDefaultValue(dalType, value, flag, sqlDbType);
         }
@@ -683,6 +683,14 @@ namespace CYQ.Data.Tool
         public static DBInfo GetDBInfo(string conn)
         {
             return DBSchema.GetSchema(conn);
+        }
+        public static TableInfo GetTableInfo(string tableName)
+        {
+            return CrossDB.GetTableInfoByName(tableName);
+        }
+        public static TableInfo GetTableInfo(string tableName, string conn)
+        {
+            return CrossDB.GetTableInfoByName(tableName, conn);
         }
     }
 }

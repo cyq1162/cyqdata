@@ -36,19 +36,19 @@ namespace CYQ.Data.Aop
         /// <summary>
         /// 数据类型(只读)
         /// </summary>
-        public DalType DalType
+        public DataBaseType DalType
         {
             get
             {
                 if (MAction != null)
                 {
-                   return MAction.DalType;
+                   return MAction.DataBaseType;
                 }
                 else if (MProc != null)
                 {
-                    return  MProc.DalType;
+                    return  MProc.DataBaseType;
                 }
-                return DalType.None;
+                return DataBaseType.None;
                 //if (_DalType == DalType.None)
                 //{
                 //    if (MAction != null)
@@ -73,11 +73,11 @@ namespace CYQ.Data.Aop
             get {
                 if (MAction != null)
                 {
-                    return MAction.DataBase;
+                    return MAction.DataBaseName;
                 }
                 else if (MProc != null)
                 {
-                    return MProc.DataBase;
+                    return MProc.DataBaseName;
                 }
                 return string.Empty;
                 //if (string.IsNullOrEmpty(_DataBase))

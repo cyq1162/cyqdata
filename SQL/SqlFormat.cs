@@ -16,7 +16,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// Sql关键字处理
         /// </summary>
-        public static string Keyword(string name, DalType dalType)
+        public static string Keyword(string name, DataBaseType dalType)
         {
             if (!string.IsNullOrEmpty(name))
             {
@@ -33,18 +33,18 @@ namespace CYQ.Data.SQL
                     }
                     switch (dalType)
                     {
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "[" + name + "]";
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             return (pre == null ? "" : pre + "..") + "[" + name + "]";
-                        case DalType.MySql:
+                        case DataBaseType.MySql:
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
-                        case DalType.SQLite:
-                        case DalType.PostgreSQL:
+                        case DataBaseType.SQLite:
+                        case DataBaseType.PostgreSQL:
                             return "\"" + name + "\"";
-                        case DalType.Txt:
-                        case DalType.Xml:
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
                             return NotKeyword(name);
                     }
                 }
@@ -76,7 +76,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// Sql数据库兼容和Sql注入处理
         /// </summary>
-        public static string Compatible(object where, DalType dalType, bool isFilterInjection)
+        public static string Compatible(object where, DataBaseType dalType, bool isFilterInjection)
         {
             string text = GetIFieldSql(where);
             if (isFilterInjection)
@@ -298,10 +298,10 @@ namespace CYQ.Data.SQL
         /// <param name="flag">[0:转成标准值],[1:转成各数据库值],[2:转成各数据库值并补充字符串前后缀]</param>
         /// <param name="sqlDbType">该列的值</param>
         /// <returns></returns>
-        public static string FormatDefaultValue(DalType dalType, object value, int flag, SqlDbType sqlDbType)
+        public static string FormatDefaultValue(DataBaseType dalType, object value, int flag, SqlDbType sqlDbType)
         {
             string defaultValue = Convert.ToString(value).Trim().TrimEnd('\n');//oracle会自带\n结尾
-            if (dalType != DalType.Access)
+            if (dalType != DataBaseType.Access)
             {
                 defaultValue = defaultValue.Replace("GenGUID()", string.Empty);
             }
@@ -325,11 +325,11 @@ namespace CYQ.Data.SQL
                 }
                 switch (dalType)
                 {
-                    case DalType.MySql://用转\' \"，所以不用替换。
+                    case DataBaseType.MySql://用转\' \"，所以不用替换。
                         defaultValue = defaultValue.Replace("\\\"", "\"").Replace("\\\'", "\'");
                         break;
-                    case DalType.Access:
-                    case DalType.SQLite:
+                    case DataBaseType.Access:
+                    case DataBaseType.SQLite:
                         defaultValue = defaultValue.Replace("\"\"", "≮");
                         break;
                     default:
@@ -353,10 +353,10 @@ namespace CYQ.Data.SQL
                 {
                     switch (dalType)
                     {
-                        case DalType.MsSql:
-                        case DalType.Oracle:
-                        case DalType.Sybase:
-                        case DalType.PostgreSQL:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Oracle:
+                        case DataBaseType.Sybase:
+                        case DataBaseType.PostgreSQL:
                             return SqlCompatible.FormatGUID(defaultValue, dalType);
                         default:
                             return "";
@@ -366,7 +366,7 @@ namespace CYQ.Data.SQL
             }
             switch (dalType)
             {
-                case DalType.Access:
+                case DataBaseType.Access:
                     if (flag == 0)
                     {
                         if (defaultValue[0] == '"' && defaultValue[defaultValue.Length - 1] == '"')
@@ -383,8 +383,8 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
-                case DalType.MsSql:
-                case DalType.Sybase:
+                case DataBaseType.MsSql:
+                case DataBaseType.Sybase:
                     if (flag == 0)
                     {
                         if (defaultValue.StartsWith("(") && defaultValue.EndsWith(")"))//避免 (newid()) 被去掉()
@@ -406,7 +406,7 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('\'');
@@ -420,7 +420,7 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
-                case DalType.MySql:
+                case DataBaseType.MySql:
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Replace("b'0", "0").Replace("b'1", "1").Trim(' ', '\'');
@@ -434,7 +434,7 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
-                case DalType.SQLite:
+                case DataBaseType.SQLite:
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
@@ -452,7 +452,7 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
-                case DalType.PostgreSQL:
+                case DataBaseType.PostgreSQL:
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');

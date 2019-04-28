@@ -91,7 +91,7 @@ namespace CYQ.Data
                 case "V":
                     if (type == "U") { type = "BASE TABLE"; }
                     else { type = "View"; }
-                    return string.Format("select table_name as TableName,cast(obj_description(p.oid,'pg_class') as varchar) as Description from information_schema.tables t left join  pg_class p on t.table_name=p.relname  where table_schema='public' and table_type='{1}' and table_catalog='{0}'", DataBase, type);
+                    return string.Format("select table_name as TableName,cast(obj_description(p.oid,'pg_class') as varchar) as Description from information_schema.tables t left join  pg_class p on t.table_name=p.relname  where table_schema='public' and table_type='{1}' and table_catalog='{0}'", DataBaseName, type);
                 case "P":
                 default:
                     return "select routine_name as TableName,'' as Description from information_schema.routines where specific_schema='public' and external_language='SQL'";

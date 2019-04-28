@@ -93,13 +93,13 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(firstTableName))
             {
                 TableInfo info = GetTableInfoByName(firstTableName, priorityConn);
-                if (info != null && info.Parent != null)
+                if (info != null && info.DBInfo != null)
                 {
                     if (nameOrSql == firstTableName)
                     {
                         fixName = info.Name;
                     }
-                    conn = info.Parent.ConnName;
+                    conn = info.DBInfo.ConnName;
                 }
             }
             return conn;
@@ -113,9 +113,9 @@ namespace CYQ.Data.SQL
         public static string GetDBName(string name)
         {
             TableInfo info = GetTableInfoByName(name);
-            if (info != null && info.Parent != null)
+            if (info != null && info.DBInfo != null)
             {
-                return info.Parent.DataBaseName;
+                return info.DBInfo.DataBaseName;
             }
             return "";
         }

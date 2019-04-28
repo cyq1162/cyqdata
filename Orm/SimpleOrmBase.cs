@@ -126,12 +126,27 @@ namespace CYQ.Data.Orm
 
         }
         /// <summary>
+        /// 设置参数化
+        /// </summary>
+        public SimpleOrmBase SetPara(object paraName, object value)
+        {
+            Action.SetPara(paraName, value);
+            return this;
+        }
+
+        public SimpleOrmBase SetPara(object paraName, object value, DbType dbType)
+        {
+            Action.SetPara(paraName, value, dbType);
+            return this;
+        }
+        /// <summary>
         /// 设置Aop状态
         /// </summary>
         /// <param name="op"></param>
-        public void SetAopState(AopOp op)
+        public SimpleOrmBase SetAopState(AopOp op)
         {
             Action.SetAopState(op);
+            return this;
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -197,8 +212,8 @@ namespace CYQ.Data.Orm
                 string key = tableName + StaticTool.GetHashKey(conn);
                 if (!CacheManage.LocalInstance.Contains(key))
                 {
-                    DalType dal = DBTool.GetDalType(conn);
-                    bool isTxtDal = dal == DalType.Txt || dal == DalType.Xml;
+                    DataBaseType dal = DBTool.GetDalType(conn);
+                    bool isTxtDal = dal == DataBaseType.Txt || dal == DataBaseType.Xml;
                     string errMsg = string.Empty;
                     Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
                     if (Columns == null || Columns.Count == 0)
@@ -414,8 +429,15 @@ namespace CYQ.Data.Orm
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         public bool Delete(object where)
         {
+            return Delete(where, false);
+        }
+
+        /// <param name="isIgnoreDeleteField">当表存在删除字段，如：IsDeleted标识时，默认会转成更新，此标识可以强制设置为删除</param>
+        /// <returns></returns>
+        public bool Delete(object where, bool isIgnoreDeleteField)
+        {
             GetValueFromEntity();
-            return Action.Delete(where);
+            return Action.Delete(where, isIgnoreDeleteField);
         }
         #endregion
 
@@ -500,13 +522,20 @@ namespace CYQ.Data.Orm
         /// <param name="pageSize">每页数量[为0时默认选择所有]</param>
         /// <param name="where"> 查询条件[可附带 order by 语句]</param>
         /// <param name="count">返回的记录总数</param>
+        /// <param name="selectColumns">指定返回的列</param>
         public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count)
         {
             return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
         }
+
         internal MDataTable Select(int pageIndex, int pageSize, string where, out int count)
         {
             return Action.Select(pageIndex, pageSize, where, out count);
+        }
+        public SimpleOrmBase SetSelectColumns(params object[] columnNames)
+        {
+            Action.SetSelectColumns(columnNames);
+            return this;
         }
         /// <summary>
         /// 获取记录总数

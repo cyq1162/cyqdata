@@ -117,8 +117,8 @@ namespace CYQ.Data.UI
             MDataTable mTable = null;
             switch (_DalBase.DataBaseType)
             {
-                case DalType.Txt:
-                case DalType.Xml:
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                     NoSqlCommand cmd = new NoSqlCommand(sql, _DalBase);
                     mTable = cmd.ExeMDataTable();
                     cmd.Dispose();

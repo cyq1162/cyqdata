@@ -132,7 +132,7 @@ namespace CYQ.Data
         /// The database type
         /// <para>数据库类型</para>
         /// </summary>
-        public DalType DalType
+        public DataBaseType DataBaseType
         {
             get
             {
@@ -143,18 +143,18 @@ namespace CYQ.Data
         /// The database name
         /// <para>数据库名称</para>
         /// </summary>
-        public string DataBase
+        public string DataBaseName
         {
             get
             {
-                return dalHelper.DataBase;
+                return dalHelper.DataBaseName;
             }
         }
         /// <summary>
         /// The database version
         /// 数据库的版本号
         /// </summary>
-        public string DalVersion
+        public string DataBaseVersion
         {
             get
             {
@@ -223,8 +223,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.MsSql:
-                    case DalType.Sybase:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
                         if (_Data.Columns.FirstPrimary.IsAutoIncrement)//数字型
                         {
                             try
@@ -260,13 +260,13 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.MsSql:
-                    case DalType.Sybase:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
                         if (_Data.Columns.FirstPrimary.IsAutoIncrement)//数字型
                         {
                             try
                             {
-                                if (dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, DalType.MsSql) + " off", false) > -2)
+                                if (dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, DataBaseType.MsSql) + " off", false) > -2)
                                 {
                                     _setIdentityResult = false;
                                     CacheManage.LocalInstance.Remove("MAction_identityInsertForSql");
@@ -282,10 +282,7 @@ namespace CYQ.Data
             }
             _AllowInsertID = false;
         }
-        /// <summary>
-        /// 当DeleteField被设置后（删除转更新操作），如果仍想删除操作（可将此属性置为true）
-        /// </summary>
-        internal bool IsIgnoreDeleteField = false;
+
         #endregion
 
         #region 构造函数
@@ -399,7 +396,7 @@ namespace CYQ.Data
             }
             if (!string.IsNullOrEmpty(newDbName))//需要切换数据库。
             {
-                if (string.Compare(dalHelper.DataBase, newDbName, StringComparison.OrdinalIgnoreCase) != 0)//数据库名称不相同。
+                if (string.Compare(dalHelper.DataBaseName, newDbName, StringComparison.OrdinalIgnoreCase) != 0)//数据库名称不相同。
                 {
                     if (newRow.TableName.Contains(" "))//视图语句，则直接切换数据库链接。
                     {
@@ -409,7 +406,7 @@ namespace CYQ.Data
                     {
                         bool isWithDbName = newRow.TableName.Contains(".");//是否DBName.TableName
                         string fullTableName = isWithDbName ? newRow.TableName : newDbName + "." + newRow.TableName;
-                        string sourceDbName = dalHelper.DataBase;
+                        string sourceDbName = dalHelper.DataBaseName;
                         DBResetResult result = dalHelper.ChangeDatabaseWithCheck(fullTableName);
                         switch (result)
                         {
@@ -448,9 +445,9 @@ namespace CYQ.Data
                 {
                     if (!dalHelper.TestConn(AllowConnLevel.MaterBackupSlave))
                     {
-                        Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBase + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
+                        Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBaseName + ":open database failed! check the connectionstring is be ok!" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
                     }
-                    Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBase + ":check the tablename  \"" + _TableName + "\" is exist?" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
+                    Error.Throw(dalHelper.DataBaseType + "." + dalHelper.DataBaseName + ":check the tablename  \"" + _TableName + "\" is exist?" + AppConst.NewLine + "error:" + dalHelper.DebugInfo.ToString());
                 }
             }
             else if (resetState)
@@ -509,8 +506,8 @@ namespace CYQ.Data
                 {
                     switch (dalHelper.DataBaseType)
                     {
-                        case DalType.Txt:
-                        case DalType.Xml:
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
                             _noSqlAction = new NoSqlAction(ref _Data, _TableName, dalHelper.Con.DataSource, dalHelper.DataBaseType);
                             break;
                     }
@@ -534,9 +531,9 @@ namespace CYQ.Data
                     object id;
                     switch (dalHelper.DataBaseType)
                     {
-                        case DalType.MsSql:
-                        case DalType.Sybase:
-                        case DalType.PostgreSQL:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
+                        case DataBaseType.PostgreSQL:
                             id = dalHelper.ExeScalar(sqlCommandText, false);
                             if (id == null && AllowInsertID && dalHelper.RecordsAffected > -2)
                             {
@@ -656,8 +653,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Insert(dalHelper.IsOpenTrans);
                         dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
@@ -743,8 +740,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         int count;
                         _aop.Para.IsSuccess = _noSqlAction.Update(_sqlCreate.FormatWhere(where), out count);
                         dalHelper.RecordsAffected = count;
@@ -774,12 +771,16 @@ namespace CYQ.Data
         /// </summary>
         public bool Delete()
         {
-            return Delete(null);
+            return Delete(null, false);
         }
-
+        public bool Delete(object where)
+        {
+            return Delete(where, false);
+        }
         /// <param name="where">Sql statement where the conditions: 88, "id = 88"
         /// <para>sql语句的where条件：88、"id=88"</para></param>
-        public bool Delete(object where)
+        /// <param name="isIgnoreDeleteField">当DeleteField被设置后（删除转更新操作），如果仍想删除操作（可将此属性置为true）</param>
+        public bool Delete(object where, bool isIgnoreDeleteField)
         {
             if (CheckDisposed()) { return false; }
             if (where == null || Convert.ToString(where) == "")
@@ -801,11 +802,11 @@ namespace CYQ.Data
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
                 string deleteField = AppConfig.DB.DeleteField;
-                bool isToUpdate = !IsIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
+                bool isToUpdate = !isIgnoreDeleteField && !string.IsNullOrEmpty(deleteField) && _Data.Columns.Contains(deleteField);
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         string sqlWhere = _sqlCreate.FormatWhere(where);
                         int count;
                         if (isToUpdate)
@@ -897,8 +898,8 @@ namespace CYQ.Data
                 string primaryKey = SqlFormat.Keyword(_Data.Columns.FirstPrimary.ColumnName, dalHelper.DataBaseType);//主键列名。
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.Table = _noSqlAction.Select(pageIndex, pageSize, _sqlCreate.FormatWhere(where), out rowCount, _sqlCreate.selectColumns);
                         dalHelper.RecordsAffected = rowCount;
                         break;
@@ -1040,8 +1041,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Fill(_sqlCreate.FormatWhere(where));
                         dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
                         break;
@@ -1134,8 +1135,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.RowCount = _noSqlAction.GetCount(_sqlCreate.FormatWhere(where));
                         _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
                         dalHelper.RecordsAffected = _aop.Para.RowCount;
@@ -1202,8 +1203,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.IsSuccess = _noSqlAction.Exists(_sqlCreate.FormatWhere(where));
                         _aop.Para.ExeResult = _aop.Para.IsSuccess;
                         dalHelper.RecordsAffected = _aop.Para.IsSuccess ? 1 : 0;
@@ -1446,7 +1447,7 @@ namespace CYQ.Data
             {
                 cs.AddRange(cells);
             }
-            return SqlCreate.GetWhere(DalType, isAnd, cs);
+            return SqlCreate.GetWhere(DataBaseType, isAnd, cs);
         }
 
         /// <param name="cells">MDataCell<para>单元格</para></param>

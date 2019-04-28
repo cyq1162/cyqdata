@@ -208,16 +208,16 @@ namespace CYQ.Data.SQL
             MDataColumn mdcs = null;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {
-                DalType dalType = dbHelper.DataBaseType;
+                DataBaseType dalType = dbHelper.DataBaseType;
 
                 #region 文本数据库处理。
-                if (dalType == DalType.Txt || dalType == DalType.Xml)
+                if (dalType == DataBaseType.Txt || dalType == DataBaseType.Xml)
                 {
                     if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
                     {
                         tableName = SqlFormat.NotKeyword(tableName);//处理database..tableName;
                         tableName = Path.GetFileNameWithoutExtension(tableName);//视图表，带“.“的，会出问题
-                        string fileName = dbHelper.Con.DataSource + tableName + (dalType == DalType.Txt ? ".txt" : ".xml");
+                        string fileName = dbHelper.Con.DataSource + tableName + (dalType == DataBaseType.Txt ? ".txt" : ".xml");
                         mdcs = MDataColumn.CreateFrom(fileName);
                         mdcs.dalType = dalType;
                         return mdcs;
@@ -258,14 +258,14 @@ namespace CYQ.Data.SQL
                         mdcs.AddRelateionTableName(SqlFormat.NotKeyword(tableName));
                         switch (dalType)
                         {
-                            case DalType.MsSql:
-                            case DalType.Oracle:
-                            case DalType.MySql:
-                            case DalType.Sybase:
-                            case DalType.PostgreSQL:
+                            case DataBaseType.MsSql:
+                            case DataBaseType.Oracle:
+                            case DataBaseType.MySql:
+                            case DataBaseType.Sybase:
+                            case DataBaseType.PostgreSQL:
                                 #region Sql
                                 string sql = string.Empty;
-                                if (dalType == DalType.MsSql)
+                                if (dalType == DataBaseType.MsSql)
                                 {
                                     #region Mssql
                                     string dbName = null;
@@ -284,14 +284,14 @@ namespace CYQ.Data.SQL
                                         }
                                     }
 
-                                    sql = GetMSSQLColumns(helper.Version.StartsWith("08"), dbName ?? helper.DataBase);
+                                    sql = GetMSSQLColumns(helper.Version.StartsWith("08"), dbName ?? helper.DataBaseName);
                                     #endregion
                                 }
-                                else if (dalType == DalType.MySql)
+                                else if (dalType == DataBaseType.MySql)
                                 {
-                                    sql = GetMySqlColumns(helper.DataBase);
+                                    sql = GetMySqlColumns(helper.DataBaseName);
                                 }
-                                else if (dalType == DalType.Oracle)
+                                else if (dalType == DataBaseType.Oracle)
                                 {
                                     tableName = tableName.ToUpper();//Oracle转大写。
                                     //先获取同义词，不检测是否跨库
@@ -303,12 +303,12 @@ namespace CYQ.Data.SQL
 
                                     sql = GetOracleColumns();
                                 }
-                                else if (dalType == DalType.Sybase)
+                                else if (dalType == DataBaseType.Sybase)
                                 {
                                     tableName = SqlFormat.NotKeyword(tableName);
                                     sql = GetSybaseColumns();
                                 }
-                                else if (dalType == DalType.PostgreSQL)
+                                else if (dalType == DataBaseType.PostgreSQL)
                                 {
                                     sql = GetPostgreColumns();
                                 }
@@ -347,9 +347,9 @@ namespace CYQ.Data.SQL
                                         mStruct.IsPrimaryKey = Convert.ToString(sdr["IsPrimaryKey"]) == "1";
                                         switch (dalType)
                                         {
-                                            case DalType.MsSql:
-                                            case DalType.MySql:
-                                            case DalType.Oracle:
+                                            case DataBaseType.MsSql:
+                                            case DataBaseType.MySql:
+                                            case DataBaseType.Oracle:
                                                 mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
                                                 mStruct.IsForeignKey = Convert.ToString(sdr["IsForeignKey"]) == "1";
                                                 mStruct.FKTableName = Convert.ToString(sdr["FKTableName"]);
@@ -361,7 +361,7 @@ namespace CYQ.Data.SQL
                                         mdcs.Add(mStruct);
                                     }
                                     sdr.Close();
-                                    if (dalType == DalType.Oracle && mdcs.Count > 0)//默认没有自增概念，只能根据情况判断。
+                                    if (dalType == DataBaseType.Oracle && mdcs.Count > 0)//默认没有自增概念，只能根据情况判断。
                                     {
                                         MCellStruct firstColumn = mdcs[0];
                                         if (firstColumn.IsPrimaryKey && firstColumn.ColumnName.ToLower().Contains("id") && firstColumn.Scale == 0 && DataType.GetGroup(firstColumn.SqlType) == 1 && mdcs.JointPrimary.Count == 1)
@@ -372,7 +372,7 @@ namespace CYQ.Data.SQL
                                 }
                                 #endregion
                                 break;
-                            case DalType.SQLite:
+                            case DataBaseType.SQLite:
                                 #region SQlite
                                 if (helper.Con.State != ConnectionState.Open)
                                 {
@@ -421,7 +421,7 @@ namespace CYQ.Data.SQL
                                 }
                                 #endregion
                                 break;
-                            case DalType.Access:
+                            case DataBaseType.Access:
                                 #region Access
                                 DataTable keyDt, valueDt;
                                 string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);

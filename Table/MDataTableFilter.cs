@@ -341,7 +341,7 @@ namespace CYQ.Data.Table
             group2 = new List<TFilter>();
             List<TFilter> tFilterList = new List<TFilter>();
             string whereStr = SqlFormat.GetIFieldSql(whereObj);
-            whereStr = SqlCreate.FormatWhere(whereStr, mdc, DalType.None, null);
+            whereStr = SqlCreate.FormatWhere(whereStr, mdc, DataBaseType.None, null);
             string lowerWhere = whereStr.ToLower();
             string andSign = " and ";
             string orSign = " or ";

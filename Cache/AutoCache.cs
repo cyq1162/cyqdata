@@ -254,11 +254,11 @@ namespace CYQ.Data.Cache
                     {
                         return true;
                     }
-                    databaseName = aopInfo.MProc.DataBase;
+                    databaseName = aopInfo.MProc.DataBaseName;
                 }
                 else
                 {
-                    databaseName = aopInfo.MAction.DataBase;
+                    databaseName = aopInfo.MAction.DataBaseName;
                 }
                 string tableName = aopInfo.TableName;
                 if (string.IsNullOrEmpty(tableName))
@@ -884,7 +884,7 @@ namespace CYQ.Data.Cache
             public static void ReadAndRemoveKey()
             {
                 MAction action = ActionInstance;//
-                string cacheTime = DBTool.Keyword("CacheTime", action.DalType);
+                string cacheTime = DBTool.Keyword("CacheTime", action.DataBaseType);
                 MDataTable dt = action.Select(cacheTime + ">" + keyTime + " order by " + cacheTime + " asc");
                 if (dt.Rows.Count > 0)
                 {

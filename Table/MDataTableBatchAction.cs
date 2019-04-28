@@ -26,7 +26,7 @@ namespace CYQ.Data.Table
         /// </summary>
         List<int> jointPrimaryIndex;
         MDataTable mdt, sourceTable;
-        internal DalType dalTypeTo = DalType.None;
+        internal DataBaseType dalTypeTo = DataBaseType.None;
         internal string database = string.Empty;
         private bool _IsTruncate;
         /// <summary>
@@ -215,11 +215,11 @@ namespace CYQ.Data.Table
         {
             try
             {
-                if (dalTypeTo == DalType.MsSql)
+                if (dalTypeTo == DataBaseType.MsSql)
                 {
                     return MsSqlBulkCopyInsert(keepid);
                 }
-                else if (dalTypeTo == DalType.Oracle && _dalHelper == null && !IsTruncate)
+                else if (dalTypeTo == DataBaseType.Oracle && _dalHelper == null && !IsTruncate)
                 {
                     if (OracleDal.clientType == 1 && keepid)
                     {
@@ -230,7 +230,7 @@ namespace CYQ.Data.Table
                     //    return LoadDataInsert(dalTypeTo, keepid);
                     //}
                 }
-                else if (dalTypeTo == DalType.MySql && IsAllowBulkCopy(DalType.MySql))
+                else if (dalTypeTo == DataBaseType.MySql && IsAllowBulkCopy(DataBaseType.MySql))
                 {
                     return LoadDataInsert(dalTypeTo, keepid);
                 }
@@ -309,18 +309,18 @@ namespace CYQ.Data.Table
                     string columnName = keyColumn.ColumnName;
                     //计算分组处理
                     int pageSize = 5000;
-                    if (action.DalVersion.StartsWith("08")) { pageSize = 1000; }
+                    if (action.DataBaseVersion.StartsWith("08")) { pageSize = 1000; }
                     int count = mdt.Rows.Count / pageSize + 1;
                     for (int i = 0; i < count; i++)
                     {
                         MDataTable dt = mdt.Select(i + 1, pageSize, null);//分页读取
                         if (dt != null && dt.Rows.Count > 0)
                         {
-                            string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                            string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DataBaseType);
                             action.SetSelectColumns(columnName);
                             MDataTable keyTable = action.Select(whereIn);//拿到数据，准备分拆上市
 
-                            MDataTable[] dt2 = dt.Split(SqlCreate.GetWhereIn(keyColumn, keyTable.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DalType.None));//这里不需要格式化查询条件。
+                            MDataTable[] dt2 = dt.Split(SqlCreate.GetWhereIn(keyColumn, keyTable.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DataBaseType.None));//这里不需要格式化查询条件。
                             result = dt2[0].Rows.Count == 0;
                             if (!result)
                             {
@@ -392,7 +392,7 @@ namespace CYQ.Data.Table
                     {
                         #region 循环处理
                         action.ResetTable(row, false);
-                        string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
+                        string where = SqlCreate.GetWhere(action.DataBaseType, GetJoinPrimaryCell(row));
                         bool isExists = action.Exists(where);
                         if (action.RecordsAffected == -2)
                         {
@@ -459,7 +459,7 @@ namespace CYQ.Data.Table
             bool isCreateDal = false;
             try
             {
-                CheckGUIDAndDateTime(DalType.MsSql);
+                CheckGUIDAndDateTime(DataBaseType.MsSql);
                 string conn = AppConfig.GetConn(_Conn);
                 if (_dalHelper == null)
                 {
@@ -499,7 +499,7 @@ namespace CYQ.Data.Table
                     using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepid ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
                     {
                         sbc.BatchSize = 100000;
-                        sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DalType.MsSql);
+                        sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DataBaseType.MsSql);
                         sbc.BulkCopyTimeout = AppConfig.DB.CommandTimeout;
                         foreach (MCellStruct column in mdt.Columns)
                         {
@@ -539,7 +539,7 @@ namespace CYQ.Data.Table
         }
         internal bool OracleBulkCopyInsert()
         {
-            CheckGUIDAndDateTime(DalType.Oracle);
+            CheckGUIDAndDateTime(DataBaseType.Oracle);
             string conn = ConnBean.Create(_Conn).ConnString;
             Assembly ass = OracleDal.GetAssembly();
             object sbc = ass.CreateInstance("Oracle.DataAccess.Client.OracleBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
@@ -549,7 +549,7 @@ namespace CYQ.Data.Table
 
                 sbcType.GetProperty("BatchSize").SetValue(sbc, 100000, null);
                 sbcType.GetProperty("BulkCopyTimeout").SetValue(sbc, AppConfig.DB.CommandTimeout, null);
-                sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DalType.Oracle), null);
+                sbcType.GetProperty("DestinationTableName").SetValue(sbc, SqlFormat.Keyword(mdt.TableName, DataBaseType.Oracle), null);
                 PropertyInfo cInfo = sbcType.GetProperty("ColumnMappings");
                 object cObj = cInfo.GetValue(sbc, null);
                 MethodInfo addMethod = cInfo.PropertyType.GetMethods()[4];
@@ -591,7 +591,7 @@ namespace CYQ.Data.Table
 
 
         }
-        bool IsAllowBulkCopy(DalType dalType)
+        bool IsAllowBulkCopy(DataBaseType dalType)
         {
             foreach (MCellStruct st in mdt.Columns)
             {
@@ -603,7 +603,7 @@ namespace CYQ.Data.Table
             }
             try
             {
-                if (dalType == DalType.Oracle && !HasSqlLoader())
+                if (dalType == DataBaseType.Oracle && !HasSqlLoader())
                 {
                     return false;
                 }
@@ -620,27 +620,27 @@ namespace CYQ.Data.Table
             }
             return false;
         }
-        internal bool LoadDataInsert(DalType dalType, bool keepid)
+        internal bool LoadDataInsert(DataBaseType dalType, bool keepid)
         {
             bool fillGUID = CheckGUIDAndDateTime(dalType);
             bool isNeedCreateDal = (_dalHelper == null);
-            if (isNeedCreateDal && dalType != DalType.Oracle)
+            if (isNeedCreateDal && dalType != DataBaseType.Oracle)
             {
                 _dalHelper = DalCreate.CreateDal(_Conn);
                 _dalHelper.IsWriteLogOnError = false;
             }
             string path = MDataTableToFile(mdt, fillGUID ? true : keepid, dalType);
-            string formatSql = dalType == DalType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
+            string formatSql = dalType == DataBaseType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
             string sql = string.Format(formatSql, path, SqlFormat.Keyword(mdt.TableName, dalType),
                 AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepid, dalType));
-            if (dalType == DalType.Oracle)
+            if (dalType == DataBaseType.Oracle)
             {
                 string ctlPath = CreateCTL(sql, path);
                 sql = string.Format(SqlCreate.OracleSqlidR, "sa/123456@ORCL", ctlPath);//只能用进程处理
             }
             try
             {
-                if (dalType == DalType.Oracle)
+                if (dalType == DataBaseType.Oracle)
                 {
                     return ExeSqlLoader(sql);
                 }
@@ -687,7 +687,7 @@ namespace CYQ.Data.Table
             IOHelper.Write(path, sql);
             return path;
         }
-        private static string MDataTableToFile(MDataTable dt, bool keepid, DalType dalType)
+        private static string MDataTableToFile(MDataTable dt, bool keepid, DataBaseType dalType)
         {
             string path = Path.GetTempPath() + dt.TableName + ".csv";
             using (StreamWriter sw = new StreamWriter(path, false, new UTF8Encoding(false)))
@@ -704,7 +704,7 @@ namespace CYQ.Data.Table
                         {
                             continue;
                         }
-                        else if (dalType == DalType.MySql && row[i].IsNull)
+                        else if (dalType == DataBaseType.MySql && row[i].IsNull)
                         {
                             sw.Write("\\N");//Mysql用\N表示null值。
                         }
@@ -714,7 +714,7 @@ namespace CYQ.Data.Table
                             if (ms.SqlType == SqlDbType.Bit)
                             {
                                 int v = (value.ToLower() == "true" || value == "1") ? 1 : 0;
-                                if (dalType == DalType.MySql)
+                                if (dalType == DataBaseType.MySql)
                                 {
                                     byte[] b = new byte[1];
                                     b[0] = (byte)v;
@@ -752,7 +752,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 检测GUID，若空，补值。
         /// </summary>
-        private bool CheckGUIDAndDateTime(DalType dal)
+        private bool CheckGUIDAndDateTime(DataBaseType dal)
         {
             bool fillGUID = false;
             int groupID;
@@ -764,11 +764,11 @@ namespace CYQ.Data.Table
                 {
                     for (int j = 0; j < mdt.Rows.Count; j++)
                     {
-                        if (dal == DalType.MsSql && mdt.Rows[j][i].StringValue == DateTime.MinValue.ToString())
+                        if (dal == DataBaseType.MsSql && mdt.Rows[j][i].StringValue == DateTime.MinValue.ToString())
                         {
                             mdt.Rows[j][i].Value = SqlDateTime.MinValue;
                         }
-                        else if (dal == DalType.Oracle && mdt.Rows[j][i].StringValue == SqlDateTime.MinValue.ToString())
+                        else if (dal == DataBaseType.Oracle && mdt.Rows[j][i].StringValue == SqlDateTime.MinValue.ToString())
                         {
                             mdt.Rows[j][i].Value = SqlDateTime.MinValue;
                         }
@@ -804,7 +804,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
-                if (action.DalVersion.StartsWith("08"))
+                if (action.DataBaseVersion.StartsWith("08"))
                 {
                     pageSize = 1000;
                 }
@@ -827,12 +827,12 @@ namespace CYQ.Data.Table
                     if (dt != null && dt.Rows.Count > 0)
                     {
                         #region 核心逻辑
-                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DataBaseType);
                         MDataTable dtData = action.Select(whereIn);//获取远程数据。
                         dtData.Load(dt, keyColumn);//重新加载赋值。
-                        action.IsIgnoreDeleteField = true;//处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
-                        result = action.Delete(whereIn);
-                        action.IsIgnoreDeleteField = false;
+                        //处理如果存在IsDeleted，会被转Update（导致后续无法Insert）、外层也有判断，不会进来。
+                        result = action.Delete(whereIn, true);
+
                         if (result)
                         {
                             dtData.DynamicData = action;
@@ -871,7 +871,7 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
-                if (action.DalVersion.StartsWith("08"))
+                if (action.DataBaseVersion.StartsWith("08"))
                 {
                     pageSize = 1000;
                 }
@@ -894,7 +894,7 @@ namespace CYQ.Data.Table
                     if (dt != null && dt.Rows.Count > 0)
                     {
                         #region 核心逻辑
-                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DalType);
+                        string whereIn = SqlCreate.GetWhereIn(keyColumn, dt.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), action.DataBaseType);
                         result = action.Delete(whereIn) || action.RecordsAffected == 0;
                         if (result)
                         {
@@ -1006,7 +1006,7 @@ namespace CYQ.Data.Table
                 bool isGoOn = true;
                 if (IsTruncate)
                 {
-                    if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
+                    if (dalTypeTo == DataBaseType.Txt || dalTypeTo == DataBaseType.Xml)
                     {
                         action.Delete("1=1");
                     }
@@ -1074,7 +1074,7 @@ namespace CYQ.Data.Table
                     if (row.GetState(true) > 1)
                     {
                         action.ResetTable(row, false);
-                        string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
+                        string where = SqlCreate.GetWhere(action.DataBaseType, GetJoinPrimaryCell(row));
                         result = action.Update(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
                         if (action.RecordsAffected > 0)
                         {
@@ -1137,7 +1137,7 @@ namespace CYQ.Data.Table
                 {
                     row = mdt.Rows[i];
                     action.ResetTable(row, false);
-                    string where = SqlCreate.GetWhere(action.DalType, GetJoinPrimaryCell(row));
+                    string where = SqlCreate.GetWhere(action.DataBaseType, GetJoinPrimaryCell(row));
                     result = action.Delete(where) || action.RecordsAffected == 0;//没有可更新的数据，也返回true
                     if (action.RecordsAffected > 0)
                     {

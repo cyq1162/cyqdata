@@ -15,7 +15,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 同语句多数据库兼容处理
         /// </summary>
-        internal static string Format(string text, DalType dalType)
+        internal static string Format(string text, DataBaseType dalType)
         {
             if (!string.IsNullOrEmpty(text))
             {
@@ -44,12 +44,12 @@ namespace CYQ.Data.SQL
             return text;
         }
         #region 过滤与多数据库标签解析
-        internal static string FormatLeft(string text, DalType dalType)
+        internal static string FormatLeft(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
                 //substr(MAX(SheetID),1,4)) IS NULL THEN 0 ELSE substr(MAX(SheetID)length(MAX(SheetID))-4,4) 
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     int index = text.IndexOf(SqlValue.Left, StringComparison.OrdinalIgnoreCase);//left(a,4) =>to_char(substr(a,1,4))
                     if (index > -1)
                     {
@@ -70,11 +70,11 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.Left, "Left");
             }
         }
-        internal static string FormatRight(string text, DalType dalType)
+        internal static string FormatRight(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     int index = text.IndexOf(SqlValue.Right, StringComparison.OrdinalIgnoreCase);//right(a,4) => to_char(substr(a,length(a)-4,4))
                     if (index > -1)
                     {
@@ -98,22 +98,22 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.Right, "Right");
             }
         }
-        internal static string FormatContact(string text, DalType dalType)
+        internal static string FormatContact(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Oracle:
-                case DalType.PostgreSQL:
+                case DataBaseType.Oracle:
+                case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.Contact, "||");
                 default:
                     return Replace(text, SqlValue.Contact, "+");
             }
         }
-        internal static string FormatIsNull(string text, DalType dalType)
+        internal static string FormatIsNull(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Access:
+                case DataBaseType.Access:
                     int index = text.IndexOf(SqlValue.IsNull, StringComparison.OrdinalIgnoreCase);//isnull  (isnull(aaa),'3,3')   iif(isnull   (aaa),333,aaa)
                     if (index > -1)
                     {
@@ -132,62 +132,62 @@ namespace CYQ.Data.SQL
                         return Replace(text, SqlValue.IsNull, "iif(isnull");
                     }
                     break;
-                case DalType.SQLite:
-                case DalType.MySql:
+                case DataBaseType.SQLite:
+                case DataBaseType.MySql:
                     return Replace(text, SqlValue.IsNull, "IfNull");
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     return Replace(text, SqlValue.IsNull, "NVL");
-                case DalType.PostgreSQL:
+                case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.IsNull, "COALESCE");
-                case DalType.MsSql:
-                case DalType.Sybase:
+                case DataBaseType.MsSql:
+                case DataBaseType.Sybase:
                 default:
                     return Replace(text, SqlValue.IsNull, "IsNull");
 
             }
             return text;
         }
-        internal static string FormatGUID(string text, DalType dalType)
+        internal static string FormatGUID(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Access:
+                case DataBaseType.Access:
                     return Replace(text, SqlValue.Guid, "GenGUID()");
-                case DalType.MySql:
+                case DataBaseType.MySql:
                     return Replace(text, SqlValue.Guid, "UUid()");
-                case DalType.MsSql:
-                case DalType.Sybase:
+                case DataBaseType.MsSql:
+                case DataBaseType.Sybase:
                     return Replace(text, SqlValue.Guid, "newid()");
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     return Replace(text, SqlValue.Guid, "SYS_GUID()");
-                case DalType.SQLite:
+                case DataBaseType.SQLite:
                     return Replace(text, SqlValue.Guid, Guid.NewGuid().ToString());
-                case DalType.PostgreSQL:
+                case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.Guid, "uuid_generate_v4()");
 
             }
             return text;
         }
 
-        private static string FormatPara(string text, DalType dalType)
+        private static string FormatPara(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.MySql:
+                case DataBaseType.MySql:
                     return text.Replace("=:?", "=?");
-                case DalType.Oracle:
-                case DalType.PostgreSQL:
+                case DataBaseType.Oracle:
+                case DataBaseType.PostgreSQL:
                     return text.Replace("=:?", "=:");
                 default:
                     return text.Replace("=:?", "=@");
             }
         }
 
-        private static string FormatTrueFalseAscDesc(string text, DalType dalType)
+        private static string FormatTrueFalseAscDesc(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Access:
+                case DataBaseType.Access:
                     text = Replace(text, SqlValue.True, "true");
                     text = Replace(text, SqlValue.False, "false");
                     text = Replace(text, SqlValue.Desc, "asc");
@@ -200,35 +200,35 @@ namespace CYQ.Data.SQL
             }
         }
 
-        private static string FormatLen(string text, DalType dalType)
+        private static string FormatLen(string text, DataBaseType dalType)
         {
             switch (dalType)//处理函数替换
             {
-                case DalType.Access:
-                case DalType.MsSql:
+                case DataBaseType.Access:
+                case DataBaseType.MsSql:
                     text = Replace(text, SqlValue.Len, "len");
                     return Replace(text, SqlValue.Substring, "substring");
-                case DalType.Oracle:
-                case DalType.SQLite:
+                case DataBaseType.Oracle:
+                case DataBaseType.SQLite:
                     text = Replace(text, SqlValue.Len, "length");
                     return Replace(text, SqlValue.Substring, "substr");
-                case DalType.MySql:
+                case DataBaseType.MySql:
                     text = Replace(text, SqlValue.Len, "char_length");
                     return Replace(text, SqlValue.Substring, "substring");
-                case DalType.Sybase:
+                case DataBaseType.Sybase:
                     text = Replace(text, SqlValue.Len, "datalength");
                     return Replace(text, SqlValue.Substring, "substring");
-                case DalType.PostgreSQL:
+                case DataBaseType.PostgreSQL:
                     text = Replace(text, SqlValue.Len, "length");
                     return Replace(text, SqlValue.Substring, "substring");
             }
             return text;
         }
-        private static string GetFormatDateKey(DalType dalType, string key)
+        private static string GetFormatDateKey(DataBaseType dalType, string key)
         {
             switch (dalType)
             {
-                case DalType.SQLite:
+                case DataBaseType.SQLite:
                     switch (key)
                     {
                         case SqlValue.Year:
@@ -239,7 +239,7 @@ namespace CYQ.Data.SQL
                             return "'%d',";
                     }
                     break;
-                case DalType.Sybase:
+                case DataBaseType.Sybase:
                     switch (key)
                     {
                         case SqlValue.Year:
@@ -264,7 +264,7 @@ namespace CYQ.Data.SQL
             }
             return string.Empty;
         }
-        private static string FormatDate(string text, DalType dalType, string key, string func)
+        private static string FormatDate(string text, DataBaseType dalType, string key, string func)
         {
             int index = text.IndexOf(key, StringComparison.OrdinalIgnoreCase);//[#year](字段)
             if (index > -1)//存在[#year]函数
@@ -273,7 +273,7 @@ namespace CYQ.Data.SQL
                 int found = 0;
                 switch (dalType)
                 {
-                    case DalType.Oracle:
+                    case DataBaseType.Oracle:
                         do
                         {
                             text = text.Insert(index + 2, "_");//[#_year](字段)
@@ -285,7 +285,7 @@ namespace CYQ.Data.SQL
                         text = text.Replace("#_", "#");
                         text = Replace(text, key, "to_char");//[#year](字段,'yyyy')
                         break;
-                    case DalType.SQLite:
+                    case DataBaseType.SQLite:
                         do
                         {
                             text = text.Insert(index + 2, "_");//[#_year](字段)
@@ -299,11 +299,11 @@ namespace CYQ.Data.SQL
                         text = text.Replace("#_", "#");
                         text = Replace(text, key, "cast(strftime");//cast(strftime('%Y', UpdateTime) as int) [%Y,%m,%d]
                         break;
-                    case DalType.Sybase:
+                    case DataBaseType.Sybase:
                         text = Replace(text, key + "(", "datepart(" + format);
                         //// [#YEAR](getdate())  datepart(mm,getdate()) datepart(mm,getdate()) datepart(mm,getdate())
                         break;
-                    case DalType.PostgreSQL:
+                    case DataBaseType.PostgreSQL:
                         text = Replace(text, key + "(", "EXTRACT(" + func + " from ");
                         break;
                     default:
@@ -313,28 +313,28 @@ namespace CYQ.Data.SQL
             }
             return text;
         }
-        internal static string FormatGetDate(string text, DalType dalType)
+        internal static string FormatGetDate(string text, DataBaseType dalType)
         {
             switch (dalType)
             {
-                case DalType.Access:
-                case DalType.MySql:
-                case DalType.PostgreSQL:
+                case DataBaseType.Access:
+                case DataBaseType.MySql:
+                case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.GetDate, "now()");
-                case DalType.MsSql:
-                case DalType.Sybase:
+                case DataBaseType.MsSql:
+                case DataBaseType.Sybase:
                     return Replace(text, SqlValue.GetDate, "getdate()");
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     return Replace(text, SqlValue.GetDate, "current_date");
-                case DalType.SQLite:
+                case DataBaseType.SQLite:
                     return Replace(text, SqlValue.GetDate, "datetime('now','localtime')");
-                case DalType.Txt:
-                case DalType.Xml:
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                     return Replace(text, SqlValue.GetDate, "'" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "'");
             }
             return text;
         }
-        private static string FormatCharIndex(string text, DalType dalType)
+        private static string FormatCharIndex(string text, DataBaseType dalType)
         {
             string key = SqlValue.CharIndex;
             //select [#charindex]('ok',xxx) from xxx where [#charindex]('ok',xx)>0
@@ -343,8 +343,8 @@ namespace CYQ.Data.SQL
             {
                 switch (dalType)
                 {
-                    case DalType.Access:
-                    case DalType.Oracle:
+                    case DataBaseType.Access:
+                    case DataBaseType.Oracle:
                         int found = 0;
                         string func = string.Empty;
                         do
@@ -361,13 +361,13 @@ namespace CYQ.Data.SQL
                         while (index > -1);
                         text = text.Replace("#_", "#");
                         return Replace(text, key, "instr");
-                    case DalType.MySql:
+                    case DataBaseType.MySql:
                         return Replace(text, key, "locate");
-                    case DalType.MsSql:
-                    case DalType.Sybase:
-                    case DalType.SQLite:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
+                    case DataBaseType.SQLite:
                         return Replace(text, key, "charindex");
-                    case DalType.PostgreSQL:
+                    case DataBaseType.PostgreSQL:
                         found = 0;
                         func = string.Empty;
                         do
@@ -390,7 +390,7 @@ namespace CYQ.Data.SQL
             }
             return text;
         }
-        private static string FormatDateDiff(string text, DalType dalType)
+        private static string FormatDateDiff(string text, DataBaseType dalType)
         {
             string key = SqlValue.DateDiff;
             //select [#DATEDIFF](aa,'bb','cc') from xxx where [#DATEDIFF](aa,'bb','cc')>0
@@ -400,22 +400,22 @@ namespace CYQ.Data.SQL
                 string[] keys = new string[] { "yyyy", "m", "d", "h", "n", "s" };//"hh/h"
                 switch (dalType)
                 {
-                    case DalType.Access:
-                    case DalType.Oracle:
+                    case DataBaseType.Access:
+                    case DataBaseType.Oracle:
                         foreach (string key1 in keys)
                         {
                             text = text.Replace("[#" + key1 + "]", "'" + key1 + "'");
                         }
                         break;
-                    case DalType.MsSql:
-                    case DalType.Sybase:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
                         text = text.Replace("[#h]", "hh");
                         foreach (string key2 in keys)
                         {
                             text = text.Replace("[#" + key2 + "]", key2);
                         }
                         break;
-                    case DalType.MySql://和mssql/access参数相反
+                    case DataBaseType.MySql://和mssql/access参数相反
                         foreach (string key2 in keys)
                         {
                             text = text.Replace("[#" + key2 + "],", string.Empty);
@@ -437,7 +437,7 @@ namespace CYQ.Data.SQL
                         while (index > -1);
                         text = text.Replace("#_", "#").Replace(AppConst.SplitChar, "()");
                         break;
-                    case DalType.SQLite:
+                    case DataBaseType.SQLite:
                         found = 0;
                         func = string.Empty;
                         do
@@ -455,7 +455,7 @@ namespace CYQ.Data.SQL
                         text = text.Replace("#_", "#");
                         text = Replace(text, key, string.Empty);
                         break;
-                    case DalType.PostgreSQL:
+                    case DataBaseType.PostgreSQL:
                         found = 0;
                         func = string.Empty;
                         string para = "", ageFun = "";
@@ -501,18 +501,18 @@ namespace CYQ.Data.SQL
             }
             return Replace(text, key, "DateDiff");
         }
-        private static string FormatCaseWhen(string text, DalType dalType)
+        private static string FormatCaseWhen(string text, DataBaseType dalType)
         {
             //CASE when languageid=1 THEN 1000 ELSE 10 End
 
             switch (dalType)
             {
-                case DalType.MsSql:
-                case DalType.Oracle:
-                case DalType.MySql:
-                case DalType.SQLite:
-                case DalType.Sybase:
-                case DalType.PostgreSQL:
+                case DataBaseType.MsSql:
+                case DataBaseType.Oracle:
+                case DataBaseType.MySql:
+                case DataBaseType.SQLite:
+                case DataBaseType.Sybase:
+                case DataBaseType.PostgreSQL:
                     if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1 || text.IndexOf(SqlValue.CaseWhen, StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         text = Replace(text, SqlValue.Case, "Case");
@@ -523,7 +523,7 @@ namespace CYQ.Data.SQL
                         text = Replace(text, "[#END]", "end");
                     }
                     break;
-                case DalType.Access:
+                case DataBaseType.Access:
                     if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         text = Replace(text, SqlValue.Case, string.Empty);

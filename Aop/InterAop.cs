@@ -25,7 +25,7 @@ namespace CYQ.Data.Aop
         {
             get
             {
-                return Para.DalType == DalType.Txt || Para.DalType == DalType.Xml;
+                return Para.DalType == DataBaseType.Txt || Para.DalType == DataBaseType.Xml;
             }
         }
         private AopInfo _AopInfo;

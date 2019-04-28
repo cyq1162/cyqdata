@@ -789,3 +789,6 @@
 574：DalBase：修正存储过程参数被移除的问题(2019-04-24)
 575：DBTool 开放 DataBases 属性和GetDBInfo方法(2019-04-26)
 576：MAction 兼容语句中带dbo.和子查询(2019-04-27)
+577：重命名 DataBase => DataBaseName、DalType =》 DataBaseType、DalVerion => DataBaseVersion (2019-04-28)
+578：DBInfo、TableInfo、MDataTable(Join方法）、MDataRow(Set方法）小细节调优(2019-04-28)
+579：MAction、SimpleOrm ：where 增加重载参数，SimpleOrm：开放SetPara参数化方法(2019-04-28)

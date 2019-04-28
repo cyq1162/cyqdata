@@ -72,7 +72,7 @@ namespace CYQ.Data
         /// The database type
         /// <para>数据库类型</para>
         /// </summary>
-        public DalType DalType
+        public DataBaseType DataBaseType
         {
             get
             {
@@ -80,29 +80,29 @@ namespace CYQ.Data
                 {
                     return dalHelper.DataBaseType;
                 }
-                return AppConfig.DB.DefaultDalType;
+                return AppConfig.DB.DefaultDataBaseType;
             }
         }
         /// <summary>
         /// The database name
         /// <para>数据库名称</para>
         /// </summary>
-        public string DataBase
+        public string DataBaseName
         {
             get
             {
                 if (dalHelper != null)
                 {
-                    return dalHelper.DataBase;
+                    return dalHelper.DataBaseName;
                 }
-                return AppConfig.DB.DefaultDataBase;
+                return AppConfig.DB.DefaultDataBaseName;
             }
         }
         /// <summary>
         /// The database version
         /// 数据库的版本号
         /// </summary>
-        public string DalVersion
+        public string DataBaseVersion
         {
             get
             {
@@ -248,8 +248,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _noSqlCommand = null;
                         _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
                         break;
@@ -313,13 +313,13 @@ namespace CYQ.Data
                 {
                     switch (dalHelper.DataBaseType)
                     {
-                        case DalType.Txt:
-                        case DalType.Xml:
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
                             _aop.Para.Table = _noSqlCommand.ExeMDataTable();
                             break;
                         default:
                             _aop.Para.Table = dalHelper.ExeDataReader(_procName, _isProc);
-                            _aop.Para.Table.Columns.dalType = DalType;
+                            _aop.Para.Table.Columns.dalType = DataBaseType;
                             // dalHelper.ResetConn();//重置Slave
                             break;
                     }
@@ -352,17 +352,17 @@ namespace CYQ.Data
                     List<MDataTable> dtList = new List<MDataTable>();
                     switch (dalHelper.DataBaseType)
                     {
-                        case DalType.Txt:
-                        case DalType.Xml:
-                        case DalType.Oracle:
-                            if (_isProc && dalHelper.DataBaseType == DalType.Oracle)
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
+                        case DataBaseType.Oracle:
+                            if (_isProc && dalHelper.DataBaseType == DataBaseType.Oracle)
                             {
                                 goto isProc;
                             }
                             foreach (string sql in _procName.TrimEnd(';').Split(';'))
                             {
                                 MDataTable dt = null;
-                                if (dalHelper.DataBaseType == DalType.Oracle)
+                                if (dalHelper.DataBaseType == DataBaseType.Oracle)
                                 {
                                     dt = dalHelper.ExeDataReader(sql, false);
                                 }
@@ -422,8 +422,8 @@ namespace CYQ.Data
                 {
                     switch (dalHelper.DataBaseType)
                     {
-                        case DalType.Txt:
-                        case DalType.Xml:
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
                             _aop.Para.RowCount = _noSqlCommand.ExeNonQuery();
                             break;
                         default:
@@ -451,8 +451,8 @@ namespace CYQ.Data
             {
                 switch (dalHelper.DataBaseType)
                 {
-                    case DalType.Txt:
-                    case DalType.Xml:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         _aop.Para.ExeResult = _noSqlCommand.ExeScalar();
                         break;
                     default:

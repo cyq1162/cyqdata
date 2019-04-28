@@ -16,12 +16,12 @@ namespace CYQ.Data.SQL
         /// </summary>
         public static Type GetType(SqlDbType sqlType)
         {
-            return GetType(sqlType, DalType.None);
+            return GetType(sqlType, DataBaseType.None);
         }
         /// <summary>
         /// 获得数据类型对应的Type
         /// </summary>
-        public static Type GetType(SqlDbType sqlType, DalType dalType)
+        public static Type GetType(SqlDbType sqlType, DataBaseType dalType)
         {
 
             switch (sqlType)
@@ -52,8 +52,8 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Timestamp:
                     switch (dalType)
                     {
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             return typeof(byte[]);
                         default:
                             return typeof(DateTime);
@@ -257,14 +257,14 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static DbType GetDbType(string typeName)
         {
-            return GetDbType(typeName, DalType.None);
+            return GetDbType(typeName, DataBaseType.None);
         }
         /// <summary>
         /// 将DbType类型字符串表达形式对应映射到DbType类型
         /// </summary>
         /// <param name="typeName">类型名称</param>
         /// <returns></returns>
-        public static DbType GetDbType(string typeName, DalType dalType)
+        public static DbType GetDbType(string typeName, DataBaseType dalType)
         {
             switch (typeName.ToLower().Replace("system.", ""))
             {
@@ -310,8 +310,8 @@ namespace CYQ.Data.SQL
                 case "timestamp":
                     switch (dalType)
                     {
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             return DbType.Binary;
                         default:
                             return DbType.DateTime;
@@ -373,14 +373,14 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static int GetGroup(SqlDbType sqlDbType)
         {
-            return GetGroup(sqlDbType, DalType.None);
+            return GetGroup(sqlDbType, DataBaseType.None);
         }
         /// <summary>
         /// 字母型返回0；数字型返回1；日期型返回2；bool返回3；guid返回4；其它返回999
         /// </summary>
         /// <param name="sqlDbType"></param>
         /// <returns></returns>
-        public static int GetGroup(SqlDbType sqlDbType, DalType dalType)
+        public static int GetGroup(SqlDbType sqlDbType, DataBaseType dalType)
         {
             switch (sqlDbType)
             {
@@ -416,7 +416,7 @@ namespace CYQ.Data.SQL
                 default:
                     if (sqlDbType == SqlDbType.Timestamp)
                     {
-                        if (dalType != DalType.MsSql && dalType != DalType.Sybase)
+                        if (dalType != DataBaseType.MsSql && dalType != DataBaseType.Sybase)
                         {
                             return 2;
                         }
@@ -438,9 +438,9 @@ namespace CYQ.Data.SQL
         /// <param name="dalTo">数据库类型</param>
         /// <param name="version">数据库版本号</param>
         /// <returns></returns>
-        internal static string GetDataType(MCellStruct ms, DalType dalTo, string version)
+        internal static string GetDataType(MCellStruct ms, DataBaseType dalTo, string version)
         {
-            DalType dalFrom = DalType.None;
+            DataBaseType dalFrom = DataBaseType.None;
             if (ms.MDataColumn != null)
             {
                 dalFrom = ms.MDataColumn.dalType;
@@ -451,7 +451,7 @@ namespace CYQ.Data.SQL
             int maxSize = ms.MaxSize == 0 ? 255 : ms.MaxSize;
             short scale = ms.Scale;
             version = version ?? string.Empty;
-            bool is2000 = version.StartsWith("08") || dalTo == DalType.Sybase;//Sybase 和2000类似。
+            bool is2000 = version.StartsWith("08") || dalTo == DataBaseType.Sybase;//Sybase 和2000类似。
 
             switch (sqlType)
             {
@@ -465,19 +465,19 @@ namespace CYQ.Data.SQL
                     //}
                     switch (dalTo)
                     {
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             if (sqlType == SqlDbType.BigInt)
                             {
                                 return "long";
                             }
                             break;
-                        case DalType.SQLite:
+                        case DataBaseType.SQLite:
                             if (sqlType == SqlDbType.BigInt)
                             {
                                 return "INT64";
                             }
                             return "INTEGER";
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             if (sqlType == SqlDbType.BigInt)
                             {
                                 if (maxSize > 10)
@@ -487,13 +487,13 @@ namespace CYQ.Data.SQL
                                 return "LONG";
                             }
                             return maxSize < 1 ? "NUMBER" : "NUMBER(" + maxSize + ")";
-                        case DalType.MySql:
+                        case DataBaseType.MySql:
                             if (sqlType == SqlDbType.TinyInt)
                             {
                                 return "tinyint(" + (maxSize > 0 ? maxSize : 4) + ") UNSIGNED";
                             }
                             break;
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             if (sqlType == SqlDbType.TinyInt)
                             {
                                 return "smallint";//postgreSQL没有tinyint
@@ -503,11 +503,11 @@ namespace CYQ.Data.SQL
                     }
                     return sqlType.ToString().ToLower();
                 case SqlDbType.Time:
-                    if (dalTo == DalType.PostgreSQL)
+                    if (dalTo == DataBaseType.PostgreSQL)
                     {
                         return isSameDalType ? ms.SqlTypeName : "time without time zone";
                     }
-                    if (dalTo == DalType.MySql || dalTo == DalType.SQLite || isSameDalType)
+                    if (dalTo == DataBaseType.MySql || dalTo == DataBaseType.SQLite || isSameDalType)
                     {
                         return sqlType.ToString().ToLower();
                     }
@@ -516,31 +516,31 @@ namespace CYQ.Data.SQL
                     if (isSameDalType) { return sqlType.ToString().ToLower(); }
                     switch (dalTo)
                     {
-                        case DalType.MySql:
-                        case DalType.SQLite:
-                        case DalType.Oracle:
-                        case DalType.PostgreSQL:
+                        case DataBaseType.MySql:
+                        case DataBaseType.SQLite:
+                        case DataBaseType.Oracle:
+                        case DataBaseType.PostgreSQL:
                             return sqlType.ToString().ToLower();
                     }
                     return "datetime";
                 case SqlDbType.Timestamp:
 
                     if (isSameDalType) { return "timestamp"; }
-                    if (dalFrom == DalType.MySql || dalFrom == DalType.Oracle)
+                    if (dalFrom == DataBaseType.MySql || dalFrom == DataBaseType.Oracle)
                     {
-                        if (dalTo == DalType.MySql || dalTo == DalType.Oracle || dalTo == DalType.PostgreSQL)
+                        if (dalTo == DataBaseType.MySql || dalTo == DataBaseType.Oracle || dalTo == DataBaseType.PostgreSQL)
                         {
                             return "timestamp";
                         }
                         return "datetime";
                     }
-                    else if (dalFrom == DalType.MsSql || dalFrom == DalType.Sybase)
+                    else if (dalFrom == DataBaseType.MsSql || dalFrom == DataBaseType.Sybase)
                     {
-                        if (dalTo == DalType.MsSql || dalTo == DalType.Sybase)
+                        if (dalTo == DataBaseType.MsSql || dalTo == DataBaseType.Sybase)
                         {
                             return "timestamp";
                         }
-                        else if (dalTo == DalType.PostgreSQL)
+                        else if (dalTo == DataBaseType.PostgreSQL)
                         {
                             return "bytea";
                         }
@@ -551,22 +551,22 @@ namespace CYQ.Data.SQL
                 case SqlDbType.DateTimeOffset:
                 case SqlDbType.DateTime2:
                 case SqlDbType.DateTime:
-                    if (dalTo == DalType.PostgreSQL)
+                    if (dalTo == DataBaseType.PostgreSQL)
                     {
                         return isSameDalType ? ms.SqlTypeName : "timestamp";
                     }
                     if (isSameDalType) { return sqlType.ToString().ToLower(); }
                     switch (dalTo)
                     {
-                        case DalType.MySql:
-                        case DalType.Oracle:
-                            if (dalTo == DalType.Oracle)
+                        case DataBaseType.MySql:
+                        case DataBaseType.Oracle:
+                            if (dalTo == DataBaseType.Oracle)
                             {
                                 return "date";
                             }
                             break;
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             if (sqlType == SqlDbType.SmallDateTime)
                             {
                                 return sqlType.ToString().ToLower();
@@ -577,9 +577,9 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Bit:
                     switch (dalTo)
                     {
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             return "NUMBER(" + (maxSize == -1 ? 1 : maxSize) + ")";
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             if (maxSize <= 1) { return "boolean"; }
                             string name = isSameDalType ? ms.SqlTypeName : "bit";
                             return name + "(" + maxSize + ")";
@@ -596,12 +596,12 @@ namespace CYQ.Data.SQL
                 case SqlDbType.SmallMoney:
                     switch (dalTo)
                     {
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "Currency";
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             return maxSize == -1 ? "NUMBER" : "NUMBER(" + maxSize + "," + scale + ")";
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             if (sqlType == SqlDbType.Money || sqlType == SqlDbType.SmallMoney)
                             {
                                 return sqlType.ToString().ToLower();
@@ -611,7 +611,7 @@ namespace CYQ.Data.SQL
                                 return "numeric(" + maxSize + "," + scale + ")";
                             }
                             break;
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             if (sqlType == SqlDbType.Decimal)
                             {
                                 return "numeric(" + maxSize + "," + scale + ")";
@@ -624,11 +624,11 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Real:
                     switch (dalTo)
                     {
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             return maxSize == -1 ? "NUMBER" : "NUMBER(" + maxSize + "," + scale + ")";
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "double";
-                        case DalType.MsSql:
+                        case DataBaseType.MsSql:
                             return ms.SqlType.ToString();
                     }
                     return ms.SqlTypeName;
@@ -642,12 +642,12 @@ namespace CYQ.Data.SQL
                     }
                     switch (dalTo)
                     {
-                        case DalType.SQLite:
-                        case DalType.Oracle:
+                        case DataBaseType.SQLite:
+                        case DataBaseType.Oracle:
                             return "BLOB";
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "oleobject";
-                        case DalType.MySql:
+                        case DataBaseType.MySql:
                             if (ms.SqlTypeName.ToLower() == "binary" && maxSize > 0 && maxSize <= 255)
                             {
                                 if (maxSize <= 16) { maxSize = 255; }
@@ -669,10 +669,10 @@ namespace CYQ.Data.SQL
                             {
                                 return "mediumblob";
                             }
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             string key = sqlType.ToString().ToLower();
-                            bool isSybase = dalTo == DalType.Sybase;
+                            bool isSybase = dalTo == DataBaseType.Sybase;
                             if (key == "image" || (maxSize < 0 && is2000) || (isSybase && maxSize > 1962))
                             {
                                 return "image";
@@ -684,7 +684,7 @@ namespace CYQ.Data.SQL
                             }
                             if (maxSize > 0 && maxSize <= 16) { maxSize = 255; }//兼容MySql，16的字节存了36的数据
                             return key + "(" + (maxSize < 0 ? "max" : maxSize.ToString()) + ")";
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             return "bytea";
                     }
                     return "binary";
@@ -698,14 +698,14 @@ namespace CYQ.Data.SQL
                     string t = sqlType.ToString().ToLower();
                     switch (dalTo)
                     {
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return (maxSize < 1 || maxSize > 255) ? "memo" : "text(" + maxSize + ")";
-                        case DalType.MsSql:
-                        case DalType.Sybase:
+                        case DataBaseType.MsSql:
+                        case DataBaseType.Sybase:
                             #region mssql、sybase
                             if (maxSize < 1 || maxSize > 8000)//ntext、text
                             {
-                                if (dalTo == DalType.Sybase)
+                                if (dalTo == DataBaseType.Sybase)
                                 {
                                     return t[0] == 'n' ? "unitext" : "text";
                                 }
@@ -717,16 +717,16 @@ namespace CYQ.Data.SQL
                             }
                             else
                             {
-                                if (dalTo == DalType.Sybase && t[0] == 'n')
+                                if (dalTo == DataBaseType.Sybase && t[0] == 'n')
                                 {
                                     t = "uni" + t.Substring(1);
                                 }
                                 return t + "(" + maxSize + ")";
                             }
                             #endregion
-                        case DalType.SQLite:
+                        case DataBaseType.SQLite:
                             return (maxSize < 1 || maxSize > 65535) ? "TEXT" : "TEXT(" + maxSize + ")";
-                        case DalType.MySql://mysql没有nchar之类的。
+                        case DataBaseType.MySql://mysql没有nchar之类的。
                             #region mysql
                             if (ms.IsPrimaryKey && t.EndsWith("text"))
                             {
@@ -762,7 +762,7 @@ namespace CYQ.Data.SQL
                             }
                             #endregion
                         //return (maxSize < 1 || maxSize > 8000) ? "longtext" : ();
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             if (maxSize < 1 || maxSize > 4000 || (maxSize > 2000 && (sqlType == SqlDbType.NVarChar || sqlType == SqlDbType.Char))
                                 || sqlType == SqlDbType.Text || sqlType == SqlDbType.NText)
                             {
@@ -773,7 +773,7 @@ namespace CYQ.Data.SQL
                                 return "char(" + maxSize + ")";
                             }
                             return t + "2(" + maxSize + ")";
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             string name = "varchar";
                             if (isSameDalType)
                             {
@@ -790,20 +790,20 @@ namespace CYQ.Data.SQL
                 case SqlDbType.UniqueIdentifier:
                     switch (dalTo)
                     {
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "GUID";
-                        case DalType.MySql:
-                        case DalType.Oracle:
-                        case DalType.Sybase:
+                        case DataBaseType.MySql:
+                        case DataBaseType.Oracle:
+                        case DataBaseType.Sybase:
                             return "char(36)";
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             return "uuid";
                     }
                     return "uniqueidentifier";
                 case SqlDbType.Xml:
                     switch (dalTo)
                     {
-                        case DalType.MsSql:
+                        case DataBaseType.MsSql:
                             if (is2000)
                             {
                                 return "ntext";
@@ -812,16 +812,16 @@ namespace CYQ.Data.SQL
                             {
                                 return "xml";
                             }
-                        case DalType.Sybase:
-                        case DalType.SQLite:
+                        case DataBaseType.Sybase:
+                        case DataBaseType.SQLite:
                             return "text";
-                        case DalType.MySql:
+                        case DataBaseType.MySql:
                             return "mediumtext";
-                        case DalType.Oracle:
+                        case DataBaseType.Oracle:
                             return "CLOB";
-                        case DalType.Access:
+                        case DataBaseType.Access:
                             return "memo";
-                        case DalType.PostgreSQL:
+                        case DataBaseType.PostgreSQL:
                             return "Xml";
                     }
                     break;

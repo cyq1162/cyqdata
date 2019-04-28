@@ -342,7 +342,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 当前的数据库类型。
         /// </summary>
-        internal DalType dalType = DalType.None;
+        internal DataBaseType dalType = DataBaseType.None;
         /// <summary>
         /// 该结构是否由视图拥有
         /// </summary>
@@ -456,7 +456,7 @@ namespace CYQ.Data.Table
         {
             if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
             {
-                if (dalType == DalType.None)
+                if (dalType == DataBaseType.None)
                 {
                     dalType = item.DalType;
                 }

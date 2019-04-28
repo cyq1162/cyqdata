@@ -6,7 +6,7 @@ namespace CYQ.Data
 { /// <summary>
     /// 操作的数据库类型
     /// </summary>
-    public enum DalType
+    public enum DataBaseType
     {
         None,
         /// <summary>

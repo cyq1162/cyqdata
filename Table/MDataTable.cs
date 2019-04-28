@@ -569,7 +569,6 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public List<T> ToList<T>(params bool[] useEmit)
         {
-
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
             {
@@ -594,6 +593,10 @@ namespace CYQ.Data.Table
         }
         internal object ToList(Type t)
         {
+            if (t.Name == "MDataTable")
+            {
+                return this;
+            }
             object listObj = Activator.CreateInstance(t);//´´½¨ÊµÀý
             if (Rows != null && Rows.Count > 0)
             {

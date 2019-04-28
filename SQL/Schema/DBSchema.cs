@@ -57,7 +57,9 @@ namespace CYQ.Data.SQL
             DBInfo info = new DBInfo();
             info.ConnName = dal.ConnObj.Master.ConnName;
             info.ConnString = dal.ConnObj.Master.ConnString;
-            info.DataBaseName = dal.DataBase;
+            info.DataBaseName = dal.DataBaseName;
+            info.DataBaseType = dal.DataBaseType;
+            info.DataBaseVersion = dal.Version;
             Dictionary<string, string> tables = TableSchema.GetTables(conn);
             if (tables != null && tables.Count > 0)
             {

@@ -43,7 +43,7 @@ namespace CYQ.Data
         /// <summary>
         /// 数据库类型
         /// </summary>
-        public DalType ConnDalType;
+        public DataBaseType ConnDalType;
         /// <summary>
         /// 数据库版本信息
         /// </summary>
@@ -121,9 +121,9 @@ namespace CYQ.Data
         /// <summary>
         /// 去掉 链接中的 provider=xxxx;
         /// </summary>
-        public static string RemoveConnProvider(DalType dal, string connString)
+        public static string RemoveConnProvider(DataBaseType dal, string connString)
         {
-            if (dal != DalType.Access)
+            if (dal != DataBaseType.Access)
             {
                 string conn = connString.ToLower();
                 int index = conn.IndexOf("provider");
@@ -138,7 +138,7 @@ namespace CYQ.Data
             }
             return connString;
         }
-        public static DalType GetDalTypeByConnString(string connString)
+        public static DataBaseType GetDalTypeByConnString(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//去掉空格
 
@@ -146,34 +146,34 @@ namespace CYQ.Data
             if (connString.Contains("server=") && !connString.Contains("port="))
             {
                 //server=.;database=xx;uid=xx;pwd=xx;
-                return DalType.MsSql;
+                return DataBaseType.MsSql;
             }
             if (connString.Contains("txtpath="))
             {
                 // txt path={0}
-                return DalType.Txt;
+                return DataBaseType.Txt;
             }
             if (connString.Contains("xmlpath="))
             {
                 // xml path={0}
-                return DalType.Xml;
+                return DataBaseType.Xml;
             }
             if (connString.Contains(".mdb") || connString.Contains(".accdb"))
             {
                 //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
                 //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
-                return DalType.Access;
+                return DataBaseType.Access;
             }
             if (connString.Contains(".db;") || connString.Contains(".db3;"))
             {
                 //Data Source={0}App_Data/demo.db;failifmissing=false
-                return DalType.SQLite;
+                return DataBaseType.SQLite;
             }
             if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
                || connString.Contains("description=") || connString.Contains("fororacle"))
             {
                 //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
-                return DalType.Oracle;
+                return DataBaseType.Oracle;
             }
 
             #endregion
@@ -182,37 +182,37 @@ namespace CYQ.Data
             if (connString.Contains("provider=ase") || connString.Contains("port=5000"))
             {
                 //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
-                return DalType.Sybase;
+                return DataBaseType.Sybase;
             }
             if (connString.Contains("port=5432"))
             {
                 ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
-                return DalType.PostgreSQL;
+                return DataBaseType.PostgreSQL;
             }
             if (connString.Contains("port=3306"))
             {
                 //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
-                return DalType.MySql;
+                return DataBaseType.MySql;
             }
             #endregion
 
             if (connString.Contains("host=") && File.Exists(AppConfig.AssemblyPath + "MySql.Data.dll"))
             {
-                return DalType.MySql;
+                return DataBaseType.MySql;
             }
 
             if (connString.Contains("datasource") &&
                 (File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet2.AseClient.dll") || File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet4.AseClient.dll")))
             {
-                return DalType.Sybase;
+                return DataBaseType.Sybase;
             }
             //postgre和mssql的链接语句一样，为postgre
             if (File.Exists(AppConfig.AssemblyPath + "Npgsql.dll"))
             {
-                return DalType.PostgreSQL;
+                return DataBaseType.PostgreSQL;
             }
 
-            return DalType.MsSql;
+            return DataBaseType.MsSql;
 
         }
 

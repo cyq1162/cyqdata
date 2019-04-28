@@ -69,10 +69,10 @@ namespace CYQ.Data
 
                 switch (_DalType)
                 {
-                    case DalType.Txt:
+                    case DataBaseType.Txt:
                         _Table = MDataTable.CreateFrom(_FileFullName, _Row.Columns, EscapeOp.Encode);
                         break;
-                    case DalType.Xml:
+                    case DataBaseType.Xml:
                         _Table = MDataTable.CreateFromXml(_FileFullName, _Row.Columns);
                         break;
                 }
@@ -229,8 +229,8 @@ namespace CYQ.Data
         /// </summary>
         string _FileName = string.Empty;
         internal MDataRow _Row;//MAction中的Row
-        DalType _DalType = DalType.None;
-        public NoSqlAction(ref MDataRow row, string fileName, string filePath, DalType dalType)
+        DataBaseType _DalType = DataBaseType.None;
+        public NoSqlAction(ref MDataRow row, string fileName, string filePath, DataBaseType dalType)
         {
             Reset(ref row, fileName, filePath, dalType);
         }
@@ -241,17 +241,17 @@ namespace CYQ.Data
         /// <param name="fileName">文件名称</param>
         /// <param name="filePath">文件路径</param>
         /// <param name="dalType">数据类型</param>
-        public void Reset(ref MDataRow row, string fileName, string filePath, DalType dalType)
+        public void Reset(ref MDataRow row, string fileName, string filePath, DataBaseType dalType)
         {
             string exName = Path.GetExtension(fileName);
             if (string.IsNullOrEmpty(exName))
             {
                 switch (dalType)
                 {
-                    case DalType.Txt:
+                    case DataBaseType.Txt:
                         fileName = fileName + ".txt";
                         break;
-                    case DalType.Xml:
+                    case DataBaseType.Xml:
                         fileName = fileName + ".xml";
                         break;
                 }
@@ -484,7 +484,7 @@ namespace CYQ.Data
             if (state > 0)
             {
                 bool isFirstAddRow = (Table.Rows.Count - _insertRows.Count) == 0;//如果是首次新增加数据。
-                if (state > 1 || isFirstAddRow || _DalType == DalType.Xml || _insertRows.Count == 0)
+                if (state > 1 || isFirstAddRow || _DalType == DataBaseType.Xml || _insertRows.Count == 0)
                 {
                     Save();
                 }
@@ -541,7 +541,7 @@ namespace CYQ.Data
                 string text = string.Empty;
                 if (string.IsNullOrEmpty(text))
                 {
-                    text = _DalType == DalType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Encode).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
+                    text = _DalType == DataBaseType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Encode).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
                 }
                 int tryAgainCount = 3;
                 bool isError = false;
@@ -550,7 +550,7 @@ namespace CYQ.Data
                     try
                     {
 
-                        IOHelper.Write(_FileFullName, text, _DalType == DalType.Txt ? IOHelper.DefaultEncoding : Encoding.UTF8);
+                        IOHelper.Write(_FileFullName, text, _DalType == DataBaseType.Txt ? IOHelper.DefaultEncoding : Encoding.UTF8);
                         tryAgainCount = 0;
                         if (_isDeleteAll.Contains(_FileFullName))
                         {
