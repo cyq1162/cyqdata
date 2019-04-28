@@ -387,7 +387,7 @@ namespace CYQ.Data.Orm
             }
             GetValueFromEntity();
 
-            if (updateColumns.Length > 0)
+            if (updateColumns != null && updateColumns.Length > 0)
             {
                 Action.Data.SetState(0);
                 if (updateColumns.Length == 1)

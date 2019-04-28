@@ -329,7 +329,7 @@ namespace CYQ.Data.SQL
             string key = t != v ? (v + "," + t) : t;
             return string.Format("select distinct {0} from {1} {2}", key, TableName, FormatWhere(whereObj));
         }
-        internal string GetMaxid()
+        internal string GetMaxID()
         {
             switch (_action.dalHelper.DataBaseType)
             {

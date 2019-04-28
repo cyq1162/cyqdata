@@ -287,7 +287,12 @@ namespace CYQ.Data
             }
             else
             {
-                return ExecuteNonQuery();
+                int result = ExecuteNonQuery();
+                if (result > 0 && ss.IsInsert)
+                {
+                    return action._Row[action._Row.PrimaryCell.ColumnName].Value;
+                }
+                return result;
             }
         }
         /// <summary>
