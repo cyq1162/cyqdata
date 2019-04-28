@@ -100,13 +100,13 @@ namespace CYQ.Data.SQL
                         break;
                     case "by":
                     case "where":
-                        if (IsFrom)
+                        if (IsFrom || IsUpdate)
                         {
                             IsFrom = false;
                             IsWhere = true;
 
                             int startIndex = sqlText.LastIndexOf(" " + item + " ") + item.Length + 2;
-                            int limit = sqlText.IndexOf(" limit ", startIndex,StringComparison.OrdinalIgnoreCase);
+                            int limit = sqlText.IndexOf(" limit ", startIndex, StringComparison.OrdinalIgnoreCase);
                             if (limit == -1)
                             {
                                 Where = sqlText.Substring(startIndex);
