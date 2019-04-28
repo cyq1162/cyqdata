@@ -109,17 +109,22 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public static bool Delete<T>(object where)
         {
+            return Delete<T>(where, false);
+        }
+        public static bool Delete<T>(object where, bool isIgnoreDeleteField)
+        {
             if (where == null) { return false; }
             using (MAction action = GetMAction<T>())
             {
+
                 if (typeof(T).FullName == where.GetType().FullName)//传进实体类
                 {
                     action.Data.LoadFrom(where);
-                    return action.Delete();
+                    return action.Delete(null, isIgnoreDeleteField);
                 }
                 else
                 {
-                    return action.Delete(where);
+                    return action.Delete(where, isIgnoreDeleteField);
                 }
 
             }
@@ -168,12 +173,29 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
         /// <param name="where">条件</param>
+        /// <param name="updateColumns">指定要更新列</param>
         /// <returns></returns>
-        public static bool Update<T>(T t, object where)
+        public static bool Update<T>(T t, object where, params string[] updateColumns)
         {
             using (MAction action = GetMAction<T>())
             {
                 action.Data.LoadFrom(t, BreakOp.Null);
+                if (updateColumns.Length > 0)
+                {
+                    action.Data.SetState(0);
+                    if (updateColumns.Length == 1)
+                    {
+                        updateColumns = updateColumns[0].Split(',');
+                    }
+                    foreach (string item in updateColumns)
+                    {
+                        MDataCell cell = action.Data[item];
+                        if (cell != null)
+                        {
+                            cell.State = 2;
+                        }
+                    }
+                }
                 return action.Update(where);
             }
         }

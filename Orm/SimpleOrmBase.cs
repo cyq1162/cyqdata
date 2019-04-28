@@ -368,36 +368,33 @@ namespace CYQ.Data.Orm
         ///  更新数据
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
-        public bool Update(object where)
-        {
-            return Update(where, false, null);
-        }
         /// <param name="onlyUpdateColumns">指定仅更新的列名，多个用逗号分隔</param>
         /// <returns></returns>
-        public bool Update(object where, string onlyUpdateColumns)
+        public bool Update(object where, params string[] updateColumns)
         {
-            return Update(where, false, onlyUpdateColumns);
-        }
-        internal bool Update(object where, bool autoSetValue)
-        {
-            return Update(where, autoSetValue, null);
+            return Update(where, false, updateColumns);
         }
         /// <summary>
         ///  更新数据
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Update(object where, bool autoSetValue, string onlyUpdateColumns)
+        internal bool Update(object where, bool autoSetValue, params string[] updateColumns)
         {
             if (autoSetValue)
             {
                 Action.UI.GetAll(false);
             }
             GetValueFromEntity();
-            if (!string.IsNullOrEmpty(onlyUpdateColumns))
+
+            if (updateColumns.Length > 0)
             {
                 Action.Data.SetState(0);
-                foreach (string item in onlyUpdateColumns.Split(','))
+                if (updateColumns.Length == 1)
+                {
+                    updateColumns = updateColumns[0].Split(',');
+                }
+                foreach (string item in updateColumns)
                 {
                     MDataCell cell = Action.Data[item];
                     if (cell != null)
