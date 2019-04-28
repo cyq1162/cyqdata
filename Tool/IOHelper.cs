@@ -425,7 +425,7 @@ namespace CYQ.Data.Tool
             {
                 return defaultEncoding;
             }
-            switch (DetectWithoutBom(buff, buff.Length > 1000 ? 1000 : buff.Length))//自动检测。
+            switch (DetectWithoutBom(buff, buff.Length))//自动检测。
             {
 
                 case TextEncodingDetect.TextEncode.Utf8Nobom:
@@ -503,7 +503,7 @@ namespace CYQ.Data.Tool
         {
             // Now check for valid UTF8
             TextEncode encoding = CheckUtf8(buffer, size);
-            if (encoding != TextEncode.None)
+            if (encoding == TextEncode.Utf8Nobom)
             {
                 return encoding;
             }
@@ -512,7 +512,10 @@ namespace CYQ.Data.Tool
             if (!ContainsZero(buffer, size))
             {
                 CheckChinese(buffer, size);
-                return TextEncode.Ansi;
+                if (IsChinese)
+                {
+                    return TextEncode.Ansi;
+                }
             }
 
             // Now try UTF16  按寻找换行字符先进行判断
@@ -836,7 +839,7 @@ namespace CYQ.Data.Tool
         }
         public delegate void WatchDelegate(FileSystemEventArgs e);
         private WatchDelegate watch;
-        public void WatchOn(string fileName,WatchDelegate watch)
+        public void WatchOn(string fileName, WatchDelegate watch)
         {
             this.watch = watch;
             FileSystemWatcher fsy = new FileSystemWatcher(Path.GetDirectoryName(fileName), Path.GetFileName(fileName));

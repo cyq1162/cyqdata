@@ -153,7 +153,7 @@ namespace CYQ.Data
         }
         private void InitAction()
         {
-            ss = SqlSyntax.Analyze(FormatParas(CommandText));
+            ss = SqlSyntax.Analyze(CommandText);
             if (ss != null)
             {
                 if (action == null || action.TableName != ss.TableName)
@@ -182,8 +182,9 @@ namespace CYQ.Data
         public MDataTable ExeMDataTable()
         {
             InitAction();
+            string where = FormatParas(ss.Where);
             int count = 0;
-            MDataTable dt = action.Select(ss.PageIndex, ss.PageSize, ss.Where, out count);
+            MDataTable dt = action.Select(ss.PageIndex, ss.PageSize, where, out count);
             if (ss.FieldItems.Count > 0)
             {
                 //处理 a as B 的列。
@@ -233,6 +234,7 @@ namespace CYQ.Data
         public override int ExecuteNonQuery()
         {
             InitAction();
+            string where = FormatParas(ss.Where);
             int count = -1;
             if (ss.IsInsert || ss.IsUpdate)
             {
@@ -244,16 +246,24 @@ namespace CYQ.Data
                     {
                         string key = item.Substring(0, index);
                         string value = item.Substring(index + 1);
-                        if (value.Length > 0 && value[0] == '\'')
+
+                        if (value.Length > 0)
                         {
-                            value = value.Substring(1, value.Length - 2).Replace("''", "'");
+                            if (value[0] == '@' && list.Contains(value))
+                            {
+                                value = list[value].Value.ToString();
+                            }
+                            else if (value[0] == '\'')
+                            {
+                                value = value.Substring(1, value.Length - 2).Replace("''", "'");
+                            }
                         }
                         action._Row.Set(key, value);
                     }
                 }
                 if (ss.IsUpdate)
                 {
-                    action.Update(ss.Where, out count);
+                    action.Update(where, out count);
                 }
                 else if (ss.IsInsert && action.Insert(Transaction != null))
                 {
@@ -262,7 +272,7 @@ namespace CYQ.Data
             }
             else if (ss.IsDelete)
             {
-                action.Delete(ss.Where, out count);
+                action.Delete(where, out count);
             }
             return count;
         }
@@ -271,11 +281,12 @@ namespace CYQ.Data
             InitAction();
             if (ss.IsSelect)
             {
+                string where = FormatParas(ss.Where);
                 if (ss.IsGetCount)
                 {
-                    return action.GetCount(ss.Where);
+                    return action.GetCount(where);
                 }
-                else if (ss.FieldItems.Count > 0 && action.Fill(ss.Where))
+                else if (ss.FieldItems.Count > 0 && action.Fill(where))
                 {
                     if (action._Row.Columns.Contains(ss.FieldItems[0]))
                     {
@@ -305,7 +316,20 @@ namespace CYQ.Data
             {
                 foreach (KeyValuePair<string, NoSqlParameter> item in list)
                 {
-                    where = Regex.Replace(where, item.Value.ParameterName, "'" + item.Value.Value + "'", RegexOptions.IgnoreCase);
+                    //aa=@aa and bb=@aab
+                    if (where.IndexOf(item.Value.ParameterName + " ", StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName + " ", "'" + item.Value.Value + "' ", RegexOptions.IgnoreCase);
+                    }
+                    //aa=@aa,bb=@aab
+                    else if (where.IndexOf(item.Value.ParameterName + ",", StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName + ",", "'" + item.Value.Value + "',", RegexOptions.IgnoreCase);
+                    }
+                    else
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName, "'" + item.Value.Value + "'", RegexOptions.IgnoreCase);
+                    }
                 }
             }
             return where;
