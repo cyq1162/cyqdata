@@ -16,8 +16,10 @@ namespace CYQ.Data.SQL
         {
             return new SqlSyntax(sql);
         }
+        public string SqlText;
         private SqlSyntax(string sql)
         {
+            SqlText = sql;
             FormatSqlText(sql);
         }
         public string TableName = string.Empty;
@@ -32,7 +34,13 @@ namespace CYQ.Data.SQL
         // bool IsAll = false;
         public bool IsTopN = false;
         public bool IsDistinct = false;
+        public bool IsLimit = false;
+        public bool IsOffset = false;
+        public bool IsWhere = false;
+        public bool IsOrder = false;
         public int TopN = -1;
+        public int PageIndex = 0;
+        public int PageSize = 0;
         public List<string> FieldItems = new List<string>();
 
         void FormatSqlText(string sqlText)
@@ -40,6 +48,9 @@ namespace CYQ.Data.SQL
             string[] items = sqlText.Split(' ');
             foreach (string item in items)
             {
+                #region MyRegion
+
+
                 switch (item.ToLower())
                 {
                     case "insert":
@@ -64,12 +75,52 @@ namespace CYQ.Data.SQL
                         IsFrom = true;
                         break;
                     case "count(*)":
+                    case "count(0)":
+                    case "count(1)":
                         IsGetCount = true;
                         break;
+                    case "limit":
+                        if (IsSelect && (IsFrom || IsWhere))
+                        {
+                            IsLimit = true;
+                        }
+                        break;
+                    case "offset":
+                        if (IsLimit)
+                        {
+                            IsLimit = false;
+                            IsOffset = true;
+                        }
+                        break;
+                    case "order":
+                        if (IsFrom || IsWhere)
+                        {
+                            IsOrder = true;
+                        }
+                        break;
+                    case "by":
                     case "where":
-                        Where = sqlText.Substring(sqlText.IndexOf(item) + item.Length + 1);
-                        //该结束语句了。
-                        goto end;
+                        if (IsFrom)
+                        {
+                            IsFrom = false;
+                            IsWhere = true;
+
+                            int startIndex = sqlText.LastIndexOf(" " + item + " ") + item.Length + 2;
+                            int limit = sqlText.IndexOf(" limit ", startIndex,StringComparison.OrdinalIgnoreCase);
+                            if (limit == -1)
+                            {
+                                Where = sqlText.Substring(startIndex);
+                            }
+                            else
+                            {
+                                Where = sqlText.Substring(startIndex, limit - startIndex);
+                            }
+                            if (item.ToLower() == "by")
+                            {
+                                Where = "order by " + Where;
+                            }
+                        }
+                        break;
                     case "top":
                         if (IsSelect && !IsFrom)
                         {
@@ -99,7 +150,7 @@ namespace CYQ.Data.SQL
                                     string keyValue = itemText.Substring(commaIndex).Trim();
                                     if (!FieldItems.Contains(keyValue))
                                     {
-                                        FieldItems.Add(keyValue);
+                                        FieldItems.Add(keyValue.Trim());
                                     }
                                 }
                                 else
@@ -128,103 +179,126 @@ namespace CYQ.Data.SQL
                         }
                         break;
                     default:
-                        if (IsTopN && TopN == -1)
+                        if (IsOffset)
                         {
-                            int.TryParse(item, out TopN);//查询TopN
-                            IsTopN = false;//关闭topN
-                        }
-                        else if ((IsFrom || IsUpdate || IsInsertInto) && string.IsNullOrEmpty(TableName))
-                        {
-                            TableName = item.Split('(')[0].Trim();//获取表名。
-                        }
-                        else if (IsSelect && !IsFrom)//提取查询的中间条件。
-                        {
-                            #region Select 字段搜集
-                            switch (item)
+                            if (!int.TryParse(item, out PageIndex))
                             {
-                                case "*":
-                                case "count(*)":
-                                case "distinct":
-                                    break;
-                                default:
-                                    fieldText.Append(item + " ");
-                                    break;
+                                PageIndex = 0;
+                            }
+                        }
+                        else if (IsLimit)
+                        {
+                            if (!int.TryParse(item, out PageSize))
+                            {
+                                PageSize = 0;
                             }
 
-                            #endregion
                         }
-                        else if (IsInsertInto && !string.IsNullOrEmpty(TableName) && FieldItems.Count == 0)
+                        if (!IsWhere)
                         {
-                            #region 解析Insert Into的字段与值
-
-                            int start = sqlText.IndexOf(TableName) + TableName.Length;
-                            int end = sqlText.IndexOf("values", start, StringComparison.OrdinalIgnoreCase);
-                            if (end == -1)
+                            if (IsTopN && TopN == -1)
                             {
-                                end = sqlText.IndexOf("select", start, StringComparison.OrdinalIgnoreCase);
-                                if (end == -1) { break; }
-                            }
-                            string keys = sqlText.Substring(start, end - start).Trim();
-                            string[] keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
-
-                            string values = sqlText.Substring(end + 6).Trim();
-                            if (IsSelect && IsFrom)
-                            {
-                                end = values.IndexOf("from");
-                                if (end > 0)
+                                if (int.TryParse(item, out TopN))//查询TopN
                                 {
-                                    //insert into ...select ...from 模式
-                                    values = values.Substring(0, end);//去除两边括号
+                                    PageSize = TopN;
                                 }
+                                IsTopN = false;//关闭topN
                             }
-                            else
+                            else if ((IsFrom || IsUpdate || IsInsertInto) && string.IsNullOrEmpty(TableName))
                             {
-                                // insert into ... values 模式。
-                                values = values.Substring(1, values.Length - 2);//去除两边括号
+                                TableName = item.Split('(')[0].Trim();//获取表名。
                             }
-                            int quoteCount = 0, commaIndex = 0, valueIndex = 0;
-
-                            #region get values
-                            for (int i = 0; i < values.Length; i++)
+                            else if (IsSelect && !IsFrom)//提取查询的中间条件。
                             {
-                                if (valueIndex >= keyItems.Length)
+                                #region Select 字段搜集
+                                switch (item)
                                 {
-                                    break;
+                                    case "*":
+                                    case "count(*)":
+                                    case "count(0)":
+                                    case "count(1)":
+                                    case "distinct":
+                                        break;
+                                    default:
+                                        fieldText.Append(item + " ");
+                                        break;
                                 }
-                                if (i == values.Length - 1)
+
+                                #endregion
+                            }
+                            else if (IsInsertInto && !string.IsNullOrEmpty(TableName) && FieldItems.Count == 0)
+                            {
+                                #region 解析Insert Into的字段与值
+
+                                int start = sqlText.IndexOf(TableName) + TableName.Length;
+                                int end = sqlText.IndexOf("values", start, StringComparison.OrdinalIgnoreCase);
+                                if (end == -1)
                                 {
-                                    string value = values.Substring(commaIndex).Trim();
-                                    keyItems[valueIndex] += "=" + value;
+                                    end = sqlText.IndexOf("select", start, StringComparison.OrdinalIgnoreCase);
+                                    if (end == -1) { break; }
+                                }
+                                string keys = sqlText.Substring(start, end - start).Trim();
+                                string[] keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
+
+                                string values = sqlText.Substring(end + 6).Trim();
+                                if (IsSelect && IsFrom)
+                                {
+                                    end = values.IndexOf("from");
+                                    if (end > 0)
+                                    {
+                                        //insert into ...select ...from 模式
+                                        values = values.Substring(0, end);//去除两边括号
+                                    }
                                 }
                                 else
                                 {
-                                    switch (values[i])
-                                    {
-                                        case '\'':
-                                            quoteCount++;
-                                            break;
-                                        case ',':
-                                            if (quoteCount % 2 == 0)//双数，则允许分隔。
-                                            {
-                                                string value = values.Substring(commaIndex, i - commaIndex).Trim();
-                                                keyItems[valueIndex] += "=" + value;
-                                                commaIndex = i + 1;
-                                                valueIndex++;
-                                            }
-                                            break;
+                                    // insert into ... values 模式。
+                                    values = values.Substring(1, values.Length - 2);//去除两边括号
+                                }
+                                int quoteCount = 0, commaIndex = 0, valueIndex = 0;
 
+                                #region get values
+                                for (int i = 0; i < values.Length; i++)
+                                {
+                                    if (valueIndex >= keyItems.Length)
+                                    {
+                                        break;
+                                    }
+                                    if (i == values.Length - 1)
+                                    {
+                                        string value = values.Substring(commaIndex).Trim();
+                                        keyItems[valueIndex] += "=" + value;
+                                    }
+                                    else
+                                    {
+                                        switch (values[i])
+                                        {
+                                            case '\'':
+                                                quoteCount++;
+                                                break;
+                                            case ',':
+                                                if (quoteCount % 2 == 0)//双数，则允许分隔。
+                                                {
+                                                    string value = values.Substring(commaIndex, i - commaIndex).Trim();
+                                                    keyItems[valueIndex] += "=" + value;
+                                                    commaIndex = i + 1;
+                                                    valueIndex++;
+                                                }
+                                                break;
+
+                                        }
                                     }
                                 }
-                            } 
-                            #endregion
-                            FieldItems.AddRange(keyItems);
+                                #endregion
+                                FieldItems.AddRange(keyItems);
 
-                            #endregion
+                                #endregion
+                            }
                         }
                         break;
                 }
+                #endregion
             }
-        end:
             #region Select 字段解析
             if (fieldText.Length > 0)
             {
@@ -238,6 +312,6 @@ namespace CYQ.Data.SQL
             #endregion
         }
         private StringBuilder fieldText = new StringBuilder();
-        
+
     }
 }

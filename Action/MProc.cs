@@ -46,9 +46,7 @@ namespace CYQ.Data
         }
         #endregion
         internal DalBase dalHelper;
-        private NoSqlCommand _noSqlCommand;
         private InterAop _aop = new InterAop();
-        // private AopInfo _aopInfo = new AopInfo();
         private string _procName = string.Empty;
         private bool _isProc = true;
         private string _debugInfo = string.Empty;
@@ -244,22 +242,6 @@ namespace CYQ.Data
             {
                 dalHelper.ClearParameters();
             }
-            if (dalHelper != null)
-            {
-                switch (dalHelper.DataBaseType)
-                {
-                    case DataBaseType.Txt:
-                    case DataBaseType.Xml:
-                        _noSqlCommand = null;
-                        _noSqlCommand = new NoSqlCommand(_procName, dalHelper);
-                        break;
-                }
-            }
-            //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
-            //if (myAop != null)
-            //{
-            //    SetAop(myAop);
-            //}
         }
         /// <summary>
         /// <param name="isClearPara">IsClearParameters
@@ -311,18 +293,8 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    switch (dalHelper.DataBaseType)
-                    {
-                        case DataBaseType.Txt:
-                        case DataBaseType.Xml:
-                            _aop.Para.Table = _noSqlCommand.ExeMDataTable();
-                            break;
-                        default:
-                            _aop.Para.Table = dalHelper.ExeDataReader(_procName, _isProc);
-                            _aop.Para.Table.Columns.DataBaseType = DataBaseType;
-                            // dalHelper.ResetConn();//重置Slave
-                            break;
-                    }
+                    _aop.Para.Table = dalHelper.ExeDataReader(_procName, _isProc);
+                    _aop.Para.Table.Columns.DataBaseType = DataBaseType;
                     _aop.Para.Table.Conn = dalHelper.ConnName;
                     _aop.Para.IsSuccess = _aop.Para.Table.Rows.Count > 0;
                 }
@@ -361,16 +333,7 @@ namespace CYQ.Data
                             }
                             foreach (string sql in _procName.TrimEnd(';').Split(';'))
                             {
-                                MDataTable dt = null;
-                                if (dalHelper.DataBaseType == DataBaseType.Oracle)
-                                {
-                                    dt = dalHelper.ExeDataReader(sql, false);
-                                }
-                                else
-                                {
-                                    _noSqlCommand.CommandText = sql;
-                                    dt = _noSqlCommand.ExeMDataTable();
-                                }
+                                MDataTable dt = dalHelper.ExeDataReader(sql, false);
                                 if (dt != null)
                                 {
                                     dtList.Add(dt);
@@ -420,16 +383,7 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    switch (dalHelper.DataBaseType)
-                    {
-                        case DataBaseType.Txt:
-                        case DataBaseType.Xml:
-                            _aop.Para.RowCount = _noSqlCommand.ExeNonQuery();
-                            break;
-                        default:
-                            _aop.Para.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
-                            break;
-                    }
+                    _aop.Para.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
                     _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
                 }
                 if (aopResult != AopResult.Default)
@@ -449,16 +403,7 @@ namespace CYQ.Data
             AopResult aopResult = SetAopResult(AopEnum.ExeScalar);
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
             {
-                switch (dalHelper.DataBaseType)
-                {
-                    case DataBaseType.Txt:
-                    case DataBaseType.Xml:
-                        _aop.Para.ExeResult = _noSqlCommand.ExeScalar();
-                        break;
-                    default:
-                        _aop.Para.ExeResult = dalHelper.ExeScalar(_procName, _isProc);
-                        break;
-                }
+                _aop.Para.ExeResult = dalHelper.ExeScalar(_procName, _isProc);
                 _aop.Para.IsSuccess = _aop.Para.ExeResult != null;
             }
             if (aopResult == AopResult.Continue || aopResult == AopResult.Break)
@@ -657,10 +602,6 @@ namespace CYQ.Data
                 _debugInfo = dalHelper.DebugInfo.ToString();
                 dalHelper.Dispose();
                 dalHelper = null;
-            }
-            if (_noSqlCommand != null)
-            {
-                _noSqlCommand.Dispose();
             }
         }
         bool hasDisposed = false;

@@ -793,3 +793,5 @@
 578：DBInfo、TableInfo、MDataTable(Join方法）、MDataRow(Set方法）小细节调优(2019-04-28)
 579：MAction、SimpleOrm ：where 增加重载参数，SimpleOrm：开放SetPara参数化方法(2019-04-28)
 580：DBTool 去调GetTables方法、ExistsTable 更名：Exists (2019-04-28)
+581：NoSqlAction：文本数据库机制内部调整、查询优化。(2019-04-29)
+582：Aop、AutoCache：自动缓存机制小调整，除了原有的全局IsAutoCache全局初始化控制外，Aop参数可二次强制控制。(2019-04-29)

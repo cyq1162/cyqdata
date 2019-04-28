@@ -146,6 +146,7 @@ namespace CYQ.Data.Table
         /// </summary>
         public int GetIndex(string columnName)
         {
+            columnName = columnName.Trim();
             if (columnIndex.Count == 0 || IsColumnNameChanged || columnIndex.Count != Count)
             {
                 columnIndex.Clear();

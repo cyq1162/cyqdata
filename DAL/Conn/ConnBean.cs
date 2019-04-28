@@ -113,7 +113,7 @@ namespace CYQ.Data
             }
             ConnBean cb = new ConnBean();
             cb.ConnName = connNameOrString;
-            cb.ConnDalType = GetDalTypeByConnString(connString);
+            cb.ConnDalType = GetDataBaseType(connString);
             cb.ConnString = RemoveConnProvider(cb.ConnDalType, connString);
 
             return cb;
@@ -138,7 +138,7 @@ namespace CYQ.Data
             }
             return connString;
         }
-        public static DataBaseType GetDalTypeByConnString(string connString)
+        public static DataBaseType GetDataBaseType(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//È¥µô¿Õ¸ñ
 

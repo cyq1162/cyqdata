@@ -30,8 +30,8 @@ namespace CYQ.Data
         ///  是否需要更新：0未更新；1仅插入[往后面插数据]；2更新删除或插入[重新保存],//需要更新[全局的可以有效处理并发]
         /// </summary>
         private static MDictionary<string, int> _needToSaveState = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);
-        private static MDictionary<string, object> _lockNextidObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//自增加id锁
-        private static MDictionary<string, int> _maxid = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大id
+        private static MDictionary<string, object> _lockNextIDObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//自增加id锁
+        private static MDictionary<string, int> _maxID = new MDictionary<string, int>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大id
         private static MDictionary<string, DateTime> _lastWriteTimeList = new MDictionary<string, DateTime>(5, StringComparer.OrdinalIgnoreCase);//当前表的最大id
         // private static MDictionary<string, object> _lockOperatorObj = new MDictionary<string, object>(5, StringComparer.OrdinalIgnoreCase);//增删改时的互锁
         private List<MDataRow> _insertRows = new List<MDataRow>();//新插入的集合，仅是引用MDataTable的索引
@@ -55,9 +55,9 @@ namespace CYQ.Data
                     _Table = _tableList[_FileFullName];
                     if (_Table.Rows.Count == 0 && !_isDeleteAll.Contains(_FileFullName))
                     {
-                        if (_maxid.ContainsKey(_FileFullName))
+                        if (_maxID.ContainsKey(_FileFullName))
                         {
-                            _maxid.Remove(_FileFullName);
+                            _maxID.Remove(_FileFullName);
                         }
                         _tableList.Remove(_FileFullName);// 会引发最后一条数据无法删除的问题(已修正该问题，所以可开放)。
                     }
@@ -116,30 +116,30 @@ namespace CYQ.Data
             }
         }
 
-        private int maxid
+        private int maxID
         {
             get
             {
-                if (!_maxid.ContainsKey(_FileFullName))
+                if (!_maxID.ContainsKey(_FileFullName))
                 {
-                    _maxid.Add(_FileFullName, 0);
+                    _maxID.Add(_FileFullName, 0);
                 }
-                return _maxid[_FileFullName];
+                return _maxID[_FileFullName];
             }
             set
             {
-                _maxid[_FileFullName] = value;
+                _maxID[_FileFullName] = value;
             }
         }
-        private object lockNextidobj
+        private object lockNextIDObj
         {
             get
             {
-                if (!_lockNextidObj.ContainsKey(_FileFullName))
+                if (!_lockNextIDObj.ContainsKey(_FileFullName))
                 {
-                    _lockNextidObj.Add(_FileFullName, new object());
+                    _lockNextIDObj.Add(_FileFullName, new object());
                 }
-                return _lockNextidObj[_FileFullName];
+                return _lockNextIDObj[_FileFullName];
             }
         }
         private int needToSaveState
@@ -162,15 +162,15 @@ namespace CYQ.Data
         /// <summary>
         /// 下一个自增加id
         /// </summary>
-        private int Nextid
+        private int NextID
         {
             get
             {
-                lock (lockNextidobj)
+                lock (lockNextIDObj)
                 {
-                    if (maxid > 0)
+                    if (maxID > 0)
                     {
-                        maxid++;
+                        maxID++;
                     }
                     else if (DataType.GetGroup(Table.Columns.FirstPrimary.SqlType) == 1)//自增id仅对int有效
                     {
@@ -190,21 +190,21 @@ namespace CYQ.Data
                                         }
                                         else
                                         {
-                                            maxid = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
+                                            maxID = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
                                         }
                                     }
                                     else
                                     {
-                                        maxid = 1;
+                                        maxID = 1;
                                     }
                                 }
-                                while (maxid == 0);
+                                while (maxID == 0);
                                 #endregion
 
                             }
                             else
                             {
-                                maxid = 1;
+                                maxID = 1;
                             }
                         }
                         catch
@@ -217,7 +217,7 @@ namespace CYQ.Data
                     }
 
                 }
-                return maxid;
+                return maxID;
             }
         }
         /// <summary>
@@ -225,11 +225,15 @@ namespace CYQ.Data
         /// </summary>
         string _FileFullName = string.Empty;
         /// <summary>
-        /// 不包含路径的文件名称(带扩展名)
+        /// （文件名）：不包含路径的文件名称(带扩展名)
         /// </summary>
-        string _FileName = string.Empty;
+        public string _FileName = string.Empty;
         internal MDataRow _Row;//MAction中的Row
         DataBaseType _DalType = DataBaseType.None;
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName;
         public NoSqlAction(ref MDataRow row, string fileName, string filePath, DataBaseType dalType)
         {
             Reset(ref row, fileName, filePath, dalType);
@@ -243,6 +247,7 @@ namespace CYQ.Data
         /// <param name="dalType">数据类型</param>
         public void Reset(ref MDataRow row, string fileName, string filePath, DataBaseType dalType)
         {
+            TableName = Path.GetFileNameWithoutExtension(fileName);
             string exName = Path.GetExtension(fileName);
             if (string.IsNullOrEmpty(exName))
             {
@@ -344,7 +349,7 @@ namespace CYQ.Data
                         switch (groupID)
                         {
                             case 1:
-                                cell.Value = Nextid;
+                                cell.Value = NextID;
                                 break;
                             case 4:
                                 cell.Value = Guid.NewGuid();
@@ -364,7 +369,7 @@ namespace CYQ.Data
                         }
                         else if (groupID == 1)
                         {
-                            maxid = (int)cell.Value;
+                            maxID = (int)cell.Value;
                         }
                     }
                     #endregion

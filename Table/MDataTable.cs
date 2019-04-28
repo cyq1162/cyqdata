@@ -1173,6 +1173,10 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         internal static MDataTable CreateFrom(DbDataReader sdr)
         {
+            if (sdr != null && sdr is NoSqlDataReader)
+            {
+                return ((NoSqlDataReader)sdr).ResultTable;
+            }
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {

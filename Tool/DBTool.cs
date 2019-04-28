@@ -152,7 +152,7 @@ namespace CYQ.Data.Tool
                         tableName = Path.GetFileNameWithoutExtension(tableName);
                         string fileName = NoSqlConnection.GetFilePath(conn) + tableName + ".ts";
                         result = columns.WriteSchema(fileName);
-                        dataBase = new NoSqlConnection(conn).Database;
+                        dataBase = GetDBInfo(conn).DataBaseName;
                     }
                     break;
                 default:

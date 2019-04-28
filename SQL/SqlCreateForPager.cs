@@ -42,6 +42,8 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Access:
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         return string.Format(top1Pager, "top " + pageSize + " " + columns, tableName, where);
                     //case DalType.Oracle:
                     //    return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
@@ -63,7 +65,7 @@ namespace CYQ.Data.SQL
                         int pageCount = leftNum == 0 ? rowCount / pageSize : rowCount / pageSize + 1;//页数
                         if (pageIndex == pageCount && dalType != DataBaseType.Sybase) // 最后一页Sybase 不支持双Top order by
                         {
-                            return string.Format(top2Pager, pageSize+" "+columns, "top " + (leftNum == 0 ? pageSize : leftNum) + " * ", tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
+                            return string.Format(top2Pager, pageSize + " " + columns, "top " + (leftNum == 0 ? pageSize : leftNum) + " * ", tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
                         }
                         if ((pageCount > 1000 || rowCount > 100000) && pageIndex > pageCount / 2) // 页数过后半段，反转查询
                         {
@@ -75,6 +77,9 @@ namespace CYQ.Data.SQL
                             rowStart = rowStartTemp;
                         }
                         break;
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
+                        return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize + " offset " + pageIndex);
 
                 }
             }
@@ -137,9 +142,9 @@ namespace CYQ.Data.SQL
                 top3:
                     if (!string.IsNullOrEmpty(orderBy)) // 反转查询
                     {
-                        return string.Format(top4Pager,columns, (rowCount - max > pageSize ? pageSize : rowCount - max), topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
+                        return string.Format(top4Pager, columns, (rowCount - max > pageSize ? pageSize : rowCount - max), topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
                     }
-                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max),columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
+                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max), columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
                 case DataBaseType.SQLite:
                 case DataBaseType.MySql:
                 case DataBaseType.PostgreSQL:

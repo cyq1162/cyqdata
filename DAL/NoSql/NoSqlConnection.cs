@@ -10,18 +10,25 @@ namespace CYQ.Data
 {
     internal sealed class NoSqlConnection : DbConnection
     {
-        public NoSqlConnection(string conn)
+        NoSqlDal _NoSqlDal;
+        public NoSqlTransaction Transaction;
+        public NoSqlConnection(string conn, NoSqlDal noSqlDal)
         {
             _Conn = conn;
+            _NoSqlDal = noSqlDal;
         }
         protected override DbCommand CreateDbCommand()
         {
-            return null;
+            return new NoSqlCommand(null, this);
         }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
-            return null;
+            if (Transaction == null)
+            {
+                Transaction = new NoSqlTransaction(this, isolationLevel);
+            }
+            return Transaction;
         }
         public override void ChangeDatabase(string databaseName)
         {
@@ -69,7 +76,13 @@ namespace CYQ.Data
                 return folderName;
             }
         }
-
+        public DataBaseType DatabaseType
+        {
+            get
+            {
+                return ConnBean.GetDataBaseType(ConnectionString);
+            }
+        }
         public override void Open()
         {
             if (!Directory.Exists(DataSource))
@@ -110,7 +123,7 @@ namespace CYQ.Data
                 case "tables":
                     #region tables
 
-                   
+
                     string[] tsList = Directory.GetFiles(DataSource, "*.ts", SearchOption.TopDirectoryOnly);
                     if (tsList != null && tsList.Length > 0)
                     {
@@ -141,12 +154,12 @@ namespace CYQ.Data
 
                         }
                     }
-                     #endregion
+                    #endregion
                     break;
                 case "columns":
                     #region columns
 
-                    
+
                     dt.Columns.Add("COLUMN_NAME");
                     dt.Columns.Add("COLUMN_LCid", typeof(int));
                     dt.Columns.Add("DATA_TYPE", typeof(int));

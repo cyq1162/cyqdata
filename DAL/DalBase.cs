@@ -495,7 +495,7 @@ namespace CYQ.Data
             {
                 return false;
             }
-            DbParameter para = _fac.CreateParameter();
+            DbParameter para = _com.CreateParameter();
             para.ParameterName = parameterName;
             para.Value = value == null ? DBNull.Value : value;
             if (dbType == DbType.Time)// && dalType != DalType.MySql
@@ -809,6 +809,7 @@ namespace CYQ.Data
             }
             if (_com != null)
             {
+                _com.Dispose();
                 _com = null;
             }
             if (_watch != null)

@@ -302,6 +302,8 @@ namespace CYQ.Data.SQL
             string columnNames = !string.IsNullOrEmpty(customColumn) ? customColumn : GetColumnsSql();
             switch (_action.dalHelper.DataBaseType)
             {
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                 case DataBaseType.Sybase:
                 //return "set rowcount 1 select " + columnNames + " from " + TableName + " where " + FormatWhere(whereObj) + " set rowcount 0";
                 case DataBaseType.MsSql:
