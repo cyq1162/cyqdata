@@ -52,7 +52,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static int GetHashCode(string name)
         {
-            return TableInfo.GetHashCode(name);
+            return Math.Abs(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower().GetHashCode());
         }
         /// <summary>
         /// 获取相关的列架构（对表和视图有效）
