@@ -478,7 +478,6 @@ namespace CYQ.Data
         #endregion
 
         #region IDisposable ≥…‘±
-
         public void Dispose()
         {
             if (string.IsNullOrEmpty(_FileFullName))
@@ -539,6 +538,7 @@ namespace CYQ.Data
             }
 
         }
+
         private void Save()
         {
             try

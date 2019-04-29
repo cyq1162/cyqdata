@@ -141,6 +141,7 @@
     <Compile Include="Orm\OrmBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Orm\OrmBaseInfo.cs" />
     <Compile Include="Orm\SimpleOrmBase.cs">
       <SubType>Code</SubType>
     </Compile>

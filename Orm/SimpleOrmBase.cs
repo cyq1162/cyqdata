@@ -70,6 +70,24 @@ namespace CYQ.Data.Orm
     /// </summary>
     public class SimpleOrmBase : IDisposable
     {
+        OrmBaseInfo _BaseInfo;
+        /// <summary>
+        /// 获取 基类 ORM 的相关信息
+        /// </summary>
+        [JsonIgnore]
+        public OrmBaseInfo BaseInfo
+        {
+            get
+            {
+                if (_BaseInfo == null)
+                {
+                    _BaseInfo = new OrmBaseInfo(Action);
+                }
+                return _BaseInfo;
+            }
+        }
+       
+
         internal MDataColumn Columns = null;
         /// <summary>
         /// 标识是否允许写日志(默认true)
@@ -176,8 +194,8 @@ namespace CYQ.Data.Orm
             SetInit(entityInstance, tableName, conn, AopOp.OpenAll);
         }
         private object _entityInstance;
-        private string _tableName;
-        private string _conn;
+        private string _tableName = string.Empty;
+        private string _conn = string.Empty;
         private AopOp _op;
         protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
@@ -276,7 +294,7 @@ namespace CYQ.Data.Orm
                 {
                     Log.Write(err, LogType.DataBase);
                 }
-                throw;
+                Error.Throw(err.Message);
             }
         }
         internal void SetInit2(Object entityInstance, string tableName, string conn, AopOp op)
@@ -611,4 +629,6 @@ namespace CYQ.Data.Orm
 
         #endregion
     }
+
+   
 }

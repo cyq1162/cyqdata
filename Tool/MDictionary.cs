@@ -74,10 +74,14 @@ namespace CYQ.Data.Tool
         {
             try
             {
-                lock (lockObj)
+                if (ContainsKey(key))
                 {
-                    return base.Remove(key);
+                    lock (lockObj)
+                    {
+                        return base.Remove(key);
+                    }
                 }
+                return true;
             }
             catch (Exception err)
             {
@@ -144,6 +148,14 @@ namespace CYQ.Data.Tool
                         }
                     }
                 }
+                else // ºÊ»›¥Êµµhash int
+                {
+                    K key = ConvertTool.ChangeType<K>(index);
+                    if (base.ContainsKey(key))
+                    {
+                        return base[key];
+                    }
+                }
                 return default(V);
             }
             set
@@ -163,6 +175,11 @@ namespace CYQ.Data.Tool
                             i++;
                         }
                     }
+                }
+                else
+                {
+                    K key = ConvertTool.ChangeType<K>(index);
+                    base[key] = value;
                 }
             }
         }

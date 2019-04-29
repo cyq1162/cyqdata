@@ -117,6 +117,16 @@ namespace CYQ.Data.Table
             }
         }
         /// <summary>
+        /// 是否忽略Json转换
+        /// </summary>
+        internal bool IsJsonIgnore
+        {
+            get
+            {
+                return _CellStruct.IsJsonIgnore;
+            }
+        }
+        /// <summary>
         /// 延时检测值的类型
         /// </summary>
         private void CheckNewValue()

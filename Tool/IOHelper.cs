@@ -202,7 +202,13 @@ namespace CYQ.Data.Tool
                     {
                         using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
                         {
+                            if (!isAppend && fileName.EndsWith(".txt"))
+                            {
+                                //–¥»ÎbomÕ∑
+                                
+                            }
                             writer.Write(text);
+
                         }
                     }
                     catch (Exception err)

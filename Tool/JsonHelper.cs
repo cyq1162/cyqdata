@@ -769,10 +769,10 @@ namespace CYQ.Data.Tool
             for (int i = 0; i < row.Count; i++)
             {
                 MDataCell cell = row[i];
-                //if (cell.IsNull)
-                //{
-                //    continue;
-                //}
+                if (cell.IsJsonIgnore)
+                {
+                    continue;
+                }
                 if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.State >= (int)_RowOp)))
                 {
                     #region MyRegion

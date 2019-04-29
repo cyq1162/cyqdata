@@ -130,7 +130,7 @@ namespace CYQ.Data
         /// The database connection string
         ///<para>数据库链接字符串</para> 
         /// </summary>
-        public string ConnectionString
+        public string ConnString
         {
             get
             {
@@ -141,7 +141,11 @@ namespace CYQ.Data
                 return string.Empty;
             }
         }
-        internal string ConnName
+        /// <summary>
+        /// The database connection name
+        ///<para>数据库链接配置名称</para> 
+        /// </summary>
+        public string ConnName
         {
             get
             {
@@ -207,11 +211,16 @@ namespace CYQ.Data
                     {
                         conn = CrossDB.GetConnByEnum(procNameOrSql as Enum);
                     }
-                    else if (procNameOrSql is String)
+                    if (string.IsNullOrEmpty(conn) && !string.IsNullOrEmpty(ConnName))
                     {
-                        string fixName;
-                        conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName, ConnName);
+                        conn = ConnName;
                     }
+
+                }
+                if (procNameOrSql is String)
+                {
+                    string fixName;
+                    conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName, conn);
                 }
                 _procName = procNameOrSql.ToString().Trim();
                 _isProc = _procName.IndexOf(' ') == -1;//不包含空格

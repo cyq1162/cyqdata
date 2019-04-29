@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Data.SqlClient;
+using CYQ.Data.Tool;
 
 namespace CYQ.Data
 {
@@ -96,10 +97,29 @@ namespace CYQ.Data
     }
     internal partial class ConnBean
     {
+        /// <summary>
+        /// 所有链接的对象集合
+        /// </summary>
+        private static MDictionary<int, ConnBean> connBeanDicCache = new MDictionary<int, ConnBean>();
+        public static void ClearCache(string key)
+        {
+            if(!string.IsNullOrEmpty(key))
+            {
+                int hash = key.GetHashCode();
+                ConnBean cb = connBeanDicCache[hash];
+                if (cb != null)
+                {
+                    connBeanDicCache.Remove(hash);
+                    connBeanDicCache.Remove(cb.ConnName.GetHashCode());
+                    connBeanDicCache.Remove(cb.ConnString.GetHashCode());
+                }
+            }
+        }
         public static int GetHashCode(string conn)
         {
             return Create(conn).GetHashCode();
         }
+        static readonly object o = new object();
         /// <summary>
         /// 创建一个实例。
         /// </summary>
@@ -111,12 +131,26 @@ namespace CYQ.Data
             {
                 return null;
             }
-            ConnBean cb = new ConnBean();
-            cb.ConnName = connNameOrString;
-            cb.ConnDalType = GetDataBaseType(connString);
-            cb.ConnString = RemoveConnProvider(cb.ConnDalType, connString);
-
-            return cb;
+            //检测缓存中有木有
+            int hash = connNameOrString.GetHashCode();
+            lock (o)
+            {
+                if (connBeanDicCache.ContainsKey(hash))
+                {
+                    return connBeanDicCache[hash];
+                }
+                ConnBean cb = new ConnBean();
+                cb.ConnName = connNameOrString;
+                cb.ConnDalType = GetDataBaseType(connString);
+                cb.ConnString = RemoveConnProvider(cb.ConnDalType, connString);
+                connBeanDicCache.Add(hash, cb);
+                hash = cb.ConnString.GetHashCode();
+                if (!connBeanDicCache.ContainsKey(hash))
+                {
+                    connBeanDicCache.Add(hash, cb);//存两份，以connName,connString为key
+                }
+                return cb;
+            }
         }
         /// <summary>
         /// 去掉 链接中的 provider=xxxx;

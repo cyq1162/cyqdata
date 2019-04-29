@@ -363,7 +363,7 @@ namespace CYQ.Data.SQL
             return mdc;
 
         }
-       
+
 
         public static void Clear()
         {
@@ -566,6 +566,7 @@ namespace CYQ.Data.SQL
             {
                 column.MaxSize = DataType.GetMaxSize(sqlType);
             }
+
             KeyAttribute ka = GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
             if (ka != null)
             {
@@ -603,26 +604,22 @@ namespace CYQ.Data.SQL
             {
                 column.Description = da.Description;
             }
+            JsonIgnoreAttribute jia = GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
+            if (jia != null)
+            {
+                column.IsJsonIgnore = true;
+            }
         }
         private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
         {
             Type type = typeof(T);
-            object[] attr = pi != null ? pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
+            object[] attr = StaticTool.GetAttributes(pi != null ? pi.PropertyType : fi.FieldType, typeof(T));//  pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
 
             if (attr != null && attr.Length == 1)
             {
                 return (T)attr[0];
             }
             return default(T);
-        }
-        private static DescriptionAttribute GetDescriptionAttr(PropertyInfo pi)
-        {
-            object[] attr = pi.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
-            if (attr != null && attr.Length == 1)
-            {
-                return attr[0] as DescriptionAttribute;
-            }
-            return null;
         }
     }
     /// <summary>

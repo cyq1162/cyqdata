@@ -117,6 +117,7 @@ namespace CYQ.Data.Table
 
             #region 构建新表及表结构
             MDataTable joinTable = new MDataTable("V_" + dtA.TableName);
+            joinTable.Conn = dtA.Conn;
             joinTable.Columns.AddRange(dtA.Columns.Clone());
             if (columns.Length == 0)
             {

@@ -61,8 +61,8 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                bool isInheritOrm = t.BaseType.Name == "OrmBase" || t.BaseType.Name == "SimpleOrmBase";
-                PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
+                bool isInheritOrm = false;// t.BaseType.Name.StartsWith("OrmBase") || t.BaseType.Name.StartsWith("SimpleOrmBase");
+                PropertyInfo[] pInfo = t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
                 List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
                 try
                 {
@@ -148,7 +148,7 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    if (t.Name.EndsWith("[]") || t.Name == "MDataRowCollection")
+                    if (t.Name.EndsWith("[]") || t.Name == "MDataRowCollection" || t.Name == "MDataColumn")
                     {
                         len = 1;
                     }

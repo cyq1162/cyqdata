@@ -104,11 +104,11 @@ namespace CYQ.Data.Aop
             {
                 if (MAction != null)
                 {
-                    return MAction.ConnectionString;
+                    return MAction.ConnString;
                 }
                 else if (MProc != null)
                 {
-                    return MProc.ConnectionString;
+                    return MProc.ConnString;
                 }
                 return string.Empty;
                 
