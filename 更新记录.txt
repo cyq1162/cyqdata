@@ -674,7 +674,7 @@
 459：DBTool 增加ErrorMsg属性，用于返回表的创建，修改，删除方法的错误信息返回。(2017-01-17）
 460：优化CacheManage中MemCache和Redis从预先加载的单例模式改成延迟加载的方式。(2017-01-17）
 461：DBTool的AlterTable 方法枚举支持组合操作 mCellStruct.AlterOp = AlterOp.AddOrModify| AlterOp.Rename;(2017-01-17）
-462：DBTool.StaticTool.ChangeType 增加对浮点到int类型的转换支持(2017-01-18）
+462：DBTool.ConvertTool.ChangeType 增加对浮点到int类型的转换支持(2017-01-18）
 463：MDataTable Join 方法，增加对as的支持dt.Join(dt2, "id  as Pid", "Name as PName");(2017-01-18）
 464：MDataTable 重写（简化）方法Avg、Sum、Max、Min(2017-01-18）
 465：MDataColumn 增加Set方法（为所有行赋值）(2017-01-18）

@@ -357,7 +357,7 @@ namespace CYQ.Data.Table
                             }
                             else
                             {
-                                value = StaticTool.ChangeType(value, convertionType);
+                                value = ConvertTool.ChangeType(value, convertionType);
                             }
                             break;
                     }
@@ -562,7 +562,7 @@ namespace CYQ.Data.Table
                     }
                     else if (Value is IEnumerable)
                     {
-                        int len = StaticTool.GetArgumentLength(ref t);
+                        int len = ReflectTool.GetArgumentLength(ref t);
                         if (len == 1)
                         {
                             table = MDataTable.CreateFrom(Value);

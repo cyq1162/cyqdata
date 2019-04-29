@@ -438,7 +438,7 @@ namespace CYQ.Data
                 default:
                     try
                     {
-                        value = StaticTool.ChangeType(value, t);
+                        value = ConvertTool.ChangeType(value, t);
                     }
                     catch
                     {

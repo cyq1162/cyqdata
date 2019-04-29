@@ -490,7 +490,7 @@ namespace CYQ.Data.SQL
                 #region 获取列结构
                 MDataColumn mdc = new MDataColumn();
                 mdc.TableName = typeInfo.Name;
-                switch (StaticTool.GetSystemType(ref typeInfo))
+                switch (ReflectTool.GetSystemType(ref typeInfo))
                 {
                     case SysType.Base:
                     case SysType.Enum:
@@ -499,7 +499,7 @@ namespace CYQ.Data.SQL
                     case SysType.Generic:
                     case SysType.Collection:
                         Type[] argTypes;
-                        Tool.StaticTool.GetArgumentLength(ref typeInfo, out argTypes);
+                        Tool.ReflectTool.GetArgumentLength(ref typeInfo, out argTypes);
                         foreach (Type type in argTypes)
                         {
                             mdc.Add(type.Name, DataType.GetSqlType(type), false);
@@ -509,7 +509,7 @@ namespace CYQ.Data.SQL
 
                 }
 
-                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(typeInfo);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(typeInfo);
                 if (pis.Count > 0)
                 {
                     for (int i = 0; i < pis.Count; i++)
@@ -519,7 +519,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    List<FieldInfo> fis = StaticTool.GetFieldInfo(typeInfo);
+                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(typeInfo);
                     if (fis.Count > 0)
                     {
                         for (int i = 0; i < fis.Count; i++)
@@ -613,7 +613,7 @@ namespace CYQ.Data.SQL
         private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
         {
             Type type = typeof(T);
-            object[] attr = StaticTool.GetAttributes(pi != null ? pi.PropertyType : fi.FieldType, typeof(T));//  pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
+            object[] attr = ReflectTool.GetAttributes(pi != null ? pi.PropertyType : fi.FieldType, typeof(T));//  pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
 
             if (attr != null && attr.Length == 1)
             {
