@@ -16,14 +16,14 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 获取单个列的表描述语句
         /// </summary>
-        internal static string GetTableDescriptionSql(string tableName, MCellStruct mcs, DalType dalType, bool isAdd)
+        internal static string GetTableDescriptionSql(string tableName, MCellStruct mcs, DataBaseType dalType, bool isAdd)
         {
             switch (dalType)
             {
-                case DalType.MsSql:
+                case DataBaseType.MsSql:
                     string spName = isAdd ? "sp_addextendedproperty" : "sp_updateextendedproperty";
                     return string.Format("exec {3} N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}', N'column', N'{2}'", mcs.Description, tableName, mcs.ColumnName, spName);
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     return string.Format("comment on column {0}.{1}  is '{2}'", tableName.ToUpper(), mcs.ColumnName.ToUpper(), mcs.Description);
             }
 
@@ -34,50 +34,50 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)的说明语句
         /// </summary>
-        internal static string CreateTableDescriptionSql(string tableName, MDataColumn columns, DalType dalType)
+        internal static string CreateTableDescriptionSql(string tableName, MDataColumn columns, DataBaseType dalType)
         {
             string result = string.Empty;
             switch (dalType)
             {
-                case DalType.MsSql:
-                case DalType.Oracle:
-                case DalType.PostgreSQL:
-                case DalType.MySql:
+                case DataBaseType.MsSql:
+                case DataBaseType.Oracle:
+                case DataBaseType.PostgreSQL:
+                case DataBaseType.MySql:
                     StringBuilder sb = new StringBuilder();
                     foreach (MCellStruct mcs in columns)
                     {
                         if (!string.IsNullOrEmpty(mcs.Description))
                         {
-                            if (dalType == DalType.MsSql)
+                            if (dalType == DataBaseType.MsSql)
                             {
                                 sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}', N'column', N'{2}';\r\n", mcs.Description, tableName, mcs.ColumnName);
                             }
-                            else if (dalType == DalType.Oracle)
+                            else if (dalType == DataBaseType.Oracle)
                             {
                                 sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n", tableName.ToUpper(), mcs.ColumnName.ToUpper(), mcs.Description);
                             }
-                            else if (dalType == DalType.PostgreSQL)
+                            else if (dalType == DataBaseType.PostgreSQL)
                             {
                                 sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n",
-                                   SqlFormat.Keyword(tableName, DalType.PostgreSQL), SqlFormat.Keyword(mcs.ColumnName, DalType.PostgreSQL), mcs.Description);
+                                   SqlFormat.Keyword(tableName, DataBaseType.PostgreSQL), SqlFormat.Keyword(mcs.ColumnName, DataBaseType.PostgreSQL), mcs.Description);
                             }
                         }
                     }
-                    if (dalType == DalType.MsSql)//增加表的描述
+                    if (dalType == DataBaseType.MsSql)//增加表的描述
                     {
                         sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}';\r\n", columns.Description, tableName);
                     }
-                    else if (dalType == DalType.Oracle)
+                    else if (dalType == DataBaseType.Oracle)
                     {
                         sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
                                 tableName.ToUpper(), columns.Description);
                     }
-                    else if (dalType == DalType.PostgreSQL)
+                    else if (dalType == DataBaseType.PostgreSQL)
                     {
                         sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
-                                SqlFormat.Keyword(tableName, DalType.PostgreSQL), columns.Description);
+                                SqlFormat.Keyword(tableName, DataBaseType.PostgreSQL), columns.Description);
                     }
-                    else if (dalType == DalType.MySql)
+                    else if (dalType == DataBaseType.MySql)
                     {
                         sb.AppendFormat("comment = '{0}';\r\n", columns.Description);
                     }
@@ -92,12 +92,12 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)语句
         /// </summary>
-        internal static string CreateTableSql(string tableName, MDataColumn columns, DalType dalType, string version)
+        internal static string CreateTableSql(string tableName, MDataColumn columns, DataBaseType dalType, string version)
         {
             switch (dalType)
             {
-                case DalType.Txt:
-                case DalType.Xml:
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                     return columns.ToJson(true);
                 default:
                     string createSql = string.Empty;
@@ -122,7 +122,7 @@ namespace CYQ.Data.SQL
                     }
                     createSql = createSql.TrimEnd(',') + " \n)";
                     // createSql += GetSuffix(dalType);
-                    if (dalType == DalType.MySql && createSql.IndexOf("CURRENT_TIMESTAMP") != createSql.LastIndexOf("CURRENT_TIMESTAMP"))
+                    if (dalType == DataBaseType.MySql && createSql.IndexOf("CURRENT_TIMESTAMP") != createSql.LastIndexOf("CURRENT_TIMESTAMP"))
                     {
                         createSql = createSql.Replace("Default CURRENT_TIMESTAMP", string.Empty);//mysql不允许存在两个以上的CURRENT_TIMESTAMP。
                     }
@@ -131,15 +131,15 @@ namespace CYQ.Data.SQL
             }
         }
 
-        private static string GetKey(MCellStruct column, DalType dalType, ref List<MCellStruct> primaryKeyList, string version)
+        private static string GetKey(MCellStruct column, DataBaseType dalType, ref List<MCellStruct> primaryKeyList, string version)
         {
             string key = SqlFormat.Keyword(column.ColumnName, dalType);//列名。
             int groupID = DataType.GetGroup(column.SqlType);//数据库类型。
             bool isAutoOrPKey = column.IsPrimaryKey || column.IsAutoIncrement;//是否主键或自增列。
-            if (dalType != DalType.Access || !isAutoOrPKey || !column.IsAutoIncrement)
+            if (dalType != DataBaseType.Access || !isAutoOrPKey || !column.IsAutoIncrement)
             {
                 SqlDbType sdt = column.SqlType;
-                if (sdt == SqlDbType.DateTime && dalType == DalType.MySql && Convert.ToString(column.DefaultValue) == SqlValue.GetDate)
+                if (sdt == SqlDbType.DateTime && dalType == DataBaseType.MySql && Convert.ToString(column.DefaultValue) == SqlValue.GetDate)
                 {
                     sdt = SqlDbType.Timestamp;
                 }
@@ -149,7 +149,7 @@ namespace CYQ.Data.SQL
             {
                 if (column.IsAutoIncrement)
                 {
-                    if (primaryKeyList.Count == 0 || (!column.IsPrimaryKey && dalType == DalType.MySql))//MySql 的自增必须是主键.
+                    if (primaryKeyList.Count == 0 || (!column.IsPrimaryKey && dalType == DataBaseType.MySql))//MySql 的自增必须是主键.
                     {
                         column.IsPrimaryKey = true;
                         primaryKeyList.Insert(0, column);
@@ -157,7 +157,7 @@ namespace CYQ.Data.SQL
                 }
                 switch (dalType)
                 {
-                    case DalType.Access:
+                    case DataBaseType.Access:
                         if (column.IsAutoIncrement)
                         {
                             key += " autoincrement(1,1)";
@@ -170,7 +170,7 @@ namespace CYQ.Data.SQL
                             }
                         }
                         break;
-                    case DalType.MsSql:
+                    case DataBaseType.MsSql:
                         if (column.IsAutoIncrement)
                         {
                             key += " idENTITY(1,1)";
@@ -183,13 +183,13 @@ namespace CYQ.Data.SQL
                             }
                         }
                         break;
-                    case DalType.Oracle:
+                    case DataBaseType.Oracle:
                         if (Convert.ToString(column.DefaultValue) == SqlValue.Guid)//主键又是GUID
                         {
                             key += " Default (SYS_GUID())";
                         }
                         break;
-                    case DalType.Sybase:
+                    case DataBaseType.Sybase:
                         if (column.IsAutoIncrement)
                         {
                             key += " idENTITY";
@@ -202,7 +202,7 @@ namespace CYQ.Data.SQL
                             }
                         }
                         break;
-                    case DalType.MySql:
+                    case DataBaseType.MySql:
                         if (column.IsAutoIncrement)
                         {
                             key += " AUTO_INCREMENT";
@@ -212,14 +212,14 @@ namespace CYQ.Data.SQL
                             }
                         }
                         break;
-                    case DalType.SQLite://sqlite的AUTOINCREMENT不能写在primarykey前,
+                    case DataBaseType.SQLite://sqlite的AUTOINCREMENT不能写在primarykey前,
                         if (column.IsAutoIncrement)
                         {
                             key += " PRIMARY KEY AUTOINCREMENT";
                             primaryKeyList.Clear();//如果有自增加，只允许存在这一个主键。
                         }
                         break;
-                    case DalType.PostgreSQL:
+                    case DataBaseType.PostgreSQL:
                         if (column.IsAutoIncrement && key.EndsWith("int"))
                         {
                             key = key.Substring(0, key.Length - 3) + "serial";
@@ -233,7 +233,7 @@ namespace CYQ.Data.SQL
                 string defaultValue = string.Empty;
                 if (Convert.ToString(column.DefaultValue).Length > 0 && groupID < 5)//默认值只能是基础类型有。
                 {
-                    if (dalType == DalType.MySql)
+                    if (dalType == DataBaseType.MySql)
                     {
                         if ((groupID == 0 && (column.MaxSize < 1 || column.MaxSize > 8000)) || (groupID == 2 && key.Contains("datetime"))) //只能对TIMESTAMP类型的赋默认值。
                         {
@@ -243,15 +243,15 @@ namespace CYQ.Data.SQL
                     defaultValue = SqlFormat.FormatDefaultValue(dalType, column.DefaultValue, 1, column.SqlType);
                     if (!string.IsNullOrEmpty(defaultValue))
                     {
-                        if (dalType == DalType.MySql) { defaultValue = defaultValue.Trim('(', ')'); }
+                        if (dalType == DataBaseType.MySql) { defaultValue = defaultValue.Trim('(', ')'); }
                         key += " Default " + defaultValue;
                     }
                 }
 
             er:
-                if (dalType != DalType.Access)
+                if (dalType != DataBaseType.Access)
                 {
-                    if (dalType == DalType.Sybase && column.SqlType == SqlDbType.Bit)
+                    if (dalType == DataBaseType.Sybase && column.SqlType == SqlDbType.Bit)
                     {
                         if (string.IsNullOrEmpty(defaultValue))
                         {
@@ -269,14 +269,14 @@ namespace CYQ.Data.SQL
             {
                 switch (dalType)
                 {
-                    case DalType.MySql:
+                    case DataBaseType.MySql:
                         key += string.Format(" COMMENT '{0}'", column.Description.Replace("'", "''"));
                         break;
                 }
             }
             return key + ",";
         }
-        private static string GetUnionPrimaryKey(DalType dalType, List<MCellStruct> primaryKeyList)
+        private static string GetUnionPrimaryKey(DataBaseType dalType, List<MCellStruct> primaryKeyList)
         {
             string suffix = "\n    ";
 
@@ -310,7 +310,7 @@ namespace CYQ.Data.SQL
         {
             List<string> sql = new List<string>();
             string version = null;
-            DalType dalType;
+            DataBaseType dalType;
             using (DalBase helper = DalCreate.CreateDal(conn))
             {
                 helper.ChangeDatabaseWithCheck(tableName);//检测dbname.dbo.tablename的情况
@@ -322,7 +322,7 @@ namespace CYQ.Data.SQL
                 dalType = helper.DataBaseType;
                 version = helper.Version;
             }
-            MDataColumn dbColumn = ColumnSchema.GetColumns(tableName, conn);//获取数据库的列结构
+            MDataColumn dbColumn = TableSchema.GetColumns(tableName, conn);//获取数据库的列结构
             if (dbColumn == null || dbColumn.Count == 0) { return sql; }
 
             //开始比较异同
@@ -345,16 +345,16 @@ namespace CYQ.Data.SQL
                             string oName = SqlFormat.Keyword(ms.OldName, dalType);
                             switch (dalType)
                             {
-                                case DalType.MsSql:
+                                case DataBaseType.MsSql:
                                     sql.Add("exec sp_rename '" + tbName + "." + oName + "', '" + ms.ColumnName + "', 'column'");
                                     break;
-                                case DalType.Sybase:
+                                case DataBaseType.Sybase:
                                     sql.Add("exec sp_rename \"" + tableName + "." + ms.OldName + "\", " + ms.ColumnName);
                                     break;
-                                case DalType.MySql:
+                                case DataBaseType.MySql:
                                     sql.Add(alterTable + " change " + oName + " " + GetKey(ms, dalType, ref primaryKeyList, version).TrimEnd(','));
                                     break;
-                                case DalType.Oracle:
+                                case DataBaseType.Oracle:
 
                                     sql.Add(alterTable + " rename column " + oName + " to " + cName);
                                     break;
@@ -371,18 +371,18 @@ namespace CYQ.Data.SQL
                         {
                             switch (dalType)
                             {
-                                case DalType.MsSql:
-                                case DalType.Access:
-                                case DalType.MySql:
-                                case DalType.Oracle:
-                                    if (dalType == DalType.MsSql)
+                                case DataBaseType.MsSql:
+                                case DataBaseType.Access:
+                                case DataBaseType.MySql:
+                                case DataBaseType.Oracle:
+                                    if (dalType == DataBaseType.MsSql)
                                     {
                                         sql.Add(@"declare @name varchar(50) select  @name =b.name from sysobjects b join syscolumns a on b.id = a.cdefault 
 where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'if(@name!='') begin   EXEC('alter table " + tableName + " drop constraint '+ @name) end");
                                     }
                                     sql.Add(alterTable + " drop column " + cName);
                                     break;
-                                case DalType.Sybase:
+                                case DataBaseType.Sybase:
                                     sql.Add(alterTable + " drop " + cName);
                                     break;
                             }
@@ -406,16 +406,16 @@ where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'i
                                 string modify = "";
                                 switch (dalType)
                                 {
-                                    case DalType.Oracle:
-                                    case DalType.Sybase:
+                                    case DataBaseType.Oracle:
+                                    case DataBaseType.Sybase:
                                         modify = " modify ";
                                         break;
-                                    case DalType.MySql:
+                                    case DataBaseType.MySql:
                                         modify = " change " + cName + " ";
                                         break;
-                                    case DalType.MsSql:
-                                    case DalType.Access:
-                                    case DalType.PostgreSQL:
+                                    case DataBaseType.MsSql:
+                                    case DataBaseType.Access:
+                                    case DataBaseType.PostgreSQL:
                                         modify = " alter column ";
                                         break;
                                 }

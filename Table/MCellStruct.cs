@@ -166,14 +166,14 @@ namespace CYQ.Data.Table
         /// </summary>
         internal string SqlTypeName;
         internal Type ValueType;
-        private DalType dalType = DalType.None;
-        internal DalType DalType
+        private DataBaseType dalType = DataBaseType.None;
+        internal DataBaseType DalType
         {
             get
             {
                 if (_MDataColumn != null)
                 {
-                    return _MDataColumn.dalType;
+                    return _MDataColumn.DataBaseType;
                 }
                 return dalType;
             }
@@ -191,7 +191,7 @@ namespace CYQ.Data.Table
         internal int ReaderIndex = -1;
 
         #region ¹¹Ôìº¯Êý
-        internal MCellStruct(DalType dalType)
+        internal MCellStruct(DataBaseType dalType)
         {
             this.dalType = dalType;
         }

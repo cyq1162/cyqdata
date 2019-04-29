@@ -53,7 +53,7 @@ namespace CYQ.Data
         /// <summary>
         /// 获得链接的数据库名称
         /// </summary>
-        public virtual string DataBase
+        public virtual string DataBaseName
         {
             get
             {
@@ -61,7 +61,7 @@ namespace CYQ.Data
                 {
                     return _con.Database;
                 }
-                else if (DataBaseType == DalType.Oracle)
+                else if (DataBaseType == DataBaseType.Oracle)
                 {
                     // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = Aries)))
                     int i = _con.DataSource.LastIndexOf('=') + 1;
@@ -86,10 +86,10 @@ namespace CYQ.Data
                 {
                     switch (DataBaseType)
                     {
-                        case DalType.Txt:
+                        case DataBaseType.Txt:
                             _Version = "txt2.0";
                             break;
-                        case DalType.Xml:
+                        case DataBaseType.Xml:
                             _Version = "xml2.0";
                             break;
                         default:
@@ -128,7 +128,7 @@ namespace CYQ.Data
         /// <summary>
         /// 当前操作的数据库类型
         /// </summary>
-        public DalType DataBaseType
+        public DataBaseType DataBaseType
         {
             get
             {
@@ -363,7 +363,7 @@ namespace CYQ.Data
             {
 
                 string dbName = dbTableName.Split('.')[0];
-                if (string.Compare(DataBase, dbName, StringComparison.OrdinalIgnoreCase) != 0 && ConnName.IndexOf(DataBase) == ConnName.LastIndexOf(DataBase))
+                if (string.Compare(DataBaseName, dbName, StringComparison.OrdinalIgnoreCase) != 0 && ConnName.IndexOf(DataBaseName) == ConnName.LastIndexOf(DataBaseName))
                 {
                     return true;
                 }
@@ -378,7 +378,7 @@ namespace CYQ.Data
             {
                 return ConnBean.Create(newConn).ConnString;
             }
-            return UsingConnBean.ConnString.Replace(DataBase, dbName);
+            return UsingConnBean.ConnString.Replace(DataBaseName, dbName);
         }
 
         static MDictionary<string, bool> dbList = new MDictionary<string, bool>(3);
@@ -478,7 +478,7 @@ namespace CYQ.Data
         }
         public virtual bool AddParameters(string parameterName, object value, DbType dbType, int size, ParameterDirection direction)
         {
-            if (DataBaseType == DalType.Oracle)
+            if (DataBaseType == DataBaseType.Oracle)
             {
                 parameterName = parameterName.Replace(":", "").Replace("@", "");
                 if (dbType == DbType.String && size > 4000)
@@ -495,7 +495,7 @@ namespace CYQ.Data
             {
                 return false;
             }
-            DbParameter para = _fac.CreateParameter();
+            DbParameter para = _com.CreateParameter();
             para.ParameterName = parameterName;
             para.Value = value == null ? DBNull.Value : value;
             if (dbType == DbType.Time)// && dalType != DalType.MySql
@@ -507,18 +507,18 @@ namespace CYQ.Data
                 if (dbType == DbType.DateTime && value != null)
                 {
                     string time = Convert.ToString(value);
-                    if (DataBaseType == DalType.MsSql && time == DateTime.MinValue.ToString())
+                    if (DataBaseType == DataBaseType.MsSql && time == DateTime.MinValue.ToString())
                     {
                         para.Value = SqlDateTime.MinValue;
                     }
-                    else if (DataBaseType == DalType.MySql && (time == SqlDateTime.MinValue.ToString() || time == DateTime.MinValue.ToString()))
+                    else if (DataBaseType == DataBaseType.MySql && (time == SqlDateTime.MinValue.ToString() || time == DateTime.MinValue.ToString()))
                     {
                         para.Value = DateTime.MinValue;
                     }
                 }
                 para.DbType = dbType;
             }
-            if (dbType == DbType.Binary && DataBaseType == DalType.MySql)//（mysql不能设定长度，否则会报索引超出了数组界限错误【已过时，旧版本的MySql.Data.dll不能指定长度】）。
+            if (dbType == DbType.Binary && DataBaseType == DataBaseType.MySql)//（mysql不能设定长度，否则会报索引超出了数组界限错误【已过时，旧版本的MySql.Data.dll不能指定长度】）。
             {
                 if (value != null)
                 {
@@ -590,7 +590,7 @@ namespace CYQ.Data
                 }
             }
             _com.CommandText = isProc ? commandText : SqlFormat.Compatible(commandText, DataBaseType, false);
-            if (!isProc && DataBaseType == DalType.SQLite && _com.CommandText.Contains("charindex"))
+            if (!isProc && DataBaseType == DataBaseType.SQLite && _com.CommandText.Contains("charindex"))
             {
                 _com.CommandText += " COLLATE NOCASE";//忽略大小写
             }
@@ -613,7 +613,7 @@ namespace CYQ.Data
             //上面if代码被注释了，下面代码忘了加!isProc判断，现补上。 取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
             if (!isProc && _com != null && _com.Parameters != null && _com.Parameters.Count > 0)
             {
-                bool needToReplace = (DataBaseType == DalType.Oracle || DataBaseType == DalType.MySql) && _com.CommandText.Contains("@");
+                bool needToReplace = (DataBaseType == DataBaseType.Oracle || DataBaseType == DataBaseType.MySql) && _com.CommandText.Contains("@");
                 string paraName;
                 for (int i = 0; i < _com.Parameters.Count; i++)
                 {
@@ -623,8 +623,8 @@ namespace CYQ.Data
                         //兼容多数据库的参数（虽然提供了=:?"为兼容语法，但还是贴心的再处理一下）
                         switch (DataBaseType)
                         {
-                            case DalType.Oracle:
-                            case DalType.MySql:
+                            case DataBaseType.Oracle:
+                            case DataBaseType.MySql:
                                 _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
                                 break;
                         }
@@ -657,7 +657,7 @@ namespace CYQ.Data
 
         private string GetParaInfo(string commandText)
         {
-            string paraInfo = DataBaseType + "." + DataBase + ".SQL: " + AppConst.BR + commandText;
+            string paraInfo = DataBaseType + "." + DataBaseName + ".SQL: " + AppConst.BR + commandText;
             foreach (DbParameter item in _com.Parameters)
             {
                 paraInfo += AppConst.BR + "Para: " + item.ParameterName + "-> " + (item.Value == DBNull.Value ? "DBNull.Value" : item.Value);
@@ -809,6 +809,7 @@ namespace CYQ.Data
             }
             if (_com != null)
             {
+                _com.Dispose();
                 _com = null;
             }
             if (_watch != null)
@@ -913,7 +914,7 @@ namespace CYQ.Data
                     }
                     else
                     {
-                        if (isUseUnsafeModeOnSqlite && !isProc && DataBaseType == DalType.SQLite && !IsOpenTrans)
+                        if (isUseUnsafeModeOnSqlite && !isProc && DataBaseType == DataBaseType.SQLite && !IsOpenTrans)
                         {
                             _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
                         }
@@ -1265,7 +1266,7 @@ namespace CYQ.Data
         {
             if (_con.State == ConnectionState.Closed)
             {
-                if (DataBaseType == DalType.Sybase)
+                if (DataBaseType == DataBaseType.Sybase)
                 {
                     _com.Connection = _con;//重新赋值（Sybase每次Close后命令的Con都丢失）
                 }

@@ -113,11 +113,16 @@
     <Compile Include="DAL\NoSql\NoSqlConnection.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DAL\NoSql\NoSqlDataReader.cs" />
     <Compile Include="DAL\NoSql\NoSqlFactory.cs" />
     <Compile Include="DAL\NoSql\NoSqlCommand.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="DAL\NoSqlDal.cs" />
     <Compile Include="Action\ActionEnum.cs" />
+    <Compile Include="DAL\NoSql\NoSqlParameter.cs" />
+    <Compile Include="DAL\NoSql\NoSqlParameterCollection.cs" />
+    <Compile Include="DAL\NoSql\NoSqlTransaction.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
     <Compile Include="Log\LocalEnvironment.cs">
@@ -144,7 +149,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SQL\Schema\ColumnSchema.cs" />
+    <Compile Include="SQL\Schema\TableSchema.cs" />
     <Compile Include="SQL\Schema\CrossDB.cs" />
     <Compile Include="SQL\Schema\DBSchema.cs" />
     <Compile Include="SQL\SqlCreateForSchema.cs" />
@@ -157,7 +162,8 @@
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
-    <Compile Include="Tool\DBEntity\DBEntity.cs" />
+    <Compile Include="Tool\DBEntity\TableInfo.cs" />
+    <Compile Include="Tool\DBEntity\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
@@ -194,9 +200,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SQL\SqlCreateForPager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SQL\Schema\TableSchema.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="SQL\SqlCreate.cs">

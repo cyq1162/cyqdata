@@ -339,6 +339,14 @@ namespace CYQ.Data.Orm
             Action.SetPara(paraName, value, dbType);
         }
         /// <summary>
+        /// 设置参数化
+        /// </summary>
+        public void SetPara(object paraName, object value)
+        {
+            Action.SetPara(paraName, value);
+        }
+
+        /// <summary>
         /// 清除(SetPara设置的)自定义参数
         /// </summary>
         public void ClearPara()
@@ -411,11 +419,11 @@ namespace CYQ.Data.Orm
         /// <summary>
         /// 当前的数据库类型
         /// </summary>
-        public DalType DalType
+        public DataBaseType DalType
         {
             get
             {
-                return Action.DalType;
+                return Action.DataBaseType;
             }
         }
         /// <summary>

@@ -569,7 +569,6 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public List<T> ToList<T>(params bool[] useEmit)
         {
-
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
             {
@@ -594,6 +593,10 @@ namespace CYQ.Data.Table
         }
         internal object ToList(Type t)
         {
+            if (t.Name == "MDataTable")
+            {
+                return this;
+            }
             object listObj = Activator.CreateInstance(t);//´´½¨ÊµÀý
             if (Rows != null && Rows.Count > 0)
             {
@@ -1170,6 +1173,10 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         internal static MDataTable CreateFrom(DbDataReader sdr)
         {
+            if (sdr != null && sdr is NoSqlDataReader)
+            {
+                return ((NoSqlDataReader)sdr).ResultTable;
+            }
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {
@@ -1208,9 +1215,8 @@ namespace CYQ.Data.Table
                 }
                 else if (dt != null && dt.Rows.Count > 0)
                 {
-                    ColumnSchema.FixTableSchemaType(sdr, dt);
-                    mTable.Columns = ColumnSchema.GetColumns(dt);
-                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
+                    mTable.Columns = TableSchema.GetColumnByTable(dt, sdr, false);
+                    mTable.Columns.DataBaseType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                 }
                 #endregion
                 if (sdr.HasRows)
@@ -1310,7 +1316,7 @@ namespace CYQ.Data.Table
                             else
                             {
                                 dt.TableName = objType.Name;
-                                dt.Columns = ColumnSchema.GetColumns(objType);
+                                dt.Columns = TableSchema.GetColumnByType(objType);
                             }
                         }
                         #endregion

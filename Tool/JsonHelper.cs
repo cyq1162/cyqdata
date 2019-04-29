@@ -877,7 +877,7 @@ namespace CYQ.Data.Tool
                                 {
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
-                                        MDataRow oRow = new MDataRow(ColumnSchema.GetColumns(t));
+                                        MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(t));
                                         oRow.DynamicData = LoopCheckList;
                                         oRow.LoadFrom(cell.Value);
                                         value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
@@ -1331,7 +1331,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                MDataRow row = new MDataRow(ColumnSchema.GetColumns(t));
+                MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
                 row.LoadFrom(json);
                 return row.ToEntity<T>();
             }
@@ -1347,7 +1347,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, ColumnSchema.GetColumns(typeof(T)), op).ToList<T>();
+            return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json

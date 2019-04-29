@@ -10,7 +10,7 @@ namespace CYQ.Data.SQL
     /// </summary>
     internal partial class SqlCreateForPager
     {
-        public static string GetSql(DalType dalType, string version, int pageIndex, int pageSize, object objWhere, string tableName, int rowCount, string columns, string primaryKey, bool primaryKeyIsidentity)
+        public static string GetSql(DataBaseType dalType, string version, int pageIndex, int pageSize, object objWhere, string tableName, int rowCount, string columns, string primaryKey, bool primaryKeyIsidentity)
         {
             if (string.IsNullOrEmpty(columns))
             {
@@ -35,19 +35,21 @@ namespace CYQ.Data.SQL
             int rowStart = (pageIndex - 1) * pageSize + 1;
             int rowEnd = rowStart + pageSize - 1;
             string orderBy = string.Empty;
-            if (pageIndex == 1 && dalType != DalType.Oracle)//第一页（oracle时 rownum 在排序条件为非数字时，和row_number()的不一样，会导致结果差异，所以分页统一用row_number()。）
+            if (pageIndex == 1 && dalType != DataBaseType.Oracle)//第一页（oracle时 rownum 在排序条件为非数字时，和row_number()的不一样，会导致结果差异，所以分页统一用row_number()。）
             {
                 switch (dalType)
                 {
-                    case DalType.Access:
-                    case DalType.MsSql:
-                    case DalType.Sybase:
+                    case DataBaseType.Access:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
                         return string.Format(top1Pager, "top " + pageSize + " " + columns, tableName, where);
                     //case DalType.Oracle:
                     //    return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
-                    case DalType.SQLite:
-                    case DalType.MySql:
-                    case DalType.PostgreSQL:
+                    case DataBaseType.SQLite:
+                    case DataBaseType.MySql:
+                    case DataBaseType.PostgreSQL:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize);
                 }
             }
@@ -56,14 +58,14 @@ namespace CYQ.Data.SQL
 
                 switch (dalType)
                 {
-                    case DalType.Access:
-                    case DalType.MsSql:
-                    case DalType.Sybase:
+                    case DataBaseType.Access:
+                    case DataBaseType.MsSql:
+                    case DataBaseType.Sybase:
                         int leftNum = rowCount % pageSize;
                         int pageCount = leftNum == 0 ? rowCount / pageSize : rowCount / pageSize + 1;//页数
-                        if (pageIndex == pageCount && dalType != DalType.Sybase) // 最后一页Sybase 不支持双Top order by
+                        if (pageIndex == pageCount && dalType != DataBaseType.Sybase) // 最后一页Sybase 不支持双Top order by
                         {
-                            return string.Format(top2Pager, pageSize+" "+columns, "top " + (leftNum == 0 ? pageSize : leftNum) + " * ", tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
+                            return string.Format(top2Pager, pageSize + " " + columns, "top " + (leftNum == 0 ? pageSize : leftNum) + " * ", tableName, ReverseOrderBy(where, primaryKey), GetOrderBy(where, false, primaryKey));//反序
                         }
                         if ((pageCount > 1000 || rowCount > 100000) && pageIndex > pageCount / 2) // 页数过后半段，反转查询
                         {
@@ -75,6 +77,9 @@ namespace CYQ.Data.SQL
                             rowStart = rowStartTemp;
                         }
                         break;
+                    case DataBaseType.Txt:
+                    case DataBaseType.Xml:
+                        return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize + " offset " + pageIndex);
 
                 }
             }
@@ -82,8 +87,8 @@ namespace CYQ.Data.SQL
 
             switch (dalType)
             {
-                case DalType.MsSql:
-                case DalType.Oracle:
+                case DataBaseType.MsSql:
+                case DataBaseType.Oracle:
                     if (version.StartsWith("08"))
                     {
                         goto temtable;
@@ -94,11 +99,11 @@ namespace CYQ.Data.SQL
                     {
                         tableName = tableName.Substring(0, index + 1);
                     }
-                    string v = dalType == DalType.Oracle ? "" : " v";
+                    string v = dalType == DataBaseType.Oracle ? "" : " v";
                     string onlyWhere = "where " + SqlCreate.RemoveOrderBy(where);
                     onlyWhere = SqlFormat.RemoveWhereOneEqualsOne(onlyWhere);
                     return string.Format(rowNumberPager, GetOrderBy(where, false, primaryKey), (columns == "*" ? "t.*" : columns), tableName, onlyWhere, v, rowStart, rowEnd);
-                case DalType.Sybase:
+                case DataBaseType.Sybase:
                 temtable:
                     if (primaryKeyIsidentity)
                     {
@@ -133,16 +138,16 @@ namespace CYQ.Data.SQL
                         }
                     }
                     return string.Format(tempTablePager, DateTime.Now.Millisecond, pageIndex * pageSize + " " + columns, tableName, where, pageSize, rowStart, rowEnd, orderBy);
-                case DalType.Access:
+                case DataBaseType.Access:
                 top3:
                     if (!string.IsNullOrEmpty(orderBy)) // 反转查询
                     {
-                        return string.Format(top4Pager,columns, (rowCount - max > pageSize ? pageSize : rowCount - max), topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
+                        return string.Format(top4Pager, columns, (rowCount - max > pageSize ? pageSize : rowCount - max), topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey), orderBy);
                     }
-                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max),columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
-                case DalType.SQLite:
-                case DalType.MySql:
-                case DalType.PostgreSQL:
+                    return string.Format(top3Pager, (rowCount - max > pageSize ? pageSize : rowCount - max), columns, topN, tableName, where, GetOrderBy(where, true, primaryKey), GetOrderBy(where, false, primaryKey));
+                case DataBaseType.SQLite:
+                case DataBaseType.MySql:
+                case DataBaseType.PostgreSQL:
                     if (max > 500000 && primaryKeyIsidentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
                     {
                         where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);

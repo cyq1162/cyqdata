@@ -9,16 +9,17 @@ namespace CYQ.Data
 {
     internal sealed class NoSqlFactory : DbProviderFactory
     {
-        // Fields
-        public static readonly NoSqlFactory Instance = new NoSqlFactory();
+
+        NoSqlDal _NoSqlDal;
 
         // Methods
-        private NoSqlFactory()
+        public NoSqlFactory(NoSqlDal noSqlDal)
         {
+            _NoSqlDal = noSqlDal;
         }
         public override DbConnection CreateConnection()
         {
-            return new NoSqlConnection(base.ToString());
+            return new NoSqlConnection(base.ToString(), _NoSqlDal);
         }
     }
    

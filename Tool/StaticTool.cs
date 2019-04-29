@@ -26,6 +26,13 @@ namespace CYQ.Data.Tool
         {
             return StaticTool.ChangeType(value, t);
         }
+        /// <summary>
+        /// 类型转换(精准强大)
+        /// </summary>
+        public static T ChangeType<T>(object value)
+        {
+            return (T)ChangeType(value, typeof(T));
+        }
     }
 
     /// <summary>
@@ -337,6 +344,11 @@ namespace CYQ.Data.Tool
                         default:
                             return false;
                     }
+                }
+                else if (t.IsEnum)
+                {
+
+                    return Enum.Parse(t, strValue, true);
                 }
                 return Convert.ChangeType(strValue, t);
             }

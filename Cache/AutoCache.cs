@@ -254,11 +254,11 @@ namespace CYQ.Data.Cache
                     {
                         return true;
                     }
-                    databaseName = aopInfo.MProc.DataBase;
+                    databaseName = aopInfo.MProc.DataBaseName;
                 }
                 else
                 {
-                    databaseName = aopInfo.MAction.DataBase;
+                    databaseName = aopInfo.MAction.DataBaseName;
                 }
                 string tableName = aopInfo.TableName;
                 if (string.IsNullOrEmpty(tableName))
@@ -538,7 +538,7 @@ namespace CYQ.Data.Cache
                     {
                         if (para.TableName.Contains(" "))
                         {
-                            tableName = "View_" +TableSchema.GetTableHash(para.TableName);
+                            tableName = "View_" +TableInfo.GetHashCode(para.TableName);
                         }
                         else
                         {
@@ -827,7 +827,7 @@ namespace CYQ.Data.Cache
                     string AutoCacheConn = AppConfig.Cache.AutoCacheConn;
                     if (DBTool.TestConn(AutoCacheConn))
                     {
-                        HasAutoCacheTable = DBTool.ExistsTable(KeyTableName, AutoCacheConn);
+                        HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);
                         //检测数据是否存在表
                         if (!HasAutoCacheTable)
                         {
@@ -837,7 +837,7 @@ namespace CYQ.Data.Cache
                             HasAutoCacheTable = DBTool.CreateTable(KeyTableName, mdc, AutoCacheConn);
                             if (!HasAutoCacheTable)//若创建失败，可能并发下其它进程创建了。
                             {
-                                HasAutoCacheTable = DBTool.ExistsTable(KeyTableName, AutoCacheConn);//重新检测表是否存在。
+                                HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);//重新检测表是否存在。
                             }
                         }
                     }
@@ -884,7 +884,7 @@ namespace CYQ.Data.Cache
             public static void ReadAndRemoveKey()
             {
                 MAction action = ActionInstance;//
-                string cacheTime = DBTool.Keyword("CacheTime", action.DalType);
+                string cacheTime = DBTool.Keyword("CacheTime", action.DataBaseType);
                 MDataTable dt = action.Select(cacheTime + ">" + keyTime + " order by " + cacheTime + " asc");
                 if (dt.Rows.Count > 0)
                 {

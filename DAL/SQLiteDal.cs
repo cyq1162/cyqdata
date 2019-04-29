@@ -85,7 +85,7 @@ namespace CYQ.Data
             return factory as DbProviderFactory;
 
         }
-        public override string DataBase
+        public override string DataBaseName
         {
             get
             {

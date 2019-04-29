@@ -64,7 +64,7 @@ namespace CYQ.Data
         }
         protected override bool IsExistsDbName(string dbName)
         {
-            return File.Exists(Con.DataSource.Replace(DataBase, dbName));
+            return File.Exists(Con.DataSource.Replace(DataBaseName, dbName));
         }
     }
 

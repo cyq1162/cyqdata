@@ -4,63 +4,187 @@ using System.Text;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
 using System.Data.Common;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 
 namespace CYQ.Data
 {
-    internal class NoSqlCommand : IDisposable // DbCommand
+
+
+    internal partial class NoSqlCommand : DbCommand
     {
-        SqlSyntax ss;
-        string sourceSql = string.Empty;//传过来的SQL语句
-        public string CommandText
+        NoSqlParameterCollection list = new NoSqlParameterCollection();
+        public override void Cancel()
+        {
+
+        }
+
+        public override int CommandTimeout
         {
             get
             {
-                return sourceSql;
+                return 1000;
             }
             set
             {
-                sourceSql = value;
-                if (ss == null)
-                {
-                    ss = SqlSyntax.Analyze(sourceSql);
-                }
+
+            }
+        }
+
+        public override CommandType CommandType
+        {
+            get
+            {
+                return CommandType.Text;
+            }
+            set
+            {
+
+            }
+        }
+
+        protected override DbParameter CreateDbParameter()
+        {
+            return new NoSqlParameter();
+        }
+
+        protected override DbConnection DbConnection
+        {
+            get
+            {
+                return con;
+            }
+            set
+            {
+                con = value as NoSqlConnection;
+            }
+        }
+
+        protected override DbParameterCollection DbParameterCollection
+        {
+            get
+            {
+                return list;
+            }
+        }
+
+        protected override DbTransaction DbTransaction
+        {
+            get
+            {
+                return con.Transaction;
+            }
+            set
+            {
+
+            }
+        }
+
+        public override bool DesignTimeVisible
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+
+            }
+        }
+
+        protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
+        {
+            return new NoSqlDataReader(ExeMDataTable());
+        }
+
+
+        public override void Prepare()
+        {
+
+        }
+
+        public override UpdateRowSource UpdatedRowSource
+        {
+            get
+            {
+                return UpdateRowSource.None;
+            }
+            set
+            {
+
+            }
+        }
+    }
+    internal partial class NoSqlCommand  // DbCommand
+    {
+        string _CommandText;
+        public override string CommandText
+        {
+            get
+            {
+                return _CommandText;
+            }
+            set
+            {
+                _CommandText = value;
             }
         }
 
         NoSqlAction action = null;
-        public NoSqlCommand(string sqlText, DalBase dalBase)
+        SqlSyntax ss;
+        NoSqlConnection con;
+        public NoSqlCommand(string sqlText, NoSqlConnection con)
         {
             try
             {
+                this.con = con;
                 if (string.IsNullOrEmpty(sqlText))
                 {
                     return;
                 }
-                sourceSql = sqlText;
-                ss = SqlSyntax.Analyze(sqlText);
+                CommandText = sqlText;
             }
             catch (Exception err)
             {
                 Log.Write(err, LogType.DataBase);
             }
-            if (ss.IsSelect || ss.IsUpdate || ss.IsDelete || ss.IsInsert)
+
+        }
+        private void InitAction()
+        {
+            ss = SqlSyntax.Analyze(CommandText);
+            if (ss != null)
             {
-                MDataRow row = new MDataRow();
-                row.Conn = dalBase.ConnName;
-                if (ColumnSchema.FillTableSchema(ref row, ss.TableName, ss.TableName))
-                { 
-                    action = new NoSqlAction(ref row, ss.TableName, dalBase.Con.DataSource, dalBase.DataBaseType);
+                if (action == null || action.TableName != ss.TableName)
+                {
+                    if (action != null)
+                    {
+                        action.Dispose();
+                    }
+                    if (ss.IsSelect || ss.IsUpdate || ss.IsDelete || ss.IsInsert)
+                    {
+                        MDataRow row = new MDataRow();
+                        row.Conn = con.ConnectionString;
+                        if (TableSchema.FillTableSchema(ref row, ss.TableName, ss.TableName))
+                        {
+                            action = new NoSqlAction(ref row, ss.TableName, con.DataSource, con.DatabaseType);
+                        }
+
+                    }
+                    else
+                    {
+                        Log.Write("NoSql Grammar Error Or No Support : " + ss.SqlText, LogType.DataBase);
+                    }
                 }
-            }
-            else
-            {
-                Log.Write("NoSql Grammar Error Or No Support : " + sqlText, LogType.DataBase);
             }
         }
         public MDataTable ExeMDataTable()
         {
+            InitAction();
+            string where = FormatParas(ss.Where);
             int count = 0;
-            MDataTable dt = action.Select(1, ss.TopN, ss.Where, out count);
+            MDataTable dt = action.Select(ss.PageIndex, ss.PageSize, where, out count);
             if (ss.FieldItems.Count > 0)
             {
                 //处理 a as B 的列。
@@ -107,8 +231,10 @@ namespace CYQ.Data
             return dt;
 
         }
-        public int ExeNonQuery()
+        public override int ExecuteNonQuery()
         {
+            InitAction();
+            string where = FormatParas(ss.Where);
             int count = -1;
             if (ss.IsInsert || ss.IsUpdate)
             {
@@ -120,58 +246,102 @@ namespace CYQ.Data
                     {
                         string key = item.Substring(0, index);
                         string value = item.Substring(index + 1);
-                        if (value.Length > 0 && value[0] == '\'')
+
+                        if (value.Length > 0)
                         {
-                            value = value.Substring(1, value.Length - 2).Replace("''", "'");
+                            if (value[0] == '@' && list.Contains(value))
+                            {
+                                value = list[value].Value.ToString();
+                            }
+                            else if (value[0] == '\'')
+                            {
+                                value = value.Substring(1, value.Length - 2).Replace("''", "'");
+                            }
                         }
                         action._Row.Set(key, value);
                     }
                 }
                 if (ss.IsUpdate)
                 {
-                    action.Update(ss.Where, out count);
+                    action.Update(where, out count);
                 }
-                else if (ss.IsInsert && action.Insert(false))
+                else if (ss.IsInsert && action.Insert(Transaction != null))
                 {
                     count = 1;
                 }
             }
             else if (ss.IsDelete)
             {
-                action.Delete(ss.Where, out count);
+                action.Delete(where, out count);
             }
             return count;
         }
-        public object ExeScalar()
+        public override object ExecuteScalar()
         {
+            InitAction();
             if (ss.IsSelect)
             {
+                string where = FormatParas(ss.Where);
                 if (ss.IsGetCount)
                 {
-                    return action.GetCount(ss.Where);
+                    return action.GetCount(where);
                 }
-                else if (ss.FieldItems.Count > 0 && action.Fill(ss.Where) && action._Row.Columns.Contains(ss.FieldItems[0]))
+                else if (ss.FieldItems.Count > 0 && action.Fill(where))
                 {
-                    return action._Row[ss.FieldItems[0]].Value;
+                    if (action._Row.Columns.Contains(ss.FieldItems[0]))
+                    {
+                        return action._Row[ss.FieldItems[0]].Value;
+                    }
+                    return ss.FieldItems[0];
                 }
                 return null;
             }
             else
             {
-                return ExeNonQuery();
+                int result = ExecuteNonQuery();
+                if (result > 0 && ss.IsInsert)
+                {
+                    return action._Row[action._Row.PrimaryCell.ColumnName].Value;
+                }
+                return result;
             }
         }
-
+        /// <summary>
+        /// 处理参数化替换
+        /// </summary>
+        /// <returns></returns>
+        private string FormatParas(string where)
+        {
+            if (list.Count > 0 && !string.IsNullOrEmpty(where) && where.IndexOf('@') > -1)
+            {
+                foreach (KeyValuePair<string, NoSqlParameter> item in list)
+                {
+                    //aa=@aa and bb=@aab
+                    if (where.IndexOf(item.Value.ParameterName + " ", StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName + " ", "'" + item.Value.Value + "' ", RegexOptions.IgnoreCase);
+                    }
+                    //aa=@aa,bb=@aab
+                    else if (where.IndexOf(item.Value.ParameterName + ",", StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName + ",", "'" + item.Value.Value + "',", RegexOptions.IgnoreCase);
+                    }
+                    else
+                    {
+                        where = Regex.Replace(where, item.Value.ParameterName, "'" + item.Value.Value + "'", RegexOptions.IgnoreCase);
+                    }
+                }
+            }
+            return where;
+        }
         #region IDisposable 成员
-
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
             if (action != null)
             {
                 action.Dispose();
             }
         }
-
         #endregion
 
     }
