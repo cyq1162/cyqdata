@@ -901,10 +901,10 @@ namespace CYQ.Data.Table
         public T ToEntity<T>()
         {
             //Type t = typeof(T);
-            //switch (StaticTool.GetSystemType(ref t))
+            //switch (ReflectTool.GetSystemType(ref t))
             //{
             //    case SysType.Base:
-            //        return (T)StaticTool.ChangeType(this[0].Value, t);
+            //        return (T)ConvertTool.ChangeType(this[0].Value, t);
 
             //}
             //object obj = Activator.CreateInstance(t);
@@ -918,10 +918,10 @@ namespace CYQ.Data.Table
             {
                 return this;
             }
-            switch (StaticTool.GetSystemType(ref t))
+            switch (ReflectTool.GetSystemType(ref t))
             {
                 case SysType.Base:
-                    return StaticTool.ChangeType(this[0].Value, t);
+                    return ConvertTool.ChangeType(this[0].Value, t);
 
             }
             object obj = Activator.CreateInstance(t);
@@ -931,10 +931,10 @@ namespace CYQ.Data.Table
 
         private object GetValue(MDataRow row, Type type)
         {
-            switch (StaticTool.GetSystemType(ref type))
+            switch (ReflectTool.GetSystemType(ref type))
             {
                 case SysType.Base:
-                    return StaticTool.ChangeType(row[0].Value, type);
+                    return ConvertTool.ChangeType(row[0].Value, type);
                 case SysType.Enum:
                     return Enum.Parse(type, row[0].ToString());
                 default:
@@ -1270,7 +1270,7 @@ namespace CYQ.Data.Table
                 Type t = entity.GetType();
                 if (Columns.Count == 0)
                 {
-                    MDataColumn mcs = ColumnSchema.GetColumns(t);
+                    MDataColumn mcs = TableSchema.GetColumnByType(t);
                     MCellStruct ms = null;
                     for (int i = 0; i < mcs.Count; i++)
                     {
@@ -1284,7 +1284,7 @@ namespace CYQ.Data.Table
                 {
                     TableName = t.Name;
                 }
-                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(t);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(t);
                 if (pis.Count > 0)
                 {
                     foreach (PropertyInfo p in pis)
@@ -1294,7 +1294,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    List<FieldInfo> fis = StaticTool.GetFieldInfo(t);
+                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(t);
                     if (fis.Count > 0)
                     {
                         foreach (FieldInfo f in fis)
@@ -1364,7 +1364,7 @@ namespace CYQ.Data.Table
             try
             {
                 #region 处理核心
-                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(objType);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(objType);
                 if (pis.Count > 0)
                 {
                     foreach (PropertyInfo p in pis)//遍历实体
@@ -1377,7 +1377,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    List<FieldInfo> fis = StaticTool.GetFieldInfo(objType);
+                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(objType);
                     if (fis.Count > 0)
                     {
                         foreach (FieldInfo f in fis)//遍历实体
@@ -1422,7 +1422,7 @@ namespace CYQ.Data.Table
             Type propType = toType;
             string value = Convert.ToString(objValue);
             object returnObj = null;
-            SysType sysType = StaticTool.GetSystemType(ref propType);
+            SysType sysType = ReflectTool.GetSystemType(ref propType);
             switch (sysType)
             {
                 case SysType.Enum:
@@ -1444,7 +1444,7 @@ namespace CYQ.Data.Table
                     }
                     else
                     {
-                        returnObj = StaticTool.ChangeType(value, propType);
+                        returnObj = ConvertTool.ChangeType(value, propType);
                     }
                     #endregion
                     break;
@@ -1459,7 +1459,7 @@ namespace CYQ.Data.Table
                     else
                     {
                         Type[] argTypes = null;
-                        int len = StaticTool.GetArgumentLength(ref propType, out argTypes);
+                        int len = ReflectTool.GetArgumentLength(ref propType, out argTypes);
                         if (len == 1) // Table
                         {
 
@@ -1514,7 +1514,7 @@ namespace CYQ.Data.Table
                                     MethodInfo method;
                                     if (isArray)
                                     {
-                                        Object item = StaticTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
+                                        Object item = ConvertTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
                                         method = objListType.GetMethod("Set");
                                         if (method != null)
                                         {
@@ -1523,7 +1523,7 @@ namespace CYQ.Data.Table
                                     }
                                     else
                                     {
-                                        Object item = StaticTool.ChangeType(items[i], argTypes[0]);
+                                        Object item = ConvertTool.ChangeType(items[i], argTypes[0]);
                                         method = objListType.GetMethod("Add");
                                         if (method == null)
                                         {
@@ -1553,7 +1553,7 @@ namespace CYQ.Data.Table
                     #endregion
                     break;
                 case SysType.Custom://继续递归
-                    MDataRow mr = new MDataRow(ColumnSchema.GetColumns(propType));
+                    MDataRow mr = new MDataRow(TableSchema.GetColumnByType(propType));
                     mr.LoadFrom(value);
                     returnObj = Activator.CreateInstance(propType);
                     SetToEntity(ref returnObj, mr);

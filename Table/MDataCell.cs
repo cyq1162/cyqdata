@@ -117,6 +117,16 @@ namespace CYQ.Data.Table
             }
         }
         /// <summary>
+        /// 是否忽略Json转换
+        /// </summary>
+        internal bool IsJsonIgnore
+        {
+            get
+            {
+                return _CellStruct.IsJsonIgnore;
+            }
+        }
+        /// <summary>
         /// 延时检测值的类型
         /// </summary>
         private void CheckNewValue()
@@ -347,7 +357,7 @@ namespace CYQ.Data.Table
                             }
                             else
                             {
-                                value = StaticTool.ChangeType(value, convertionType);
+                                value = ConvertTool.ChangeType(value, convertionType);
                             }
                             break;
                     }
@@ -547,12 +557,12 @@ namespace CYQ.Data.Table
                     Type t = Value.GetType();
                     if (!t.FullName.StartsWith("System."))//普通对象。
                     {
-                        row = new MDataRow(ColumnSchema.GetColumns(t));
+                        row = new MDataRow(TableSchema.GetColumnByType(t));
                         row.LoadFrom(Value);
                     }
                     else if (Value is IEnumerable)
                     {
-                        int len = StaticTool.GetArgumentLength(ref t);
+                        int len = ReflectTool.GetArgumentLength(ref t);
                         if (len == 1)
                         {
                             table = MDataTable.CreateFrom(Value);

@@ -21,6 +21,17 @@ namespace CYQ.Data.Orm
     [AopAttribute]
     public abstract partial class OrmBase : ContextBoundObject, IDisposable
     {
+        /// <summary>
+        /// 获取 基类 ORM 的相关信息
+        /// </summary>
+        [JsonIgnore]
+        public OrmBaseInfo BaseInfo
+        {
+            get
+            {
+                return sob.BaseInfo;
+            }
+        }
         private SimpleOrmBase sob = new SimpleOrmBase();
         /// <summary>
         ///  字段来源（当字段变更时，可以设置此属性来切换更新）
@@ -339,6 +350,14 @@ namespace CYQ.Data.Orm
             Action.SetPara(paraName, value, dbType);
         }
         /// <summary>
+        /// 设置参数化
+        /// </summary>
+        public void SetPara(object paraName, object value)
+        {
+            Action.SetPara(paraName, value);
+        }
+
+        /// <summary>
         /// 清除(SetPara设置的)自定义参数
         /// </summary>
         public void ClearPara()
@@ -366,68 +385,6 @@ namespace CYQ.Data.Orm
             set { Action.AllowInsertID = value; }
         }
 
-        /// <summary>
-        /// 获取或设置表名
-        /// </summary>
-        public string TableName
-        {
-            get
-            {
-                if (Action != null)
-                {
-                    return Action.TableName;
-                }
-                return string.Empty;
-            }
-            set
-            {
-                if (Action != null)
-                {
-                    Action.TableName = value;
-                }
-            }
-        }
-        private MDataColumn _Columns = null;
-        /// <summary>
-        /// 获取表的结构。
-        /// </summary>
-        public MDataColumn Columns
-        {
-            get
-            {
-                return _Columns;
-            }
-        }
-        /// <summary>
-        /// 执行的调试语句输出
-        /// </summary>
-        public string DebugInfo
-        {
-            get
-            {
-                return Action.DebugInfo;
-            }
-        }
-        /// <summary>
-        /// 当前的数据库类型
-        /// </summary>
-        public DalType DalType
-        {
-            get
-            {
-                return Action.DalType;
-            }
-        }
-        /// <summary>
-        /// 原始行数据。
-        /// </summary>
-        public MDataRow RawData
-        {
-            get
-            {
-                return Action.Data;
-            }
-        }
         /// <summary>
         /// UI操作
         /// </summary>

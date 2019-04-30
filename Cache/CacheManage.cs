@@ -157,7 +157,7 @@ namespace CYQ.Data.Cache
                 Type t = typeof(T);
                 try
                 {
-                    return (T)StaticTool.ChangeType(o, t);
+                    return (T)ConvertTool.ChangeType(o, t);
                 }
                 catch (Exception err)
                 {
@@ -195,7 +195,7 @@ namespace CYQ.Data.Cache
             switch (ckt)
             {
                 case CacheKeyType.Schema:
-                    return ColumnSchema.GetSchemaKey(tableName, conn);
+                    return TableSchema.GetSchemaKey(tableName, conn);
                 case CacheKeyType.AutoCache:
                     return AutoCache.GetBaseKey(tableName, conn);
             }

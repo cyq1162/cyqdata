@@ -114,21 +114,7 @@ namespace CYQ.Data.UI
         public void Bind(object control, object where, object text, object value)
         {
             string sql = _SqlCreate.GetBindSql(where, text, value);
-            MDataTable mTable = null;
-            switch (_DalBase.DataBaseType)
-            {
-                case DalType.Txt:
-                case DalType.Xml:
-                    NoSqlCommand cmd = new NoSqlCommand(sql, _DalBase);
-                    mTable = cmd.ExeMDataTable();
-                    cmd.Dispose();
-                    break;
-                default:
-                    mTable = _DalBase.ExeDataReader(sql, false);
-                    // dalHelper.ResetConn();//重置Slave
-                    break;
-            }
-
+            MDataTable mTable = _DalBase.ExeDataReader(sql, false);
             bool result = (mTable != null && mTable.Rows.Count > 0);
             if (result)
             {
@@ -288,7 +274,7 @@ namespace CYQ.Data.UI
                         p = t.GetProperty(ctPropName);
                         if (value != null)
                         {
-                            value = StaticTool.ChangeType(value, p.PropertyType);
+                            value = ConvertTool.ChangeType(value, p.PropertyType);
                             p.SetValue(ct, value, null);
                         }
                         else if (!p.PropertyType.IsValueType)
@@ -385,7 +371,7 @@ namespace CYQ.Data.UI
                                 }
                                 if (p != null)
                                 {
-                                    value = StaticTool.ChangeType(value, p.PropertyType);
+                                    value = ConvertTool.ChangeType(value, p.PropertyType);
                                     p.SetValue(ct, value, null);
                                 }
                                 break;

@@ -402,7 +402,6 @@ namespace CYQ.Data.Cache
                 {
                     DBSchema.Clear();
                     TableSchema.Clear();
-                    ColumnSchema.Clear();
 
                     theCache.Clear();
                     theTime.Clear();

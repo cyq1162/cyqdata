@@ -48,53 +48,53 @@ namespace CYQ.Data
 
         private static DalBase GetDalBaseBy(ConnObject co)
         {
-            DalType dalType = co.Master.ConnDalType;
+            DataBaseType dalType = co.Master.ConnDalType;
             //License.Check(providerName);//¿ò¼ÜÄ£¿éÊÚÈ¨¼ì²â¡£
             switch (dalType)
             {
-                case DalType.MsSql:
+                case DataBaseType.MsSql:
                     return new MsSqlDal(co);
-                case DalType.Access:
+                case DataBaseType.Access:
                     return new OleDbDal(co);
-                case DalType.Oracle:
+                case DataBaseType.Oracle:
                     return new OracleDal(co);
-                case DalType.SQLite:
+                case DataBaseType.SQLite:
                     return new SQLiteDal(co);
-                case DalType.MySql:
+                case DataBaseType.MySql:
                     return new MySQLDal(co);
-                case DalType.Sybase:
+                case DataBaseType.Sybase:
                     return new SybaseDal(co);
-                case DalType.PostgreSQL:
+                case DataBaseType.PostgreSQL:
                     return new PostgreDal(co);
-                case DalType.Txt:
-                case DalType.Xml:
+                case DataBaseType.Txt:
+                case DataBaseType.Xml:
                     return new NoSqlDal(co);
             }
             return (DalBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", dalType.ToString()));
         }
 
-        public static DalType GetDalTypeByReaderName(string typeName)
+        public static DataBaseType GetDalTypeByReaderName(string typeName)
         {
             switch (typeName.Replace("DataReader", "").ToLower())
             {
                 case "oracle":
-                    return DalType.Oracle;
+                    return DataBaseType.Oracle;
                 case "sql":
-                    return DalType.MsSql;
+                    return DataBaseType.MsSql;
                 case "sqlite":
-                    return DalType.SQLite;
+                    return DataBaseType.SQLite;
                 case "oledb":
-                    return DalType.Access;
+                    return DataBaseType.Access;
                 case "mysql":
-                    return DalType.MySql;
+                    return DataBaseType.MySql;
                 case "odbc":
                 case "ase":
-                    return DalType.Sybase;
+                    return DataBaseType.Sybase;
                 case "PgSql":
                 case "Npgsql":
-                    return DalType.PostgreSQL;
+                    return DataBaseType.PostgreSQL;
                 default:
-                    return DalType.None;
+                    return DataBaseType.None;
 
             }
         }

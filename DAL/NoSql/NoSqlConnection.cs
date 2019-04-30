@@ -10,28 +10,36 @@ namespace CYQ.Data
 {
     internal sealed class NoSqlConnection : DbConnection
     {
-        public NoSqlConnection(string conn)
+        NoSqlDal _NoSqlDal;
+        public NoSqlTransaction Transaction;
+        public NoSqlCommand Command;
+        public NoSqlConnection(string conn, NoSqlDal noSqlDal)
         {
             _Conn = conn;
+            _NoSqlDal = noSqlDal;
         }
         protected override DbCommand CreateDbCommand()
         {
-            return null;
+            if (Command == null)
+            {
+                Command = new NoSqlCommand(null, this);
+            }
+            return Command;
         }
 
         protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
         {
-            return null;
+            if (Transaction == null)
+            {
+                Transaction = new NoSqlTransaction(this, isolationLevel);
+            }
+            return Transaction;
         }
         public override void ChangeDatabase(string databaseName)
         {
             //
         }
-        public override void Close()
-        {
-            //重新写回数据。
 
-        }
         private string _Conn;
         public override string ConnectionString
         {
@@ -45,18 +53,24 @@ namespace CYQ.Data
             }
         }
         private string filePath = "";
+        /// <summary>
+        /// 返回文件夹所在的目录
+        /// </summary>
         public override string DataSource
         {
             get
             {
                 if (string.IsNullOrEmpty(filePath))
                 {
-                    filePath = GetFilePath(_Conn);
+                    filePath = GetFilePath(ConnectionString);
                 }
                 return filePath;
             }
         }
         private string folderName;
+        /// <summary>
+        /// 返回 目录名 即数据库名
+        /// </summary>
         public override string Database
         {
             get
@@ -69,28 +83,40 @@ namespace CYQ.Data
                 return folderName;
             }
         }
-
+        public DataBaseType DatabaseType
+        {
+            get
+            {
+                return ConnBean.GetDataBaseType(ConnectionString);
+            }
+        }
         public override void Open()
         {
             if (!Directory.Exists(DataSource))
             {
                 Error.Throw("Error for this directory:" + DataSource);
             }
+            state = ConnectionState.Open;
         }
-
+        public override void Close()
+        {
+            //重新写回数据。
+            Command.Dispose(true);
+            state = ConnectionState.Closed;
+        }
         public override string ServerVersion
         {
             get
             {
-                return "CYQ.Data.NoSql";
+                return "CYQ.Data.NoSql V3.0";
             }
         }
-
+        private ConnectionState state = ConnectionState.Closed;
         public override ConnectionState State
         {
             get
             {
-                return ConnectionState.Closed;
+                return state;
             }
         }
         public override DataTable GetSchema()
@@ -110,7 +136,7 @@ namespace CYQ.Data
                 case "tables":
                     #region tables
 
-                   
+
                     string[] tsList = Directory.GetFiles(DataSource, "*.ts", SearchOption.TopDirectoryOnly);
                     if (tsList != null && tsList.Length > 0)
                     {
@@ -141,12 +167,12 @@ namespace CYQ.Data
 
                         }
                     }
-                     #endregion
+                    #endregion
                     break;
                 case "columns":
                     #region columns
 
-                    
+
                     dt.Columns.Add("COLUMN_NAME");
                     dt.Columns.Add("COLUMN_LCid", typeof(int));
                     dt.Columns.Add("DATA_TYPE", typeof(int));

@@ -75,6 +75,10 @@ namespace CYQ.Data.Table
                 action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
                 if (appendColumns.Length > 0)
                 {
+                    if (appendColumns.Length == 1)
+                    {
+                        appendColumns = appendColumns[0].Split(',');
+                    }
                     List<string> items = new List<string>(appendColumns.Length + 1);
                     items.AddRange(appendColumns);
                     if (!items.Contains(joinOnName))
@@ -83,7 +87,7 @@ namespace CYQ.Data.Table
                     }
                     action.SetSelectColumns(items.ToArray());
                 }
-                string whereIn = SqlCreate.GetWhereIn(action.Data[joinOnName].Struct, dtA.GetColumnItems<string>(dtA.joinOnIndex, BreakOp.NullOrEmpty, true), action.DalType);
+                string whereIn = SqlCreate.GetWhereIn(action.Data[joinOnName].Struct, dtA.GetColumnItems<string>(dtA.joinOnIndex, BreakOp.NullOrEmpty, true), action.DataBaseType);
                 dtB = action.Select(whereIn);
                 dtB.JoinOnName = joinOnName;
 
@@ -113,6 +117,7 @@ namespace CYQ.Data.Table
 
             #region 构建新表及表结构
             MDataTable joinTable = new MDataTable("V_" + dtA.TableName);
+            joinTable.Conn = dtA.Conn;
             joinTable.Columns.AddRange(dtA.Columns.Clone());
             if (columns.Length == 0)
             {

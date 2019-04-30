@@ -31,7 +31,7 @@ namespace CYQ.Data.SQL
                 filterKeyList = value;
             }
         }
-        public static string Filter(string text, DalType dalType)
+        public static string Filter(string text, DataBaseType dalType)
         {
             string[] items = null;
             if (text.IndexOf("--") > -1)
@@ -67,9 +67,9 @@ namespace CYQ.Data.SQL
             {
                 switch (dalType)
                 {
-                    case DalType.MySql:
-                    case DalType.Oracle:
-                    case DalType.SQLite:
+                    case DataBaseType.MySql:
+                    case DataBaseType.Oracle:
+                    case DataBaseType.SQLite:
                         for (int i = 0; i < items.Length; i++)//È¥µô×Ö¶ÎµÄ[×Ö¶Î]£¬Á½¸ö·ûºÅ
                         {
                             if (!items[i].StartsWith("[#") && items[i].StartsWith("[") && items[i].EndsWith("]"))

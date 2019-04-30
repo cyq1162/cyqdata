@@ -578,35 +578,35 @@ namespace CYQ.Data
                 }
             }
             */
-            private static string _DefaultDataBase;
+            private static string _DefaultDataBaseName;
             /// <summary>
             /// 默认数据库名称（只读）
             /// </summary>
-            public static string DefaultDataBase
+            public static string DefaultDataBaseName
             {
                 get
                 {
-                    if (string.IsNullOrEmpty(_DefaultDataBase))
+                    if (string.IsNullOrEmpty(_DefaultDataBaseName))
                     {
                         SetDefault();
 
                     }
-                    return _DefaultDataBase;
+                    return _DefaultDataBaseName;
                 }
             }
-            private static DalType _DefaultDalType = DalType.None;
+            private static DataBaseType _DefaultDataBaseType = DataBaseType.None;
             /// <summary>
             /// 默认数据库类型（只读）
             /// </summary>
-            public static DalType DefaultDalType
+            public static DataBaseType DefaultDataBaseType
             {
                 get
                 {
-                    if (_DefaultDalType == DalType.None)
+                    if (_DefaultDataBaseType == DataBaseType.None)
                     {
                         SetDefault();
                     }
-                    return _DefaultDalType;
+                    return _DefaultDataBaseType;
                 }
             }
             private static void SetDefault()
@@ -614,8 +614,8 @@ namespace CYQ.Data
                 DalBase db = DalCreate.CreateDal(DefaultConn);
                 if (db != null)
                 {
-                    _DefaultDataBase = db.DataBase;
-                    _DefaultDalType = db.DataBaseType;
+                    _DefaultDataBaseName = db.DataBaseName;
+                    _DefaultDataBaseType = db.DataBaseType;
                     db.Dispose();
                 }
             }

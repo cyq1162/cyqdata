@@ -93,13 +93,13 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(firstTableName))
             {
                 TableInfo info = GetTableInfoByName(firstTableName, priorityConn);
-                if (info != null && info.Parent != null)
+                if (info != null && info.DBInfo != null)
                 {
                     if (nameOrSql == firstTableName)
                     {
                         fixName = info.Name;
                     }
-                    conn = info.Parent.ConnName;
+                    conn = info.DBInfo.ConnName;
                 }
             }
             return conn;
@@ -113,9 +113,9 @@ namespace CYQ.Data.SQL
         public static string GetDBName(string name)
         {
             TableInfo info = GetTableInfoByName(name);
-            if (info != null && info.Parent != null)
+            if (info != null && info.DBInfo != null)
             {
-                return info.Parent.DataBaseName;
+                return info.DBInfo.DataBaseName;
             }
             return "";
         }
@@ -144,7 +144,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name))
             {
-                int tableHash = TableSchema.GetTableHash(name);
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -190,7 +190,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -221,12 +221,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
-                if (dic != null && dic.ContainsKey(name))
-                {
-                    dic.Remove(name);
-                }
+                int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     int dbHash = ConnBean.GetHashCode(conn);
@@ -253,12 +248,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableSchema.GetTableHash(name);
-                Dictionary<string, string> dic = TableSchema.GetSchemas(conn, type);
-                if (dic != null && !dic.ContainsKey(name))
-                {
-                    dic.Add(name, name);
-                }
+                int tableHash = TableInfo.GetHashCode(name);
                 int dbHash = ConnBean.GetHashCode(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))
                 {

@@ -1,18 +1,116 @@
-﻿using CYQ.Data.SQL;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace CYQ.Data.Tool
 {
+    /// <summary>
+    /// 数据库信息
+    /// </summary>
     public class DBInfo
     {
-        public string ConnName;
-        public string ConnString;
-        public string DataBaseName;
-        public Dictionary<int, TableInfo> Tables;
-        public Dictionary<int, TableInfo> Views;
-        public Dictionary<int, TableInfo> Procs;
+        internal DBInfo()
+        {
+
+        }
+        private string _ConnName;
+        public string ConnName
+        {
+            get
+            {
+                return _ConnName;
+            }
+            internal set
+            {
+                _ConnName = value;
+            }
+        }
+        private string _ConnString;
+        public string ConnString
+        {
+            get
+            {
+                return _ConnString;
+            }
+            internal set
+            {
+                _ConnString = value;
+            }
+        }
+        private string _DataBaseName;
+        public string DataBaseName
+        {
+            get
+            {
+                return _DataBaseName;
+            }
+            internal set
+            {
+                _DataBaseName = value;
+            }
+        }
+        private string _DataBaseVersion;
+        public string DataBaseVersion
+        {
+            get
+            {
+                return _DataBaseVersion;
+            }
+            internal set
+            {
+                _DataBaseVersion = value;
+            }
+        }
+        private DataBaseType _DataBaseType;
+        public DataBaseType DataBaseType
+        {
+            get
+            {
+                return _DataBaseType;
+            }
+            internal set
+            {
+                _DataBaseType = value;
+            }
+        }
+        private Dictionary<int, TableInfo> _Tables;
+        public Dictionary<int, TableInfo> Tables
+        {
+            get
+            {
+                return _Tables;
+            }
+            internal set
+            {
+                _Tables = value;
+            }
+        }
+        private Dictionary<int, TableInfo> _Views;
+        public Dictionary<int, TableInfo> Views
+        {
+            get
+            {
+                return _Views;
+            }
+            internal set
+            {
+                _Views = value;
+            }
+        }
+        private Dictionary<int, TableInfo> _Procs;
+        public Dictionary<int, TableInfo> Procs
+        {
+            get
+            {
+                return _Procs;
+            }
+            internal set
+            {
+                _Procs = value;
+            }
+        }
+
+
         internal TableInfo GetTableInfo(int tableHash)
         {
             return GetTableInfo(tableHash, null);
@@ -80,29 +178,6 @@ namespace CYQ.Data.Tool
         public static int GetHashCode(string connNameOrString)
         {
             return ConnBean.Create(connNameOrString).GetHashCode();
-        }
-    }
-    public class TableInfo
-    {
-        public TableInfo(string name, string type, string description, DBInfo parent)
-        {
-            this.Name = name;
-            this.Type = type;
-            this.Description = description;
-            this.Parent = parent;
-        }
-        public string Name;
-        public string Type;
-        public string Description;
-        public DBInfo Parent;
-        /// <summary>
-        /// 获取指定数据库链接的Hash值
-        /// </summary>
-        /// <param name="connNameOrString">配置名或链接字符串</param>
-        /// <returns></returns>
-        public static int GetHashCode(string tableName)
-        {
-            return TableSchema.GetTableHash(tableName);
         }
     }
 }

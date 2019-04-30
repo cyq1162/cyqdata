@@ -18,14 +18,14 @@ namespace CYQ.Data.Aop
         {
             get
             {
-                return aopOp != AopOp.CloseAll && (AppConfig.Cache.IsAutoCache || outerAop != null);
+                return aopOp != AopOp.CloseAll;
             }
         }
         internal bool IsTxtDataBase
         {
             get
             {
-                return Para.DalType == DalType.Txt || Para.DalType == DalType.Xml;
+                return Para.DalType == DataBaseType.Txt || Para.DalType == DataBaseType.Xml;
             }
         }
         private AopInfo _AopInfo;
@@ -48,6 +48,14 @@ namespace CYQ.Data.Aop
         public InterAop()
         {
             outerAop = GetFromConfig();
+            if (outerAop == null)
+            {
+                aopOp = AppConfig.Cache.IsAutoCache ? AopOp.OnlyInner : AopOp.CloseAll;
+            }
+            else
+            {
+                aopOp = AppConfig.Cache.IsAutoCache ? AopOp.OpenAll : AopOp.OnlyOuter;
+            }
         }
         #region IAop 成员
 
@@ -64,10 +72,10 @@ namespace CYQ.Data.Aop
             }
             if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回
-                {
-                    isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
-                }
+                //if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回，------调整机制，由Aop参数控制。
+                //{
+                isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
+                // }
                 if (isHasCache)  //找到Cache
                 {
 
@@ -89,7 +97,7 @@ namespace CYQ.Data.Aop
             }
             if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                if (!isHasCache && !IsTxtDataBase && Para.IsSuccess)//Select内部调用了GetCount，GetCount的内部isHasCache为true影响了
+                if (!isHasCache  && Para.IsSuccess)//Select内部调用了GetCount，GetCount的内部isHasCache为true影响了
                 {
                     AutoCache.SetCache(action, Para); //找看有没有Cache
                 }
@@ -166,20 +174,5 @@ namespace CYQ.Data.Aop
             }
             return null;
         }
-
-        #region 内部单例
-        //public static InterAop Instance
-        //{
-        //    get
-        //    {
-        //        return Shell.instance;
-        //    }
-        //}
-
-        //class Shell
-        //{
-        //    internal static readonly InterAop instance = new InterAop();
-        //}
-        #endregion
     }
 }

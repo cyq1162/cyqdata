@@ -341,7 +341,7 @@ namespace CYQ.Data.Table
             group2 = new List<TFilter>();
             List<TFilter> tFilterList = new List<TFilter>();
             string whereStr = SqlFormat.GetIFieldSql(whereObj);
-            whereStr = SqlCreate.FormatWhere(whereStr, mdc, DalType.None, null);
+            whereStr = SqlCreate.FormatWhere(whereStr, mdc, DataBaseType.None, null);
             string lowerWhere = whereStr.ToLower();
             string andSign = " and ";
             string orSign = " or ";
@@ -572,7 +572,7 @@ namespace CYQ.Data.Table
                     {
                         try
                         {
-                            tFilter._valueB = StaticTool.ChangeType(tFilter._valueB, columnAIndex > -1 ? typeof(string) : mdc[columnAIndex].ValueType);
+                            tFilter._valueB = ConvertTool.ChangeType(tFilter._valueB, columnAIndex > -1 ? typeof(string) : mdc[columnAIndex].ValueType);
                         }
                         catch
                         {
@@ -599,23 +599,26 @@ namespace CYQ.Data.Table
             object valueA = null, valueB = null;
             foreach (TFilter item in filters)
             {
-                if (item._Op == Op.None)
+                if (item._Op == Op.None || item._columnAIndex == -1)
                 {
-                    moreResult = true;
+                    moreResult = true;//如果条件的列不属于当前表，直接忽略该条件
                 }
                 else
                 {
-                    if (item._columnAIndex == -1)
-                    {
-                        valueA = item._valueA;
-                        sqlDbType = SqlDbType.NVarChar;
-                    }
-                    else
-                    {
-                        cell = row[item._columnAIndex];
-                        valueA = cell.Value;
-                        sqlDbType = cell.Struct.SqlType;
-                    }
+                    //if (item._columnAIndex == -1)
+                    //{
+                    //    moreResult = true;
+                    //    continue;
+                    //    //valueA = item._valueA;
+                    //    //sqlDbType = SqlDbType.NVarChar;
+                    //}
+                    //else
+                    //{
+                    cell = row[item._columnAIndex];
+                    valueA = cell.Value;
+                    sqlDbType = cell.Struct.SqlType;
+                    //}
+                    #region MyRegion
                     if (item._columnBIndex > -1)
                     {
                         otherCell = row[item._columnBIndex];
@@ -640,6 +643,7 @@ namespace CYQ.Data.Table
                         default:
                             if (Convert.ToString(valueA) == "" || Convert.ToString(valueB) == "")//空格的问题，稍后回来处理。
                             {
+                                #region MyRegion
                                 int a = valueA == null ? 1 : (Convert.ToString(valueA) == "" ? 2 : 3);
                                 int b = valueB == null ? 1 : (Convert.ToString(valueB) == "" ? 2 : 3);
                                 switch (item._Op)
@@ -670,6 +674,7 @@ namespace CYQ.Data.Table
                                     //case Op.NotIn:
                                     //    break;
                                 }
+                                #endregion
                             }
                             else
                             {
@@ -677,12 +682,17 @@ namespace CYQ.Data.Table
                             }
                             break;
                     }
+                    #endregion
 
                 }
                 switch (item._Ao)
                 {
                     case Ao.And:
                         result = result && moreResult;
+                        if (!result)
+                        {
+                            break;
+                        }
                         break;
                     case Ao.Or:
                         result = result || moreResult;
@@ -691,6 +701,7 @@ namespace CYQ.Data.Table
                         result = moreResult;
                         break;
                 }
+                
             }
 
             return result;

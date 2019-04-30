@@ -15,12 +15,12 @@ namespace CYQ.Data
         }
         protected override System.Data.Common.DbProviderFactory GetFactory()
         {
-            return NoSqlFactory.Instance;
+            return new NoSqlFactory(this);
         }
         protected override bool IsExistsDbName(string dbName)
         {
-            string folder = Con.DataSource.TrimEnd('\\');
-            folder = folder.Substring(0, folder.Length - DataBase.Length) + dbName;
+            string folder = Con.DataSource.TrimEnd('\\', '/');
+            folder = folder.Substring(0, folder.Length - DataBaseName.Length) + dbName;
 
             return System.IO.Directory.Exists(folder);
         }
@@ -29,7 +29,7 @@ namespace CYQ.Data
     {
         public override Dictionary<string, string> GetTables()
         {
-            Dictionary<string,string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             string[] files = Directory.GetFiles(Con.DataSource, "*.ts");
             foreach (string file in files)
             {

@@ -769,10 +769,10 @@ namespace CYQ.Data.Tool
             for (int i = 0; i < row.Count; i++)
             {
                 MDataCell cell = row[i];
-                //if (cell.IsNull)
-                //{
-                //    continue;
-                //}
+                if (cell.IsJsonIgnore)
+                {
+                    continue;
+                }
                 if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.State >= (int)_RowOp)))
                 {
                     #region MyRegion
@@ -843,7 +843,7 @@ namespace CYQ.Data.Tool
                             {
                                 if (cell.Value is IEnumerable)
                                 {
-                                    int len = StaticTool.GetArgumentLength(ref t);
+                                    int len = ReflectTool.GetArgumentLength(ref t);
                                     if (len <= 1)//List<T>
                                     {
                                         JsonHelper js = new JsonHelper(false, false);
@@ -877,7 +877,7 @@ namespace CYQ.Data.Tool
                                 {
                                     if (!t.FullName.StartsWith("System."))//普通对象。
                                     {
-                                        MDataRow oRow = new MDataRow(ColumnSchema.GetColumns(t));
+                                        MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(t));
                                         oRow.DynamicData = LoopCheckList;
                                         oRow.LoadFrom(cell.Value);
                                         value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
@@ -982,7 +982,7 @@ namespace CYQ.Data.Tool
                 {
                     #region IEnumerable
                     Type t = obj.GetType();
-                    int len = StaticTool.GetArgumentLength(ref t);
+                    int len = ReflectTool.GetArgumentLength(ref t);
                     if (len == 1)
                     {
                         foreach (object o in obj as IEnumerable)
@@ -1251,7 +1251,7 @@ namespace CYQ.Data.Tool
             if (t.FullName.StartsWith("System.Collections."))
             {
                 Type[] ts;
-                int argLength = StaticTool.GetArgumentLength(ref t, out ts);
+                int argLength = ReflectTool.GetArgumentLength(ref t, out ts);
                 #region Dictionary
                 if (t.FullName.Contains("Dictionary") && argLength == 2 && ts[0].Name == "String" && ts[1].Name == "String")
                 {
@@ -1331,7 +1331,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                MDataRow row = new MDataRow(ColumnSchema.GetColumns(t));
+                MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
                 row.LoadFrom(json);
                 return row.ToEntity<T>();
             }
@@ -1347,7 +1347,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, ColumnSchema.GetColumns(typeof(T)), op).ToList<T>();
+            return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json

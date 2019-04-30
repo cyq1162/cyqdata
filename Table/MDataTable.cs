@@ -569,7 +569,6 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public List<T> ToList<T>(params bool[] useEmit)
         {
-
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
             {
@@ -594,12 +593,16 @@ namespace CYQ.Data.Table
         }
         internal object ToList(Type t)
         {
+            if (t.Name == "MDataTable")
+            {
+                return this;
+            }
             object listObj = Activator.CreateInstance(t);//创建实例
             if (Rows != null && Rows.Count > 0)
             {
                 Type[] paraTypeList = null;
                 Type listObjType = listObj.GetType();
-                StaticTool.GetArgumentLength(ref listObjType, out paraTypeList);
+                ReflectTool.GetArgumentLength(ref listObjType, out paraTypeList);
                 MethodInfo method = listObjType.GetMethod("Add");
                 foreach (MDataRow row in Rows)
                 {
@@ -1170,6 +1173,10 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         internal static MDataTable CreateFrom(DbDataReader sdr)
         {
+            if (sdr != null && sdr is NoSqlDataReader)
+            {
+                return ((NoSqlDataReader)sdr).ResultTable;
+            }
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
             {
@@ -1208,9 +1215,8 @@ namespace CYQ.Data.Table
                 }
                 else if (dt != null && dt.Rows.Count > 0)
                 {
-                    ColumnSchema.FixTableSchemaType(sdr, dt);
-                    mTable.Columns = ColumnSchema.GetColumns(dt);
-                    mTable.Columns.dalType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
+                    mTable.Columns = TableSchema.GetColumnByTable(dt, sdr, false);
+                    mTable.Columns.DataBaseType = DalCreate.GetDalTypeByReaderName(sdr.GetType().Name);
                 }
                 #endregion
                 if (sdr.HasRows)
@@ -1288,7 +1294,7 @@ namespace CYQ.Data.Table
                     {
                         #region 处理列头
                         Type[] types;
-                        int len = StaticTool.GetArgumentLength(ref t, out types);
+                        int len = ReflectTool.GetArgumentLength(ref t, out types);
                         if (len == 2)//字典
                         {
                             dt.Columns.Add("Key", DataType.GetSqlType(types[0]));
@@ -1310,7 +1316,7 @@ namespace CYQ.Data.Table
                             else
                             {
                                 dt.TableName = objType.Name;
-                                dt.Columns = ColumnSchema.GetColumns(objType);
+                                dt.Columns = TableSchema.GetColumnByType(objType);
                             }
                         }
                         #endregion
@@ -1624,7 +1630,7 @@ namespace CYQ.Data.Table
                     {
                         sum += itemList[i];
                     }
-                    return (T)StaticTool.ChangeType(sum, typeof(T));
+                    return (T)ConvertTool.ChangeType(sum, typeof(T));
                 }
             }
             return default(T);
@@ -1651,7 +1657,7 @@ namespace CYQ.Data.Table
             Decimal sum = Sum<Decimal>(index);
             if (sum > 0)
             {
-                return (T)StaticTool.ChangeType(sum / Rows.Count, typeof(T));
+                return (T)ConvertTool.ChangeType(sum / Rows.Count, typeof(T));
             }
             return default(T);
         }
