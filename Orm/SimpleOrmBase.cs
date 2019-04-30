@@ -209,6 +209,10 @@ namespace CYQ.Data.Orm
         /// </summary>
         private void SetDelayInit(Object entityInstance, string tableName, string conn, AopOp op)
         {
+            if(tableName==AppConfig.Log.LogTableName && string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            {
+                return;
+            }
             //if (string.IsNullOrEmpty(conn))
             //{
             //    //不设置链接，则忽略（当成普通的实体类）
