@@ -126,7 +126,7 @@ namespace CYQ.Data.Cache
             {
                 type = SerializedType.ObjectJson;
                 Type t = value.GetType();
-                switch (StaticTool.GetSystemType(ref t))
+                switch (ReflectTool.GetSystemType(ref t))
                 {
                     case SysType.Base:
                     case SysType.Enum:

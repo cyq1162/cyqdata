@@ -157,7 +157,7 @@ namespace CYQ.Data.Cache
                 Type t = typeof(T);
                 try
                 {
-                    return (T)StaticTool.ChangeType(o, t);
+                    return (T)ConvertTool.ChangeType(o, t);
                 }
                 catch (Exception err)
                 {

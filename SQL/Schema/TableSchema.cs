@@ -363,7 +363,7 @@ namespace CYQ.Data.SQL
             return mdc;
 
         }
-       
+
 
         public static void Clear()
         {
@@ -490,7 +490,7 @@ namespace CYQ.Data.SQL
                 #region 获取列结构
                 MDataColumn mdc = new MDataColumn();
                 mdc.TableName = typeInfo.Name;
-                switch (StaticTool.GetSystemType(ref typeInfo))
+                switch (ReflectTool.GetSystemType(ref typeInfo))
                 {
                     case SysType.Base:
                     case SysType.Enum:
@@ -499,7 +499,7 @@ namespace CYQ.Data.SQL
                     case SysType.Generic:
                     case SysType.Collection:
                         Type[] argTypes;
-                        Tool.StaticTool.GetArgumentLength(ref typeInfo, out argTypes);
+                        Tool.ReflectTool.GetArgumentLength(ref typeInfo, out argTypes);
                         foreach (Type type in argTypes)
                         {
                             mdc.Add(type.Name, DataType.GetSqlType(type), false);
@@ -509,7 +509,7 @@ namespace CYQ.Data.SQL
 
                 }
 
-                List<PropertyInfo> pis = StaticTool.GetPropertyInfo(typeInfo);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(typeInfo);
                 if (pis.Count > 0)
                 {
                     for (int i = 0; i < pis.Count; i++)
@@ -519,7 +519,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    List<FieldInfo> fis = StaticTool.GetFieldInfo(typeInfo);
+                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(typeInfo);
                     if (fis.Count > 0)
                     {
                         for (int i = 0; i < fis.Count; i++)
@@ -566,6 +566,7 @@ namespace CYQ.Data.SQL
             {
                 column.MaxSize = DataType.GetMaxSize(sqlType);
             }
+
             KeyAttribute ka = GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
             if (ka != null)
             {
@@ -603,26 +604,22 @@ namespace CYQ.Data.SQL
             {
                 column.Description = da.Description;
             }
+            JsonIgnoreAttribute jia = GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
+            if (jia != null)
+            {
+                column.IsJsonIgnore = true;
+            }
         }
         private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
         {
             Type type = typeof(T);
-            object[] attr = pi != null ? pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
+            object[] attr = ReflectTool.GetAttributes(pi != null ? pi.PropertyType : fi.FieldType, typeof(T));//  pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
 
             if (attr != null && attr.Length == 1)
             {
                 return (T)attr[0];
             }
             return default(T);
-        }
-        private static DescriptionAttribute GetDescriptionAttr(PropertyInfo pi)
-        {
-            object[] attr = pi.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
-            if (attr != null && attr.Length == 1)
-            {
-                return attr[0] as DescriptionAttribute;
-            }
-            return null;
         }
     }
     /// <summary>

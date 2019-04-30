@@ -572,7 +572,7 @@ namespace CYQ.Data.Table
                     {
                         try
                         {
-                            tFilter._valueB = StaticTool.ChangeType(tFilter._valueB, columnAIndex > -1 ? typeof(string) : mdc[columnAIndex].ValueType);
+                            tFilter._valueB = ConvertTool.ChangeType(tFilter._valueB, columnAIndex > -1 ? typeof(string) : mdc[columnAIndex].ValueType);
                         }
                         catch
                         {

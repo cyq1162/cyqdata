@@ -35,7 +35,7 @@ namespace CYQ.Data.SQL
                 {
                     if (!_DBScheams.ContainsKey(hash))
                     {
-                        DBInfo dbSchema = GetSchemaDic(cb.ConnString);
+                        DBInfo dbSchema = GetSchemaDic(cb.ConnName);
                         if (dbSchema != null)
                         {
                             _DBScheams.Add(hash, dbSchema);

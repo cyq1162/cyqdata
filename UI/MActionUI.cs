@@ -274,7 +274,7 @@ namespace CYQ.Data.UI
                         p = t.GetProperty(ctPropName);
                         if (value != null)
                         {
-                            value = StaticTool.ChangeType(value, p.PropertyType);
+                            value = ConvertTool.ChangeType(value, p.PropertyType);
                             p.SetValue(ct, value, null);
                         }
                         else if (!p.PropertyType.IsValueType)
@@ -371,7 +371,7 @@ namespace CYQ.Data.UI
                                 }
                                 if (p != null)
                                 {
-                                    value = StaticTool.ChangeType(value, p.PropertyType);
+                                    value = ConvertTool.ChangeType(value, p.PropertyType);
                                     p.SetValue(ct, value, null);
                                 }
                                 break;

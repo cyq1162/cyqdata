@@ -189,7 +189,10 @@ namespace CYQ.Data.Table
         }
         //内部使用的索引，在字段名为空时使用
         internal int ReaderIndex = -1;
-
+        /// <summary>
+        /// 是否忽略Json转换
+        /// </summary>
+        public bool IsJsonIgnore = false;
         #region 构造函数
         internal MCellStruct(DataBaseType dalType)
         {
@@ -227,7 +230,7 @@ namespace CYQ.Data.Table
             FKTableName = ms.FKTableName;
             SqlTypeName = ms.SqlTypeName;
             AlterOp = ms.AlterOp;
-
+            IsJsonIgnore = ms.IsJsonIgnore;
             if (ms.DefaultValue != null)
             {
                 DefaultValue = ms.DefaultValue;
@@ -260,6 +263,7 @@ namespace CYQ.Data.Table
             ms.MDataColumn = MDataColumn;
             ms.AlterOp = AlterOp;
             ms.TableName = TableName;
+            ms.IsJsonIgnore = IsJsonIgnore;
             return ms;
         }
         #endregion

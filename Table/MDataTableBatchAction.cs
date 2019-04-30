@@ -76,11 +76,11 @@ namespace CYQ.Data.Table
             {
                 if (mTable.DynamicData != null && mTable.DynamicData is MAction)//尝试多动态中获取链接
                 {
-                    _Conn = ((MAction)mTable.DynamicData).ConnectionString;
+                    _Conn = ((MAction)mTable.DynamicData).ConnString;
                 }
                 else if (mTable.DynamicData != null && mTable.DynamicData is MProc)
                 {
-                    _Conn = ((MProc)mTable.DynamicData).ConnectionString;
+                    _Conn = ((MProc)mTable.DynamicData).ConnString;
                 }
                 else
                 {

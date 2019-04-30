@@ -242,7 +242,7 @@ namespace CYQ.Data.Orm
                 items = null;
             }
             string tName = t.Name;
-            object[] names = StaticTool.GetAttributes(t, typeof(TableNameAttribute));
+            object[] names = ReflectTool.GetAttributes(t, typeof(TableNameAttribute));
             if (names != null && names.Length > 0)
             {
                 foreach (object item in names)

@@ -141,6 +141,7 @@
     <Compile Include="Orm\OrmBase.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Orm\OrmBaseInfo.cs" />
     <Compile Include="Orm\SimpleOrmBase.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -162,6 +163,7 @@
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
+    <Compile Include="Tool\ConvertTool.cs" />
     <Compile Include="Tool\DBEntity\TableInfo.cs" />
     <Compile Include="Tool\DBEntity\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />

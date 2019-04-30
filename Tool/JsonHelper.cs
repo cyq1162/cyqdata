@@ -769,10 +769,10 @@ namespace CYQ.Data.Tool
             for (int i = 0; i < row.Count; i++)
             {
                 MDataCell cell = row[i];
-                //if (cell.IsNull)
-                //{
-                //    continue;
-                //}
+                if (cell.IsJsonIgnore)
+                {
+                    continue;
+                }
                 if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.State >= (int)_RowOp)))
                 {
                     #region MyRegion
@@ -843,7 +843,7 @@ namespace CYQ.Data.Tool
                             {
                                 if (cell.Value is IEnumerable)
                                 {
-                                    int len = StaticTool.GetArgumentLength(ref t);
+                                    int len = ReflectTool.GetArgumentLength(ref t);
                                     if (len <= 1)//List<T>
                                     {
                                         JsonHelper js = new JsonHelper(false, false);
@@ -982,7 +982,7 @@ namespace CYQ.Data.Tool
                 {
                     #region IEnumerable
                     Type t = obj.GetType();
-                    int len = StaticTool.GetArgumentLength(ref t);
+                    int len = ReflectTool.GetArgumentLength(ref t);
                     if (len == 1)
                     {
                         foreach (object o in obj as IEnumerable)
@@ -1251,7 +1251,7 @@ namespace CYQ.Data.Tool
             if (t.FullName.StartsWith("System.Collections."))
             {
                 Type[] ts;
-                int argLength = StaticTool.GetArgumentLength(ref t, out ts);
+                int argLength = ReflectTool.GetArgumentLength(ref t, out ts);
                 #region Dictionary
                 if (t.FullName.Contains("Dictionary") && argLength == 2 && ts[0].Name == "String" && ts[1].Name == "String")
                 {

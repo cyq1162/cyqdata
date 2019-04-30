@@ -165,4 +165,13 @@ namespace CYQ.Data.Orm
             _TableName = tableName;
         }
     }
+
+    /// <summary>
+    /// Json ×ª»»ºöÂÔµÄ×Ö¶Î
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class JsonIgnoreAttribute : Attribute
+    {
+
+    }
 }

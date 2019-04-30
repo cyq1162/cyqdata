@@ -335,7 +335,7 @@ namespace CYQ.Data
             return where;
         }
         #region IDisposable ≥…‘±
-        protected override void Dispose(bool disposing)
+        public new void Dispose(bool disposing)
         {
             if (action != null)
             {

@@ -602,7 +602,7 @@ namespace CYQ.Data.Table
             {
                 Type[] paraTypeList = null;
                 Type listObjType = listObj.GetType();
-                StaticTool.GetArgumentLength(ref listObjType, out paraTypeList);
+                ReflectTool.GetArgumentLength(ref listObjType, out paraTypeList);
                 MethodInfo method = listObjType.GetMethod("Add");
                 foreach (MDataRow row in Rows)
                 {
@@ -1294,7 +1294,7 @@ namespace CYQ.Data.Table
                     {
                         #region 处理列头
                         Type[] types;
-                        int len = StaticTool.GetArgumentLength(ref t, out types);
+                        int len = ReflectTool.GetArgumentLength(ref t, out types);
                         if (len == 2)//字典
                         {
                             dt.Columns.Add("Key", DataType.GetSqlType(types[0]));
@@ -1630,7 +1630,7 @@ namespace CYQ.Data.Table
                     {
                         sum += itemList[i];
                     }
-                    return (T)StaticTool.ChangeType(sum, typeof(T));
+                    return (T)ConvertTool.ChangeType(sum, typeof(T));
                 }
             }
             return default(T);
@@ -1657,7 +1657,7 @@ namespace CYQ.Data.Table
             Decimal sum = Sum<Decimal>(index);
             if (sum > 0)
             {
-                return (T)StaticTool.ChangeType(sum / Rows.Count, typeof(T));
+                return (T)ConvertTool.ChangeType(sum / Rows.Count, typeof(T));
             }
             return default(T);
         }

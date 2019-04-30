@@ -84,42 +84,29 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_Version))
                 {
-                    switch (DataBaseType)
+                    if (_VersionCache.ContainsKey(ConnName))
                     {
-                        case DataBaseType.Txt:
-                            _Version = "txt2.0";
-                            break;
-                        case DataBaseType.Xml:
-                            _Version = "xml2.0";
-                            break;
-                        default:
-                            if (_VersionCache.ContainsKey(ConnName))
-                            {
-                                _Version = _VersionCache[ConnName];
-                            }
-                            else
-                            {
-                                if (IsOpenTrans && UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
-                                {
-                                    ResetConn(ConnObj.Master);
-                                }
-                                if (OpenCon(UsingConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
-                                {
-                                    _Version = _con.ServerVersion;
-                                    if (!_VersionCache.ContainsKey(ConnName))
-                                    {
-                                        _VersionCache.Set(ConnName, _Version);
-                                    }
-                                    if (!IsOpenTrans)//避免把事务给关闭了。
-                                    {
-                                        CloseCon();
-                                    }
-                                }
-                            }
-
-                            break;
+                        _Version = _VersionCache[ConnName];
                     }
-
+                    else
+                    {
+                        if (IsOpenTrans && UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+                        {
+                            ResetConn(ConnObj.Master);
+                        }
+                        if (OpenCon(UsingConnBean, AllowConnLevel.MaterBackupSlave))//这里可能切换链接
+                        {
+                            _Version = _con.ServerVersion;
+                            if (!_VersionCache.ContainsKey(ConnName))
+                            {
+                                _VersionCache.Set(ConnName, _Version);
+                            }
+                            if (!IsOpenTrans)//避免把事务给关闭了。
+                            {
+                                CloseCon();
+                            }
+                        }
+                    }
 
                 }
                 return _Version;
