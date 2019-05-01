@@ -1333,7 +1333,7 @@ namespace CYQ.Data.Tool
             else
             {
                 MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
-                row.LoadFrom(json);
+                row.LoadFrom(json, op);
                 return row.ToEntity<T>();
             }
         }
