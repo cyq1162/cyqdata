@@ -168,11 +168,11 @@ namespace CYQ.Data.Tool
 
         public static object[] GetAttributes(FieldInfo t, Type searchType)
         {
-            return GetAttributes(t.FieldType, searchType, null, t);
+            return GetAttributes(t.DeclaringType, searchType, null, t);
         }
         public static object[] GetAttributes(PropertyInfo t, Type searchType)
         {
-            return GetAttributes(t.PropertyType, searchType, t, null);
+            return GetAttributes(t.DeclaringType, searchType, t, null);
         }
         public static object[] GetAttributes(Type t, Type searchType)
         {
