@@ -118,7 +118,9 @@ namespace CYQ.Data.SQL
                 }
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
-                    _action.dalHelper.DebugInfo.Append(AppConst.HR + string.Format("error : {0} {1} can't be null", TableName, cell.ColumnName) + AppConst.BR);
+                    string err = AppConst.HR + string.Format("error : {0} {1} can't be insert null", TableName, cell.ColumnName) + AppConst.BR;
+                    Log.Write(err, LogType.DataBase);
+                    _action.dalHelper.DebugInfo.Append(err);
                     _action.dalHelper.RecordsAffected = -2;
                     isCanDo = false;
                     break;
@@ -262,7 +264,9 @@ namespace CYQ.Data.SQL
             }
             if (!isCanDo)
             {
-                _action.dalHelper.DebugInfo.Append(AppConst.HR + "warn : " + TableName + " can't find the data can be updated!");
+                string err = AppConst.HR + "warn : " + TableName + " can't find the data can be updated!";
+                Log.Write(err, LogType.Warn);
+                _action.dalHelper.DebugInfo.Append(err);
             }
             //switch (_action.dalHelper.dalType)
             //{
