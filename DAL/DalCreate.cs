@@ -4,6 +4,7 @@ using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
 using System.IO;
+using CYQ.Data.Orm;
 
 
 namespace CYQ.Data
@@ -11,7 +12,7 @@ namespace CYQ.Data
     /// <summary>
     /// 数据库类型操作类
     /// </summary>
-    internal class DalCreate
+    internal static class DalCreate
     {
         //private const string SqlClient = "System.Data.SqlClient";
         //private const string OleDb = "System.Data.OleDb";
@@ -25,9 +26,47 @@ namespace CYQ.Data
         //private const string XHtmlClient = "CYQ.Data.XHtmlClient";
 
         /// <summary>
+        /// 全局存档，是为了用单例来实现全局事务。
+        /// </summary>
+        private static MDictionary<string, DalBase> dalBaseDic = new MDictionary<string, DalBase>();
+        public static DalBase Get(string key)
+        {
+            if (dalBaseDic.ContainsKey(key))
+            {
+                return dalBaseDic[key];
+            }
+            return null;
+        }
+        public static bool Remove(string key)
+        {
+            return dalBaseDic.Remove(key);
+        }
+        /// <summary>
         /// 简单工厂（Factory Method）
         /// </summary>
         public static DalBase CreateDal(string connNameOrString)
+        {
+            string key = StaticTool.GetTransationKey(connNameOrString);
+            //检测是否开启了全局事务;
+            bool isTrans = DBFast.HasTransation(key);
+            if (isTrans)
+            {
+                if (dalBaseDic.ContainsKey(key))
+                {
+                    return dalBaseDic[key];
+                }
+
+            }
+            DalBase dal = CreateDalBase(connNameOrString);
+            if (isTrans)
+            {
+                dal.TranLevel = DBFast.GetTransationLevel(key);
+                dal.IsOpenTrans = true;
+                dalBaseDic.Add(key, dal);
+            }
+            return dal;
+        }
+        private static DalBase CreateDalBase(string connNameOrString)
         {
             //ABCConn
             DalBase db = GetDalBaseBy(ConnObject.Create(connNameOrString));
@@ -43,9 +82,7 @@ namespace CYQ.Data
                 }
             }
             return db;
-
         }
-
         private static DalBase GetDalBaseBy(ConnObject co)
         {
             DataBaseType dalType = co.Master.ConnDalType;

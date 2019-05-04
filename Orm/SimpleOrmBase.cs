@@ -613,7 +613,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void Dispose()
         {
-            if (Action != null)
+            if (Action != null && !Action.IsTransation)//ORM的事务，由全局控制，不在这里释放链接。
             {
                 Action.Dispose();
             }

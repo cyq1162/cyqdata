@@ -4,6 +4,9 @@ using System.Text;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
+using System.Web;
+using System.Threading;
+using System.Data;
 
 
 namespace CYQ.Data.Orm
@@ -13,6 +16,73 @@ namespace CYQ.Data.Orm
     /// </summary>
     public static class DBFast
     {
+        /// <summary>
+        /// 当前 用户 是否开启了全局事务
+        /// </summary>
+        /// <returns></returns>
+        internal static bool HasTransation(string key)
+        {
+            return TransationKeys.ContainsKey(key);
+        }
+        internal static IsolationLevel GetTransationLevel(string key)
+        {
+            if (TransationKeys.ContainsKey(key))
+            {
+                return TransationKeys[key];
+            }
+            return IsolationLevel.ReadCommitted;
+        }
+        /// <summary>
+        /// 存档事务的标识
+        /// </summary>
+        public static MDictionary<string, IsolationLevel> TransationKeys = new MDictionary<string, IsolationLevel>();
+        /// <summary>
+        /// 开启事务 (Web 状态下以（Session+线程ID）为单位，其它状态下仅以线程ID为单位)
+        /// 如果已存在事务（则返回false）
+        /// </summary>
+        public static bool BeginTransation(string conn)
+        {
+            return BeginTransation(conn, IsolationLevel.ReadCommitted);
+        }
+        public static bool BeginTransation(string conn, IsolationLevel level)
+        {
+            string key = StaticTool.GetTransationKey(conn);
+            if (!TransationKeys.ContainsKey(key))
+            {
+                TransationKeys.Add(key, level);
+            }
+            return false;
+        }
+        /// <summary>
+        /// 提交事务
+        /// </summary>
+        public static bool EndTransation(string conn)
+        {
+            string key = StaticTool.GetTransationKey(conn);
+            TransationKeys.Remove(key);
+            DalBase dal = DalCreate.Get(key);
+            if (dal != null && dal.EndTransaction())//如果事务回滚了，
+            {
+                dal.Dispose();
+                return DalCreate.Remove(key);
+            }
+            return false;
+        }
+        /// <summary>
+        /// 事务回滚
+        /// </summary>
+        public static bool RollBack(string conn)
+        {
+            string key = StaticTool.GetTransationKey(conn);
+            TransationKeys.Remove(key);
+            DalBase dal = DalCreate.Get(key);
+            if (dal != null && dal.RollBack())
+            {
+                dal.Dispose();
+                return DalCreate.Remove(key);
+            }
+            return false;
+        }
         /// <summary>
         /// 查找单条记录
         /// </summary>

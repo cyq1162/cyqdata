@@ -30,6 +30,16 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
+        /// 是否事务进行中
+        /// </summary>
+        public bool IsTransation
+        {
+            get
+            {
+                return _Action.IsTransation;
+            }
+        }
+        /// <summary>
         /// 获取 数据库的 表名
         /// </summary>
         public string TableName
