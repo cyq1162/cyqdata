@@ -33,20 +33,20 @@ namespace CYQ.Data.Orm
             }
         }
         private SimpleOrmBase sob = new SimpleOrmBase();
-        /// <summary>
-        ///  字段来源（当字段变更时，可以设置此属性来切换更新）
-        /// </summary>
-        public static FieldSource FieldSource
-        {
-            get
-            {
-                return SimpleOrmBase.FieldSource;
-            }
-            set
-            {
-                SimpleOrmBase.FieldSource = value;
-            }
-        }
+        ///// <summary>
+        /////  字段来源（当字段变更时，可以设置此属性来切换更新）
+        ///// </summary>
+        //public static FieldSource FieldSource
+        //{
+        //    get
+        //    {
+        //        return SimpleOrmBase.FieldSource;
+        //    }
+        //    set
+        //    {
+        //        SimpleOrmBase.FieldSource = value;
+        //    }
+        //}
 
 
         //Object entity;//实体对象
@@ -323,8 +323,7 @@ namespace CYQ.Data.Orm
         /// <param name="jsonOrEntity">json字符串或实体对象</param>
         public void LoadFrom(object jsonOrEntity)
         {
-            Action.Data.LoadFrom(jsonOrEntity);
-            sob.SetValueToEntity();
+            sob.LoadFrom(jsonOrEntity);
         }
         /// <summary>
         /// 本方法可以在单表使用时查询指定的列[设置后可使用Fill与Select方法]
@@ -333,7 +332,7 @@ namespace CYQ.Data.Orm
         /// <param name="columnNames">可设置多个列名[调用Fill或Select后,本参数将被清除]</param>
         public void SetSelectColumns(params object[] columnNames)
         {
-            Action.SetSelectColumns(columnNames);
+            sob.SetSelectColumns(columnNames);
         }
         /// <summary>
         /// 参数化传参[当Where条件为参数化(如：name=@name)语句时使用]
@@ -343,14 +342,14 @@ namespace CYQ.Data.Orm
         /// <param name="dbType">参数类型</param>
         public void SetPara(object paraName, object value, DbType dbType)
         {
-            Action.SetPara(paraName, value, dbType);
+            sob.SetPara(paraName, value, dbType);
         }
         /// <summary>
         /// 设置参数化
         /// </summary>
         public void SetPara(object paraName, object value)
         {
-            Action.SetPara(paraName, value);
+            sob.SetPara(paraName, value);
         }
 
         /// <summary>
@@ -358,7 +357,14 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void ClearPara()
         {
-            Action.ClearPara();
+            sob.ClearPara();
+        }
+        /// <summary>
+        /// 清空所有值
+        /// </summary>
+        public void Clear()
+        {
+            sob.Clear();
         }
         /// <summary>
         /// 更新操作的自定义表达式设置。
@@ -400,7 +406,7 @@ namespace CYQ.Data.Orm
         {
             if (!string.IsNullOrEmpty(propValue))
             {
-                sob.SetValueToEntity(propValue);
+                sob.SetValueToEntity(propValue, RowOp.IgnoreNull);
             }
         }
 
