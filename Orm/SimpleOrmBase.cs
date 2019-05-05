@@ -131,7 +131,7 @@ namespace CYQ.Data.Orm
             {
                 if (_Action == null)
                 {
-                    SetDelayInit(_entityInstance, _tableName, _conn, _op);//延迟加载
+                    SetDelayInit(_entityInstance, _tableName, _conn);//延迟加载
                 }
                 return _Action;
             }
@@ -191,24 +191,23 @@ namespace CYQ.Data.Orm
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
         {
-            SetInit(entityInstance, tableName, conn, AopOp.OpenAll);
+            _entityInstance = entityInstance;
+            _tableName = tableName;
+            _conn = conn;
         }
         private object _entityInstance;
         private string _tableName = string.Empty;
         private string _conn = string.Empty;
-        private AopOp _op;
-        protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
-        {
-            _entityInstance = entityInstance;
-            _tableName = tableName;
-            _conn = conn;
-            _op = op;
-        }
+
         /// <summary>
         /// 将原有的初始化改造成延时加载。
         /// </summary>
-        private void SetDelayInit(Object entityInstance, string tableName, string conn, AopOp op)
+        private void SetDelayInit(Object entityInstance, string tableName, string conn)
         {
+            if(tableName==AppConfig.Log.LogTableName && string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            {
+                return;
+            }
             //if (string.IsNullOrEmpty(conn))
             //{
             //    //不设置链接，则忽略（当成普通的实体类）
@@ -282,10 +281,7 @@ namespace CYQ.Data.Orm
                 {
                     _Action.SetAopState(Aop.AopOp.CloseAll);
                 }
-                else
-                {
-                    _Action.SetAopState(op);
-                }
+
                 _Action.EndTransation();
             }
             catch (Exception err)
@@ -296,10 +292,6 @@ namespace CYQ.Data.Orm
                 }
                 Error.Throw(err.Message);
             }
-        }
-        internal void SetInit2(Object entityInstance, string tableName, string conn, AopOp op)
-        {
-            SetInit(entityInstance, tableName, conn, op);
         }
         internal void SetInit2(Object entityInstance, string tableName, string conn)
         {
@@ -621,7 +613,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void Dispose()
         {
-            if (Action != null)
+            if (Action != null && !Action.IsTransation)//ORM的事务，由全局控制，不在这里释放链接。
             {
                 Action.Dispose();
             }

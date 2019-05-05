@@ -177,6 +177,16 @@ namespace CYQ.Data
             }
         }
         /// <summary>
+        /// 是否事务进行中
+        /// </summary>
+        public bool IsTransation
+        {
+            get
+            {
+                return dalHelper.IsOpenTrans;
+            }
+        }
+        /// <summary>
         /// Command Timeout[seconds]
         ///<para>命令超时设置[单位秒]</para>
         /// </summary>

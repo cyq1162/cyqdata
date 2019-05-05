@@ -12,11 +12,12 @@ namespace CYQ.Data
         /// <param name="msg"></param>
         internal static object Throw(string msg)
         {
-            //#if DEBUG
-            //            return "";
+#if DEBUG
+           // return msg;
             //#else
+#endif
             throw new Exception("V" + AppConfig.Version + " " + msg);
-            //#endif
+
         }
     }
     /// <summary>

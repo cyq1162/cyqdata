@@ -100,10 +100,6 @@ namespace CYQ.Data.Orm
         {
             sob.SetInit2(entityInstance, tableName, conn);
         }
-        protected void SetInit(Object entityInstance, string tableName, string conn, AopOp op)
-        {
-            sob.SetInit2(entityInstance, tableName, conn, op);
-        }
         /// <summary>
         /// 设置值,例如:[action.Set(TableName.id,10);]
         /// </summary>

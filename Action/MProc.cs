@@ -127,6 +127,16 @@ namespace CYQ.Data
             }
         }
         /// <summary>
+        /// 是否事务进行中
+        /// </summary>
+        public bool IsTransation
+        {
+            get
+            {
+                return dalHelper.IsOpenTrans;
+            }
+        }
+        /// <summary>
         /// The database connection string
         ///<para>数据库链接字符串</para> 
         /// </summary>

@@ -554,8 +554,15 @@ namespace CYQ.Data.SQL
             Type type = pi != null ? pi.PropertyType : fi.FieldType;
             string name = pi != null ? pi.Name : fi.Name;
             SqlDbType sqlType = SQL.DataType.GetSqlType(type);
+            JsonIgnoreAttribute jia = GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
+            if (jia != null)
+            {
+                return;//被Json忽略的列，不在返回列结构中。
+            }
+
             mdc.Add(name, sqlType);
-            MCellStruct column = mdc[i];
+            MCellStruct column = mdc[mdc.Count - 1];
+
             LengthAttribute la = GetAttr<LengthAttribute>(pi, fi);//获取长度设置
             if (la != null)
             {
@@ -604,16 +611,20 @@ namespace CYQ.Data.SQL
             {
                 column.Description = da.Description;
             }
-            JsonIgnoreAttribute jia = GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
-            if (jia != null)
-            {
-                column.IsJsonIgnore = true;
-            }
+
         }
         private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
         {
             Type type = typeof(T);
-            object[] attr = ReflectTool.GetAttributes(pi != null ? pi.PropertyType : fi.FieldType, typeof(T));//  pi.GetCustomAttributes(type, false) : fi.GetCustomAttributes(type, false);//看是否设置了特性
+            object[] attr = null;
+            if (pi != null)
+            {
+                attr = ReflectTool.GetAttributes(pi, type);
+            }
+            else
+            {
+                attr = ReflectTool.GetAttributes(fi, type);
+            }
 
             if (attr != null && attr.Length == 1)
             {
