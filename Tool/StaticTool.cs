@@ -6,6 +6,8 @@ using System.Data;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
 using System.IO;
+using System.Web;
+using System.Threading;
 
 
 namespace CYQ.Data.Tool
@@ -26,11 +28,6 @@ namespace CYQ.Data.Tool
             return BitConverter.ToString(new Guid(guid).ToByteArray()).Replace("-", "");
         }
 
-       
-
-
-
-        #region 将字符串变HashKey
         static MDictionary<string, string> hashKeyCache = new MDictionary<string, string>(32);
         internal static string GetHashKey(string sourceString)
         {
@@ -57,7 +54,78 @@ namespace CYQ.Data.Tool
                 return sourceString;
             }
         }
-        #endregion
-
+        /// <summary>
+        /// 用于标识（以用户为单位）的 主从 的唯一标识
+        /// </summary>
+        /// <returns></returns>
+        public static string GetMasterSlaveKey()
+        {
+            string id = string.Empty;
+            if (HttpContext.Current != null)
+            {
+                if (HttpContext.Current.Session != null)
+                {
+                    id = HttpContext.Current.Session.SessionID;
+                }
+                else if (HttpContext.Current.Request["Token"] != null)
+                {
+                    id = HttpContext.Current.Request["Token"];
+                }
+                else if (HttpContext.Current.Request.Headers["Token"] != null)
+                {
+                    id = HttpContext.Current.Request.Headers["Token"];
+                }
+                else if (HttpContext.Current.Request["MasterSlaveid"] != null)
+                {
+                    id = HttpContext.Current.Request["MasterSlaveid"];
+                }
+                if (string.IsNullOrEmpty(id))
+                {
+                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveid"];
+                    if (cookie != null)
+                    {
+                        id = cookie.Value;
+                    }
+                    else
+                    {
+                        id = Guid.NewGuid().ToString().Replace("-", "");
+                        cookie = new HttpCookie("MasterSlaveid", id);
+                        cookie.Expires = DateTime.Now.AddMonths(1);
+                        HttpContext.Current.Response.Cookies.Add(cookie);
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(id))
+            {
+                id = DateTime.Now.Minute + Thread.CurrentThread.ManagedThreadId.ToString();
+            }
+            return "MasterSlave_" + id;
+        }
+        /// <summary>
+        /// 用于标识（以用户为单位）的 全局事务 的唯一标识
+        /// </summary>
+        public static string GetTransationKey(string conn)
+        {
+            string key = Thread.CurrentThread.ManagedThreadId.ToString();
+            if (HttpContext.Current != null)
+            {
+                string id = string.Empty;
+                if (HttpContext.Current.Session != null)
+                {
+                    id = HttpContext.Current.Session.SessionID;
+                }
+                else if (HttpContext.Current.Request["Token"] != null)
+                {
+                    id = HttpContext.Current.Request["Token"];
+                }
+                else if (HttpContext.Current.Request.Headers["Token"] != null)
+                {
+                    id = HttpContext.Current.Request.Headers["Token"];
+                }
+                key = id + key;
+            }
+            int hash = ConnBean.GetHashCode(conn);
+            return "Transation_" + key + hash;
+        }
     }
 }

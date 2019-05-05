@@ -85,59 +85,17 @@ namespace CYQ.Data
         {
             if (Slave.Count > 0)
             {
-                string id = GetIdentity();//获取当前的标识
+                string id = StaticTool.GetMasterSlaveKey();//获取当前的标识
                 Cache.CacheManage.LocalInstance.Set(id, 1, AppConfig.DB.MasterSlaveTime / 60.0);
             }
         }
         public bool IsAllowSlave()
         {
             if (Slave.Count == 0) { return false; }
-            string id = GetIdentity();//获取当前的标识
+            string id = StaticTool.GetMasterSlaveKey();//获取当前的标识
             return !Cache.CacheManage.LocalInstance.Contains(id);
         }
-        private string GetIdentity()
-        {
-            string id = string.Empty;
-            if (HttpContext.Current != null)
-            {
-                if (HttpContext.Current.Session != null)
-                {
-                    id = HttpContext.Current.Session.SessionID;
-                }
-                else if (HttpContext.Current.Request["Token"] != null)
-                {
-                    id = HttpContext.Current.Request["Token"];
-                }
-                else if (HttpContext.Current.Request.Headers["Token"] != null)
-                {
-                    id = HttpContext.Current.Request.Headers["Token"];
-                }
-                else if (HttpContext.Current.Request["MasterSlaveid"] != null)
-                {
-                    id = HttpContext.Current.Request["MasterSlaveid"];
-                }
-                if (string.IsNullOrEmpty(id))
-                {
-                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveid"];
-                    if (cookie != null)
-                    {
-                        id = cookie.Value;
-                    }
-                    else
-                    {
-                        id = Guid.NewGuid().ToString().Replace("-", "");
-                        cookie = new HttpCookie("MasterSlaveid", id);
-                        cookie.Expires = DateTime.Now.AddMonths(1);
-                        HttpContext.Current.Response.Cookies.Add(cookie);
-                    }
-                }
-            }
-            if (string.IsNullOrEmpty(id))
-            {
-                id = DateTime.Now.Minute + Thread.CurrentThread.ManagedThreadId.ToString();
-            }
-            return "MasterSlave_" + id;
-        }
+
     }
 
     internal partial class ConnObject
@@ -242,14 +200,14 @@ namespace CYQ.Data
                             ConnObject obj = connDicCache[key];
                             if (obj != null)
                             {
-                                if (!obj.Master.IsOK) 
+                                if (!obj.Master.IsOK)
                                 {
                                     if (obj.Master.ConnName == obj.Master.ConnString)
                                     {
                                         connDicCache.Remove(key);//移除错误的链接。
                                         continue;
                                     }
-                                    obj.Master.TryTestConn(); 
+                                    obj.Master.TryTestConn();
                                 }
                                 if (obj.BackUp != null && !obj.BackUp.IsOK) { obj.BackUp.TryTestConn(); }
                                 if (obj.Slave != null && obj.Slave.Count > 0)

@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using CYQ.Data.SQL;
 using System.IO;
 using System.Reflection;
+using CYQ.Data.Xml;
 
 
 namespace CYQ.Data.Tool
@@ -237,7 +238,7 @@ namespace CYQ.Data.Tool
                 if (t.IsEnum)
                 {
                     value = (int)value;
-                    Add(name, value.ToString(),true);
+                    Add(name, value.ToString(), true);
                 }
                 else
                 {
@@ -1332,7 +1333,7 @@ namespace CYQ.Data.Tool
             else
             {
                 MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
-                row.LoadFrom(json);
+                row.LoadFrom(json, op);
                 return row.ToEntity<T>();
             }
         }
@@ -1384,6 +1385,10 @@ namespace CYQ.Data.Tool
                     return text;
                 }
             }
+            else if (text[0] == '<' && text[text.Length - 1] == '>')
+            {
+                return XmlToJson(text, true);
+            }
 
             JsonHelper js = new JsonHelper();
             js.LoopCheckList.Add(obj.GetHashCode(), 0);
@@ -1397,30 +1402,31 @@ namespace CYQ.Data.Tool
 
 
         #region Xml 转 Json
-        /*
+
         /// <summary>
         /// 转Json
         /// <param name="xml">xml字符串</param>
         /// <param name="isConvertNameToLower">字段是否转小写</param>
         /// <param name="isWithAttr">是否将属性值也输出</param>
         /// </summary>
-        public static string ToJson(string xml, bool isConvertNameToLower, bool isWithAttr)
+        private static string XmlToJson(string xml, bool isWithAttr)
         {
             using (XHtmlAction action = new XHtmlAction(false, true))
             {
                 try
                 {
                     action.LoadXml(xml);
-                    return ToJson(action.XmlDoc.DocumentElement, isConvertNameToLower, isWithAttr);
+                    return action.ToJson(action.XmlDoc.DocumentElement, isWithAttr);
                 }
                 catch (Exception err)
                 {
-                    Log.Write(err, LogType.Error);
+                    Log.WriteLogToTxt(err, LogType.Error);
+                    return string.Empty;
                 }
 
             }
-        } 
-         */
+        }
+
         #endregion
 
 
@@ -1438,10 +1444,18 @@ namespace CYQ.Data.Tool
         {
             return ToXml(json, isWithAttr, DefaultEscape);
         }
-        /// <param name="isWithAttr">default value is true
-        /// <para>是否转成属性，默认true</para></param>
         public static string ToXml(string json, bool isWithAttr, EscapeOp op)
         {
+            return ToXml(json, isWithAttr, op, null);
+        }
+        /// <param name="isWithAttr">default value is true
+        /// <para>是否转成属性，默认true</para></param>
+        public static string ToXml(string json, bool isWithAttr, EscapeOp op, string rootName)
+        {
+            if (!string.IsNullOrEmpty(rootName))
+            {
+                json = string.Format("{{\"{0}\":{1}}}", rootName, json);
+            }
             StringBuilder xml = new StringBuilder();
             xml.Append("<?xml version=\"1.0\"  standalone=\"yes\"?>");
             List<Dictionary<string, string>> dicList = JsonSplit.Split(json);
@@ -1450,14 +1464,14 @@ namespace CYQ.Data.Tool
                 bool addRoot = dicList.Count > 1 || dicList[0].Count > 1;
                 if (addRoot)
                 {
-                    xml.Append("<root>");//</root>";
+                    xml.Append(string.Format("<{0}>", rootName ?? "root"));//</root>";
                 }
 
                 xml.Append(GetXmlList(dicList, isWithAttr, op));
 
                 if (addRoot)
                 {
-                    xml.Append("</root>");//</root>";
+                    xml.Append(string.Format("</{0}>", rootName ?? "root"));//</root>";
                 }
 
             }
@@ -1491,6 +1505,12 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
+                    string key = item.Key;
+                    if (key.EndsWith("List") && isWithAttr)
+                    {
+                        xml.AppendFormat("<{0}>", key);
+                        key = key.Substring(0, key.Length - 4);
+                    }
                     List<Dictionary<string, string>> jsonList = JsonSplit.Split(item.Value);
                     if (jsonList != null && jsonList.Count > 0)
                     {
@@ -1502,7 +1522,7 @@ namespace CYQ.Data.Tool
                         {
                             if (isWithAttr)
                             {
-                                xml.Append(GetXmlElement(item.Key, jsonList[j], op));
+                                xml.Append(GetXmlElement(key, jsonList[j], op));
                             }
                             else
                             {
@@ -1511,12 +1531,17 @@ namespace CYQ.Data.Tool
                         }
                         if (!isWithAttr)
                         {
-                            xml.AppendFormat("</{0}>", item.Key);
+                            xml.AppendFormat("</{0}>", key);
                         }
                     }
                     else // 空Json {}
                     {
-                        xml.AppendFormat("<{0}></{0}>", item.Key);
+                        xml.AppendFormat("<{0}></{0}>", key);
+                    }
+
+                    if (item.Key.EndsWith("List") && isWithAttr)
+                    {
+                        xml.AppendFormat("</{0}>", item.Key);
                     }
                 }
             }
@@ -1530,7 +1555,9 @@ namespace CYQ.Data.Tool
             xml.Append("<" + parentName);
             foreach (KeyValuePair<string, string> kv in dic)
             {
-                if (kv.Value.IndexOf('"') > -1 || IsJson(kv.Value)) // 属性不能带双引号，所以转到元素处理。
+                if (kv.Value.IndexOf('"') > -1 || kv.Value.Length > 50
+                    || kv.Key.Contains("Remark") || kv.Key.Contains("Description") || kv.Key.Contains("Rule")
+                    || IsJson(kv.Value)) // 属性不能带双引号，所以转到元素处理。
                 {
                     jsonDic.Add(kv.Key, kv.Value);
                 }

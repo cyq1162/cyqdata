@@ -16,7 +16,7 @@ namespace CYQ.Data.Tool
         static MDictionary<string, List<PropertyInfo>> propCache = new MDictionary<string, List<PropertyInfo>>();
         static MDictionary<string, List<FieldInfo>> fieldCache = new MDictionary<string, List<FieldInfo>>();
         static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
-        static Dictionary<string, Type[]> argumentCache = new Dictionary<string, Type[]>();
+        static MDictionary<string, Type[]> argumentCache = new MDictionary<string, Type[]>();
         /// <summary>
         /// 获取属性列表
         /// </summary>
@@ -79,7 +79,7 @@ namespace CYQ.Data.Tool
                 return list;
             }
         }
-       
+
         /// <summary>
         ///  获取泛型的参数长度（非泛型按默认方法计算）
         /// </summary>
@@ -93,16 +93,18 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static int GetArgumentLength(ref Type t, out Type[] argTypes)
         {
-            if (argumentCache.ContainsKey(t.FullName))
+            string key = t.FullName;
+            if (argumentCache.ContainsKey(key))
             {
-                argTypes = argumentCache[t.FullName];
-                return argTypes.Length;
+                argTypes = argumentCache[key];
             }
             else
             {
                 int len = 0;
+
                 if (t.IsGenericType)
                 {
+                    #region MyRegion
                     argTypes = t.GetGenericArguments();
                     len = argTypes.Length;
                     for (int i = 0; i < argTypes.Length; i++)
@@ -112,13 +114,13 @@ namespace CYQ.Data.Tool
                             argTypes[i] = Nullable.GetUnderlyingType(argTypes[i]);
                         }
                     }
-                    if (t.Name.StartsWith("Nullable"))
-                    {
-                        t = Nullable.GetUnderlyingType(t);
-                    }
+                    #endregion
                 }
                 else
                 {
+                    #region 非泛型
+
+
                     if (t.Name.EndsWith("[]") || t.Name == "MDataRowCollection" || t.Name == "MDataColumn")
                     {
                         len = 1;
@@ -140,25 +142,56 @@ namespace CYQ.Data.Tool
                     {
                         argTypes[i] = typeof(object);
                     }
+                    #endregion
                 }
-                try
-                {
-                    argumentCache.Add(t.FullName, argTypes);
-                }
-                catch
-                {
 
-                }
-                return len;
+                argumentCache.Set(key, argTypes);
             }
+            if (t.IsGenericType)
+            {
+                if (t.Name.StartsWith("Nullable"))
+                {
+                    t = Nullable.GetUnderlyingType(t);
+                }
+                else if (t.Name == "IList`1")
+                {
+                    //List<int> a;typeof(List<int>);
+                    t = typeof(List<>).MakeGenericType(argTypes[0]);
+                }
+                else if (t.Name == "IDictionary`2")
+                {
+                    t = typeof(Dictionary<,>).MakeGenericType(argTypes[0], argTypes[1]);
+                }
+            }
+            return argTypes.Length;
         }
 
+        public static object[] GetAttributes(FieldInfo t, Type searchType)
+        {
+            return GetAttributes(t.DeclaringType, searchType, null, t);
+        }
+        public static object[] GetAttributes(PropertyInfo t, Type searchType)
+        {
+            return GetAttributes(t.DeclaringType, searchType, t, null);
+        }
+        public static object[] GetAttributes(Type t, Type searchType)
+        {
+            return GetAttributes(t, searchType, null, null);
+        }
         /// <summary>
         /// 获取特性列表
         /// </summary>
-        public static object[] GetAttributes(Type t, Type searchType)
+        private static object[] GetAttributes(Type t, Type searchType, PropertyInfo pi, FieldInfo fi)
         {
             string key = t.GUID.ToString() + (searchType == null ? "" : searchType.Name);
+            if (pi != null)
+            {
+                key += pi.Name;
+            }
+            else if (fi != null)
+            {
+                key += fi.Name;
+            }
             if (attrCache.ContainsKey(key))
             {
                 return attrCache[key];
@@ -167,7 +200,19 @@ namespace CYQ.Data.Tool
             {
                 try
                 {
-                    object[] items = searchType == null ? t.GetCustomAttributes(false) : t.GetCustomAttributes(searchType, true);
+                    object[] items = null;
+                    if (pi != null)
+                    {
+                        items = searchType == null ? pi.GetCustomAttributes(false) : pi.GetCustomAttributes(searchType, true);
+                    }
+                    else if (fi != null)
+                    {
+                        items = searchType == null ? fi.GetCustomAttributes(false) : fi.GetCustomAttributes(searchType, true);
+                    }
+                    else
+                    {
+                        items = searchType == null ? t.GetCustomAttributes(false) : t.GetCustomAttributes(searchType, true);
+                    }
                     attrCache.Add(key, items);
                     return items;
                 }
@@ -222,6 +267,6 @@ namespace CYQ.Data.Tool
                 return SysType.Custom;
             }
         }
-       
+
     }
 }

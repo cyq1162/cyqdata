@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using CYQ.Data.Tool;
 using System.Data.SqlTypes;
 using System.Threading;
+using CYQ.Data.Orm;
 
 
 namespace CYQ.Data
@@ -478,6 +479,10 @@ namespace CYQ.Data
             {
                 parameterName = parameterName.Substring(0, 1) == Pre.ToString() ? parameterName : Pre + parameterName;
             }
+            if (Com == null)
+            {
+                return false;
+            }
             if (Com.Parameters.Contains(parameterName))//已经存在，不添加
             {
                 return false;
@@ -789,6 +794,11 @@ namespace CYQ.Data
 
         public void Dispose()
         {
+            string key = StaticTool.GetTransationKey(UsingConnBean.ConnName);
+            if (DBFast.HasTransation(key))
+            {
+                return;//全局事务由全局控制（全局事务会在移除key后重新调用）。
+            }
             if (_con != null)
             {
                 CloseCon();

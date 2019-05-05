@@ -66,10 +66,10 @@ namespace CYQ.Data.Cache
             {
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ConnObject.CheckConnIsOk));//主从链接的检测机制。
-                if (AppConfig.Cache.IsAutoCache)
-                {
+                //if (AppConfig.Cache.IsAutoCache) // 机制变更为Aop也可控制，所以这个参数还决定不了
+                //{
                     ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));
-                }
+                //}
             }
             catch (Exception err)
             {

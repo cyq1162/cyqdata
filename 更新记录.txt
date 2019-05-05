@@ -796,3 +796,5 @@
 581：NoSqlAction：文本数据库机制内部调整、查询优化。(2019-04-29)
 582：Aop、AutoCache：自动缓存机制小调整，除了原有的全局IsAutoCache全局初始化控制外，Aop参数可二次强制控制。(2019-04-29)
 583：增加 JsonIgnore 属性（标识不输出Json的字段）、SimpleOrmBase、OrmBase增加BaseInfo属性可获得详细信息(2019-04-29)
+584：优化Json与Xml互转机制(2019-04-29)
+585：DBFast 增加全局事务机制【最近因 Gemini.Workflow，因此对ORM实体这一块进行内部机制大升级】(2019-05-04)
