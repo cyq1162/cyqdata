@@ -24,10 +24,11 @@ namespace CYQ.Data.SQL
         {
 
             string key = GetSchemaKey(tableName, conn);
-            if (CacheManage.LocalInstance.Contains(key))//缓存里获取
+            if (_ColumnCache.ContainsKey(key))
             {
-                return CacheManage.LocalInstance.Get<MDataColumn>(key).Clone();
+                return _ColumnCache[key].Clone();
             }
+
             string fixName;
             conn = CrossDB.GetConn(tableName, out fixName, conn);
             tableName = fixName;
@@ -340,9 +341,9 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (!CacheManage.LocalInstance.Contains(key) && mdcs.Count > 0)//拿不到表结构时不缓存。
+            if (!_ColumnCache.ContainsKey(key))
             {
-                CacheManage.LocalInstance.Set(key, mdcs.Clone());
+                _ColumnCache.Add(key, mdcs.Clone());
             }
             return mdcs;
         }
@@ -350,6 +351,7 @@ namespace CYQ.Data.SQL
         private static MDataColumn GetViewColumns(string sqlText, ref DalBase helper)
         {
             MDataColumn mdc = null;
+
             helper.OpenCon(null, AllowConnLevel.MaterBackupSlave);
             helper.Com.CommandText = sqlText;
             DbDataReader sdr = helper.Com.ExecuteReader(CommandBehavior.KeyInfo);
@@ -360,6 +362,7 @@ namespace CYQ.Data.SQL
                 mdc = GetColumnByTable(keyDt, sdr, true);
                 mdc.DataBaseType = helper.DataBaseType;
             }
+
             return mdc;
 
         }
@@ -402,6 +405,7 @@ namespace CYQ.Data.SQL
             //{
             //    key = SqlFormat.NotKeyword(key);
             //}
+            tableName = SqlFormat.NotKeyword(tableName);
             if (string.IsNullOrEmpty(conn))
             {
                 conn = CrossDB.GetConn(tableName, out tableName, conn);

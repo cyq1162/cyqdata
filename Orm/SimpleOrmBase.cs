@@ -13,24 +13,24 @@ using CYQ.Data.Aop;
 
 namespace CYQ.Data.Orm
 {
-    /// <summary>
-    /// ORM CodeFirst 字段来源
-    /// </summary>
-    public enum FieldSource
-    {
-        /// <summary>
-        /// 从实体属性来
-        /// </summary>
-        Property,
-        /// <summary>
-        /// 从数据库或文本数据来
-        /// </summary>
-        Data,
-        /// <summary>
-        /// 综合以上两者
-        /// </summary>
-        BothOfAll
-    }
+    ///// <summary>
+    ///// ORM CodeFirst 字段来源
+    ///// </summary>
+    //public enum FieldSource
+    //{
+    //    /// <summary>
+    //    /// 从实体属性来
+    //    /// </summary>
+    //    Property,
+    //    /// <summary>
+    //    /// 从数据库或文本数据来
+    //    /// </summary>
+    //    Data,
+    //    /// <summary>
+    //    /// 综合以上两者
+    //    /// </summary>
+    //    BothOfAll
+    //}
     /// <summary>
     /// 简单ORM基类（纯数据交互功能）
     /// </summary>
@@ -86,7 +86,7 @@ namespace CYQ.Data.Orm
                 return _BaseInfo;
             }
         }
-       
+
 
         internal MDataColumn Columns = null;
         /// <summary>
@@ -106,21 +106,21 @@ namespace CYQ.Data.Orm
         /// 是否启用了AOP拦截设置字段值同步(默认false)
         /// </summary>
         internal bool IsUseAop = false;
-        private static FieldSource _FieldSource = FieldSource.BothOfAll;
-        /// <summary>
-        ///  字段来源（当字段变更时，可以设置此属性来切换更新）
-        /// </summary>
-        public static FieldSource FieldSource
-        {
-            get
-            {
-                return _FieldSource;
-            }
-            set
-            {
-                _FieldSource = value;
-            }
-        }
+        //private static FieldSource _FieldSource = FieldSource.BothOfAll;
+        ///// <summary>
+        /////  字段来源（当字段变更时，可以设置此属性来切换更新）
+        ///// </summary>
+        //public static FieldSource FieldSource
+        //{
+        //    get
+        //    {
+        //        return _FieldSource;
+        //    }
+        //    set
+        //    {
+        //        _FieldSource = value;
+        //    }
+        //}
 
         Object entity;//实体对象
         Type typeInfo;//实体对象类型
@@ -204,7 +204,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         private void SetDelayInit(Object entityInstance, string tableName, string conn)
         {
-            if(tableName==AppConfig.Log.LogTableName && string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (tableName == AppConfig.Log.LogTableName && string.IsNullOrEmpty(AppConfig.Log.LogConn))
             {
                 return;
             }
@@ -225,64 +225,30 @@ namespace CYQ.Data.Orm
                     if (string.IsNullOrEmpty(tableName)) { tableName = tName; }
                     if (string.IsNullOrEmpty(conn)) { conn = tConn; }
                 }
-
-                string key = tableName + StaticTool.GetHashKey(conn);
-                if (!CacheManage.LocalInstance.Contains(key))
+                string errMsg = string.Empty;
+                Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
+                if (Columns == null || Columns.Count == 0)
                 {
-                    DataBaseType dal = DBTool.GetDalType(conn);
-                    bool isTxtDal = dal == DataBaseType.Txt || dal == DataBaseType.Xml;
-                    string errMsg = string.Empty;
-                    Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
-                    if (Columns == null || Columns.Count == 0)
+                    if (errMsg != string.Empty)
                     {
-                        if (errMsg != string.Empty)
-                        {
-                            Error.Throw(errMsg);
-                        }
-                        Columns = TableSchema.GetColumnByType(typeInfo);
-                        ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
-                        if (!DBTool.Exists(tableName, connBean.ConnString))
-                        {
-                            DBTool.ErrorMsg = null;
-                            if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
-                            {
-                                Error.Throw("SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg);
-                            }
-                        }
+                        Error.Throw(errMsg);
                     }
-                    else if (isTxtDal)//文本数据库
+                    Columns = TableSchema.GetColumnByType(typeInfo);
+                    ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
+                    if (!DBTool.Exists(tableName, connBean.ConnString))
                     {
-                        if (FieldSource != FieldSource.Data)
+                        DBTool.ErrorMsg = null;
+                        if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
                         {
-                            MDataColumn c2 = TableSchema.GetColumnByType(typeInfo);
-                            if (FieldSource == FieldSource.BothOfAll)
-                            {
-                                Columns.AddRange(c2);
-                            }
-                            else
-                            {
-                                Columns = c2;
-                            }
+                            Error.Throw("SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg);
                         }
-                    }
-
-                    if (Columns != null && Columns.Count > 0)
-                    {
-                        CacheManage.LocalInstance.Set(key, Columns, 1440, null);
                     }
                 }
-                else
-                {
-                    Columns = CacheManage.LocalInstance.Get(key) as MDataColumn;
-                }
-
                 _Action = new MAction(Columns.ToRow(tableName), conn);
                 if (typeInfo.Name == "SysLogs")
                 {
                     _Action.SetAopState(Aop.AopOp.CloseAll);
                 }
-
-                _Action.EndTransation();
             }
             catch (Exception err)
             {
@@ -567,13 +533,29 @@ namespace CYQ.Data.Orm
         }
 
         #endregion
-
+        /// <summary>
+        /// 批量加载值（可从Json、实体对象、MDataRow、泛型字段等批量加载值）
+        /// </summary>
+        /// <param name="jsonOrEntity">json字符串或实体对象</param>
+        public void LoadFrom(object jsonOrEntity)
+        {
+            LoadFrom(jsonOrEntity, BreakOp.None);
+        }
+        public void LoadFrom(object jsonOrEntity, BreakOp op)
+        {
+            Action.Data.LoadFrom(jsonOrEntity, op);
+            SetValueToEntity(RowOp.Update);
+        }
         #endregion
         internal void SetValueToEntity()
         {
-            SetValueToEntity(null);
+            SetValueToEntity(null, RowOp.IgnoreNull);
         }
-        internal void SetValueToEntity(string propName)
+        internal void SetValueToEntity(RowOp op)
+        {
+            SetValueToEntity(null, op);
+        }
+        internal void SetValueToEntity(string propName, RowOp op)
         {
             if (!string.IsNullOrEmpty(propName))
             {
@@ -597,7 +579,7 @@ namespace CYQ.Data.Orm
             }
             else
             {
-                Action.Data.SetToEntity(entity);
+                Action.Data.SetToEntity(entity, op);
             }
         }
         private void GetValueFromEntity()
@@ -606,6 +588,20 @@ namespace CYQ.Data.Orm
             {
                 Action.Data.LoadFrom(entity, BreakOp.Null);
             }
+        }
+        /// <summary>
+        /// 清除(SetPara设置的)自定义参数
+        /// </summary>
+        public void ClearPara()
+        {
+            Action.ClearPara();
+        }
+        /// <summary>
+        /// 清空所有值
+        /// </summary>
+        public void Clear()
+        {
+            Action.Data.Clear();
         }
         #region IDisposable 成员
         /// <summary>
@@ -622,5 +618,5 @@ namespace CYQ.Data.Orm
         #endregion
     }
 
-   
+
 }

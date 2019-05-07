@@ -144,6 +144,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name))
             {
+                name = SqlFormat.NotKeyword(name);
                 int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
