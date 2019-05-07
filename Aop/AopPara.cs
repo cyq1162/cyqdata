@@ -32,7 +32,7 @@ namespace CYQ.Data.Aop
         //    get { return _IsView; }
         //    set { _IsView = value; }
         //}
-       // private DalType _DalType = DalType.None;
+        // private DalType _DalType = DalType.None;
         /// <summary>
         /// 数据类型(只读)
         /// </summary>
@@ -42,11 +42,11 @@ namespace CYQ.Data.Aop
             {
                 if (MAction != null)
                 {
-                   return MAction.DataBaseType;
+                    return MAction.DataBaseType;
                 }
                 else if (MProc != null)
                 {
-                    return  MProc.DataBaseType;
+                    return MProc.DataBaseType;
                 }
                 return DataBaseType.None;
                 //if (_DalType == DalType.None)
@@ -64,13 +64,14 @@ namespace CYQ.Data.Aop
             }
             //set { _DalType = value; }
         }
-       // private string _DataBase;
+        // private string _DataBase;
         /// <summary>
         /// 数据库名称(只读)
         /// </summary>
         public string DataBase
         {
-            get {
+            get
+            {
                 if (MAction != null)
                 {
                     return MAction.DataBaseName;
@@ -93,7 +94,7 @@ namespace CYQ.Data.Aop
                 //}
                 //return _DataBase;
             }
-           // set { _DataBase = value; }
+            // set { _DataBase = value; }
         }
         /// <summary>
         /// 数据库链接（只读）
@@ -111,7 +112,7 @@ namespace CYQ.Data.Aop
                     return MProc.ConnString;
                 }
                 return string.Empty;
-                
+
             }
         }
 
@@ -332,11 +333,11 @@ namespace CYQ.Data.Aop
     /// </summary>
     public class AopCustomDbPara
     {
-        private object _ParaName;
+        private string _ParaName;
         /// <summary>
         /// 参数名称
         /// </summary>
-        public object ParaName
+        public string ParaName
         {
             get { return _ParaName; }
             set { _ParaName = value; }

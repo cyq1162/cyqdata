@@ -489,7 +489,19 @@ namespace CYQ.Data.Table
             }
             cell.State = state;
         }
-
+        /// <summary>
+        /// 无参时默认自-1
+        /// </summary>
+        internal void SetState()
+        {
+            for (int i = 0; i < this.Count; i++)
+            {
+                if (this[i].State == 2)
+                {
+                    this[i].State = 1;
+                }
+            }
+        }
 
         #region ICloneable 成员
         /// <summary>
@@ -1346,7 +1358,11 @@ namespace CYQ.Data.Table
         /// <param name="obj">实体对象</param>
         public void SetToEntity(object obj)
         {
-            SetToEntity(ref obj, this);
+            SetToEntity(obj, RowOp.IgnoreNull);
+        }
+        public void SetToEntity(object obj, RowOp op)
+        {
+            SetToEntity(ref obj, this, op);
         }
         /// <summary>
         /// 将指定行的数据赋给实体对象。
@@ -1354,6 +1370,10 @@ namespace CYQ.Data.Table
         /// <param name="obj"></param>
         /// <param name="row"></param>
         internal void SetToEntity(ref object obj, MDataRow row)
+        {
+            SetToEntity(ref obj, row, RowOp.IgnoreNull);
+        }
+        internal void SetToEntity(ref object obj, MDataRow row, RowOp op)
         {
             if (obj == null || row == null || row.Count == 0)
             {
@@ -1371,7 +1391,7 @@ namespace CYQ.Data.Table
                     {
                         if (p.CanWrite)
                         {
-                            SetValueToPropertyOrField(ref obj, row, p, null, out cellName);
+                            SetValueToPropertyOrField(ref obj, row, p, null, op, out cellName);
                         }
                     }
                 }
@@ -1382,7 +1402,7 @@ namespace CYQ.Data.Table
                     {
                         foreach (FieldInfo f in fis)//遍历实体
                         {
-                            SetValueToPropertyOrField(ref obj, row, null, f, out cellName);
+                            SetValueToPropertyOrField(ref obj, row, null, f, op, out cellName);
                         }
                     }
                 }
@@ -1396,11 +1416,23 @@ namespace CYQ.Data.Table
             }
         }
 
-        private void SetValueToPropertyOrField(ref object obj, MDataRow row, PropertyInfo p, FieldInfo f, out string cellName)
+        private void SetValueToPropertyOrField(ref object obj, MDataRow row, PropertyInfo p, FieldInfo f, RowOp op, out string cellName)
         {
             cellName = p != null ? p.Name : f.Name;
             MDataCell cell = row[cellName];
-            if (cell == null || cell.IsNull)
+            if (cell == null)
+            {
+                return;
+            }
+            if (op == RowOp.IgnoreNull && cell.IsNull)
+            {
+                return;
+            }
+            else if (op == RowOp.Insert && cell.State == 0)
+            {
+                return;
+            }
+            else if (op == RowOp.Update && cell.State != 2)
             {
                 return;
             }
@@ -1419,6 +1451,7 @@ namespace CYQ.Data.Table
 
         internal object GetObj(Type toType, object objValue)
         {
+            if (objValue == null) { return null; }
             Type propType = toType;
             string value = Convert.ToString(objValue);
             object returnObj = null;

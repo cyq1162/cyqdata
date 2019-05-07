@@ -50,6 +50,7 @@ namespace CYQ.Data.Orm
             if (!TransationKeys.ContainsKey(key))
             {
                 TransationKeys.Add(key, level);
+                return true;
             }
             return false;
         }
