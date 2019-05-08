@@ -30,9 +30,12 @@ namespace CYQ.Data.SQL
             }
 
             string fixName;
-            conn = CrossDB.GetConn(tableName, out fixName, conn);
+            conn = CrossDB.GetConn(tableName, out fixName, conn ?? AppConfig.DB.DefaultConn);
             tableName = fixName;
-
+            if (conn == null)
+            {
+                return null;
+            }
             MDataColumn mdcs = null;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {
@@ -513,7 +516,7 @@ namespace CYQ.Data.SQL
 
                 }
 
-                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(typeInfo);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyList(typeInfo);
                 if (pis.Count > 0)
                 {
                     for (int i = 0; i < pis.Count; i++)
@@ -523,7 +526,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(typeInfo);
+                    List<FieldInfo> fis = ReflectTool.GetFieldList(typeInfo);
                     if (fis.Count > 0)
                     {
                         for (int i = 0; i < fis.Count; i++)

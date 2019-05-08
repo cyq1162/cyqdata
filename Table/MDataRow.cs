@@ -1296,7 +1296,7 @@ namespace CYQ.Data.Table
                 {
                     TableName = t.Name;
                 }
-                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(t);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyList(t);
                 if (pis.Count > 0)
                 {
                     foreach (PropertyInfo p in pis)
@@ -1306,7 +1306,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(t);
+                    List<FieldInfo> fis = ReflectTool.GetFieldList(t);
                     if (fis.Count > 0)
                     {
                         foreach (FieldInfo f in fis)
@@ -1384,7 +1384,7 @@ namespace CYQ.Data.Table
             try
             {
                 #region 处理核心
-                List<PropertyInfo> pis = ReflectTool.GetPropertyInfo(objType);
+                List<PropertyInfo> pis = ReflectTool.GetPropertyList(objType);
                 if (pis.Count > 0)
                 {
                     foreach (PropertyInfo p in pis)//遍历实体
@@ -1397,7 +1397,7 @@ namespace CYQ.Data.Table
                 }
                 else
                 {
-                    List<FieldInfo> fis = ReflectTool.GetFieldInfo(objType);
+                    List<FieldInfo> fis = ReflectTool.GetFieldList(objType);
                     if (fis.Count > 0)
                     {
                         foreach (FieldInfo f in fis)//遍历实体

@@ -543,8 +543,25 @@ namespace CYQ.Data.Orm
         }
         public void LoadFrom(object jsonOrEntity, BreakOp op)
         {
-            Action.Data.LoadFrom(jsonOrEntity, op);
-            SetValueToEntity(RowOp.Update);
+            MDataRow newValueRow = MDataRow.CreateFrom(jsonOrEntity, null, op);
+            Action.Data.LoadFrom(newValueRow);
+            List<PropertyInfo> piList = ReflectTool.GetPropertyList(typeInfo);
+            foreach (PropertyInfo item in piList)
+            {
+                MDataCell cell = newValueRow[item.Name];
+                if (cell != null && !cell.IsNull && item.CanWrite)
+                {
+                    try
+                    {
+                        item.SetValue(entity, ConvertTool.ChangeType(cell.Value, item.PropertyType), null);
+                    }
+                    catch (Exception err)
+                    {
+                        Log.Write(err, LogType.Error);
+                    }
+                }
+
+            }
         }
         #endregion
         internal void SetValueToEntity()

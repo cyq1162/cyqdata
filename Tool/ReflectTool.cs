@@ -22,7 +22,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static List<PropertyInfo> GetPropertyInfo(Type t)
+        public static List<PropertyInfo> GetPropertyList(Type t)
         {
             bool isAnonymousType = t.Name.Contains("f__AnonymousType");//忽略匿名类型
             string key = t.GUID.ToString();
@@ -54,7 +54,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取Field列表
         /// </summary>
-        public static List<FieldInfo> GetFieldInfo(Type t)
+        public static List<FieldInfo> GetFieldList(Type t)
         {
             string key = t.GUID.ToString();
             if (fieldCache.ContainsKey(key))
