@@ -61,7 +61,7 @@ namespace CYQ.Data
         public bool TryTestConn()
         {
             //err = string.Empty;
-            if (!string.IsNullOrEmpty(ConnName))
+            if (!string.IsNullOrEmpty(ConnName) && AppConfig.GetAppBool("Conn.Result", true))
             {
                 DalBase helper = DalCreate.CreateDal(ConnName);
                 try
@@ -69,7 +69,10 @@ namespace CYQ.Data
 
                     helper.Con.Open();
                     Version = helper.Con.ServerVersion;
-                    if (string.IsNullOrEmpty(Version)) { Version = helper.DataBaseType.ToString(); }
+                    if (string.IsNullOrEmpty(Version))
+                    {
+                        Version = helper.DataBaseType.ToString();
+                    }
                     helper.Con.Close();
                     IsOK = true;
                     ErrorMsg = string.Empty;
@@ -103,7 +106,7 @@ namespace CYQ.Data
         private static MDictionary<int, ConnBean> connBeanDicCache = new MDictionary<int, ConnBean>();
         public static void ClearCache(string key)
         {
-            if(!string.IsNullOrEmpty(key))
+            if (!string.IsNullOrEmpty(key))
             {
                 int hash = key.GetHashCode();
                 ConnBean cb = connBeanDicCache[hash];

@@ -80,22 +80,7 @@ namespace CYQ.Data
                 {
                     Error.Throw("MDataTable can't load data from file : " + _FileFullName);
                 }
-                //行修正，有可能json的某些列数据为Null
-                //                foreach (MCellStruct rowST in _Row.Columns)
-                //                {
-                //                    foreach (MCellStruct tableST in _Table.Columns)
-                //{
 
-                //}
-                //                    if (!_Table.Columns.Contains(cst.ColumnName))
-                //                    {
-                //                        _Table.Columns.Add(cst);
-                //                    }
-                //                    else if(cst.SqlType!=_Table.col
-                //                    {
-
-                //                    }
-                //                }
                 DateTime _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
                 if (!_lastWriteTimeList.ContainsKey(_FileFullName))
                 {
@@ -103,13 +88,10 @@ namespace CYQ.Data
                 }
                 if (_Table.Rows.Count > 0)
                 {
-                    //lock (_lockTableListObj)
-                    //{
                     if (!_tableList.ContainsKey(_FileFullName))
                     {
                         _tableList.Add(_FileFullName, _Table);
                     }
-                    // }
                 }
                 return _Table;
 

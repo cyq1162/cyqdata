@@ -15,7 +15,7 @@ namespace CYQ.Data
         internal const string Host = "cyqdata.com";
         internal const string Host_Aries = "aries.cyqdata.com";
         internal const string Host_Taurus = "taurus.cyqdata.com";
-
+        internal const string Host_Lic = "lic.cyqdata.com";
         #endregion
         #region License 常量
         
@@ -35,9 +35,11 @@ namespace CYQ.Data
 
         #region 全局
         internal const string FilePre = "file:";
+        internal const string Result = ".Result";
         internal const string Global_NotImplemented = "The method or operation is not implemented.";
         internal const string ACKey = "4pMxvlk1OlOv0K6z96T+mNDBdEkX6mPa7Yq27cWP/u0#=2";
         internal const string ALKey = "YH/xArdNhygAvQ7NwJiq2HreAmphvcTP7Yq27cWP/u0#=2";
+        
         #endregion
 
         #region 静态常量
@@ -92,6 +94,7 @@ namespace CYQ.Data
         /// </summary>
         internal static string _DLLFullName = string.Empty;
         static string _RunfolderPath;
+        internal static string HNKey = LocalEnvironment.HostName;
         /// <summary>
         /// 框架的程序集所在的运行路径
         /// </summary>

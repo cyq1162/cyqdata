@@ -54,7 +54,7 @@ namespace CYQ.Data.Cache
 
                     #endregion
 
-                    allowCacheTableTime = DateTime.Now.AddSeconds(5); 
+                    allowCacheTableTime = DateTime.Now.AddSeconds(5);
                     cacheInfoTable = cacheTable;
                 }
                 return cacheInfoTable;
@@ -68,7 +68,7 @@ namespace CYQ.Data.Cache
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ConnObject.CheckConnIsOk));//主从链接的检测机制。
                 //if (AppConfig.Cache.IsAutoCache) // 机制变更为Aop也可控制，所以这个参数还决定不了
                 //{
-                    ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));
+                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));
                 //}
             }
             catch (Exception err)
@@ -145,24 +145,9 @@ namespace CYQ.Data.Cache
             if (!isFirstCheck)
             {
                 isFirstCheck = true;
-                string key = EncryptHelper.Decrypt(AppConst.ACKey, AppConst.Host);
-                key = AppConfig.GetConn(key);
-                if (!string.IsNullOrEmpty(key))
+                if (!EncryptHelper.HashKeyIsValid())
                 {
-                    key = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
-                    if (!string.IsNullOrEmpty(key))
-                    {
-                        string code = AppConfig.GetApp(key);
-                        if (!string.IsNullOrEmpty(code))
-                        {
-                            string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
-                            DateTime d;
-                            if (DateTime.TryParse(items[0], out d) && d > DateTime.Now)
-                            {
-                                AppConfig.SetApp(key + ".result", "1");
-                            }
-                        }
-                    }
+                    AppConfig.SetApp("Conn" + AppConst.Result, "false");
                 }
             }
         }
@@ -321,7 +306,7 @@ namespace CYQ.Data.Cache
                 }
                 return true;
             }
-            catch(Exception err)
+            catch (Exception err)
             {
                 Log.Write(err, LogType.Cache);
                 errorCount++;

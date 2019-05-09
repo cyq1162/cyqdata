@@ -149,7 +149,32 @@ namespace CYQ.Data.Tool
             }
             return result;
         }
-
+        internal static bool HashKeyIsValid()
+        {
+            string acKey = Decrypt(AppConst.ACKey, AppConst.Host);
+            acKey = AppConfig.GetConn(acKey);
+            if (!string.IsNullOrEmpty(acKey))
+            {
+                string alKey = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
+                if (!string.IsNullOrEmpty(alKey))
+                {
+                    string code = AppConfig.GetApp(alKey);
+                    if (!string.IsNullOrEmpty(code))
+                    {
+                        string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
+                        DateTime d;
+                        if ((DateTime.TryParse(items[0], out d) && d > DateTime.Now) || (items.Length > 1 && items[1] == AppConst.HNKey))
+                        {
+                            AppConfig.SetApp(alKey + AppConst.Result, "1");
+                            return true;
+                        }
+                    }
+                }
+                AppConfig.SetApp(alKey + AppConst.Result, "0");
+                return false;
+            }
+            return true;
+        }
         #endregion
     }
 }
