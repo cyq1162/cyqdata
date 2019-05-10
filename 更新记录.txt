@@ -798,3 +798,4 @@
 583：增加 JsonIgnore 属性（标识不输出Json的字段）、SimpleOrmBase、OrmBase增加BaseInfo属性可获得详细信息(2019-04-29)
 584：优化Json与Xml互转机制(2019-04-29)
 585：DBFast 增加全局事务机制【最近因 Gemini.Workflow，因此对ORM实体这一块进行内部机制大升级】(2019-05-04)
+586：增加：AppConfig.DB.IsTxtReadOnly 配置项，（用于演示时，避免账号数据被删除）(2019-05-10)

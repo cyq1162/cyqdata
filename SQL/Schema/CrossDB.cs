@@ -263,7 +263,7 @@ namespace CYQ.Data.SQL
         private static string GetFirstTableNameFromSql(string sql)
         {
             //获取原始表名
-            string[] items = sql.Replace("\r\n", " ").Split(' ');
+            string[] items = sql.Replace("\r", " ").Replace("\n", " ").Replace("\t", " ").Split(' ');
             if (items.Length == 1) { return sql; }//单表名
             if (items.Length > 3) // 总是包含空格的select * from xxx
             {
@@ -282,17 +282,21 @@ namespace CYQ.Data.SQL
                             {
                                 startFrom = false;
                             }
-                            else if (item.IndexOf('.') > -1)
-                            {
-                                if (item.ToLower().StartsWith("dbo."))
-                                {
-                                    return item.Substring(4);
-                                }
-                                startFrom = false;
-                            }
                             else
                             {
-                                return item;
+                                string name = item.Split(')')[0];
+                                if (name.IndexOf('.') > -1)
+                                {
+                                    if (name.ToLower().StartsWith("dbo."))
+                                    {
+                                        return name.Substring(4);
+                                    }
+                                    startFrom = false;
+                                }
+                                else
+                                {
+                                    return name;
+                                }
                             }
                         }
                     }

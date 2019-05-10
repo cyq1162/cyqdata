@@ -462,7 +462,7 @@ namespace CYQ.Data
         #region IDisposable ≥…‘±
         public void Dispose()
         {
-            if (string.IsNullOrEmpty(_FileFullName))
+            if (string.IsNullOrEmpty(_FileFullName) || AppConfig.DB.IsTxtReadOnly)
             {
                 return;
             }
@@ -528,6 +528,7 @@ namespace CYQ.Data
         {
             try
             {
+
                 string text = string.Empty;
                 if (string.IsNullOrEmpty(text))
                 {

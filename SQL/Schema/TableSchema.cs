@@ -445,7 +445,7 @@ namespace CYQ.Data.SQL
             try
             {
                 MDataColumn mdcs = TableSchema.GetColumns(tableName, row.Conn);
-                if (mdcs.Count == 0)
+                if (mdcs == null || mdcs.Count == 0)
                 {
                     return false;
                 }

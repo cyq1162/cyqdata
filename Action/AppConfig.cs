@@ -524,6 +524,20 @@ namespace CYQ.Data
         /// </summary>
         public static class DB
         {
+            /// <summary>
+            /// 文本数据库是否只读（用于Demo演示，避免演示账号或数据被删除）
+            /// </summary>
+            public static bool IsTxtReadOnly
+            {
+                get
+                {
+                    return GetAppBool("IsTxtReadOnly", false);
+                }
+                set
+                {
+                    SetApp("IsTxtReadOnly", value.ToString());
+                }
+            }
             static string _DefaultConn = string.Empty;
             /// <summary>
             /// 默认数据库链接（可赋完整链接语句或Web.config配置项名称）
