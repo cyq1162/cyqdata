@@ -446,25 +446,30 @@ namespace CYQ.Data
                             string[] domains = domainList.Split(',');
                             if (domains != null && domains.Length > 0)
                             {
-                                if (domains.Length == 1)
-                                {
-                                    _Domain = domains[0];
-                                }
-                                else if (uri != null)
+
+                                if (domains.Length > 1 && uri != null)
                                 {
                                     foreach (string domain in domains)
                                     {
                                         if (uri.Authority.Contains(domain))
                                         {
                                             _Domain = domain;
+                                            break;
                                         }
                                     }
                                 }
+                                if (string.IsNullOrEmpty(_Domain))
+                                {
+                                    _Domain = domains[0];
+                                }
                             }
                         }
-                        else if (uri != null && uri.Host != "localhost")
+                        else
                         {
-                            _Domain = uri.Host.Replace("www.", string.Empty);
+                            if (uri != null && uri.Host != "localhost" && uri.Host != "127.0.0.1")
+                            {
+                                _Domain = uri.Host.Replace("www.", string.Empty);
+                            }
                         }
                     }
                     return _Domain;
