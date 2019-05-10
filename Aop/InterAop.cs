@@ -72,10 +72,10 @@ namespace CYQ.Data.Aop
             }
             if (aopOp == AopOp.OpenAll || aopOp == AopOp.OnlyInner)
             {
-                //if (AppConfig.Cache.IsAutoCache && !IsTxtDataBase) // 只要不是直接返回，------调整机制，由Aop参数控制。
-                //{
-                isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
-                // }
+                if (!IsTxtDataBase) // 只要不是直接返回，------调整机制，由Aop参数控制。
+                {
+                    isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache
+                }
                 if (isHasCache)  //找到Cache
                 {
 

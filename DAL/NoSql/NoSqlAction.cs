@@ -81,10 +81,10 @@ namespace CYQ.Data
                     Error.Throw("MDataTable can't load data from file : " + _FileFullName);
                 }
 
-                DateTime _lastWriteTimeUtc = new IOInfo(_FileFullName).LastWriteTimeUtc;
+                DateTime lastWriteTime = new IOInfo(_FileFullName).LastWriteTime;
                 if (!_lastWriteTimeList.ContainsKey(_FileFullName))
                 {
-                    _lastWriteTimeList.Add(_FileFullName, _lastWriteTimeUtc);
+                    _lastWriteTimeList.Add(_FileFullName, lastWriteTime);
                 }
                 if (_Table.Rows.Count > 0)
                 {
@@ -486,9 +486,11 @@ namespace CYQ.Data
                     {
                         Save();//失败，则重新尝试写入！
                     }
+                    else
+                    {
+                        needToSaveState = 0;
+                    }
                 }
-                needToSaveState = 0;//重置为0
-                CheckFileChanged(false);//通过检测重置最后修改时间。
             }
         }
         /// <summary>
@@ -497,13 +499,13 @@ namespace CYQ.Data
         /// <param name="isNeedToReloadTable"></param>
         private void CheckFileChanged(bool isNeedToReloadTable)
         {
-            if (isNeedToReloadTable && !_isDeleteAll.Contains(_FileFullName))
+            if (!_isDeleteAll.Contains(_FileFullName))
             {
-                DateTime _lastWriteTimeUtc = _lastWriteTimeList[_FileFullName];
-                if (IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref _lastWriteTimeUtc))
+                DateTime lastWriteTime = _lastWriteTimeList[_FileFullName];
+                if (IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref lastWriteTime))
                 {
-                    _lastWriteTimeList[_FileFullName] = _lastWriteTimeUtc;
-                    if (_tableList.ContainsKey(_FileFullName))
+                    _lastWriteTimeList[_FileFullName] = lastWriteTime;
+                    if (isNeedToReloadTable && _tableList.ContainsKey(_FileFullName))
                     {
                         try
                         {
@@ -514,8 +516,9 @@ namespace CYQ.Data
                         {
 
                         }
+                        _Table = null;//需要重新加载数据。
                     }
-                    _Table = null;//需要重新加载数据。
+
                 }
             }
 
@@ -538,6 +541,13 @@ namespace CYQ.Data
                     {
 
                         IOHelper.Write(_FileFullName, text, _DalType == DataBaseType.Txt ? IOHelper.DefaultEncoding : Encoding.UTF8);
+                        needToSaveState = 0;//重置为0
+                        DateTime lastWriteTime = _lastWriteTimeList[_FileFullName];
+                        if (IOHelper.IsLastFileWriteTimeChanged(_FileFullName, ref lastWriteTime))
+                        {
+                            //更新最后文件时间
+                            _lastWriteTimeList[_FileFullName] = lastWriteTime;
+                        }
                         tryAgainCount = 0;
                         if (_isDeleteAll.Contains(_FileFullName))
                         {

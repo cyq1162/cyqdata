@@ -269,14 +269,14 @@ namespace CYQ.Data.Tool
             return false;
         }
 
-        internal static bool IsLastFileWriteTimeChanged(string fileName, ref DateTime compareTimeUtc)
+        internal static bool IsLastFileWriteTimeChanged(string fileName, ref DateTime compareTime)
         {
             bool isChanged = false;
             IOInfo info = new IOInfo(fileName);
-            if (info.Exists && info.LastWriteTimeUtc != compareTimeUtc)
+            if (info.Exists && info.LastWriteTime != compareTime)
             {
                 isChanged = true;
-                compareTimeUtc = info.LastWriteTimeUtc;
+                compareTime = info.LastWriteTime;
             }
             return isChanged;
         }
