@@ -250,6 +250,7 @@ namespace CYQ.Data.Table
             row.Columns.DataBaseType = DataBaseType;
             row.Columns.isViewOwner = isViewOwner;
             row.Columns.relationTables = relationTables;
+            row.Conn = Conn;
             return row;
         }
         /// <summary>
@@ -344,6 +345,10 @@ namespace CYQ.Data.Table
         /// 当前的数据库类型。
         /// </summary>
         internal DataBaseType DataBaseType = DataBaseType.None;
+        /// <summary>
+        /// 当前的数据库链接项（或语句）
+        /// </summary>
+        internal string Conn = string.Empty;
         /// <summary>
         /// 该结构是否由视图拥有
         /// </summary>

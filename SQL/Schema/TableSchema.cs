@@ -51,6 +51,7 @@ namespace CYQ.Data.SQL
                         string fileName = dbHelper.Con.DataSource + tableName + (dalType == DataBaseType.Txt ? ".txt" : ".xml");
                         mdcs = MDataColumn.CreateFrom(fileName);
                         mdcs.DataBaseType = dalType;
+                        mdcs.Conn = conn;
                         return mdcs;
                     }
                     return null;//处理视图
@@ -58,6 +59,7 @@ namespace CYQ.Data.SQL
                 #endregion
 
                 mdcs = new MDataColumn();
+                mdcs.Conn = conn;
                 mdcs.TableName = tableName;
                 mdcs.DataBaseType = dalType;
 
@@ -397,17 +399,6 @@ namespace CYQ.Data.SQL
         /// </summary>
         internal static string GetSchemaKey(string tableName, string conn)
         {
-            //string key = tableName;
-            //int start = key.IndexOf('(');
-            //int end = key.LastIndexOf(')');
-            //if (start > -1 && end > -1)//自定义table
-            //{
-            //    key = "View" + StaticTool.GetHashKey(key);
-            //}
-            //else
-            //{
-            //    key = SqlFormat.NotKeyword(key);
-            //}
             tableName = SqlFormat.NotKeyword(tableName);
             if (string.IsNullOrEmpty(conn))
             {
@@ -459,7 +450,7 @@ namespace CYQ.Data.SQL
                     return false;
                 }
                 row = mdcs.ToRow(sourceTableName);
-                string key = GetSchemaKey(tableName, row.Conn);
+                string key = GetSchemaKey(tableName, mdcs.Conn);
                 CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
                 if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                 {

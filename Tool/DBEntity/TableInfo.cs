@@ -52,6 +52,9 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static int GetHashCode(string name)
         {
+            if (string.IsNullOrEmpty(name)) {
+                return "".GetHashCode();
+            }
             return Math.Abs(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower().GetHashCode());
         }
         /// <summary>

@@ -73,7 +73,7 @@ namespace CYQ.Data.Tool
                 _DataBaseType = value;
             }
         }
-        private Dictionary<int, TableInfo> _Tables;
+        private Dictionary<int, TableInfo> _Tables = new Dictionary<int, TableInfo>();
         public Dictionary<int, TableInfo> Tables
         {
             get
@@ -85,7 +85,7 @@ namespace CYQ.Data.Tool
                 _Tables = value;
             }
         }
-        private Dictionary<int, TableInfo> _Views;
+        private Dictionary<int, TableInfo> _Views = new Dictionary<int, TableInfo>();
         public Dictionary<int, TableInfo> Views
         {
             get
@@ -97,7 +97,7 @@ namespace CYQ.Data.Tool
                 _Views = value;
             }
         }
-        private Dictionary<int, TableInfo> _Procs;
+        private Dictionary<int, TableInfo> _Procs = new Dictionary<int, TableInfo>();
         public Dictionary<int, TableInfo> Procs
         {
             get

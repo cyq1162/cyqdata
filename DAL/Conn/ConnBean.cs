@@ -120,7 +120,13 @@ namespace CYQ.Data
         }
         public static int GetHashCode(string conn)
         {
-            return Create(conn).GetHashCode();
+            ConnBean co = Create(conn);
+            if (co == null)
+            {
+                if (conn == null) { return "".GetHashCode(); }
+                return conn.GetHashCode();
+            }
+            return co.GetHashCode();
         }
         static readonly object o = new object();
         /// <summary>
