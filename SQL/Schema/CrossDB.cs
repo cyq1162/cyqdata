@@ -102,7 +102,7 @@ namespace CYQ.Data.SQL
                     conn = info.DBInfo.ConnName;
                 }
             }
-            return conn;
+            return string.IsNullOrEmpty(conn) ? priorityConn : conn;
         }
 
         /// <summary>
