@@ -66,7 +66,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in tables)
                     {
-                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "U", item.Value, info));
+                       int hash=TableInfo.GetHashCode(item.Key);
+                       if (!dic.ContainsKey(hash))
+                       {
+                           dic.Add(hash, new TableInfo(item.Key, "U", item.Value, info));
+                       }
                     }
                     info.Tables = dic;
                 }
@@ -77,7 +81,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in views)
                     {
-                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "V", item.Value, info));
+                         int hash=TableInfo.GetHashCode(item.Key);
+                         if (!dic.ContainsKey(hash))
+                         {
+                             dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
+                         }
                     }
                     info.Views = dic;
                 }
@@ -87,7 +95,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in procs)
                     {
-                        dic.Add(TableInfo.GetHashCode(item.Key), new TableInfo(item.Key, "P", item.Value, info));
+                         int hash=TableInfo.GetHashCode(item.Key);
+                         if (!dic.ContainsKey(hash))
+                         {
+                             dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
+                         }
                     }
                     info.Procs = dic;
                 }
