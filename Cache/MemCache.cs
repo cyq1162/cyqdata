@@ -17,12 +17,16 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
             {
-                Error.Throw("AppConfig.Cache.MemCacheServers cant' be Empty!");
+                string err = "AppConfig.Cache.MemCacheServers cant' be Empty!";
+                Log.WriteLogToTxt(err, LogType.Cache);
+                Error.Throw(err);
             }
             client = MemcachedClient.Create(AppConfig.Cache.MemCacheServers);
             if (client.hostServer.HostList.Count == 0)
             {
-                Error.Throw("AppConfig.Cache.MemCacheServers can't find the host for service : " + AppConfig.Cache.MemCacheServers);
+                string err = "AppConfig.Cache.MemCacheServers can't find the host for service : " + AppConfig.Cache.MemCacheServers;
+                Log.WriteLogToTxt(err, LogType.Cache);
+                Error.Throw(err);
             }
             if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServersBak))
             {

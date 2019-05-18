@@ -17,12 +17,16 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
             {
-                Error.Throw("AppConfig.Cache.RedisServers cant' be Empty!");
+                string err = "AppConfig.Cache.RedisServers cant' be Empty!";
+                Log.WriteLogToTxt(err, LogType.Cache);
+                Error.Throw(err);
             }
             client = RedisClient.Create(AppConfig.Cache.RedisServers);
             if (client.hostServer.HostList.Count == 0)
             {
-                Error.Throw("AppConfig.Cache.RedisServers can't find the host for service : " + AppConfig.Cache.RedisServers);
+                string err = "AppConfig.Cache.RedisServers can't find the host for service : " + AppConfig.Cache.RedisServers;
+                Log.WriteLogToTxt(err, LogType.Cache);
+                Error.Throw(err);
             }
             if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServersBak))
             {
