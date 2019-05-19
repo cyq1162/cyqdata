@@ -203,6 +203,18 @@ namespace CYQ.Data.SQL
                             return true;
                         }
                     }
+                    else
+                    {
+                        DBInfo dbInfo = DBSchema.GetSchema(conn);
+                        if (dbInfo != null)
+                        {
+                            TableInfo info = dbInfo.GetTableInfo(tableHash, type);
+                            if (info != null)
+                            {
+                                return true;
+                            }
+                        }
+                    }
                 }
                 else
                 {
