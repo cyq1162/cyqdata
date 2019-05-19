@@ -159,6 +159,10 @@ namespace CYQ.Data.Table
         private void NullCheck()
         {
             bool valueIsNull = CellValue.SourceValue == null || CellValue.SourceValue == DBNull.Value;
+            if (!valueIsNull && CellValue.StringValue.Length == 0 && DataType.GetGroup(_CellStruct.SqlType) > 0)
+            {
+                valueIsNull = true;
+            }
             if (valueIsNull)
             {
                 if (CellValue.IsNull)
@@ -217,11 +221,6 @@ namespace CYQ.Data.Table
             isAllowChangeState = false;//恢复可设置状态。
         }
 
-        internal object ChangeValue(object value, Type convertionType, int groupID)
-        {
-            Exception err;
-            return ChangeValue(value, convertionType, groupID, out err);
-        }
         /// <summary>
         ///  值的数据类型转换。
         /// </summary>
@@ -229,101 +228,44 @@ namespace CYQ.Data.Table
         /// <param name="convertionType">要转换成哪种类型</param>
         /// <param name="groupID">数据库类型的组号</param>
         /// <returns></returns>
-        internal object ChangeValue(object value, Type convertionType, int groupID, out Exception ex)
+        internal object ChangeValue(object value, Type convertionType, int groupID)
         {
-            ex = null;
-            if (value == null)
-            {
-                CellValue.IsNull = true;
-                return value;
-            }
-            if (groupID > 0 && StringValue == "")
-            {
-                CellValue.IsNull = true;
-                return null;
-            }
+            //值不为null
             try
             {
-                #region 类型转换
-                if (groupID == 1)
+                switch (groupID)
                 {
-                    switch (StringValue)
-                    {
-                        case "正无穷大":
-                            CellValue.StringValue = "Infinity";
-                            break;
-                        case "负无穷大":
-                            CellValue.StringValue = "-Infinity";
-                            break;
-                    }
+                    case 0:
+                        if (_CellStruct.SqlType == SqlDbType.Time)//time类型的特殊处理。
+                        {
+                            string[] items = StringValue.Split(' ');
+                            if (items.Length > 1)
+                            {
+                                CellValue.StringValue = items[1];
+                            }
+                        }
+                        value = StringValue;
+                        break;
+
+                    default:
+                        value = ConvertTool.ChangeType(value, convertionType);
+                        //if (convertionType.Name.EndsWith("[]"))
+                        //{
+                        //    value = Convert.FromBase64String(StringValue);
+                        //    CellValue.StringValue = "System.Byte[]";
+                        //}
+                        //else
+                        //{
+                            
+                        //}
+                        break;
                 }
-                Type valueType = value.GetType();
-                if (valueType.IsEnum && groupID == 1)
-                {
-                    if (convertionType.Name.StartsWith("Int"))
-                    {
-                        return (int)value;
-                    }
-                    return Convert.ChangeType((int)value, convertionType);
-                }
-                if (valueType != convertionType)
-                {
-                    #region 折叠
-                    switch (groupID)
-                    {
-                        case 0:
-                            if (_CellStruct.SqlType == SqlDbType.Time)//time类型的特殊处理。
-                            {
-                                string[] items = StringValue.Split(' ');
-                                if (items.Length > 1)
-                                {
-                                    CellValue.StringValue = items[1];
-                                }
-                            }
-                            value = StringValue;
-                            break;
-                        case 1:
-                            switch (StringValue.ToLower())
-                            {
-                                case "true":
-                                    value = 1;
-                                    break;
-                                case "false":
-                                    value = 0;
-                                    break;
-                                case "infinity":
-                                    value = double.PositiveInfinity;
-                                    break;
-                                case "-infinity":
-                                    value = double.NegativeInfinity;
-                                    break;
-                                default:
-                                    goto err;
-                            }
-                            break;
-                        default:
-                        err:
-                            if (convertionType.Name.EndsWith("[]"))
-                            {
-                                value = Convert.FromBase64String(StringValue);
-                                CellValue.StringValue = "System.Byte[]";
-                            }
-                            else
-                            {
-                                value = ConvertTool.ChangeType(value, convertionType);
-                            }
-                            break;
-                    }
-                    #endregion
-                }
-                #endregion
             }
             catch (Exception err)
             {
                 CellValue.Value = null;
                 CellValue.IsNull = true;
                 CellValue.StringValue = null;
-                ex = err;
                 string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
 
                 Log.Write(msg, LogType.Error);

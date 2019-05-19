@@ -66,7 +66,8 @@ namespace CYQ.Data.Tool
                         case "current_timestamp":
                             return DateTime.Now;
                     }
-                    if (DateTime.Parse(strValue) == DateTime.MinValue) {
+                    if (DateTime.Parse(strValue) == DateTime.MinValue)
+                    {
                         return (DateTime)SqlDateTime.MinValue;
                     }
                     return Convert.ChangeType(value, t);//这里用value，避免丢失毫秒
@@ -75,12 +76,19 @@ namespace CYQ.Data.Tool
                 {
                     if (strValue == SqlValue.Guid || strValue.StartsWith("newid"))
                     {
-                       return Guid.NewGuid();
+                        return Guid.NewGuid();
                     }
                     return new Guid(strValue);
                 }
                 else if (t.Name.StartsWith("Int"))
                 {
+                    switch (strValue.ToLower())
+                    {
+                        case "true":
+                            return 1;
+                        case "false":
+                            return 0;
+                    }
                     if (strValue.IndexOf('.') > -1)
                     {
                         strValue = strValue.Split('.')[0];
@@ -88,6 +96,18 @@ namespace CYQ.Data.Tool
                     else if (value.GetType().IsEnum)
                     {
                         return (int)value;
+                    }
+                }
+                else if (t.Name == "Double" || t.Name == "Single")
+                {
+                    switch (strValue.ToLower())
+                    {
+                        case "infinity":
+                        case "正无穷大":
+                            return double.PositiveInfinity;
+                        case "-infinity":
+                        case "负无穷大":
+                            return double.NegativeInfinity;
                     }
                 }
                 else if (t.Name == "Boolean")
@@ -148,7 +168,7 @@ namespace CYQ.Data.Tool
                 return Convert.ChangeType(value, t);
             }
         }
-       
+
         /// <summary>
         /// 类型转换(精准强大)
         /// </summary>
@@ -156,6 +176,6 @@ namespace CYQ.Data.Tool
         {
             return (T)ChangeType(value, typeof(T));
         }
-        
+
     }
 }
