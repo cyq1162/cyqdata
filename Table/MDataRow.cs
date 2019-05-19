@@ -516,7 +516,7 @@ namespace CYQ.Data.Table
             {
                 MCellStruct mcb = this[i].Struct;
                 MDataCell mdc = new MDataCell(ref mcb);
-                mdc.LoadValue(this[i]);
+                mdc.LoadValue(this[i], true);
                 row.Add(mdc);
             }
             //row._Table = _Table;//不能带，会造成单行移除列时，移除的是原引用的行，而不是自身
@@ -1070,12 +1070,23 @@ namespace CYQ.Data.Table
                     }
                     if (rowOp == RowOp.None || rowCell.State >= (int)rowOp)
                     {
-                        cell.Value = rowCell.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
+                        cell.LoadValue(rowCell, isWithValueState);
+                        //if (cell.Struct.SqlType == rowCell.Struct.SqlType)
+                        //{
+                        //    cell.CellValue.StringValue = rowCell.StringValue;
+                        //    cell.CellValue.Value = rowCell.CellValue.Value;
+                        //    cell.CellValue.IsNull = rowCell.CellValue.IsNull;
+                        //}
+                        //else
+                        //{
+                        //cell.Value = rowCell.Value;//用属于赋值，因为不同的架构，类型若有区别如 int[access] int64[sqlite]，在转换时会出错
                         //cell._CellValue.IsNull = rowCell._CellValue.IsNull;//
-                        if (isWithValueState)
-                        {
-                            cell.State = rowCell.State;
-                        }
+                        //}
+
+                        //if (isWithValueState)
+                        //{
+                        //    cell.State = rowCell.State;
+                        //}
                     }
                 }
 

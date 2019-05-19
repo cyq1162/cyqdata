@@ -817,7 +817,7 @@ namespace CYQ.Data.Table
                     {
                         rows.RemoveRange(0, start);//移除起始数
                     }
-                    else if (rowCount < start) //查询的超出总数
+                    else// if (rowCount < start) //查询的超出总数
                     {
                         rows.Clear();//直接清空返回
                     }

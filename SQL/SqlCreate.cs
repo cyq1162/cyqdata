@@ -801,6 +801,9 @@ namespace CYQ.Data.SQL
             for (int i = 0; i < items.Count; i++)
             {
                 item = items[i];
+                if (string.IsNullOrEmpty(item)) {
+                    continue;
+                }
                 if (groupID != 0)
                 {
                     item = item.Trim('\'');//不是字母都尝试去掉分号

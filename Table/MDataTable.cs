@@ -793,7 +793,7 @@ namespace CYQ.Data.Table
                                 }
                                 break;
                         }
-                        T value = row.Get<T>(columnIndex, default(T));
+                        T value = cell.Get<T>();// row.Get<T>(columnIndex, default(T));
                         if (!isDistinct || !items.Contains(value))
                         {
                             items.Add(value);
@@ -1728,19 +1728,30 @@ namespace CYQ.Data.Table
             {
                 return;
             }
-            string pkName = primary != null ? primary.ColumnName : Columns.FirstPrimary.ColumnName;
-            int i1 = Columns.GetIndex(pkName);
-            MDataRow rowA, rowB;
+            //if (Rows.Count == dt.Rows.Count)
+            //{
+            //    for (int i = 0; i < Rows.Count; i++)
+            //    {
+            //        Rows[i].LoadFrom(dt.Rows[i], RowOp.IgnoreNull, false);
+            //    }
+            //}
+            //else
+            //{
+                string pkName = primary != null ? primary.ColumnName : Columns.FirstPrimary.ColumnName;
+                int i1 = Columns.GetIndex(pkName);
+                MDataRow rowA, rowB;
 
-            for (int i = 0; i < Rows.Count; i++)
-            {
-                rowA = Rows[i];
-                rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
-                if (rowB != null)
+                for (int i = 0; i < Rows.Count; i++)
                 {
-                    rowA.LoadFrom(rowB, RowOp.IgnoreNull, false);
+                    rowA = Rows[i];
+                    rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
+                    if (rowB != null)
+                    {
+                        rowA.LoadFrom(rowB, RowOp.IgnoreNull, false);
+                        dt.Rows.Remove(rowB);
+                    }
                 }
-            }
+           // }
         }
 
         #region ×¢ÊÍµô´úÂë

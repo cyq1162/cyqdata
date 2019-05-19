@@ -102,6 +102,7 @@ namespace CYQ.Data.Table
             {
                 Error.Throw("After fix table columns, length can't be zero");
             }
+            dalTypeTo = column.DataBaseType;
             SetDalBaseForTransaction();
         }
         private void SetDalBaseForTransaction()
@@ -804,9 +805,14 @@ namespace CYQ.Data.Table
             using (MAction action = new MAction(mdt.TableName, _Conn))
             {
                 action.SetAopState(Aop.AopOp.CloseAll);
+                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
                 if (action.DataBaseVersion.StartsWith("08"))
                 {
                     pageSize = 1000;
+                }
+                else if (keyColumn.SqlType == SqlDbType.UniqueIdentifier)
+                {
+                    pageSize = 2000;
                 }
                 count = mdt.Rows.Count / pageSize + 1;
                 DalBase sourceHelper = action.dalHelper;
@@ -819,7 +825,7 @@ namespace CYQ.Data.Table
                     action.BeginTransation();
                 }
 
-                MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
+
                 string columnName = keyColumn.ColumnName;
                 for (int i = 0; i < count; i++)
                 {

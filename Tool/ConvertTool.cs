@@ -1,6 +1,8 @@
-﻿using CYQ.Data.Table;
+﻿using CYQ.Data.SQL;
+using CYQ.Data.Table;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
@@ -57,10 +59,24 @@ namespace CYQ.Data.Tool
             {
                 if (t.Name == "DateTime")
                 {
+                    switch (strValue.ToLower().TrimEnd(')', '('))
+                    {
+                        case "now":
+                        case "getdate":
+                        case "current_timestamp":
+                            return DateTime.Now;
+                    }
+                    if (DateTime.Parse(strValue) == DateTime.MinValue) {
+                        return (DateTime)SqlDateTime.MinValue;
+                    }
                     return Convert.ChangeType(value, t);//这里用value，避免丢失毫秒
                 }
                 if (t.Name == "Guid")
                 {
+                    if (strValue == SqlValue.Guid || strValue.StartsWith("newid"))
+                    {
+                       return Guid.NewGuid();
+                    }
                     return new Guid(strValue);
                 }
                 else if (t.Name.StartsWith("Int"))

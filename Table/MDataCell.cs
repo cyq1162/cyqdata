@@ -20,7 +20,37 @@ namespace CYQ.Data.Table
         /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
         /// </summary>
         internal int State = 0;
+        /// <summary>
+        /// 已经Fix()类型转换后的值。
+        /// </summary>
         internal object Value = null;
+        /// <summary>
+        /// 未进行类型转换之前的值
+        /// </summary>
+        internal object SourceValue = null;
+        internal string StringValue = null;
+        /// <summary>
+        /// 将值重置为空
+        /// </summary>
+        public void Clear()
+        {
+            SourceValue = null;
+            Value = null;
+            State = 0;
+            IsNull = true;
+            StringValue = null;
+        }
+        internal void LoadValue(MCellValue mValue, bool isWithState)
+        {
+            SourceValue = mValue.SourceValue;
+            Value = mValue.Value;
+            IsNull = mValue.IsNull;
+            StringValue = mValue.StringValue;
+            if (isWithState)
+            {
+                State = mValue.State;
+            }
+        }
     }
     /// <summary>
     /// 单元格
@@ -28,7 +58,7 @@ namespace CYQ.Data.Table
     public partial class MDataCell
     {
         private MCellValue _CellValue;
-        private MCellValue CellValue
+        internal MCellValue CellValue
         {
             get
             {
@@ -73,7 +103,7 @@ namespace CYQ.Data.Table
         #endregion
 
         #region 属性
-        private string _StringValue = null;
+
         /// <summary>
         /// 字符串值
         /// </summary>
@@ -81,16 +111,13 @@ namespace CYQ.Data.Table
         {
             get
             {
-                CheckNewValue();
-                return _StringValue;
-            }
-            internal set
-            {
-                _StringValue = value;
+                return CellValue.StringValue;
             }
         }
-        private object newValue = null;
+
         private bool isNewValue = false;
+        private bool isAllowChangeState = true;
+
         /// <summary>
         /// 值
         /// </summary>
@@ -98,22 +125,15 @@ namespace CYQ.Data.Table
         {
             get
             {
+                //值的检测延时到获取属性时触发
                 CheckNewValue();
                 return CellValue.Value;
             }
             set
             {
-                //只是赋值，值的检测延时到获取属性时触发
-                newValue = value;
-                isNewValue = true;
-                isAllowChangeState = true;
-            }
-        }
-        internal object SourceValue
-        {
-            set
-            {
-                CellValue.Value = value;
+                CellValue.StringValue = Convert.ToString(value);
+                CellValue.SourceValue = value;
+                NullCheck();//进行Null检测
             }
         }
         /// <summary>
@@ -131,23 +151,19 @@ namespace CYQ.Data.Table
         /// </summary>
         private void CheckNewValue()
         {
-            if (isNewValue)
+            if (isNewValue && !IsNull)
             {
-                isNewValue = false;
-                FixValue(newValue);
-                newValue = null;
-                isAllowChangeState = true;//恢复可设置状态。
+                FixValue();
             }
         }
-        private void FixValue(object value)
+        private void NullCheck()
         {
-            #region CheckValue
-            bool valueIsNull = value == null || value == DBNull.Value;
+            bool valueIsNull = CellValue.SourceValue == null || CellValue.SourceValue == DBNull.Value;
             if (valueIsNull)
             {
                 if (CellValue.IsNull)
                 {
-                    CellValue.State = (value == DBNull.Value) ? 2 : 1;
+                    CellValue.State = (CellValue.SourceValue == DBNull.Value) ? 2 : 1;
                 }
                 else
                 {
@@ -157,68 +173,50 @@ namespace CYQ.Data.Table
                     }
                     CellValue.Value = null;
                     CellValue.IsNull = true;
-                    StringValue = string.Empty;
                 }
+                isAllowChangeState = false;
             }
             else
             {
-                StringValue = value.ToString();
-                int groupID = DataType.GetGroup(_CellStruct.SqlType);
-                if (_CellStruct.SqlType != SqlDbType.Variant)
-                {
-                    if (StringValue == "" && groupID > 0)
-                    {
-                        CellValue.Value = null;
-                        CellValue.IsNull = true;
-                        return;
-                    }
-                    value = ChangeValue(value, _CellStruct.ValueType, groupID);
-                    if (value == null)
-                    {
-                        return;
-                    }
-                }
-
-                if (!CellValue.IsNull && (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == StringValue)))//对象的比较值，用==号则比例引用地址。
-                {
-                    if (isAllowChangeState)
-                    {
-                        CellValue.State = 1;
-                    }
-                }
-                else
-                {
-                    CellValue.Value = value;
-                    CellValue.IsNull = false;
-                    if (isAllowChangeState)
-                    {
-                        CellValue.State = 2;
-                    }
-                }
-
+                CellValue.IsNull = false;
+                isNewValue = true;
+                isAllowChangeState = true;
             }
-            #endregion
         }
-        /// <summary>
-        /// 数据类型被切换，重新修正值的类型。
-        /// </summary>
-        public bool FixValue()
+        internal void FixValue()
         {
-            Exception err = null;
-            return FixValue(out err);
-        }
-        /// <summary>
-        /// 数据类型被切换，重新修正值的类型。
-        /// </summary>
-        public bool FixValue(out Exception ex)
-        {
-            ex = null;
-            if (!IsNull)
+            object value = CellValue.SourceValue;
+            int groupID = DataType.GetGroup(_CellStruct.SqlType);
+            if (_CellStruct.SqlType != SqlDbType.Variant)
             {
-                CellValue.Value = ChangeValue(CellValue.Value, _CellStruct.ValueType, DataType.GetGroup(_CellStruct.SqlType), out ex);
+                if (StringValue == "" && groupID > 0)
+                {
+                    CellValue.Value = null;
+                    CellValue.IsNull = true;
+                    return;
+                }
+                value = ChangeValue(value, _CellStruct.ValueType, groupID);
+                if (value == null)
+                {
+                    return;
+                }
             }
-            return ex == null;
+            if (isAllowChangeState)
+            {
+                if (CellValue.Value == null || CellValue.Value == DBNull.Value)
+                {
+                    CellValue.State = 2;
+                }
+                else if (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == StringValue))//对象的比较值，用==号则比例引用地址。
+                {
+                    CellValue.State = 1;
+                }
+            }
+            CellValue.Value = value;
+            isNewValue = false;
+            isAllowChangeState = false;//恢复可设置状态。
         }
+
         internal object ChangeValue(object value, Type convertionType, int groupID)
         {
             Exception err;
@@ -234,7 +232,6 @@ namespace CYQ.Data.Table
         internal object ChangeValue(object value, Type convertionType, int groupID, out Exception ex)
         {
             ex = null;
-            StringValue = Convert.ToString(value);
             if (value == null)
             {
                 CellValue.IsNull = true;
@@ -253,10 +250,10 @@ namespace CYQ.Data.Table
                     switch (StringValue)
                     {
                         case "正无穷大":
-                            StringValue = "Infinity";
+                            CellValue.StringValue = "Infinity";
                             break;
                         case "负无穷大":
-                            StringValue = "-Infinity";
+                            CellValue.StringValue = "-Infinity";
                             break;
                     }
                 }
@@ -280,7 +277,7 @@ namespace CYQ.Data.Table
                                 string[] items = StringValue.Split(' ');
                                 if (items.Length > 1)
                                 {
-                                    StringValue = items[1];
+                                    CellValue.StringValue = items[1];
                                 }
                             }
                             value = StringValue;
@@ -304,56 +301,12 @@ namespace CYQ.Data.Table
                                     goto err;
                             }
                             break;
-                        case 2:
-                            switch (StringValue.ToLower().TrimEnd(')', '('))
-                            {
-                                case "now":
-                                case "getdate":
-                                case "current_timestamp":
-                                    value = DateTime.Now;
-                                    break;
-                                default:
-                                    DateTime dt = DateTime.Parse(StringValue);
-                                    value = dt == DateTime.MinValue ? (DateTime)SqlDateTime.MinValue : dt;
-                                    break;
-                            }
-                            break;
-                        case 3:
-                            switch (StringValue.ToLower())
-                            {
-                                case "yes":
-                                case "true":
-                                case "1":
-                                case "on":
-                                case "是":
-                                    value = true;
-                                    break;
-                                case "no":
-                                case "false":
-                                case "0":
-                                case "":
-                                case "否":
-                                default:
-                                    value = false;
-                                    break;
-                            }
-                            break;
-                        case 4:
-                            if (StringValue == SqlValue.Guid || StringValue.StartsWith("newid"))
-                            {
-                                value = Guid.NewGuid();
-                            }
-                            else
-                            {
-                                value = new Guid(StringValue);
-                            }
-                            break;
                         default:
                         err:
                             if (convertionType.Name.EndsWith("[]"))
                             {
                                 value = Convert.FromBase64String(StringValue);
-                                StringValue = "System.Byte[]";
+                                CellValue.StringValue = "System.Byte[]";
                             }
                             else
                             {
@@ -363,22 +316,18 @@ namespace CYQ.Data.Table
                     }
                     #endregion
                 }
-                //else if (groupID == 2 && strValue.StartsWith("000"))
-                //{
-                //    value = SqlDateTime.MinValue;
-                //}
                 #endregion
             }
             catch (Exception err)
             {
-                value = null;
                 CellValue.Value = null;
                 CellValue.IsNull = true;
+                CellValue.StringValue = null;
                 ex = err;
                 string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
-                StringValue = null;
-                Log.Write(msg, LogType.Error);
 
+                Log.Write(msg, LogType.Error);
+                return null;
             }
             return value;
         }
@@ -389,8 +338,13 @@ namespace CYQ.Data.Table
             {
                 return default(T);
             }
-            Type t = typeof(T);
-            return (T)ChangeValue(CellValue.Value, t, DataType.GetGroup(DataType.GetSqlType(t)));
+            return ConvertTool.ChangeType<T>(Value);
+            //if (isNewValue)
+            //{
+            //    Type t = typeof(T);
+            //    return (T)ChangeValue(CellValue.SourceValue, t, DataType.GetGroup(DataType.GetSqlType(t)));
+            //}
+            // return (T)Value;
         }
 
         /// <summary>
@@ -400,7 +354,6 @@ namespace CYQ.Data.Table
         {
             get
             {
-                CheckNewValue();
                 return CellValue.IsNull;
             }
             internal set
@@ -415,7 +368,6 @@ namespace CYQ.Data.Table
         {
             get
             {
-                CheckNewValue();
                 return CellValue.IsNull || StringValue.Length == 0;
             }
         }
@@ -439,7 +391,7 @@ namespace CYQ.Data.Table
                 return _CellStruct;
             }
         }
-        private bool isAllowChangeState = true;
+
         /// <summary>
         /// Value的状态:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
         /// </summary>
@@ -447,7 +399,10 @@ namespace CYQ.Data.Table
         {
             get
             {
-                CheckNewValue();
+                if (isAllowChangeState)
+                {
+                    CheckNewValue();
+                }
                 return CellValue.State;
             }
             set
@@ -465,19 +420,14 @@ namespace CYQ.Data.Table
         /// </summary>
         public void Clear()
         {
+
             isNewValue = false;
-            newValue = null;
-            CellValue.Value = null;
-            CellValue.State = 0;
-            CellValue.IsNull = true;
-            StringValue = null;
+            CellValue.Clear();
         }
-        internal void LoadValue(MDataCell cell)
+        internal void LoadValue(MDataCell cell, bool isWithState)
         {
-            StringValue = cell.StringValue;
-            CellValue.Value = cell.Value;
-            CellValue.State = cell.State;
-            CellValue.IsNull = cell.IsNull;
+            isNewValue = true;
+            CellValue.LoadValue(cell.CellValue, isWithState);
         }
         /// <summary>
         /// 设置默认值。
