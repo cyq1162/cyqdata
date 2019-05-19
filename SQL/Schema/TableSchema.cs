@@ -41,9 +41,10 @@ namespace CYQ.Data.SQL
             {
                 DataBaseType dalType = dbHelper.DataBaseType;
 
-                #region 文本数据库处理。
+
                 if (dalType == DataBaseType.Txt || dalType == DataBaseType.Xml)
                 {
+                    #region 文本数据库处理。
                     if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
                     {
                         tableName = SqlFormat.NotKeyword(tableName);//处理database..tableName;
@@ -52,285 +53,288 @@ namespace CYQ.Data.SQL
                         mdcs = MDataColumn.CreateFrom(fileName);
                         mdcs.DataBaseType = dalType;
                         mdcs.Conn = conn;
-                        return mdcs;
                     }
-                    return null;//处理视图
+
+                    #endregion
                 }
-                #endregion
-
-                mdcs = new MDataColumn();
-                mdcs.Conn = conn;
-                mdcs.TableName = tableName;
-                mdcs.DataBaseType = dalType;
-
-                tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);//加上关键字：引号
-                //如果table和helper不在同一个库
-                DalBase helper = dbHelper.ResetDalBase(tableName);
-
-                helper.IsRecordDebugInfo = false;//内部系统，不记录SQL表结构语句。
-                try
+                else
                 {
-                    bool isView = tableName.Contains(" ");//是否视图。
-                    if (!isView)
+                    #region 其它数据库
+                    mdcs = new MDataColumn();
+                    mdcs.Conn = conn;
+                    mdcs.TableName = tableName;
+                    mdcs.DataBaseType = dalType;
+
+                    tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);//加上关键字：引号
+                    //如果table和helper不在同一个库
+                    DalBase helper = dbHelper.ResetDalBase(tableName);
+
+                    helper.IsRecordDebugInfo = false;//内部系统，不记录SQL表结构语句。
+                    try
                     {
-                        isView = CrossDB.Exists(tableName, "V", conn);
-                    }
-                    if (!isView)
-                    {
-                        TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
-                        if (info != null)
+                        bool isView = tableName.Contains(" ");//是否视图。
+                        if (!isView)
                         {
-                            mdcs.Description = info.Description;
+                            isView = CrossDB.Exists(tableName, "V", conn);
                         }
-                    }
-                    MCellStruct mStruct = null;
-                    SqlDbType sqlType = SqlDbType.NVarChar;
-                    if (isView)
-                    {
-                        string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
-                        mdcs = GetViewColumns(sqlText, ref helper);
-                    }
-                    else
-                    {
-                        mdcs.AddRelateionTableName(SqlFormat.NotKeyword(tableName));
-                        switch (dalType)
+                        if (!isView)
                         {
-                            case DataBaseType.MsSql:
-                            case DataBaseType.Oracle:
-                            case DataBaseType.MySql:
-                            case DataBaseType.Sybase:
-                            case DataBaseType.PostgreSQL:
-                                #region Sql
-                                string sql = string.Empty;
-                                if (dalType == DataBaseType.MsSql)
-                                {
-                                    #region Mssql
-                                    string dbName = null;
-                                    if (!helper.Version.StartsWith("08"))
+                            TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
+                            if (info != null)
+                            {
+                                mdcs.Description = info.Description;
+                            }
+                        }
+                        MCellStruct mStruct = null;
+                        SqlDbType sqlType = SqlDbType.NVarChar;
+                        if (isView)
+                        {
+                            string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
+                            mdcs = GetViewColumns(sqlText, ref helper);
+                        }
+                        else
+                        {
+                            mdcs.AddRelateionTableName(SqlFormat.NotKeyword(tableName));
+                            switch (dalType)
+                            {
+                                case DataBaseType.MsSql:
+                                case DataBaseType.Oracle:
+                                case DataBaseType.MySql:
+                                case DataBaseType.Sybase:
+                                case DataBaseType.PostgreSQL:
+                                    #region Sql
+                                    string sql = string.Empty;
+                                    if (dalType == DataBaseType.MsSql)
                                     {
-                                        //先获取同义词，检测是否跨库
-                                        string realTableName = Convert.ToString(helper.ExeScalar(string.Format(MSSQL_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                        #region Mssql
+                                        string dbName = null;
+                                        if (!helper.Version.StartsWith("08"))
+                                        {
+                                            //先获取同义词，检测是否跨库
+                                            string realTableName = Convert.ToString(helper.ExeScalar(string.Format(MSSQL_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                            if (!string.IsNullOrEmpty(realTableName))
+                                            {
+                                                string[] items = realTableName.Split('.');
+                                                tableName = realTableName;
+                                                if (items.Length > 0)//跨库了
+                                                {
+                                                    dbName = realTableName.Split('.')[0];
+                                                }
+                                            }
+                                        }
+
+                                        sql = GetMSSQLColumns(helper.Version.StartsWith("08"), dbName ?? helper.DataBaseName);
+                                        #endregion
+                                    }
+                                    else if (dalType == DataBaseType.MySql)
+                                    {
+                                        sql = GetMySqlColumns(helper.DataBaseName);
+                                    }
+                                    else if (dalType == DataBaseType.Oracle)
+                                    {
+                                        tableName = tableName.ToUpper();//Oracle转大写。
+                                        //先获取同义词，不检测是否跨库
+                                        string realTableName = Convert.ToString(helper.ExeScalar(string.Format(Oracle_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
                                         if (!string.IsNullOrEmpty(realTableName))
                                         {
-                                            string[] items = realTableName.Split('.');
                                             tableName = realTableName;
-                                            if (items.Length > 0)//跨库了
+                                        }
+
+                                        sql = GetOracleColumns();
+                                    }
+                                    else if (dalType == DataBaseType.Sybase)
+                                    {
+                                        tableName = SqlFormat.NotKeyword(tableName);
+                                        sql = GetSybaseColumns();
+                                    }
+                                    else if (dalType == DataBaseType.PostgreSQL)
+                                    {
+                                        sql = GetPostgreColumns();
+                                    }
+                                    helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
+                                    DbDataReader sdr = helper.ExeDataReader(sql, false);
+                                    if (sdr != null)
+                                    {
+                                        long maxLength;
+                                        bool isAutoIncrement = false;
+                                        short scale = 0;
+                                        string sqlTypeName = string.Empty;
+                                        while (sdr.Read())
+                                        {
+                                            short.TryParse(Convert.ToString(sdr["Scale"]), out scale);
+                                            if (!long.TryParse(Convert.ToString(sdr["MaxSize"]), out maxLength))//mysql的长度可能大于int.MaxValue
                                             {
-                                                dbName = realTableName.Split('.')[0];
+                                                maxLength = -1;
+                                            }
+                                            else if (maxLength > int.MaxValue)
+                                            {
+                                                maxLength = int.MaxValue;
+                                            }
+                                            sqlTypeName = Convert.ToString(sdr["SqlType"]);
+                                            sqlType = DataType.GetSqlType(sqlTypeName);
+                                            isAutoIncrement = Convert.ToBoolean(sdr["IsAutoIncrement"]);
+                                            mStruct = new MCellStruct(mdcs.DataBaseType);
+                                            mStruct.ColumnName = Convert.ToString(sdr["ColumnName"]).Trim();
+                                            mStruct.OldName = mStruct.ColumnName;
+                                            mStruct.SqlType = sqlType;
+                                            mStruct.IsAutoIncrement = isAutoIncrement;
+                                            mStruct.IsCanNull = Convert.ToBoolean(sdr["IsNullable"]);
+                                            mStruct.MaxSize = (int)maxLength;
+                                            mStruct.Scale = scale;
+                                            mStruct.Description = Convert.ToString(sdr["Description"]);
+                                            mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, sdr["DefaultValue"], 0, sqlType);
+                                            mStruct.IsPrimaryKey = Convert.ToString(sdr["IsPrimaryKey"]) == "1";
+                                            switch (dalType)
+                                            {
+                                                case DataBaseType.MsSql:
+                                                case DataBaseType.MySql:
+                                                case DataBaseType.Oracle:
+                                                    mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
+                                                    mStruct.IsForeignKey = Convert.ToString(sdr["IsForeignKey"]) == "1";
+                                                    mStruct.FKTableName = Convert.ToString(sdr["FKTableName"]);
+                                                    break;
+                                            }
+
+                                            mStruct.SqlTypeName = sqlTypeName;
+                                            mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                            mdcs.Add(mStruct);
+                                        }
+                                        sdr.Close();
+                                        if (dalType == DataBaseType.Oracle && mdcs.Count > 0)//默认没有自增概念，只能根据情况判断。
+                                        {
+                                            MCellStruct firstColumn = mdcs[0];
+                                            if (firstColumn.IsPrimaryKey && firstColumn.ColumnName.ToLower().Contains("id") && firstColumn.Scale == 0 && DataType.GetGroup(firstColumn.SqlType) == 1 && mdcs.JointPrimary.Count == 1)
+                                            {
+                                                firstColumn.IsAutoIncrement = true;
                                             }
                                         }
                                     }
-
-                                    sql = GetMSSQLColumns(helper.Version.StartsWith("08"), dbName ?? helper.DataBaseName);
                                     #endregion
-                                }
-                                else if (dalType == DataBaseType.MySql)
-                                {
-                                    sql = GetMySqlColumns(helper.DataBaseName);
-                                }
-                                else if (dalType == DataBaseType.Oracle)
-                                {
-                                    tableName = tableName.ToUpper();//Oracle转大写。
-                                    //先获取同义词，不检测是否跨库
-                                    string realTableName = Convert.ToString(helper.ExeScalar(string.Format(Oracle_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
-                                    if (!string.IsNullOrEmpty(realTableName))
+                                    break;
+                                case DataBaseType.SQLite:
+                                    #region SQlite
+                                    if (helper.Con.State != ConnectionState.Open)
                                     {
-                                        tableName = realTableName;
+                                        helper.Con.Open();
                                     }
-
-                                    sql = GetOracleColumns();
-                                }
-                                else if (dalType == DataBaseType.Sybase)
-                                {
-                                    tableName = SqlFormat.NotKeyword(tableName);
-                                    sql = GetSybaseColumns();
-                                }
-                                else if (dalType == DataBaseType.PostgreSQL)
-                                {
-                                    sql = GetPostgreColumns();
-                                }
-                                helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
-                                DbDataReader sdr = helper.ExeDataReader(sql, false);
-                                if (sdr != null)
-                                {
-                                    long maxLength;
-                                    bool isAutoIncrement = false;
-                                    short scale = 0;
-                                    string sqlTypeName = string.Empty;
-                                    while (sdr.Read())
+                                    DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, SqlFormat.NotKeyword(tableName) });
+                                    if (!helper.IsOpenTrans)
                                     {
-                                        short.TryParse(Convert.ToString(sdr["Scale"]), out scale);
-                                        if (!long.TryParse(Convert.ToString(sdr["MaxSize"]), out maxLength))//mysql的长度可能大于int.MaxValue
+                                        helper.Con.Close();
+                                    }
+                                    int size;
+                                    short sizeScale;
+                                    string dataTypeName = string.Empty;
+
+                                    foreach (DataRow row in sqliteDt.Rows)
+                                    {
+                                        object len = row["NUMERIC_PRECISION"];
+                                        if (len == null || len == DBNull.Value)
                                         {
-                                            maxLength = -1;
+                                            len = row["CHARACTER_MAXIMUM_LENGTH"];
                                         }
-                                        else if (maxLength > int.MaxValue)
+                                        short.TryParse(Convert.ToString(row["NUMERIC_SCALE"]), out sizeScale);
+                                        if (!int.TryParse(Convert.ToString(len), out size))//mysql的长度可能大于int.MaxValue
                                         {
-                                            maxLength = int.MaxValue;
+                                            size = -1;
                                         }
-                                        sqlTypeName = Convert.ToString(sdr["SqlType"]);
-                                        sqlType = DataType.GetSqlType(sqlTypeName);
-                                        isAutoIncrement = Convert.ToBoolean(sdr["IsAutoIncrement"]);
-                                        mStruct = new MCellStruct(mdcs.DataBaseType);
-                                        mStruct.ColumnName = Convert.ToString(sdr["ColumnName"]).Trim();
-                                        mStruct.OldName = mStruct.ColumnName;
-                                        mStruct.SqlType = sqlType;
-                                        mStruct.IsAutoIncrement = isAutoIncrement;
-                                        mStruct.IsCanNull = Convert.ToBoolean(sdr["IsNullable"]);
-                                        mStruct.MaxSize = (int)maxLength;
-                                        mStruct.Scale = scale;
-                                        mStruct.Description = Convert.ToString(sdr["Description"]);
-                                        mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, sdr["DefaultValue"], 0, sqlType);
-                                        mStruct.IsPrimaryKey = Convert.ToString(sdr["IsPrimaryKey"]) == "1";
-                                        switch (dalType)
+                                        dataTypeName = Convert.ToString(row["DATA_TYPE"]);
+                                        if (dataTypeName == "text" && size > 0)
                                         {
-                                            case DataBaseType.MsSql:
-                                            case DataBaseType.MySql:
-                                            case DataBaseType.Oracle:
-                                                mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
-                                                mStruct.IsForeignKey = Convert.ToString(sdr["IsForeignKey"]) == "1";
-                                                mStruct.FKTableName = Convert.ToString(sdr["FKTableName"]);
-                                                break;
-                                        }
-
-                                        mStruct.SqlTypeName = sqlTypeName;
-                                        mStruct.TableName = SqlFormat.NotKeyword(tableName);
-                                        mdcs.Add(mStruct);
-                                    }
-                                    sdr.Close();
-                                    if (dalType == DataBaseType.Oracle && mdcs.Count > 0)//默认没有自增概念，只能根据情况判断。
-                                    {
-                                        MCellStruct firstColumn = mdcs[0];
-                                        if (firstColumn.IsPrimaryKey && firstColumn.ColumnName.ToLower().Contains("id") && firstColumn.Scale == 0 && DataType.GetGroup(firstColumn.SqlType) == 1 && mdcs.JointPrimary.Count == 1)
-                                        {
-                                            firstColumn.IsAutoIncrement = true;
-                                        }
-                                    }
-                                }
-                                #endregion
-                                break;
-                            case DataBaseType.SQLite:
-                                #region SQlite
-                                if (helper.Con.State != ConnectionState.Open)
-                                {
-                                    helper.Con.Open();
-                                }
-                                DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, SqlFormat.NotKeyword(tableName) });
-                                if (!helper.IsOpenTrans)
-                                {
-                                    helper.Con.Close();
-                                }
-                                int size;
-                                short sizeScale;
-                                string dataTypeName = string.Empty;
-
-                                foreach (DataRow row in sqliteDt.Rows)
-                                {
-                                    object len = row["NUMERIC_PRECISION"];
-                                    if (len == null || len == DBNull.Value)
-                                    {
-                                        len = row["CHARACTER_MAXIMUM_LENGTH"];
-                                    }
-                                    short.TryParse(Convert.ToString(row["NUMERIC_SCALE"]), out sizeScale);
-                                    if (!int.TryParse(Convert.ToString(len), out size))//mysql的长度可能大于int.MaxValue
-                                    {
-                                        size = -1;
-                                    }
-                                    dataTypeName = Convert.ToString(row["DATA_TYPE"]);
-                                    if (dataTypeName == "text" && size > 0)
-                                    {
-                                        sqlType = DataType.GetSqlType("varchar");
-                                    }
-                                    else
-                                    {
-                                        sqlType = DataType.GetSqlType(dataTypeName);
-                                    }
-                                    //COLUMN_NAME,DATA_TYPE,PRIMARY_KEY,IS_NULLABLE,CHARACTER_MAXIMUM_LENGTH AUTOINCREMENT
-
-                                    mStruct = new MCellStruct(row["COLUMN_NAME"].ToString(), sqlType, Convert.ToBoolean(row["AUTOINCREMENT"]), Convert.ToBoolean(row["IS_NULLABLE"]), size);
-                                    mStruct.Scale = sizeScale;
-                                    mStruct.Description = Convert.ToString(row["DESCRIPTION"]);
-                                    mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, row["COLUMN_DEFAULT"], 0, sqlType);//"COLUMN_DEFAULT"
-                                    mStruct.IsPrimaryKey = Convert.ToBoolean(row["PRIMARY_KEY"]);
-                                    mStruct.SqlTypeName = dataTypeName;
-                                    mStruct.TableName = SqlFormat.NotKeyword(tableName);
-                                    mdcs.Add(mStruct);
-                                }
-                                #endregion
-                                break;
-                            case DataBaseType.Access:
-                                #region Access
-                                DataTable keyDt, valueDt;
-                                string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
-                                OleDbConnection con = new OleDbConnection(helper.Con.ConnectionString);
-                                OleDbCommand com = new OleDbCommand(sqlText, con);
-                                con.Open();
-                                keyDt = com.ExecuteReader(CommandBehavior.KeyInfo).GetSchemaTable();
-                                valueDt = con.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] { null, null, SqlFormat.NotKeyword(tableName) });
-                                con.Close();
-                                con.Dispose();
-
-                                if (keyDt != null && valueDt != null)
-                                {
-                                    string columnName = string.Empty, sqlTypeName = string.Empty;
-                                    bool isKey = false, isCanNull = true, isAutoIncrement = false;
-                                    int maxSize = -1;
-                                    short maxSizeScale = 0;
-                                    SqlDbType sqlDbType;
-                                    foreach (DataRow row in keyDt.Rows)
-                                    {
-                                        columnName = row["ColumnName"].ToString();
-                                        isKey = Convert.ToBoolean(row["IsKey"]);//IsKey
-                                        isCanNull = Convert.ToBoolean(row["AllowDBNull"]);//AllowDBNull
-                                        isAutoIncrement = Convert.ToBoolean(row["IsAutoIncrement"]);
-                                        sqlTypeName = Convert.ToString(row["DataType"]);
-                                        sqlDbType = DataType.GetSqlType(sqlTypeName);
-                                        short.TryParse(Convert.ToString(row["NumericScale"]), out maxSizeScale);
-                                        if (Convert.ToInt32(row["NumericPrecision"]) > 0)//NumericPrecision
-                                        {
-                                            maxSize = Convert.ToInt32(row["NumericPrecision"]);
+                                            sqlType = DataType.GetSqlType("varchar");
                                         }
                                         else
                                         {
-                                            long len = Convert.ToInt64(row["ColumnSize"]);
-                                            if (len > int.MaxValue)
+                                            sqlType = DataType.GetSqlType(dataTypeName);
+                                        }
+                                        //COLUMN_NAME,DATA_TYPE,PRIMARY_KEY,IS_NULLABLE,CHARACTER_MAXIMUM_LENGTH AUTOINCREMENT
+
+                                        mStruct = new MCellStruct(row["COLUMN_NAME"].ToString(), sqlType, Convert.ToBoolean(row["AUTOINCREMENT"]), Convert.ToBoolean(row["IS_NULLABLE"]), size);
+                                        mStruct.Scale = sizeScale;
+                                        mStruct.Description = Convert.ToString(row["DESCRIPTION"]);
+                                        mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, row["COLUMN_DEFAULT"], 0, sqlType);//"COLUMN_DEFAULT"
+                                        mStruct.IsPrimaryKey = Convert.ToBoolean(row["PRIMARY_KEY"]);
+                                        mStruct.SqlTypeName = dataTypeName;
+                                        mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                        mdcs.Add(mStruct);
+                                    }
+                                    #endregion
+                                    break;
+                                case DataBaseType.Access:
+                                    #region Access
+                                    DataTable keyDt, valueDt;
+                                    string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
+                                    OleDbConnection con = new OleDbConnection(helper.Con.ConnectionString);
+                                    OleDbCommand com = new OleDbCommand(sqlText, con);
+                                    con.Open();
+                                    keyDt = com.ExecuteReader(CommandBehavior.KeyInfo).GetSchemaTable();
+                                    valueDt = con.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] { null, null, SqlFormat.NotKeyword(tableName) });
+                                    con.Close();
+                                    con.Dispose();
+
+                                    if (keyDt != null && valueDt != null)
+                                    {
+                                        string columnName = string.Empty, sqlTypeName = string.Empty;
+                                        bool isKey = false, isCanNull = true, isAutoIncrement = false;
+                                        int maxSize = -1;
+                                        short maxSizeScale = 0;
+                                        SqlDbType sqlDbType;
+                                        foreach (DataRow row in keyDt.Rows)
+                                        {
+                                            columnName = row["ColumnName"].ToString();
+                                            isKey = Convert.ToBoolean(row["IsKey"]);//IsKey
+                                            isCanNull = Convert.ToBoolean(row["AllowDBNull"]);//AllowDBNull
+                                            isAutoIncrement = Convert.ToBoolean(row["IsAutoIncrement"]);
+                                            sqlTypeName = Convert.ToString(row["DataType"]);
+                                            sqlDbType = DataType.GetSqlType(sqlTypeName);
+                                            short.TryParse(Convert.ToString(row["NumericScale"]), out maxSizeScale);
+                                            if (Convert.ToInt32(row["NumericPrecision"]) > 0)//NumericPrecision
                                             {
-                                                maxSize = int.MaxValue;
+                                                maxSize = Convert.ToInt32(row["NumericPrecision"]);
                                             }
                                             else
                                             {
-                                                maxSize = (int)len;
-                                            }
-                                        }
-                                        mStruct = new MCellStruct(columnName, sqlDbType, isAutoIncrement, isCanNull, maxSize);
-                                        mStruct.Scale = maxSizeScale;
-                                        mStruct.IsPrimaryKey = isKey;
-                                        mStruct.SqlTypeName = sqlTypeName;
-                                        mStruct.TableName = SqlFormat.NotKeyword(tableName);
-                                        foreach (DataRow item in valueDt.Rows)
-                                        {
-                                            if (columnName == item[3].ToString())//COLUMN_NAME
-                                            {
-                                                if (item[8].ToString() != "")
+                                                long len = Convert.ToInt64(row["ColumnSize"]);
+                                                if (len > int.MaxValue)
                                                 {
-                                                    mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, item[8], 0, sqlDbType);//"COLUMN_DEFAULT"
+                                                    maxSize = int.MaxValue;
                                                 }
-                                                break;
+                                                else
+                                                {
+                                                    maxSize = (int)len;
+                                                }
                                             }
+                                            mStruct = new MCellStruct(columnName, sqlDbType, isAutoIncrement, isCanNull, maxSize);
+                                            mStruct.Scale = maxSizeScale;
+                                            mStruct.IsPrimaryKey = isKey;
+                                            mStruct.SqlTypeName = sqlTypeName;
+                                            mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                            foreach (DataRow item in valueDt.Rows)
+                                            {
+                                                if (columnName == item[3].ToString())//COLUMN_NAME
+                                                {
+                                                    if (item[8].ToString() != "")
+                                                    {
+                                                        mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, item[8], 0, sqlDbType);//"COLUMN_DEFAULT"
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                            mdcs.Add(mStruct);
                                         }
-                                        mdcs.Add(mStruct);
+
                                     }
 
-                                }
-
-                                #endregion
-                                break;
+                                    #endregion
+                                    break;
+                            }
                         }
                     }
-                }
-                catch (Exception err)
-                {
-                    helper.DebugInfo.Append(err.Message);
+                    catch (Exception err)
+                    {
+                        helper.DebugInfo.Append(err.Message);
+                    }
+                    #endregion
                 }
             }
             if (mdcs.Count > 0)
@@ -346,7 +350,7 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (!_ColumnCache.ContainsKey(key))
+            if (!_ColumnCache.ContainsKey(key) && mdcs.Count > 0)
             {
                 _ColumnCache.Add(key, mdcs.Clone());
             }
@@ -478,66 +482,26 @@ namespace CYQ.Data.SQL
     {
         public static MDataColumn GetColumnByType(Type typeInfo)
         {
+            return GetColumnByType(typeInfo, null);
+        }
+        public static MDataColumn GetColumnByType(Type typeInfo, string conn)
+        {
             string key = "ColumnCache_" + typeInfo.FullName;
+            string outConn;
+            string tableName = DBFast.GetTableName(typeInfo, out outConn);
+            if (!string.IsNullOrEmpty(tableName) && (!string.IsNullOrEmpty(conn) || !string.IsNullOrEmpty(outConn)))
+            {
+                key = GetSchemaKey(tableName, outConn ?? conn);
+            }
+
             if (_ColumnCache.ContainsKey(key))
             {
                 return _ColumnCache[key].Clone();
             }
             else
             {
-                #region 获取列结构
-                MDataColumn mdc = new MDataColumn();
-                mdc.TableName = typeInfo.Name;
-                switch (ReflectTool.GetSystemType(ref typeInfo))
-                {
-                    case SysType.Base:
-                    case SysType.Enum:
-                        mdc.Add(typeInfo.Name, DataType.GetSqlType(typeInfo), false);
-                        return mdc;
-                    case SysType.Generic:
-                    case SysType.Collection:
-                        Type[] argTypes;
-                        Tool.ReflectTool.GetArgumentLength(ref typeInfo, out argTypes);
-                        foreach (Type type in argTypes)
-                        {
-                            mdc.Add(type.Name, DataType.GetSqlType(type), false);
-                        }
-                        argTypes = null;
-                        return mdc;
 
-                }
-
-                List<PropertyInfo> pis = ReflectTool.GetPropertyList(typeInfo);
-                if (pis.Count > 0)
-                {
-                    for (int i = 0; i < pis.Count; i++)
-                    {
-                        SetStruct(mdc, pis[i], null, i, pis.Count);
-                    }
-                }
-                else
-                {
-                    List<FieldInfo> fis = ReflectTool.GetFieldList(typeInfo);
-                    if (fis.Count > 0)
-                    {
-                        for (int i = 0; i < fis.Count; i++)
-                        {
-                            SetStruct(mdc, null, fis[i], i, fis.Count);
-                        }
-                    }
-                }
-                object[] tableAttr = typeInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
-                if (tableAttr != null && tableAttr.Length == 1)
-                {
-                    DescriptionAttribute attr = tableAttr[0] as DescriptionAttribute;
-                    if (attr != null && !string.IsNullOrEmpty(attr.Description))
-                    {
-                        mdc.Description = attr.Description;
-                    }
-                }
-                pis = null;
-                #endregion
-
+                MDataColumn mdc = GetColumns(typeInfo);
                 if (!_ColumnCache.ContainsKey(key))
                 {
                     _ColumnCache.Set(key, mdc.Clone());
@@ -546,6 +510,61 @@ namespace CYQ.Data.SQL
                 return mdc;
             }
 
+        }
+        private static MDataColumn GetColumns(Type typeInfo)
+        {
+
+            MDataColumn mdc = new MDataColumn();
+            mdc.TableName = typeInfo.Name;
+            switch (ReflectTool.GetSystemType(ref typeInfo))
+            {
+                case SysType.Base:
+                case SysType.Enum:
+                    mdc.Add(typeInfo.Name, DataType.GetSqlType(typeInfo), false);
+                    return mdc;
+                case SysType.Generic:
+                case SysType.Collection:
+                    Type[] argTypes;
+                    Tool.ReflectTool.GetArgumentLength(ref typeInfo, out argTypes);
+                    foreach (Type type in argTypes)
+                    {
+                        mdc.Add(type.Name, DataType.GetSqlType(type), false);
+                    }
+                    argTypes = null;
+                    return mdc;
+
+            }
+
+            List<PropertyInfo> pis = ReflectTool.GetPropertyList(typeInfo);
+            if (pis.Count > 0)
+            {
+                for (int i = 0; i < pis.Count; i++)
+                {
+                    SetStruct(mdc, pis[i], null, i, pis.Count);
+                }
+            }
+            else
+            {
+                List<FieldInfo> fis = ReflectTool.GetFieldList(typeInfo);
+                if (fis.Count > 0)
+                {
+                    for (int i = 0; i < fis.Count; i++)
+                    {
+                        SetStruct(mdc, null, fis[i], i, fis.Count);
+                    }
+                }
+            }
+            object[] tableAttr = typeInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述
+            if (tableAttr != null && tableAttr.Length == 1)
+            {
+                DescriptionAttribute attr = tableAttr[0] as DescriptionAttribute;
+                if (attr != null && !string.IsNullOrEmpty(attr.Description))
+                {
+                    mdc.Description = attr.Description;
+                }
+            }
+            pis = null;
+            return mdc;
         }
         private static void SetStruct(MDataColumn mdc, PropertyInfo pi, FieldInfo fi, int i, int count)
         {

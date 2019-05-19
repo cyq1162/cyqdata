@@ -233,9 +233,9 @@ namespace CYQ.Data.Orm
                     {
                         Error.Throw(errMsg);
                     }
-                    Columns = TableSchema.GetColumnByType(typeInfo);
+                    Columns = TableSchema.GetColumnByType(typeInfo, conn);
                     ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
-                    if (!DBTool.Exists(tableName, connBean.ConnString))
+                    if (!DBTool.Exists(tableName, "U", connBean.ConnString))
                     {
                         DBTool.ErrorMsg = null;
                         if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))

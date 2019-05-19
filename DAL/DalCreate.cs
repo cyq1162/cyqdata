@@ -85,7 +85,7 @@ namespace CYQ.Data
         }
         private static DalBase GetDalBaseBy(ConnObject co)
         {
-            DataBaseType dalType = co.Master.ConnDalType;
+            DataBaseType dalType = co.Master.ConnDataBaseType;
             //License.Check(providerName);//¿ò¼ÜÄ£¿éÊÚÈ¨¼ì²â¡£
             switch (dalType)
             {

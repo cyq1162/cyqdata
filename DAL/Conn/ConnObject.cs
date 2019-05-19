@@ -145,7 +145,7 @@ namespace CYQ.Data
             if (connNameOrString != null && connNameOrString.Length < 32 && !connNameOrString.Trim().Contains(" ")) // ΪconfigKey
             {
                 ConnBean coBak = ConnBean.Create(connNameOrString + "_Bak");
-                if (coBak != null && coBak.ConnDalType == cbMaster.ConnDalType)
+                if (coBak != null && coBak.ConnDataBaseType == cbMaster.ConnDataBaseType)
                 {
                     co.BackUp = coBak;
                     co.BackUp.IsBackup = true;

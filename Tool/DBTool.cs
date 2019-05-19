@@ -43,9 +43,9 @@ namespace CYQ.Data.Tool
         /// </summary>
         /// <param name="conn">链接配置Key或数据库链接语句</param>
         /// <returns></returns>
-        public static DataBaseType GetDalType(string conn)
+        public static DataBaseType GetDataBaseType(string conn)
         {
-            return ConnBean.Create(conn).ConnDalType;
+            return ConnBean.Create(conn).ConnDataBaseType;
         }
         /// <summary>
         /// 获取指定数据库的数据类型
@@ -135,7 +135,7 @@ namespace CYQ.Data.Tool
                 return false;
             }
             bool result = false;
-            DataBaseType dalType = GetDalType(conn);
+            DataBaseType dalType = GetDataBaseType(conn);
             string dataBase = string.Empty;
             switch (dalType)
             {
@@ -145,7 +145,9 @@ namespace CYQ.Data.Tool
                     conn = AppConfig.GetConn(conn);// CYQ.Data.DAL.DalCreate.GetConnString(conn, out a, out b, out c);
                     if (conn.ToLower().Contains(";ts=0"))//不写入表架构。
                     {
-                        return true;
+                        //增加缓存
+                        
+                        result = true;
                     }
                     else
                     {
@@ -156,6 +158,9 @@ namespace CYQ.Data.Tool
                     }
                     break;
                 default:
+                    #region MyRegion
+
+
                     using (MProc proc = new MProc(null, conn))
                     {
                         dataBase = proc.DataBaseName;
@@ -205,6 +210,7 @@ namespace CYQ.Data.Tool
                             }
                         }
                     }
+                    #endregion
                     break;
 
 

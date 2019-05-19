@@ -44,7 +44,7 @@ namespace CYQ.Data
         /// <summary>
         /// 数据库类型
         /// </summary>
-        public DataBaseType ConnDalType;
+        public DataBaseType ConnDataBaseType;
         /// <summary>
         /// 数据库版本信息
         /// </summary>
@@ -54,7 +54,7 @@ namespace CYQ.Data
             ConnBean cb = new ConnBean();
             cb.ConnName = this.ConnName;
             cb.ConnString = this.ConnString;
-            cb.ConnDalType = this.ConnDalType;
+            cb.ConnDataBaseType = this.ConnDataBaseType;
             cb.IsOK = this.IsOK;
             return cb;
         }
@@ -150,8 +150,8 @@ namespace CYQ.Data
                 }
                 ConnBean cb = new ConnBean();
                 cb.ConnName = connNameOrString;
-                cb.ConnDalType = GetDataBaseType(connString);
-                cb.ConnString = RemoveConnProvider(cb.ConnDalType, connString);
+                cb.ConnDataBaseType = GetDataBaseType(connString);
+                cb.ConnString = RemoveConnProvider(cb.ConnDataBaseType, connString);
                 connBeanDicCache.Add(hash, cb);
                 hash = cb.ConnString.GetHashCode();
                 if (!connBeanDicCache.ContainsKey(hash))

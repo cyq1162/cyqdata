@@ -120,7 +120,7 @@ namespace CYQ.Data
         {
             get
             {
-                return ConnObj.Master.ConnDalType;
+                return ConnObj.Master.ConnDataBaseType;
             }
         }
         #endregion
@@ -1243,7 +1243,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    WriteError(UsingConnBean.ConnDalType + ".OpenCon():" + UsingConnBean.ErrorMsg);
+                    WriteError(UsingConnBean.ConnDataBaseType + ".OpenCon():" + UsingConnBean.ErrorMsg);
                 }
                 if (IsRecordDebugInfo)
                 {
