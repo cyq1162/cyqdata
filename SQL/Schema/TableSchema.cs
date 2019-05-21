@@ -487,13 +487,7 @@ namespace CYQ.Data.SQL
         public static MDataColumn GetColumnByType(Type typeInfo, string conn)
         {
             string key = "ColumnCache_" + typeInfo.FullName;
-            string outConn;
-            string tableName = DBFast.GetTableName(typeInfo, out outConn);
-            if (!string.IsNullOrEmpty(tableName) && (!string.IsNullOrEmpty(conn) || !string.IsNullOrEmpty(outConn)))
-            {
-                key = GetSchemaKey(tableName, outConn ?? conn);
-            }
-
+            
             if (_ColumnCache.ContainsKey(key))
             {
                 return _ColumnCache[key].Clone();
@@ -504,10 +498,20 @@ namespace CYQ.Data.SQL
                 MDataColumn mdc = GetColumns(typeInfo);
                 if (!_ColumnCache.ContainsKey(key))
                 {
-                    _ColumnCache.Set(key, mdc.Clone());
+                    _ColumnCache.Set(key, mdc);
                 }
-
-                return mdc;
+                string outConn;
+                string tableName = DBFast.GetTableName(typeInfo, out outConn);
+                if (!string.IsNullOrEmpty(tableName) && (!string.IsNullOrEmpty(conn) || !string.IsNullOrEmpty(outConn)))
+                {
+                    key = GetSchemaKey(tableName, outConn ?? conn);
+                    //如果是刚创建表的情况，存档多一份
+                    if (!_ColumnCache.ContainsKey(key))
+                    {
+                        _ColumnCache.Set(key, mdc);
+                    }
+                }
+                return mdc.Clone();
             }
 
         }
