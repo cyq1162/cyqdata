@@ -41,6 +41,10 @@ namespace CYQ.Data.Tool
             }
             if (t.Name == "String")
             {
+                if (value is byte[])
+                {
+                    return Convert.ToBase64String((byte[])value);
+                }
                 return strValue;
             }
             if (t.FullName == "System.Text.StringBuilder")
@@ -138,9 +142,10 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                //Type valueType = value.GetType();
+                Type valueType = value.GetType();
                 //if(valueType.IsEnum && t.is)
-                if (value.GetType().FullName != t.FullName)
+
+                if (valueType.FullName != t.FullName)
                 {
                     switch (ReflectTool.GetSystemType(ref t))
                     {
@@ -154,8 +159,12 @@ namespace CYQ.Data.Tool
                             }
                             break;
                         case SysType.Array:
-                            if (t.Name == "Byte[]" && value.GetType().Name != t.Name)
+                            if (t.Name == "Byte[]")
                             {
+                                if (valueType.Name == "String")
+                                {
+                                    return Convert.FromBase64String(strValue);
+                                }
                                 using (MemoryStream ms = new MemoryStream())
                                 {
                                     new BinaryFormatter().Serialize(ms, value);

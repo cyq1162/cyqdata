@@ -193,12 +193,6 @@ namespace CYQ.Data.Table
             int groupID = DataType.GetGroup(_CellStruct.SqlType);
             if (_CellStruct.SqlType != SqlDbType.Variant)
             {
-                if (StringValue == "" && groupID > 0)
-                {
-                    CellValue.Value = null;
-                    CellValue.IsNull = true;
-                    return;
-                }
                 value = ChangeValue(value, _CellStruct.ValueType, groupID);
                 if (value == null)
                 {
@@ -214,6 +208,10 @@ namespace CYQ.Data.Table
                 else if (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == StringValue))//对象的比较值，用==号则比例引用地址。
                 {
                     CellValue.State = 1;
+                }
+                else
+                {
+                    CellValue.State = 2;
                 }
             }
             CellValue.Value = value;
@@ -266,6 +264,7 @@ namespace CYQ.Data.Table
                 CellValue.Value = null;
                 CellValue.IsNull = true;
                 CellValue.StringValue = null;
+                isNewValue = false;
                 string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
 
                 Log.Write(msg, LogType.Error);
