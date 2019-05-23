@@ -202,7 +202,7 @@ namespace System.Web
         {
             if (!isEnd)
             {
-                response.SendFileAsync(fileName);
+                BinaryWrite(File.ReadAllBytes(fileName));
             }
         }
     }
