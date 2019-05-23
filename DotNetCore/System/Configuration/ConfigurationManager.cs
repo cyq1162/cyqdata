@@ -45,6 +45,7 @@ namespace System.Configuration
             AppConfig.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。
         }
+        private static readonly object o = new object();
         private static NameValueCollection _AppSettings;
         public static NameValueCollection AppSettings
         {
@@ -52,11 +53,17 @@ namespace System.Configuration
             {
                 if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
                 {
-                    //EscapeOp.Default 参数若不设置，会造成死循环
-                    string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings", EscapeOp.Default);
-                    if (!string.IsNullOrEmpty(settingValue))
+                    lock (o)
                     {
-                        _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
+                        if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
+                        {
+                            //EscapeOp.Default 参数若不设置，会造成死循环
+                            string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings", EscapeOp.Default);
+                            if (!string.IsNullOrEmpty(settingValue))
+                            {
+                                _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
+                            }
+                        }
                     }
                 }
                 if (_AppSettings == null)
@@ -66,6 +73,7 @@ namespace System.Configuration
                 return _AppSettings;
             }
         }
+        private static readonly object oo = new object();
         private static ConnectionStringSettingsCollection _ConnectionStrings;
         public static ConnectionStringSettingsCollection ConnectionStrings
         {
@@ -73,24 +81,30 @@ namespace System.Configuration
             {
                 if (_ConnectionStrings == null)
                 {
-                    _ConnectionStrings = new ConnectionStringSettingsCollection();
-                    if (!string.IsNullOrEmpty(appSettingJson))
+                    lock (oo)
                     {
-                        string settingValue = JsonHelper.GetValue(appSettingJson, "connectionStrings");
-                        if (!string.IsNullOrEmpty(settingValue))
+                        if (_ConnectionStrings == null)
                         {
-                            NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(settingValue);
-                            if (nv != null && nv.Count > 0)
+                            _ConnectionStrings = new ConnectionStringSettingsCollection();
+                            if (!string.IsNullOrEmpty(appSettingJson))
                             {
-                                foreach (string key in nv.Keys)
+                                string settingValue = JsonHelper.GetValue(appSettingJson, "connectionStrings");
+                                if (!string.IsNullOrEmpty(settingValue))
                                 {
-                                    ConnectionStringSettings cs = new ConnectionStringSettings();
-                                    cs.Name = key;
-                                    cs.ConnectionString = nv[key];
-                                    _ConnectionStrings.Add(cs);
+                                    NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(settingValue);
+                                    if (nv != null && nv.Count > 0)
+                                    {
+                                        foreach (string key in nv.Keys)
+                                        {
+                                            ConnectionStringSettings cs = new ConnectionStringSettings();
+                                            cs.Name = key;
+                                            cs.ConnectionString = nv[key];
+                                            _ConnectionStrings.Add(cs);
+                                        }
+                                    }
+
                                 }
                             }
-
                         }
                     }
                 }

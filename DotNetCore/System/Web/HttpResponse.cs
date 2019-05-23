@@ -198,5 +198,12 @@ namespace System.Web
                 response.WriteAsync(text);
             }
         }
+        public void WriteFile(string fileName)
+        {
+            if (!isEnd)
+            {
+                response.SendFileAsync(fileName);
+            }
+        }
     }
 }

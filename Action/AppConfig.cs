@@ -5,6 +5,7 @@ using CYQ.Data.Tool;
 using System.Web;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 
 namespace CYQ.Data
 {
@@ -324,7 +325,18 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_WebRootPath))
                 {
-                    _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
+                   
+                    if(IsAspNetCore)
+                    {
+                        string path = Environment.CurrentDirectory + "/wwwroot";
+                        if (Directory.Exists(path)){
+                            _WebRootPath = path;
+                        }
+                    }
+                    if (string.IsNullOrEmpty(_WebRootPath))
+                    {
+                        _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
+                    }
                 }
                 if (!_WebRootPath.EndsWith("\\") && !_WebRootPath.EndsWith("/"))
                 {

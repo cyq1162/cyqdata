@@ -198,5 +198,12 @@ namespace System.Web
         {
             return request.ReadFormAsync(cancellationToken = default(CancellationToken));
         }
+        public string CurrentExecutionFilePathExtension
+        {
+            get
+            {
+                return IO.Path.GetExtension(request.Path);
+            }
+        }
     }
 }
