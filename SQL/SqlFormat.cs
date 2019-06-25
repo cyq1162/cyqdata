@@ -153,11 +153,24 @@ namespace CYQ.Data.SQL
                     partA = tableName.Substring(0, fromIndex);
                     partB = tableName.Substring(fromIndex);
                     string[] keys = new string[] { " where ", "\nwhere ", "\nwhere\r", "\nwhere\n" };
-                    foreach (string key in keys)
+                    if (partB.IndexOf("where", StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        if (partB.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                        foreach (string key in keys)
                         {
-                            return partA + Regex.Replace(partB, key, " where 1=2 and ", RegexOptions.IgnoreCase);
+                            if (partB.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                            {
+                                return partA + Regex.Replace(partB, key, " where 1=2 and ", RegexOptions.IgnoreCase);
+                            }
+                        }
+                    }
+                    else if (partA.IndexOf("where", StringComparison.OrdinalIgnoreCase) > -1)//处理select * from a where id in(select distinct id from a) 的情况
+                    {
+                        foreach (string key in keys)
+                        {
+                            if (partA.IndexOf(key, StringComparison.OrdinalIgnoreCase) > -1)
+                            {
+                                return Regex.Replace(partA, key, " where 1=2 and ", RegexOptions.IgnoreCase) + partB;
+                            }
                         }
                     }
                     //检测是否有group by
