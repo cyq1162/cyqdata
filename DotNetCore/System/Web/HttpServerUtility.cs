@@ -7,6 +7,10 @@ namespace System.Web
 {
     public class HttpServerUtility
     {
+        internal HttpServerUtility()
+        {
+
+        }
         public string HtmlDecode(string s)
         {
             return System.Net.WebUtility.HtmlDecode(s);

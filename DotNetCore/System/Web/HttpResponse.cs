@@ -10,13 +10,18 @@ namespace System.Web
     public class HttpResponse
     {
         bool isEnd = false;
-        Microsoft.AspNetCore.Http.HttpContext context;
+        Microsoft.AspNetCore.Http.HttpContext context
+        {
+            get
+            {
+                return HttpContext.contextAccessor.HttpContext;
+            }
+        }
         Microsoft.AspNetCore.Http.HttpResponse response => context.Response;
         HttpCookieCollection cookieCollection;
-        public HttpResponse(Microsoft.AspNetCore.Http.HttpContext context)
+        internal HttpResponse()
         {
-            this.context = context;
-            cookieCollection = new HttpCookieCollection(context);
+            cookieCollection = new HttpCookieCollection();
         }
 
         #region 兼容Web
@@ -59,27 +64,36 @@ namespace System.Web
             get => response.ContentType ?? "";
             set
             {
-                if (value.Contains("charset") || string.IsNullOrEmpty(response.ContentType))
+                try
                 {
-                    response.ContentType = value;
+                    if (response.ContentType != value)
+                    {
+                        if (value.Contains("charset") || string.IsNullOrEmpty(response.ContentType))
+                        {
+                            response.ContentType = value;
+                        }
+                        else
+                        {
+                            string[] items = response.ContentType.Split(';');
+                            if (items.Length == 2)//包含两个，只改前面的，不改编码
+                            {
+                                response.ContentType = value + ";" + items[1];
+                            }
+                            else if (response.ContentType.Contains("charset"))//只有charset
+                            {
+                                response.ContentType = value + "; " + items[0].Trim();
+                            }
+                            else//只有text/html
+                            {
+                                response.ContentType = value + "; charset=utf-8";
+                            }
+                        }
+                    }
                 }
-                else
+                catch (Exception err)
                 {
-                    string[] items = response.ContentType.Split(';');
-                    if (items.Length == 2)//包含两个，只改前面的，不改编码
-                    {
-                        response.ContentType = value + ";" + items[1];
-                    }
-                    else if (response.ContentType.Contains("charset"))//只有charset
-                    {
-                        response.ContentType = value + "; " + items[0].Trim();
-                    }
-                    else//只有text/html
-                    {
-                        response.ContentType = value + "; charset=utf-8";
-                    }
-                }
 
+                }
 
             }
         }
@@ -94,8 +108,11 @@ namespace System.Web
 
         public void AppendHeader(string key, string value)
         {
-            response.Headers.Remove(key);
-            response.Headers.Add(key, value);
+            if (!response.HasStarted)
+            {
+                response.Headers.Remove(key);
+                response.Headers.Add(key, value);
+            }
         }
         //public bool Buffer { get; set; }
         //public int Expires { get; set; }
@@ -195,7 +212,16 @@ namespace System.Web
         {
             if (!isEnd)
             {
-                response.WriteAsync(text);
+                //try
+                //{
+                    //System.Diagnostics.Debug.WriteLine(System.Threading.Thread.CurrentThread.ManagedThreadId + ":" + context.TraceIdentifier);
+                    response.WriteAsync(text);
+
+                //}
+                //catch (Exception err)
+                //{
+
+                //}
             }
         }
         public void WriteFile(string fileName)

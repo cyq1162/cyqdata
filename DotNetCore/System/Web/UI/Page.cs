@@ -4,11 +4,17 @@ namespace System.Web.UI
 {
     public class Page
     {
-        private Microsoft.AspNetCore.Http.HttpContext context;
-
-        public Page(Microsoft.AspNetCore.Http.HttpContext context)
+        Microsoft.AspNetCore.Http.HttpContext context
         {
-            this.context = context;
+            get
+            {
+                return HttpContext.contextAccessor.HttpContext;
+            }
+        }
+
+        internal Page()
+        {
+           
         }
 
         internal object FindControl(string key)

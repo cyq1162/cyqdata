@@ -5,17 +5,17 @@
     <AssemblyName>CYQ.Data</AssemblyName>
     <RootNamespace>CYQ.Data</RootNamespace>
     <PackageId>cyqdatacore</PackageId>
-    <Version>5.8.2.3</Version>
+    <Version>5.8.2.4</Version>
     <Authors>路过秋天</Authors>
     <Description>What's cyq.data ?： 1： It is an ORM framework. 2： It is a data access layer components. 3： It is a set of tools library. 开源地址：https://github.com/cyq1162/cyqdata</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2019-03-20）</Company>
+    <Company>路过秋天 （2019-07-04）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>http://www.cyqdata.com/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageReleaseNotes>cyq.data is not only a orm,but also a data access layer,it's very special and diffirent from others,who use who love it</PackageReleaseNotes>
     <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
-    <AssemblyVersion>5.8.2.3</AssemblyVersion>
+    <AssemblyVersion>5.8.2.4</AssemblyVersion>
     <FileVersion>5.8.2.3</FileVersion>
   </PropertyGroup>
 

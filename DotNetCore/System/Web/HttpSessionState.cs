@@ -7,11 +7,17 @@ namespace System.Web
 {
     public class HttpSessionState:ISession
     {
-        private Microsoft.AspNetCore.Http.HttpContext context;
-
-        public HttpSessionState(Microsoft.AspNetCore.Http.HttpContext context)
+        Microsoft.AspNetCore.Http.HttpContext context
         {
-            this.context = context;
+            get
+            {
+                return HttpContext.contextAccessor.HttpContext;
+            }
+        }
+
+        internal HttpSessionState()
+        {
+           
         }
 
         public string SessionID { get { return context.Session.Id; } }

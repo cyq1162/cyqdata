@@ -9,11 +9,12 @@ namespace System.Web
     {
         MDictionary<string, HttpCookie> dic = new MDictionary<string, HttpCookie>();
 
-        Microsoft.AspNetCore.Http.HttpContext context;
-
-        public HttpCookieCollection(Microsoft.AspNetCore.Http.HttpContext context)
+        Microsoft.AspNetCore.Http.HttpContext context
         {
-            this.context = context;
+            get
+            {
+                return HttpContext.contextAccessor.HttpContext;
+            }
         }
 
         public HttpCookie this[int index] { get { return dic[index]; } }

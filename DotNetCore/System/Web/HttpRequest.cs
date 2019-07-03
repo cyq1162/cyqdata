@@ -9,11 +9,17 @@ namespace System.Web
 {
     public class HttpRequest
     {
-        Microsoft.AspNetCore.Http.HttpContext context;
-        Microsoft.AspNetCore.Http.HttpRequest request => context.Request;
-        public HttpRequest(Microsoft.AspNetCore.Http.HttpContext context)
+        Microsoft.AspNetCore.Http.HttpContext context
         {
-            this.context = context;
+            get
+            {
+                return HttpContext.contextAccessor.HttpContext;
+            }
+        }
+        Microsoft.AspNetCore.Http.HttpRequest request => context.Request;
+        internal HttpRequest()
+        {
+            
         }
 
         public string this[string name]
@@ -81,7 +87,7 @@ namespace System.Web
         {
             get
             {
-                HttpCookieCollection nvc = new HttpCookieCollection(context);
+                HttpCookieCollection nvc = new HttpCookieCollection();
                 if (request.Cookies != null && request.Cookies.Keys.Count > 0)
                 {
                     foreach (string key in request.Cookies.Keys)
