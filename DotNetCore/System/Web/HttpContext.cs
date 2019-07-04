@@ -41,7 +41,7 @@ namespace System.Web
             get
             {
 
-                if (contextAccessor == null)
+                if (contextAccessor == null || contextAccessor.HttpContext == null)
                 {
                     return null;
                 }
@@ -56,16 +56,16 @@ namespace System.Web
                     CacheManage.LocalInstance.Set(key, context, 0.1);
                     return context;
                 }
-               // return _Current;
-               // return new HttpContext();
-               //lock (o)
-               //{
-               //    if (_Current == null || _Current.useContext != NetCoreContext)
-               //    {
-               //        _Current = new HttpContext();
-               //    }
-               //}
-               //return _Current;
+                // return _Current;
+                // return new HttpContext();
+                //lock (o)
+                //{
+                //    if (_Current == null || _Current.useContext != NetCoreContext)
+                //    {
+                //        _Current = new HttpContext();
+                //    }
+                //}
+                //return _Current;
             }
 
         }
