@@ -594,30 +594,33 @@ namespace CYQ.Data.Table
         }
         bool IsAllowBulkCopy(DataBaseType dalType)
         {
-            foreach (MCellStruct st in mdt.Columns)
+            if (!AppConfig.IsAspNetCore)
             {
-                switch (DataType.GetGroup(st.SqlType))
+                foreach (MCellStruct st in mdt.Columns)
                 {
-                    case 999:
+                    switch (DataType.GetGroup(st.SqlType))
+                    {
+                        case 999:
+                            return false;
+                    }
+                }
+                try
+                {
+                    if (dalType == DataBaseType.Oracle && !HasSqlLoader())
+                    {
                         return false;
+                    }
+                    string path = Path.GetTempPath() + "t.t";
+                    if (!File.Exists(path))
+                    {
+                        File.Create(path).Close();//检测文件夹的读写权限
+                    }
+                    return IOHelper.Delete(path);
                 }
-            }
-            try
-            {
-                if (dalType == DataBaseType.Oracle && !HasSqlLoader())
+                catch
                 {
-                    return false;
-                }
-                string path = Path.GetTempPath() + "t.t";
-                if (!File.Exists(path))
-                {
-                    File.Create(path).Close();//检测文件夹的读写权限
-                }
-                return IOHelper.Delete(path);
-            }
-            catch
-            {
 
+                }
             }
             return false;
         }
