@@ -20,7 +20,6 @@ namespace CYQ.Data.Table
         {
             return false;
         }
-        [NonSerialized]
         public override Type ComponentType
         {
             get
@@ -45,7 +44,7 @@ namespace CYQ.Data.Table
         {
 
         }
-        [NonSerialized]
+        //[NonSerialized]
         public override Type PropertyType
         {
             get { return cell.Struct.ValueType; }
