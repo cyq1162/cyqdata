@@ -25,7 +25,7 @@ namespace CYQ.Data.Tool
         public static List<PropertyInfo> GetPropertyList(Type t)
         {
             bool isAnonymousType = t.Name.Contains("f__AnonymousType");//忽略匿名类型
-            string key = t.GUID.ToString();
+            string key = t.FullName;// t.GUID.ToString();由泛型 XX<T> 引起的如： Ge<A> 和 Ge<B> ,Guid名相同,所以用FullName
             if (!isAnonymousType && propCache.ContainsKey(key))
             {
                 return propCache[key];
