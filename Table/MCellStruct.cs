@@ -165,6 +165,7 @@ namespace CYQ.Data.Table
         /// 原始的数据库字段类型名称
         /// </summary>
         internal string SqlTypeName;
+        [NonSerialized]
         internal Type ValueType;
         private DataBaseType dalType = DataBaseType.None;
         internal DataBaseType DalType
