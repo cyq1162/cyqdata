@@ -362,8 +362,8 @@ namespace CYQ.Data.Table
         /// </summary>
         public void Clear()
         {
-
             isNewValue = false;
+            isAllowChangeState = true;
             CellValue.Clear();
         }
         internal void LoadValue(MDataCell cell, bool isWithState)
