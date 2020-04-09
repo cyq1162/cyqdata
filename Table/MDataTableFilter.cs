@@ -299,7 +299,7 @@ namespace CYQ.Data.Table
                         {
                             break;
                         }
-                        sTable.NewRow(true).LoadFrom(row);
+                        sTable.NewRow(true).LoadFrom(row, RowOp.None, false, true);
                     }
                 }
 
@@ -701,7 +701,7 @@ namespace CYQ.Data.Table
                         result = moreResult;
                         break;
                 }
-                
+
             }
 
             return result;

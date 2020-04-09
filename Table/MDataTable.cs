@@ -1747,7 +1747,7 @@ namespace CYQ.Data.Table
                     rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
                     if (rowB != null)
                     {
-                        rowA.LoadFrom(rowB, RowOp.IgnoreNull, false);
+                        rowA.LoadFrom(rowB, RowOp.Update, false);
                         dt.Rows.Remove(rowB);
                     }
                 }

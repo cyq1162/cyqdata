@@ -131,6 +131,7 @@ namespace CYQ.Data.Table
             }
             set
             {
+                isAllowChangeState = true;
                 CellValue.StringValue = Convert.ToString(value);
                 CellValue.SourceValue = value;
                 NullCheck();//进行Null检测
@@ -369,6 +370,7 @@ namespace CYQ.Data.Table
         {
             isNewValue = true;
             CellValue.LoadValue(cell.CellValue, isWithState);
+            if (isWithState) { isAllowChangeState = false; }
         }
         /// <summary>
         /// 设置默认值。
