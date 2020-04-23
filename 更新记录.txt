@@ -804,3 +804,7 @@
 589：NetCore：修正Mysql在NetCore下的批量功能。(2020-02-27)
 590：NetCore：修正NetCore下的MDataRow序列化问题。(2020-02-27)
 591：ReflectTool：修正自定义泛型属性反射缓存。(2020-03-11)
+592：MDataTable：Winform下修正空值的批量更新问题。(2020-04-09)
+593：AppDebug：Start方法增加重载方法（允许输出框架内部的Sql语句）(2020-04-23)
+594：AppConfig.DB：SchemaMapPath的配置值的情况下，增加表、视图、存储过程也缓存结果到本地(2020-04-23)
+595：修正MSSQL分页问题（>1000页时的情况）(2020-04-23)
