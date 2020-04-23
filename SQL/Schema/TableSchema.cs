@@ -24,11 +24,25 @@ namespace CYQ.Data.SQL
         {
 
             string key = GetSchemaKey(tableName, conn);
+            #region 缓存检测
             if (_ColumnCache.ContainsKey(key))
             {
                 return _ColumnCache[key].Clone();
             }
-
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            {
+                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                if (System.IO.File.Exists(fullPath))
+                {
+                    MDataColumn columns = MDataColumn.CreateFrom(fullPath);
+                    if (columns.Count > 0)
+                    {
+                        CacheManage.LocalInstance.Set(key, columns.Clone(), 1440);
+                        return columns;
+                    }
+                }
+            }
+            #endregion
             string fixName;
             conn = CrossDB.GetConn(tableName, out fixName, conn ?? AppConfig.DB.DefaultConn);
             tableName = fixName;
@@ -69,7 +83,7 @@ namespace CYQ.Data.SQL
                     //如果table和helper不在同一个库
                     DalBase helper = dbHelper.ResetDalBase(tableName);
 
-                    helper.IsRecordDebugInfo = false;//内部系统，不记录SQL表结构语句。
+                    helper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//内部系统，不记录SQL表结构语句。
                     try
                     {
                         bool isView = tableName.Contains(" ");//是否视图。
@@ -350,10 +364,23 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
+            #region 缓存设置
+
             if (!_ColumnCache.ContainsKey(key) && mdcs.Count > 0)
             {
                 _ColumnCache.Add(key, mdcs.Clone());
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                {
+                    string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+
+                    if (!System.IO.Directory.Exists(folderPath))
+                    {
+                        System.IO.Directory.CreateDirectory(folderPath);
+                    }
+                    mdcs.WriteSchema(folderPath + key + ".ts");
+                }
             }
+            #endregion
             return mdcs;
         }
 
@@ -388,14 +415,22 @@ namespace CYQ.Data.SQL
         // private static CacheManage _SchemaCache = CacheManage.Instance;//Cache操作
         internal static bool FillTableSchema(ref MDataRow row, string tableName, string sourceTableName)
         {
-            if (FillSchemaFromCache(ref row, tableName, sourceTableName))
+            MDataColumn mdcs = GetColumns(tableName, row.Conn);
+            if (mdcs == null || mdcs.Count == 0)
             {
-                return true;
+                return false;
             }
-            else//从Cache加载失败
-            {
-                return FillSchemaFromDb(ref row, tableName, sourceTableName);
-            }
+            row = mdcs.ToRow(sourceTableName);
+            return true;
+
+            //if (FillSchemaFromCache(ref row, tableName, sourceTableName))
+            //{
+            //    return true;
+            //}
+            //else//从Cache加载失败
+            //{
+            //    return FillSchemaFromDb(ref row, tableName, sourceTableName);
+            //}
         }
 
         /// <summary>
@@ -410,69 +445,71 @@ namespace CYQ.Data.SQL
             }
             return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableInfo.GetHashCode(tableName);
         }
-        private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
-        {
-            bool returnResult = false;
+    //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
+    //    {
+    //        bool returnResult = false;
 
-            string key = GetSchemaKey(tableName, row.Conn);
-            if (CacheManage.LocalInstance.Contains(key))//缓存里获取
-            {
-                try
-                {
-                    row = ((MDataColumn)CacheManage.LocalInstance.Get(key)).ToRow(sourceTableName);
-                    returnResult = row.Count > 0;
-                }
-                catch (Exception err)
-                {
-                    Log.Write(err, LogType.DataBase);
-                }
-            }
-            else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-            {
-                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
-                if (System.IO.File.Exists(fullPath))
-                {
-                    MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
-                    if (mdcs.Count > 0)
-                    {
-                        row = mdcs.ToRow(sourceTableName);
-                        returnResult = row.Count > 0;
-                        CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
-                    }
-                }
-            }
+    //        string key = GetSchemaKey(tableName, row.Conn);
+    //        if (CacheManage.LocalInstance.Contains(key))//缓存里获取
+    //        {
+    //            try
+    //            {
+    //                row = ((MDataColumn)CacheManage.LocalInstance.Get(key)).ToRow(sourceTableName);
+    //                returnResult = row.Count > 0;
+    //            }
+    //            catch (Exception err)
+    //            {
+    //                Log.Write(err, LogType.DataBase);
+    //            }
+    //        }
+    //        else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+    //        {
+    //            string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+    //            if (System.IO.File.Exists(fullPath))
+    //            {
+    //                MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
+    //                if (mdcs.Count > 0)
+    //                {
+    //                    row = mdcs.ToRow(sourceTableName);
+    //                    returnResult = row.Count > 0;
+    //                    CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
+    //                }
+    //            }
+    //        }
 
-            return returnResult;
-        }
-        private static bool FillSchemaFromDb(ref MDataRow row, string tableName, string sourceTableName)
-        {
-            try
-            {
-                MDataColumn mdcs = TableSchema.GetColumns(tableName, row.Conn);
-                if (mdcs == null || mdcs.Count == 0)
-                {
-                    return false;
-                }
-                row = mdcs.ToRow(sourceTableName);
-                string key = GetSchemaKey(tableName, mdcs.Conn);
-                CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
-                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-                {
-                    string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
-                    if (System.IO.Directory.Exists(folderPath))
-                    {
-                        mdcs.WriteSchema(folderPath + key + ".ts");
-                    }
-                }
-                return true;
+    //        return returnResult;
+    //    }
+    //    private static bool FillSchemaFromDb(ref MDataRow row, string tableName, string sourceTableName)
+    //    {
+    //        try
+    //        {
+    //            MDataColumn mdcs = TableSchema.GetColumns(tableName, row.Conn);
+    //            if (mdcs == null || mdcs.Count == 0)
+    //            {
+    //                return false;
+    //            }
+    //            row = mdcs.ToRow(sourceTableName);
+    //            string key = GetSchemaKey(tableName, mdcs.Conn);
+    //            CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
+    //            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+    //            {
+    //                string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
 
-            }
-            catch (Exception err)
-            {
-                Log.Write(err, LogType.DataBase);
-                return false;
-            }
-        }
+    //                if (!System.IO.Directory.Exists(folderPath))
+    //                {
+    //                    System.IO.Directory.CreateDirectory(folderPath);
+    //                }
+    //                mdcs.WriteSchema(folderPath + key + ".ts");
+    //            }
+    //            return true;
+
+    //        }
+    //        catch (Exception err)
+    //        {
+    //            Log.Write(err, LogType.DataBase);
+    //            return false;
+    //        }
+    //    }
         #endregion
     }
     /// <summary>

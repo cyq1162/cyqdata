@@ -133,6 +133,10 @@ namespace CYQ.Data.SQL
                                 connNames.Add(item.Name);
                             }
                         }
+                        //if (connNames.Count == 0 && AppConfig.DB.DefaultConn!="Conn") // 加上之后调试会卡, 先不加。
+                        //{
+                        //    connNames.Add(AppConfig.DB.DefaultConn);
+                        //}
                         if (connNames.Count > 0)
                         {
                             foreach (string item in connNames)

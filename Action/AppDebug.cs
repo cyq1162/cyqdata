@@ -24,6 +24,10 @@ namespace CYQ.Data
         private const string _Key = "AppDebug_RecordSQL";// "CYQ.Data.AppDebug_RecordSQL";
         private const string _KeyTime = "AppDebug_RecordTime";// "CYQ.Data.AppDebug_RecordTime";
         /// <summary>
+        /// 输出信息时是否包含框架内部Sql（默认否，屏蔽框架内部产生的Sql）。
+        /// </summary>
+        internal static bool IsContainSysSql = false;
+        /// <summary>
         /// get sql detail info
         /// <para>获取调试信息</para>
         /// </summary>
@@ -50,11 +54,21 @@ namespace CYQ.Data
         /// <summary>
         /// start to record sql
         /// <para>开始记录调试信息</para>
+        /// <param name="isContainSysSql">是否包含框架内部Sql（默认否）</param>
         /// </summary>
-        public static void Start()
+        public static void Start(bool isContainSysSql)
         {
             _Cache.Set(_Key, string.Empty);
             _Cache.Set(_KeyTime, DateTime.Now);
+            IsContainSysSql = isContainSysSql;
+        }
+        /// <summary>
+        /// start to record sql
+        /// <para>开始记录调试信息</para>
+        /// </summary>
+        public static void Start()
+        {
+            Start(false);
         }
         /// <summary>
         /// stop to record sql
@@ -64,6 +78,7 @@ namespace CYQ.Data
         {
             _Cache.Remove(_Key);
             _Cache.Remove(_KeyTime);
+            IsContainSysSql = false;
         }
         internal static void Add(string sql)
         {

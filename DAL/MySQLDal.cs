@@ -60,7 +60,7 @@ namespace CYQ.Data
         {
             try
             {
-                IsRecordDebugInfo = false;
+                IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
                 bool result = ExeScalar("show databases like '" + dbName + "'", false) != null;
                 IsRecordDebugInfo = true;
                 return result;

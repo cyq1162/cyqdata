@@ -166,7 +166,7 @@ namespace CYQ.Data.Tool
                         dataBase = proc.DataBaseName;
                         try
                         {
-                            proc.dalHelper.IsRecordDebugInfo = false;
+                            proc.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
                             proc.SetAopState(Aop.AopOp.CloseAll);
                             proc.ResetProc(GetCreateTableSql(tableName, columns, proc.DataBaseType, proc.DataBaseVersion));//.Replace("\n", string.Empty)
                             result = proc.ExeNonQuery() > -2;

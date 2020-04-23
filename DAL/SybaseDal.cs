@@ -64,7 +64,7 @@ namespace CYQ.Data
         {
             try
             {
-                IsRecordDebugInfo = false;
+                IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
                 bool result = ExeScalar("select 1 from master..sysdatabases where [name]='" + dbName + "'", false) != null;
                 IsRecordDebugInfo = true;
                 return result;

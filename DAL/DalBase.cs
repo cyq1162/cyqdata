@@ -258,8 +258,27 @@ namespace CYQ.Data
             {
                 return null;
             }
-            Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> dic = null;
+            string key = "UVPCache_" + StaticTool.GetHashKey(sql + ConnName);
+            #region 缓存检测
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            {
+                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".json";
+                if (System.IO.File.Exists(fullPath))
+                {
+                    string json = IOHelper.ReadAllText(fullPath);
+                    dic = JsonHelper.ToEntity<Dictionary<string, string>>(json);
+                    if (dic != null && dic.Count > 0)
+                    {
+                        return dic;
+                    }
+                }
+            }
+            #endregion
+            dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
             DbDataReader sdr = ExeDataReader(sql, false);
+            IsRecordDebugInfo = true;
             if (sdr != null)
             {
                 string tableName = string.Empty;
@@ -274,6 +293,18 @@ namespace CYQ.Data
                 sdr.Close();
                 sdr = null;
             }
+            #region 缓存设置
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath) && dic != null && dic.Count > 0)
+            {
+                string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+                if (!System.IO.Directory.Exists(folderPath))
+                {
+                    System.IO.Directory.CreateDirectory(folderPath);
+                }
+                string json = JsonHelper.ToJson(dic);
+                IOHelper.Write(folderPath + key + ".json", json);
+            }
+            #endregion
             return dic;
         }
 

@@ -72,7 +72,7 @@ namespace CYQ.Data.Table
                     joinOnName = action.Data.Columns.FirstPrimary.ColumnName;
                 }
                 //action.SetAopState(CYQ.Data.Aop.AopOp.CloseAll);
-                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
+                action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
                 if (appendColumns.Length > 0)
                 {
                     if (appendColumns.Length == 1)

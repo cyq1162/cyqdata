@@ -298,7 +298,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
+                action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
 
                 if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1))
                 //jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000
@@ -1007,7 +1007,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();//事务由外部控制
                 }
-                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
                 if (keepid)
                 {
                     action.SetidentityInsertOn();
@@ -1074,7 +1074,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
 
                 MDataRow row;
                 for (int i = 0; i < mdt.Rows.Count; i++)
@@ -1139,7 +1139,7 @@ namespace CYQ.Data.Table
                 {
                     action.BeginTransation();
                 }
-                action.dalHelper.IsRecordDebugInfo = false;//屏蔽SQL日志记录
+                action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
 
                 MDataRow row;
                 for (int i = 0; i < mdt.Rows.Count; i++)
