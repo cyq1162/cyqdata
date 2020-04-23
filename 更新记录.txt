@@ -802,3 +802,5 @@
 587：修正分页（>1000页时数据重复的问题）(2019-06-25)
 588：NetCore：修正Web下的HttpContext的并发问题。(2019-07-04)
 589：NetCore：修正Mysql在NetCore下的批量功能。(2020-02-27)
+590：NetCore：修正NetCore下的MDataRow序列化问题。(2020-02-27)
+591：ReflectTool：修正自定义泛型属性反射缓存。(2020-03-11)
