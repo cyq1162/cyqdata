@@ -149,7 +149,7 @@ namespace CYQ.Data.Table
             set
             {
                 _SqlType = value;
-                ValueType = DataType.GetType(_SqlType, DalType);
+                //ValueType = DataType.GetType(_SqlType, DalType,SqlTypeName);
             }
         }
         /// <summary>
@@ -166,7 +166,18 @@ namespace CYQ.Data.Table
         /// </summary>
         internal string SqlTypeName;
         [NonSerialized]
-        internal Type ValueType;
+        internal Type valueType;
+        internal Type ValueType
+        {
+            get
+            {
+                if (valueType == null)
+                {
+                    valueType = DataType.GetType(_SqlType, DalType, SqlTypeName);
+                }
+                return valueType;
+            }
+        }
         private DataBaseType dalType = DataBaseType.None;
         internal DataBaseType DalType
         {
@@ -220,6 +231,7 @@ namespace CYQ.Data.Table
         internal void Load(MCellStruct ms)
         {
             ColumnName = ms.ColumnName;
+            SqlTypeName = ms.SqlTypeName;
             SqlType = ms.SqlType;
             IsAutoIncrement = ms.IsAutoIncrement;
             IsCanNull = ms.IsCanNull;
@@ -229,7 +241,6 @@ namespace CYQ.Data.Table
             IsUniqueKey = ms.IsUniqueKey;
             IsForeignKey = ms.IsForeignKey;
             FKTableName = ms.FKTableName;
-            SqlTypeName = ms.SqlTypeName;
             AlterOp = ms.AlterOp;
             IsJsonIgnore = ms.IsJsonIgnore;
             if (ms.DefaultValue != null)
@@ -249,6 +260,7 @@ namespace CYQ.Data.Table
         {
             MCellStruct ms = new MCellStruct(dalType);
             ms.ColumnName = ColumnName;
+            ms.SqlTypeName = SqlTypeName;
             ms.SqlType = SqlType;
             ms.IsAutoIncrement = IsAutoIncrement;
             ms.IsCanNull = IsCanNull;
@@ -258,7 +270,6 @@ namespace CYQ.Data.Table
             ms.IsUniqueKey = IsUniqueKey;
             ms.IsForeignKey = IsForeignKey;
             ms.FKTableName = FKTableName;
-            ms.SqlTypeName = SqlTypeName;
             ms.DefaultValue = DefaultValue;
             ms.Description = Description;
             ms.MDataColumn = MDataColumn;

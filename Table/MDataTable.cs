@@ -54,7 +54,9 @@ namespace CYQ.Data.Table
             {
                 foreach (DataColumn item in dt.Columns)
                 {
-                    mdt.Columns.Add(new MCellStruct(item.ColumnName, DataType.GetSqlType(item.DataType), item.ReadOnly, item.AllowDBNull, item.MaxLength));
+                    MCellStruct mcs = new MCellStruct(item.ColumnName, DataType.GetSqlType(item.DataType), item.ReadOnly, item.AllowDBNull, item.MaxLength);
+                    mcs.valueType = item.DataType;
+                    mdt.Columns.Add(mcs);
                 }
                 foreach (DataRow row in dt.Rows)
                 {

@@ -105,7 +105,28 @@ namespace CYQ.Data.Cache
         }
         class LocalShell
         {
-            internal static readonly LocalCache instance = new LocalCache();
+            private static readonly object lockLocalCache = new object();
+            /// <summary>
+            /// 兼容NetCore下迷一般的Bug的写法。
+            /// </summary>
+            public static LocalCache instance
+            {
+                get
+                {
+                    if (_instance == null)
+                    {
+                        lock (lockLocalCache)
+                        {
+                            if (_instance == null)
+                            {
+                                _instance = new LocalCache();
+                            }
+                        }
+                    }
+                    return _instance;
+                }
+            }
+            internal static LocalCache _instance;
         }
         //此种方式，会提前处理，导致异常。
         //class MemShell

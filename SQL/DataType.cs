@@ -23,7 +23,10 @@ namespace CYQ.Data.SQL
         /// </summary>
         public static Type GetType(SqlDbType sqlType, DataBaseType dalType)
         {
-
+            return GetType(sqlType, dalType, null);
+        }
+        internal static Type GetType(SqlDbType sqlType, DataBaseType dalType, string sqlTypeName)
+        {
             switch (sqlType)
             {
                 case SqlDbType.BigInt:
@@ -70,6 +73,10 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Real:
                     return typeof(double);
                 case SqlDbType.TinyInt:
+                    if (dalType == DataBaseType.MySql && !string.IsNullOrEmpty(sqlTypeName) && !sqlTypeName.EndsWith("unsigned"))
+                    {
+                        return typeof(SByte);
+                    }
                     return typeof(Byte);
                 case SqlDbType.SmallInt:
                     return typeof(Int16);
@@ -161,8 +168,10 @@ namespace CYQ.Data.SQL
                 case "bit":
                 case "bit varying":
                 case "boolean":
+                case "tinyint(1)":
                     return SqlDbType.Bit;
                 case "tinyint":
+                case "tinyint unsigned":
                 case "byte":
                 case "sbyte":
                     return SqlDbType.TinyInt;

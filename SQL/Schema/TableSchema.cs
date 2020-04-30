@@ -801,6 +801,23 @@ namespace CYQ.Data.SQL
                     mStruct.TableName = tableName;
                     mStruct.OldName = mStruct.ColumnName;
                     mStruct.ReaderIndex = i;
+                    if (sqlTypeName == "TINYINT")
+                    {
+                        switch (Convert.ToString(row["DataType"]))
+                        {
+                            case "System.SByte":
+                                mStruct.valueType = typeof(System.SByte);
+                                break;
+
+                            case "System.Byte":
+                                mStruct.valueType = typeof(System.Byte);
+                                break;
+                            case "System.Boolean":
+                                mStruct.valueType = typeof(System.Boolean);
+                                break;
+
+                        }
+                    }
                     mdcs.Add(mStruct);
 
                 }

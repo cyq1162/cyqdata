@@ -58,12 +58,16 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
+    <Reference Include="Microsoft.JScript" />
+    <Reference Include="System">
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.dll</HintPath>
+    </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.OracleClient, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Windows\Microsoft.NET\Framework64\v2.0.50727\System.Data.OracleClient.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Management" />
     <Reference Include="System.Web" />
@@ -268,7 +272,6 @@
     <None Include="Resources\xhtml-special.ent" />
     <None Include="Resources\xhtml-symbol.ent" />
     <None Include="Resources\xhtml1-transitional.ent" />
-    <None Include="更新记录.txt" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
