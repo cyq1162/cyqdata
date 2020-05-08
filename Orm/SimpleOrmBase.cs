@@ -603,11 +603,20 @@ namespace CYQ.Data.Orm
         {
             if (!IsUseAop || AppConfig.IsAspNetCore)//ASPNETCore下，动态代理的Aop是无效的
             {
-                //以下为反向装载
+                MDataRow d = Action.Data;//先触发延时加载的。
                 MDataRow row = MDataRow.CreateFrom(entity);//以实体原有值为基础。
-                row.SetState(2, BreakOp.NullOrEmpty);//把初始为1的修改为2，避免无法更新。
-                row.LoadFrom(Action.Data, RowOp.IgnoreNull, false);//实体加上后期加载的值
-                Action.Data.LoadFrom(row, RowOp.IgnoreNull, false);//把两者的合并的值，再放回数据集。
+                foreach (MDataCell cell in d)
+                {
+                    if (cell.State != 2)
+                    {
+                        MDataCell valueCell = row[cell.ColumnName];
+                        if (valueCell.IsNull)
+                        {
+                            continue;
+                        }
+                        cell.Value = valueCell.Value;
+                    }
+                }
             }
         }
         /// <summary>
