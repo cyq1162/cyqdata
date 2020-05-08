@@ -189,6 +189,10 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
+            if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
+            {
+                DBSchema.GetSchema(conn);
+            }
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
                 int tableHash = TableInfo.GetHashCode(name);
