@@ -54,7 +54,7 @@ namespace CYQ.Data
 
         public override System.Collections.IEnumerator GetEnumerator()
         {
-            return dic.GetEnumerator();
+            return dic.Values.GetEnumerator();
         }
 
         protected override DbParameter GetParameter(string parameterName)

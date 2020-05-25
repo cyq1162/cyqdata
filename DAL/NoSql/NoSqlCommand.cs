@@ -65,7 +65,7 @@ namespace CYQ.Data
         {
             get
             {
-                return list;
+                return list as DbParameterCollection;
             }
         }
 
