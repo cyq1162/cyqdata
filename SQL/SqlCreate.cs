@@ -848,7 +848,7 @@ namespace CYQ.Data.SQL
 
         internal static string MySqlBulkCopySql = "LOAD DATA LOCAL INFILE '{0}' INTO TABLE {1} CHARACTER SET utf8 FIELDS TERMINATED BY '{2}' LINES TERMINATED BY '|\r\n|' {3}";
         internal static string OracleBulkCopySql = "LOAD DATA INFILE '{0}' APPEND INTO TABLE {1} FIELDS TERMINATED BY '{2}' OPTIONALLY ENCLOSED BY '\"' {3}";
-        internal static string OracleSqlidR = " userid={0} control='{1}'";//sqlldr   
+        internal static string OracleSqlldr = " userid={0} control='{1}'";//sqlldr   
         internal static string TruncateTable = "truncate table {0}";
         /// <summary>
         /// 获得批量导入的列名。

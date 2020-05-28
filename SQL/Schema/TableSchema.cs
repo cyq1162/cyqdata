@@ -445,71 +445,71 @@ namespace CYQ.Data.SQL
             }
             return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableInfo.GetHashCode(tableName);
         }
-    //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
-    //    {
-    //        bool returnResult = false;
+        //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
+        //    {
+        //        bool returnResult = false;
 
-    //        string key = GetSchemaKey(tableName, row.Conn);
-    //        if (CacheManage.LocalInstance.Contains(key))//缓存里获取
-    //        {
-    //            try
-    //            {
-    //                row = ((MDataColumn)CacheManage.LocalInstance.Get(key)).ToRow(sourceTableName);
-    //                returnResult = row.Count > 0;
-    //            }
-    //            catch (Exception err)
-    //            {
-    //                Log.Write(err, LogType.DataBase);
-    //            }
-    //        }
-    //        else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-    //        {
-    //            string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
-    //            if (System.IO.File.Exists(fullPath))
-    //            {
-    //                MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
-    //                if (mdcs.Count > 0)
-    //                {
-    //                    row = mdcs.ToRow(sourceTableName);
-    //                    returnResult = row.Count > 0;
-    //                    CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
-    //                }
-    //            }
-    //        }
+        //        string key = GetSchemaKey(tableName, row.Conn);
+        //        if (CacheManage.LocalInstance.Contains(key))//缓存里获取
+        //        {
+        //            try
+        //            {
+        //                row = ((MDataColumn)CacheManage.LocalInstance.Get(key)).ToRow(sourceTableName);
+        //                returnResult = row.Count > 0;
+        //            }
+        //            catch (Exception err)
+        //            {
+        //                Log.Write(err, LogType.DataBase);
+        //            }
+        //        }
+        //        else if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+        //        {
+        //            string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+        //            if (System.IO.File.Exists(fullPath))
+        //            {
+        //                MDataColumn mdcs = MDataColumn.CreateFrom(fullPath);
+        //                if (mdcs.Count > 0)
+        //                {
+        //                    row = mdcs.ToRow(sourceTableName);
+        //                    returnResult = row.Count > 0;
+        //                    CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
+        //                }
+        //            }
+        //        }
 
-    //        return returnResult;
-    //    }
-    //    private static bool FillSchemaFromDb(ref MDataRow row, string tableName, string sourceTableName)
-    //    {
-    //        try
-    //        {
-    //            MDataColumn mdcs = TableSchema.GetColumns(tableName, row.Conn);
-    //            if (mdcs == null || mdcs.Count == 0)
-    //            {
-    //                return false;
-    //            }
-    //            row = mdcs.ToRow(sourceTableName);
-    //            string key = GetSchemaKey(tableName, mdcs.Conn);
-    //            CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
-    //            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-    //            {
-    //                string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+        //        return returnResult;
+        //    }
+        //    private static bool FillSchemaFromDb(ref MDataRow row, string tableName, string sourceTableName)
+        //    {
+        //        try
+        //        {
+        //            MDataColumn mdcs = TableSchema.GetColumns(tableName, row.Conn);
+        //            if (mdcs == null || mdcs.Count == 0)
+        //            {
+        //                return false;
+        //            }
+        //            row = mdcs.ToRow(sourceTableName);
+        //            string key = GetSchemaKey(tableName, mdcs.Conn);
+        //            CacheManage.LocalInstance.Set(key, mdcs.Clone(), 1440);
+        //            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+        //            {
+        //                string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
 
-    //                if (!System.IO.Directory.Exists(folderPath))
-    //                {
-    //                    System.IO.Directory.CreateDirectory(folderPath);
-    //                }
-    //                mdcs.WriteSchema(folderPath + key + ".ts");
-    //            }
-    //            return true;
+        //                if (!System.IO.Directory.Exists(folderPath))
+        //                {
+        //                    System.IO.Directory.CreateDirectory(folderPath);
+        //                }
+        //                mdcs.WriteSchema(folderPath + key + ".ts");
+        //            }
+        //            return true;
 
-    //        }
-    //        catch (Exception err)
-    //        {
-    //            Log.Write(err, LogType.DataBase);
-    //            return false;
-    //        }
-    //    }
+        //        }
+        //        catch (Exception err)
+        //        {
+        //            Log.Write(err, LogType.DataBase);
+        //            return false;
+        //        }
+        //    }
         #endregion
     }
     /// <summary>
@@ -523,8 +523,9 @@ namespace CYQ.Data.SQL
         }
         public static MDataColumn GetColumnByType(Type typeInfo, string conn)
         {
+            if (typeInfo == null) { return null; }
             string key = "ColumnCache_" + typeInfo.FullName;
-            
+
             if (_ColumnCache.ContainsKey(key))
             {
                 return _ColumnCache[key].Clone();
@@ -557,7 +558,8 @@ namespace CYQ.Data.SQL
 
             MDataColumn mdc = new MDataColumn();
             mdc.TableName = typeInfo.Name;
-            switch (ReflectTool.GetSystemType(ref typeInfo))
+            SysType st = ReflectTool.GetSystemType(ref typeInfo);
+            switch (st)
             {
                 case SysType.Base:
                 case SysType.Enum:
@@ -567,9 +569,25 @@ namespace CYQ.Data.SQL
                 case SysType.Collection:
                     Type[] argTypes;
                     Tool.ReflectTool.GetArgumentLength(ref typeInfo, out argTypes);
-                    foreach (Type type in argTypes)
+                    if (argTypes.Length == 2)
                     {
-                        mdc.Add(type.Name, DataType.GetSqlType(type), false);
+                        if (st == SysType.Collection)
+                        {
+                            mdc.Add("Name", DataType.GetSqlType(argTypes[0]), false);
+                            mdc.Add("Value", DataType.GetSqlType(argTypes[1]), false);
+                        }
+                        else
+                        {
+                            mdc.Add("Key", DataType.GetSqlType(argTypes[0]), false);
+                            mdc.Add("Value", DataType.GetSqlType(argTypes[1]), false);
+                        }
+                    }
+                    else
+                    {
+                        foreach (Type type in argTypes)
+                        {
+                            mdc.Add(type.Name, DataType.GetSqlType(type), false);
+                        }
                     }
                     argTypes = null;
                     return mdc;

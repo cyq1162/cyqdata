@@ -212,17 +212,17 @@ namespace CYQ.Data.Table
             }
         }
 
-        internal bool Insert(bool keepid)
+        internal bool Insert(bool keepID)
         {
             try
             {
                 if (dalTypeTo == DataBaseType.MsSql)
                 {
-                    return MsSqlBulkCopyInsert(keepid);
+                    return MsSqlBulkCopyInsert(keepID);
                 }
                 else if (dalTypeTo == DataBaseType.Oracle && _dalHelper == null && !IsTruncate)
                 {
-                    if (OracleDal.clientType == 1 && keepid)
+                    if (OracleDal.clientType == 1 && keepID)
                     {
                         return OracleBulkCopyInsert();//不支持外部事务合并（因为参数只能传链接字符串。）
                     }
@@ -233,14 +233,14 @@ namespace CYQ.Data.Table
                 }
                 else if (dalTypeTo == DataBaseType.MySql && IsAllowBulkCopy(DataBaseType.MySql))
                 {
-                    return LoadDataInsert(dalTypeTo, keepid);
+                    return LoadDataInsert(dalTypeTo, keepID);
                 }
 
                 //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
                 //{
                 //    NoSqlAction.ResetStaticVar();//重置一下缓存
                 //}
-                return NomalInsert(keepid);
+                return NomalInsert(keepID);
 
             }
             catch (Exception err)
@@ -640,7 +640,7 @@ namespace CYQ.Data.Table
             if (dalType == DataBaseType.Oracle)
             {
                 string ctlPath = CreateCTL(sql, path);
-                sql = string.Format(SqlCreate.OracleSqlidR, "sa/123456@ORCL", ctlPath);//只能用进程处理
+                sql = string.Format(SqlCreate.OracleSqlldr, "sa/123456@ORCL", ctlPath);//只能用进程处理
             }
             try
             {

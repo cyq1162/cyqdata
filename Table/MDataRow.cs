@@ -347,7 +347,7 @@ namespace CYQ.Data.Table
         public MDataTable ToTable()
         {
             MDataTable dt = this.Columns.ToTable();
-            MCellStruct msValue = new MCellStruct("Value", SqlDbType.NVarChar);
+            MCellStruct msValue = new MCellStruct("Value", SqlDbType.Variant);
             MCellStruct msState = new MCellStruct("State", SqlDbType.Int);
             dt.Columns.Insert(1, msValue);
             dt.Columns.Insert(2, msState);
@@ -358,7 +358,27 @@ namespace CYQ.Data.Table
             }
             return dt;
         }
-
+        /// <summary>
+        /// 将行的数据转成两列（ColumnName、Value）的表
+        /// </summary>
+        /// <param name="onlyData">仅数据（不含列头结构）</param>
+        /// <returns></returns>
+        public MDataTable ToTable(bool onlyData)
+        {
+            if (onlyData)
+            {
+                MDataTable dt = new MDataTable(this.TableName);
+                dt.Columns.Add("ColumnName", SqlDbType.NVarChar);
+                dt.Columns.Add("Value", SqlDbType.Variant);
+                for (int i = 0; i < Count; i++)
+                {
+                    dt.NewRow(true).Set(0, this[i].ColumnName)
+                        .Set(1, this[i].Value);
+                }
+                return dt;
+            }
+            return ToTable();
+        }
 
         /// <summary>
         /// 将行的数据行的值全重置为Null

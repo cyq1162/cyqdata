@@ -1284,6 +1284,10 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static MDataTable CreateFrom(object entityList, BreakOp op)
         {
+            if (entityList is MDataView)//为了处理UI绑定的表格双击再弹表格
+            {
+                return ((MDataView)entityList).Table;
+            }
             MDataTable dt = new MDataTable("SysDefault");
             if (entityList != null)
             {
@@ -1328,10 +1332,25 @@ namespace CYQ.Data.Table
                         dt.Columns.Add("Key");
                         dt.Columns.Add("Value");
                     }
+                    else if (entityList is DbParameterCollection)
+                    {
+                        dt.Columns = TableSchema.GetColumnByType(typeof(DbParameter));
+                    }
                     else
                     {
-                        isObj = false;
-                        dt.Columns.Add(t.Name.Replace("[]", ""), SqlDbType.Variant, false);
+                        if (entityList is IEnumerable)
+                        {
+                            isObj = false;
+                            dt.Columns.Add(t.Name.Replace("[]", ""), SqlDbType.Variant, false);
+                        }
+                        else
+                        {
+                            MDataRow row = MDataRow.CreateFrom(entityList);
+                            if (row != null)
+                            {
+                                return row.Table;
+                            }
+                        }
                     }
                     foreach (object o in entityList as IEnumerable)
                     {
@@ -1739,21 +1758,21 @@ namespace CYQ.Data.Table
             //}
             //else
             //{
-                string pkName = primary != null ? primary.ColumnName : Columns.FirstPrimary.ColumnName;
-                int i1 = Columns.GetIndex(pkName);
-                MDataRow rowA, rowB;
+            string pkName = primary != null ? primary.ColumnName : Columns.FirstPrimary.ColumnName;
+            int i1 = Columns.GetIndex(pkName);
+            MDataRow rowA, rowB;
 
-                for (int i = 0; i < Rows.Count; i++)
+            for (int i = 0; i < Rows.Count; i++)
+            {
+                rowA = Rows[i];
+                rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
+                if (rowB != null)
                 {
-                    rowA = Rows[i];
-                    rowB = dt.FindRow(pkName + "='" + rowA[i1].StringValue + "'");
-                    if (rowB != null)
-                    {
-                        rowA.LoadFrom(rowB, RowOp.Update, false);
-                        dt.Rows.Remove(rowB);
-                    }
+                    rowA.LoadFrom(rowB, RowOp.Update, false);
+                    dt.Rows.Remove(rowB);
                 }
-           // }
+            }
+            // }
         }
 
         #region 注释掉代码

@@ -10,7 +10,13 @@ namespace CYQ.Data.Table
     /// </summary>
     internal partial class MDataView : IListSource
     {
-        MDataTable table;
+        private MDataTable table;
+        public MDataTable Table {
+            get
+            {
+                return table;
+            }
+        }
         public MDataView(ref MDataTable dt)
         {
             table = dt;
