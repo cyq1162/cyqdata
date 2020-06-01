@@ -607,13 +607,13 @@ namespace CYQ.Data.Orm
                 MDataRow row = MDataRow.CreateFrom(entity);//以实体原有值为基础。
                 foreach (MDataCell cell in d)
                 {
-                    if (cell.State != 2)
+                    MDataCell valueCell = row[cell.ColumnName];
+                    if (valueCell.IsNull)
                     {
-                        MDataCell valueCell = row[cell.ColumnName];
-                        if (valueCell.IsNull)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
+                    if (cell.State != 2 || !valueCell.Struct.ValueType.IsValueType)
+                    {
                         cell.Value = valueCell.Value;
                     }
                 }
