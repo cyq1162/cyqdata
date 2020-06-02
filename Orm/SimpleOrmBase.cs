@@ -612,10 +612,11 @@ namespace CYQ.Data.Orm
                     {
                         continue;
                     }
-                    if (cell.State != 2 || !valueCell.Struct.ValueType.IsValueType)
+                    if (cell.State == 2 && cell.Struct.valueType.IsValueType && (valueCell.StringValue == "0" || valueCell.StringValue == DateTime.MinValue.ToString()))
                     {
-                        cell.Value = valueCell.Value;
+                        continue;
                     }
+                    cell.Value = valueCell.Value;
                 }
             }
         }
