@@ -112,6 +112,14 @@ namespace CYQ.Data.Table
             }
             set
             {
+                if (!string.IsNullOrEmpty(_TableName) && _TableName != value)
+                {
+                    //外部修改了表名
+                    for (int i = 0; i < this.Count; i++)
+                    {
+                        this[i].TableName = value;
+                    }
+                }
                 _TableName = value;
             }
         }
@@ -376,7 +384,7 @@ namespace CYQ.Data.Table
             MDataTable dt = new MDataTable(tableName);
             dt.Columns.Add("ColumnName,DataType,SqlType,MaxSize,Scale");
             dt.Columns.Add("IsPrimaryKey,IsAutoIncrement,IsCanNull,IsUniqueKey,IsForeignKey", SqlDbType.Bit);
-            dt.Columns.Add("FKTableName,DefaultValue,Description,TableName");
+            dt.Columns.Add("TableName,FKTableName,DefaultValue,Description");
 
             for (int i = 0; i < Count; i++)
             {
@@ -384,7 +392,7 @@ namespace CYQ.Data.Table
                 dt.NewRow(true)
                      .Sets(0, ms.ColumnName, ms.ValueType.Name, ms.SqlType, ms.MaxSize, ms.Scale)
                      .Sets(5, ms.IsPrimaryKey, ms.IsAutoIncrement, ms.IsCanNull, ms.IsUniqueKey, ms.IsForeignKey)
-                     .Sets(10, ms.FKTableName, ms.DefaultValue, ms.Description, ms.TableName);
+                     .Sets(10, ms.TableName, ms.FKTableName, ms.DefaultValue, ms.Description);
             }
             return dt;
         }

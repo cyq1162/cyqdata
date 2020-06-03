@@ -83,14 +83,15 @@ namespace CYQ.Data.Table
         public object DefaultValue
         {
             get { return _DefaultValue; }
-            set { 
-                int groupID=DataType.GetGroup(SqlType);
+            set
+            {
+                int groupID = DataType.GetGroup(SqlType);
                 if (groupID == 1 || groupID == 3)
                 {
                     string defaultValue = Convert.ToString(value);
-                    if (!string.IsNullOrEmpty(defaultValue) && (defaultValue[0] == 'N' || defaultValue[0]=='('))
+                    if (!string.IsNullOrEmpty(defaultValue) && (defaultValue[0] == 'N' || defaultValue[0] == '('))
                     {
-                        defaultValue = defaultValue.Trim('N','(', ')');//处理int型默认值（1）带括号的问题。
+                        defaultValue = defaultValue.Trim('N', '(', ')');//处理int型默认值（1）带括号的问题。
                     }
                     _DefaultValue = defaultValue;
                 }
@@ -100,7 +101,7 @@ namespace CYQ.Data.Table
                 }
             }
         }
-    
+
         /// <summary>
         /// 是否允许为Null
         /// </summary>
@@ -132,10 +133,25 @@ namespace CYQ.Data.Table
                 }
             }
         }
+        private string _TableName;
         /// <summary>
         /// 表名
         /// </summary>
-        public string TableName;
+        public string TableName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_TableName) && _MDataColumn != null)
+                {
+                    return _MDataColumn.TableName;
+                }
+                return _TableName;
+            }
+            set { _TableName = value; }
+
+        }
+
+
         private SqlDbType _SqlType;
         /// <summary>
         /// SqlDbType类型
