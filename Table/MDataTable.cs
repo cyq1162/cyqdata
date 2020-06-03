@@ -23,6 +23,7 @@ namespace CYQ.Data.Table
     /// </summary>
     public partial class MDataTable
     {
+        private const string DefaultTableName = "SysDefault";
         #region 隐式转换
 
         /// <summary>
@@ -134,7 +135,7 @@ namespace CYQ.Data.Table
 
         public MDataTable()
         {
-            Init("default", null);
+            Init(DefaultTableName, null);
         }
         public MDataTable(string tableName)
         {
@@ -209,6 +210,14 @@ namespace CYQ.Data.Table
             {
                 _Columns = value;
                 _Columns._Table = this;
+                if (_TableName == DefaultTableName)
+                {
+                    _TableName = _Columns.TableName;
+                }
+                else
+                {
+                    _Columns.TableName = _TableName;
+                }
             }
         }
         private string _Conn;
@@ -1288,14 +1297,14 @@ namespace CYQ.Data.Table
             {
                 return ((MDataView)entityList).Table;
             }
-            MDataTable dt = new MDataTable("SysDefault");
+            MDataTable dt = new MDataTable();
             if (entityList != null)
             {
                 try
                 {
                     bool isObj = true;
                     Type t = entityList.GetType();
-
+                    dt.TableName = t.Name;
                     if (t.IsGenericType)
                     {
                         #region 处理列头
@@ -1379,37 +1388,28 @@ namespace CYQ.Data.Table
         }
         public static MDataTable CreateFrom(NameObjectCollectionBase noc)
         {
-            MDataTable dt = new MDataTable("SysDefault");
+            MDataTable dt = new MDataTable();
             if (noc != null)
             {
                 if (noc is NameValueCollection)
                 {
-                    dt.Columns.Add("Key");
-                    dt.Columns.Add("Value");
+                    dt.TableName = "NameValueCollection";
+                    dt.Columns.Add("Key,Value");
                     NameValueCollection nv = noc as NameValueCollection;
                     foreach (string key in nv)
                     {
-                        dt.NewRow(true).Set(0, key, 1).Set(1, nv[key], 1);
+                        dt.NewRow(true).Sets(0, key, nv[key]);
                     }
                 }
                 else if (noc is HttpCookieCollection)
                 {
-
+                    dt.TableName = "HttpCookieCollection";
                     HttpCookieCollection nv = noc as HttpCookieCollection;
-                    dt.Columns.Add("Name");
-                    dt.Columns.Add("Value");
-                    dt.Columns.Add("Expires");
-                    dt.Columns.Add("Domain");
-                    dt.Columns.Add("HttpOnly");
-                    dt.Columns.Add("Path");
+                    dt.Columns.Add("Name,Value,HttpOnly,Domain,Expires,Path");
                     for (int i = 0; i < nv.Count; i++)
                     {
                         HttpCookie cookie = nv[i];
-                        dt.NewRow(true).Set(0, cookie.Name).Set(1, cookie.Value)
-                        .Set(2, cookie.Expires)
-                         .Set(3, cookie.Domain)
-                         .Set(4, cookie.HttpOnly)
-                         .Set(5, cookie.Path);
+                        dt.NewRow(true).Sets(0, cookie.Name, cookie.Value, cookie.HttpOnly, cookie.Domain, cookie.Expires, cookie.Path);
                     }
                 }
                 else

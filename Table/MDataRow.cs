@@ -417,6 +417,23 @@ namespace CYQ.Data.Table
             return state;
         }
         /// <summary>
+        /// 为行设置值（批量设置多个值）
+        /// </summary>
+        /// <param name="startIndex">起始行索引</param>
+        /// <param name="values">多个值</param>
+        /// <returns></returns>
+        internal MDataRow Sets(int startIndex, params object[] values)
+        {
+            if (startIndex < this.Count)
+            {
+                for (int i = 0; i < values.Length; i++)
+                {
+                    Set(startIndex + i, values[i]);
+                }
+            }
+            return this;
+        }
+        /// <summary>
         /// 为行设置值
         /// </summary>
         public MDataRow Set(object key, object value)
