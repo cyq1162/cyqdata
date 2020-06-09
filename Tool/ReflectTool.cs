@@ -129,6 +129,10 @@ namespace CYQ.Data.Tool
                     {
                         len = 2;
                     }
+                    else if (t.BaseType != null && t.BaseType.Name == "DbParameterCollection")
+                    {
+                        len = 1;
+                    }
                     else
                     {
                         System.Reflection.MethodInfo mi = t.GetMethod("Add");
