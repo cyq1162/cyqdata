@@ -65,7 +65,7 @@ namespace CYQ.Data
                     SysLogs sys = _LogQueue.Dequeue();
                     if (!sys.IsWriteToTxt)
                     {
-                        if (sys.Insert(InsertOp.None)) ;//直接写数据库。
+                        if (sys.Insert(InsertOp.None)) //直接写数据库。
                         {
                             sys.Dispose();
                             continue;

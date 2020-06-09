@@ -44,9 +44,29 @@ namespace CYQ.Data
             get { return _LogType ?? ""; }
             set { _LogType = value; }
         }
+        private string _HostName;
+        /// <summary>
+        /// 请求的主机名称(系统默认读取主机名)
+        /// </summary>
+        [Length(100)]
+        public string HostName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_HostName))
+                {
+                    _HostName = LocalEnvironment.HostName;
+                }
+                return _HostName;
+            }
+            set
+            {
+                _HostName = value;
+            }
+        }
         private string _Host;
         /// <summary>
-        /// 请求的主机地址
+        /// 请求的主机IP(系统默认读取主机内网IP，若无则返回主机名)
         /// </summary>
         [Length(100)]
         public string Host
