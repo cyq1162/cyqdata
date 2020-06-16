@@ -626,6 +626,7 @@ namespace CYQ.Data.Table
         /// 批量插入或更新 [提示：操作和当前表名有关，如当前表名不是要提交入库的表名,请给TableName属性重新赋值]
         /// </summary>
         /// <param name="op">操作选项[插入|更新]</param>
+        /// <returns>返回false时，若有异常，存在：DynamicData 参数中</returns>
         public bool AcceptChanges(AcceptOp op)
         {
             return AcceptChanges(op, string.Empty);
@@ -634,6 +635,7 @@ namespace CYQ.Data.Table
         /// <param name="op">操作选项[插入|更新]</param>
         /// <param name="newConn">指定新的数据库链接</param>
         /// <param name="jointPrimaryKeys">AcceptOp为Update或Auto时，若需要设置联合主键为唯一检测或更新条件，则可设置多个字段名</param>
+        /// <returns>返回false时，若有异常，存在：DynamicData 参数中</returns>
         public bool AcceptChanges(AcceptOp op, string newConn, params object[] jointPrimaryKeys)
         {
             bool result = false;
