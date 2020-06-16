@@ -125,7 +125,7 @@ namespace CYQ.Data.Table
         [NonSerialized]
         private object _DynamicData;
         /// <summary>
-        /// 动态存储数据
+        /// 动态存储数据(如：AcceptChanges 产生的异常默认由本参数存储)
         /// </summary>
         public object DynamicData
         {
