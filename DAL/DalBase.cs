@@ -636,7 +636,7 @@ namespace CYQ.Data
             //上面if代码被注释了，下面代码忘了加!isProc判断，现补上。 取消多余的参数，新加的小贴心，过滤掉用户不小心写多的参数。
             if (!isProc && _com != null && _com.Parameters != null && _com.Parameters.Count > 0)
             {
-                bool needToReplace = (DataBaseType == DataBaseType.Oracle || DataBaseType == DataBaseType.MySql) && _com.CommandText.Contains("@");
+                bool needToReplace = (DataBaseType == DataBaseType.Oracle || DataBaseType == DataBaseType.MySql || DataBaseType == Data.DataBaseType.PostgreSQL) && _com.CommandText.Contains("@");
                 string paraName;
                 for (int i = 0; i < _com.Parameters.Count; i++)
                 {
@@ -648,6 +648,7 @@ namespace CYQ.Data
                         {
                             case DataBaseType.Oracle:
                             case DataBaseType.MySql:
+                            case Data.DataBaseType.PostgreSQL:
                                 _com.CommandText = _com.CommandText.Replace("@" + paraName, Pre + paraName);
                                 break;
                         }
