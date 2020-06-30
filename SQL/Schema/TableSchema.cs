@@ -346,7 +346,8 @@ namespace CYQ.Data.SQL
                     }
                     catch (Exception err)
                     {
-                        helper.DebugInfo.Append(err.Message);
+                        Log.Write(err, LogType.DataBase);
+                        //helper.DebugInfo.Append(err.Message);
                     }
                     #endregion
                 }
