@@ -550,6 +550,20 @@ namespace CYQ.Data
                     SetApp("IsTxtReadOnly", value.ToString());
                 }
             }
+            /// <summary>
+            /// Postgre 是否小写模式。
+            /// </summary>
+            public static bool IsPostgreLower
+            {
+                get
+                {
+                    return GetAppBool("IsPostgreLower", false);
+                }
+                set
+                {
+                    SetApp("IsPostgreLower", value.ToString());
+                }
+            }
             static string _DefaultConn = string.Empty;
             /// <summary>
             /// 默认数据库链接（可赋完整链接语句或Web.config配置项名称）

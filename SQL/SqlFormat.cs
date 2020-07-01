@@ -41,7 +41,9 @@ namespace CYQ.Data.SQL
                         case DataBaseType.MySql:
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
                         case DataBaseType.SQLite:
+                            return "\"" + name + "\"";
                         case DataBaseType.PostgreSQL:
+                            if (AppConfig.DB.IsPostgreLower) { return name; }
                             return "\"" + name + "\"";
                         case DataBaseType.Txt:
                         case DataBaseType.Xml:
