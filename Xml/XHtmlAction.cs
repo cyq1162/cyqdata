@@ -1275,7 +1275,7 @@ namespace CYQ.Data.Xml
         /// <param name="pre">为所有字段名指定前缀（如："a.",或空前缀：""）</param>
         public void LoadData(MDataRow row, string pre)
         {
-            if (pre != null)
+            if (pre != null && row != null)
             {
                 foreach (MDataCell cell in row)
                 {
