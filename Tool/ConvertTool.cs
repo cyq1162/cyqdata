@@ -57,6 +57,7 @@ namespace CYQ.Data.Tool
             }
             if (strValue == "")
             {
+                if (t.Name.EndsWith("[]")) { return null; }
                 return Activator.CreateInstance(t);
             }
             else if (t.IsValueType)
