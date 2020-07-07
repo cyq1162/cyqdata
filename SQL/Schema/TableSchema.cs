@@ -941,7 +941,7 @@ order by s1.colid";
             string key = "case  when position('nextval' in column_default)>0 then 1 else 0 end";
             if (version >= 10)
             {
-                key = "i.is_identity";
+                key = "case i.is_identity when 'NO' then 0 else 1 end";
             }
             return string.Format(@"select
 a.attname AS ColumnName,
