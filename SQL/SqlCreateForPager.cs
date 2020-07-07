@@ -28,7 +28,7 @@ namespace CYQ.Data.SQL
             }
             if (rowCount > 0)//分页查询。
             {
-                where = SqlCreate.AddOrderBy(where, primaryKey);
+                where = SqlCreate.AddOrderBy(where, primaryKey, dalType);
             }
             int topN = pageIndex * pageSize;//Top N 最大数
             int max = (pageIndex - 1) * pageSize;
@@ -74,8 +74,8 @@ namespace CYQ.Data.SQL
                             where = ReverseOrderBy(where, primaryKey);//事先反转一次。
                             topN = rowCount - max;//取后面的
                             int rowStartTemp = rowCount - rowEnd;
-                            rowEnd = rowCount - rowStart +1;//网友反馈修正（数据行要+1）
-                            rowStart = rowStartTemp +1;//网友反馈修正（数据行要+1）
+                            rowEnd = rowCount - rowStart + 1;//网友反馈修正（数据行要+1）
+                            rowStart = rowStartTemp + 1;//网友反馈修正（数据行要+1）
                         }
                         break;
                     case DataBaseType.Txt:

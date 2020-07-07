@@ -166,13 +166,15 @@ namespace CYQ.Data.SQL
                         string key = Convert.ToString(primaryCell.Struct.DefaultValue);
                         if (!string.IsNullOrEmpty(key))
                         {
-                            key = key.Replace("nextval", "currval");
+                            key = key.Replace("nextval", "currval");//nextval('sequence_name'::regclass);||nextval('"sequence_name"'::regclass);
+                            string[] items = key.Split('\'');
+                            key = items[0] + "'" + SqlFormat.Keyword(items[1].Trim('\"'), DataBaseType.PostgreSQL) + "'" + items[2];
                             sql = sql + "; select " + key + " as OutPutValue";
                         }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
                     {
-                        sql += string.Format("; select '{0}' as OutPutValue", primaryCell.Value);
+                        sql += string.Format("; select '{0}' as OutPutValue", SqlFormat.Keyword(primaryCell.StringValue, DataBaseType.PostgreSQL));
                     }
                     break;
                 case DataBaseType.MsSql:
@@ -198,13 +200,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
-                //{
-                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                //}
-                //case DalType.Oracle:
-                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
-                //    break;
+                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
+                    //{
+                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                    //}
+                    //case DalType.Oracle:
+                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
+                    //    break;
             }
             return sql;
         }
@@ -351,7 +353,7 @@ namespace CYQ.Data.SQL
                     ////{
                     //columnName = SqlFormat.Keyword(columnName, _action.dalHelper.DataBaseType);
                     //tableName = SqlFormat.Keyword(tableName, _action.dalHelper.DataBaseType);
-                   // }
+                    // }
                     return string.Format("select max({0}) from {1}", SqlFormat.Keyword(_action.Data.Columns.FirstPrimary.ColumnName, _action.dalHelper.DataBaseType), SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType));
 
             }
@@ -407,7 +409,7 @@ namespace CYQ.Data.SQL
                 columnName = column.ToString().Trim();
                 if (columnName.IndexOf(' ') > -1 || columnName == "*")
                 {
-                    v_Columns += SqlFormat.Keyword(columnName, _action.dalHelper.DataBaseType) + ",";
+                    v_Columns += columnName + ",";
                 }
                 else
                 {
@@ -447,7 +449,7 @@ namespace CYQ.Data.SQL
                 {
                     where = "1=1";
                 }
-                where = AddOrderBy(where, primaryKey);
+                where = AddOrderBy(where, primaryKey, _action.DataBaseType);
             }
             return where;
         }
@@ -515,7 +517,12 @@ namespace CYQ.Data.SQL
                         }
                         break;
                     default:
-                        where = cell.ColumnName + "=" + _action.dalHelper.Pre + cell.ColumnName;
+                        string cName = cell.ColumnName;
+                        if (cell.Struct.MDataColumn != null)
+                        {
+                            cName = SqlFormat.Keyword(cell.ColumnName, cell.Struct.MDataColumn.DataBaseType);
+                        }
+                        where = cName + "=" + _action.dalHelper.Pre + cell.ColumnName;
                         _action.dalHelper.AddParameters(cell.ColumnName, cell.Value, DataType.GetDbType(cell.Struct.ValueType), cell.Struct.MaxSize, ParameterDirection.Input);
                         break;
                 }
@@ -664,6 +671,7 @@ namespace CYQ.Data.SQL
             {
                 where = where.Trim('\'');
             }
+            columnName = SqlFormat.Keyword(columnName, dalType);
             if (groupID == 1)//int 类型的，主键不为bit型。
             {
                 where = columnName + "=" + where;
@@ -700,11 +708,11 @@ namespace CYQ.Data.SQL
         }
 
 
-        internal static string AddOrderBy(string where, string primaryKey)
+        internal static string AddOrderBy(string where, string primaryKey, DataBaseType dalType)
         {
             if (where.IndexOf("order by", StringComparison.OrdinalIgnoreCase) == -1)
             {
-                where += " order by " + primaryKey + " asc";
+                where += " order by " + SqlFormat.Keyword(primaryKey, dalType) + " asc";
             }
             else if (where.IndexOf(" asc", StringComparison.OrdinalIgnoreCase) == -1 && where.IndexOf(" desc", StringComparison.OrdinalIgnoreCase) == -1)
             {
