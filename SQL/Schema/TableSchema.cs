@@ -163,7 +163,7 @@ namespace CYQ.Data.SQL
                                     }
                                     else if (dalType == DataBaseType.PostgreSQL)
                                     {
-                                        sql = GetPostgreColumns();
+                                        sql = GetPostgreColumns(float.Parse(dbHelper.Version));
                                     }
                                     helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                                     DbDataReader sdr = helper.ExeDataReader(sql, false);
@@ -936,14 +936,19 @@ left join syscomments s3 on s1.cdefault=s3.id
 where s1.id =object_id(@TableName) and s2.usertype<100
 order by s1.colid";
         }
-        internal static string GetPostgreColumns()
+        internal static string GetPostgreColumns(float version)
         {
-            return @"select
+            string key = "case  when position('nextval' in column_default)>0 then 1 else 0 end";
+            if (version >= 10)
+            {
+                key = "i.is_identity";
+            }
+            return string.Format(@"select
 a.attname AS ColumnName,
 i.data_type AS SqlType,
 coalesce(character_maximum_length,numeric_precision,-1) as MaxSize,numeric_scale as Scale,
 case a.attnotnull when 'true' then 0 else 1 end AS IsNullable,
-case  when position('nextval' in column_default)>0 then 1 else 0 end as IsAutoIncrement, 
+{0} as IsAutoIncrement, 
 case when o.conkey[a.attnum] is null then 0 else 1 end as IsPrimaryKey,
 d.description AS Description,
 i.column_default as DefaultValue
@@ -955,7 +960,7 @@ left join information_schema.columns i on i.table_schema='public' and i.table_na
 left join pg_constraint o on o.contype='p' and o.conrelid=c.oid
 where c.relname =:TableName
 and a.attnum > 0 and a.atttypid>0
-ORDER BY a.attnum";
+ORDER BY a.attnum", key);
         }
 
 

@@ -171,6 +171,10 @@ namespace CYQ.Data.SQL
                             key = items[0] + "'" + SqlFormat.Keyword(items[1].Trim('\"'), DataBaseType.PostgreSQL) + "'" + items[2];
                             sql = sql + "; select " + key + " as OutPutValue";
                         }
+                        else
+                        {
+                            sql = sql + " RETURNING " + SqlFormat.Keyword(primaryCell.ColumnName, DataBaseType.PostgreSQL);
+                        }
                     }
                     else if (!primaryCell.IsNullOrEmpty)
                     {
