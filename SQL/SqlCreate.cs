@@ -128,21 +128,28 @@ namespace CYQ.Data.SQL
                 if (cell.State > 0)
                 {
                     _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + ",");
-                    _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
-                    object value = cell.Value;
-                    DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
-                    if (dbType == DbType.String && cell.StringValue == "")
+                    if (_action.DataBaseType == DataBaseType.MsSql && cell.Struct.SqlTypeName.EndsWith("hierarchyId"))
                     {
-                        if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
-                        {
-                            value = " ";//Oracle not null 字段，不允许设置空值。
-                        }
-                        if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
-                        {
-                            value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
-                        }
+                        _TempSql2.Append("HierarchyID::Parse('" + cell.StringValue + "')");
                     }
-                    _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                    else
+                    {
+                        _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
+                        object value = cell.Value;
+                        DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
+                        if (dbType == DbType.String && cell.StringValue == "")
+                        {
+                            if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                            {
+                                value = " ";//Oracle not null 字段，不允许设置空值。
+                            }
+                            if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
+                            {
+                                value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                            }
+                        }
+                        _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                    }
                     isCanDo = true;
                 }
             }
@@ -204,13 +211,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
-                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
-                    //{
-                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                    //}
-                    //case DalType.Oracle:
-                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
-                    //    break;
+                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
+                //{
+                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                //}
+                //case DalType.Oracle:
+                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
+                //    break;
             }
             return sql;
         }
@@ -250,21 +257,28 @@ namespace CYQ.Data.SQL
                         //更新时间戳不允许更新。
                         continue;
                     }
-                    object value = cell.Value;
-                    DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
-                    if (dbType == DbType.String && cell.StringValue == "")
+                    if (_action.DataBaseType == DataBaseType.MsSql && cell.Struct.SqlTypeName.EndsWith("hierarchyId"))
                     {
-                        if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
-                        {
-                            value = " ";//Oracle not null 字段，不允许设置空值。
-                        }
-                        if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
-                        {
-                            value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
-                        }
+                        _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=HierarchyID::Parse('" + cell.StringValue + "')" + ",");
                     }
-                    _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
-                    _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=" + _action.dalHelper.Pre + cell.ColumnName + ",");
+                    else
+                    {
+                        object value = cell.Value;
+                        DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
+                        if (dbType == DbType.String && cell.StringValue == "")
+                        {
+                            if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                            {
+                                value = " ";//Oracle not null 字段，不允许设置空值。
+                            }
+                            if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
+                            {
+                                value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                            }
+                        }
+                        _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                        _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=" + _action.dalHelper.Pre + cell.ColumnName + ",");
+                    }
                     isCanDo = true;
                 }
             }

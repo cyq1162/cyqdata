@@ -122,8 +122,13 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static SqlDbType GetSqlType(string typeName)
         {
-            typeName = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
-            switch (typeName)
+           string name = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
+            if(name.Contains("."))
+            {
+                string[] items=name.Split('.');
+                name = items[items.Length - 1];
+            }
+            switch (name)
             {
                 case "char":
                 case "character":
@@ -139,6 +144,7 @@ namespace CYQ.Data.SQL
                 case "ansistring":
                 case "varchar2":
                 case "character varying":
+                case "hierarchyid"://-------------------待进一步处理。
                     return SqlDbType.VarChar;
                 case "nvarchar":
                 case "nvarchar2":
@@ -249,7 +255,7 @@ namespace CYQ.Data.SQL
                 case "jsonb":
                     return SqlDbType.Text;
                 default:
-                    if (typeName.EndsWith("[]"))
+                    if (name.EndsWith("[]"))
                     {
                         return SqlDbType.Variant;
                     }
@@ -275,7 +281,13 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static DbType GetDbType(string typeName, DataBaseType dalType)
         {
-            switch (typeName.ToLower().Replace("system.", ""))
+            string name = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
+            if (name.Contains("."))
+            {
+                string[] items = name.Split('.');
+                name = items[items.Length - 1];
+            }
+            switch (name)
             {
                 case "ansistring":
                     return DbType.AnsiString;
@@ -286,6 +298,7 @@ namespace CYQ.Data.SQL
                 case "unitext":
                 case "string":
                 case "nvarchar":
+                case "hierarchyid":
                     return DbType.String;
                 case "char":
                     return DbType.AnsiStringFixedLength;
