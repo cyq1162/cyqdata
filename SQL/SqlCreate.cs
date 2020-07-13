@@ -801,9 +801,13 @@ namespace CYQ.Data.SQL
                                 where += columnName + "=to_date('" + cell.StringValue + "','yyyy-mm-dd hh24:mi:ss')";
                             }
                         }
+                        else if (groupID == 0 && dalType == DataBaseType.MsSql && cell.Struct.SqlTypeName.EndsWith("hierarchyId"))
+                        {
+                            where += columnName + "=HierarchyID::Parse('" + cell.StringValue + "')";
+                        }
                         else
                         {
-
+                            //¥¶¿ÌHID=HierarchyID::Parse('/1/2/3/')
                             where += columnName + "='" + cell.Value + "'";
                         }
                         break;
