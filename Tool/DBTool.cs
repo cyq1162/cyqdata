@@ -100,15 +100,27 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 是否存在（表 U、视图 V 存储过程 P）
         /// </summary>
+        /// <param name="name">名称</param>
         public static bool Exists(string name)
         {
             return Exists(name, null);
         }
+        /// <summary>
+        /// 是否存在（表 U、视图 V 存储过程 P）
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="type">表 U、视图 V 存储过程 P</param>
         public static bool Exists(string name, string type)
         {
-            return Exists(name, type, null);
+            return Exists(name, type, AppConfig.DB.DefaultConn);
         }
-
+        /// <summary>
+        /// 是否存在（表 U、视图 V 存储过程 P）
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="type">表 U、视图 V 存储过程 P</param>
+        /// <param name="conn">指定链接</param>
+        /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
             return CrossDB.Exists(name, type, conn);
