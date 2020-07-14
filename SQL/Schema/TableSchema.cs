@@ -880,7 +880,7 @@ namespace CYQ.Data.SQL
                       when (DATA_TYPE='NUMBER' and DATA_SCALE>0 and DATA_PRECISION<22)  then 'double'
                         when (DATA_TYPE='NUMBER' and DATA_SCALE=0 and DATA_PRECISION<11)  then 'int'
                           when (DATA_TYPE='NUMBER' and DATA_SCALE=0 and DATA_PRECISION<20)  then 'long'
-                                when DATA_TYPE='NUMBER' then'decimal'                   
+                                when DATA_TYPE='NUMBER' then 'decimal'                   
                     else DATA_TYPE end as SqlType,
                     case when v.CONSTRAINT_TYPE='P' then 1 else 0 end as IsPrimaryKey,
                       case when v.CONSTRAINT_TYPE='U' then 1 else 0 end as IsUniqueKey,
