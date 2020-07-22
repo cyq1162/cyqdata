@@ -8,6 +8,7 @@ Sqlite::  Data Source=E:\cyqdata.db;failifmissing=false;
  Mssql::  server=.;database=cyqdata;uid=sa;pwd=123456; 
 Sybase::  data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456;
 Postgre:  server=localhost;uid=sa;pwd=123456;database=cyqdata; 
+    DB2:  Database=SAMPLE;User ID=administrator;Server=127.0.0.1;password=1234560;provider=db2; 
 
 Oracle OracleClient:: 
 Provider=MSDAORA;Data Source=orcl;User ID=sa;Password=123456
@@ -16,16 +17,17 @@ Provider=MSDAORA;Data Source=ip\orcl;User ID=sa;Password=123456
 Oracle ODP.NET::
 Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(SID = orcl)));User ID=sa;password=123456
 
+ç”±äºå„ç§æ•°æ®åº“é“¾æ¥è¯­å¥åŸºæœ¬ä¸€è‡´ï¼Œé™¤äº†ç‰¹å®šå†™æ³•å¤–ï¼Œå¯ä»¥é€šè¿‡é“¾æ¥è¡¥å……ï¼šprovider=mssqlã€provider=mysqlã€provider=db2ã€provider=postgreç­‰æ¥åŒºåˆ†ã€‚
 ###--------------------------------------------------------###
 
-ÖĞÎÄËµÃ÷£º
-1£º{0} ´ú±í¸ùÄ¿Â¼
-2£ºsqlite¡¢MySql¡¢Sybase ¶¼ĞèÒª½«¶ÔÓ¦µÄdll·Åµ½ºÍcyq.data.dllÍ¬Ò»Ä¿Â¼¡£
-Ïà¹ØµÄdllÏÂÔØ£ºhttp://www.cyqdata.com/download/article-detail-426
-3£ºoracle Ê±£º
-A£ºÄ¬ÈÏOracleClientÒıµÄÊÇ64Î»µÄ£¬Èç¹ûÊÇ32Î»µÄ£¬ĞèÒª×Ô¼º´ÓÔ´ÂëÒÆ³ıÖØĞÂÒıÓÃ32Î»µÄ¡£
-B£ºÓÃodp.net µÄOracle.DataAccess ĞèÒª×Ô¼ºÏÂÔØ°²×°£¬½«°ÑOracle.DataAccess.dll·Åµ½ºÍÍ¬Ò»Ä¿Â¼ÏÂ¡£
-C£ºÓÃOracle.ManagedDataAccess·Åµ½Í¬Ò»Ä¿Â¼ÏÂ¼´¿ÉÒÔÊ¹ÓÃ¡£
+ä¸­æ–‡è¯´æ˜ï¼š
+1ï¼š{0} ä»£è¡¨æ ¹ç›®å½•
+2ï¼šsqliteã€MySqlã€Sybase éƒ½éœ€è¦å°†å¯¹åº”çš„dllæ”¾åˆ°å’Œcyq.data.dllåŒä¸€ç›®å½•ã€‚
+ç›¸å…³çš„dllä¸‹è½½ï¼šhttp://www.cyqdata.com/download/article-detail-426
+3ï¼šoracle æ—¶ï¼š
+Aï¼šé»˜è®¤OracleClientå¼•çš„æ˜¯64ä½çš„ï¼Œå¦‚æœæ˜¯32ä½çš„ï¼Œéœ€è¦è‡ªå·±ä»æºç ç§»é™¤é‡æ–°å¼•ç”¨32ä½çš„ã€‚
+Bï¼šç”¨odp.net çš„Oracle.DataAccess éœ€è¦è‡ªå·±ä¸‹è½½å®‰è£…ï¼Œå°†æŠŠOracle.DataAccess.dllæ”¾åˆ°å’ŒåŒä¸€ç›®å½•ä¸‹ã€‚
+Cï¼šç”¨Oracle.ManagedDataAccessæ”¾åˆ°åŒä¸€ç›®å½•ä¸‹å³å¯ä»¥ä½¿ç”¨ã€‚
 
 Explanation:
 1: {0} represents the root directory
