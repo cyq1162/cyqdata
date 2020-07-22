@@ -144,7 +144,11 @@ namespace CYQ.Data.SQL
                 case "ansistring":
                 case "varchar2":
                 case "character varying":
-                case "hierarchyid"://-------------------待进一步处理。
+                case "hierarchyid":
+                case "long varchar":
+                case "graphic":
+                case "vargraphic":
+                case "long vargraphic":
                     return SqlDbType.VarChar;
                 case "nvarchar":
                 case "nvarchar2":

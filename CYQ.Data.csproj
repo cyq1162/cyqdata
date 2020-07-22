@@ -59,6 +59,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.JScript" />
+    <Reference Include="Microsoft.Vsa" />
     <Reference Include="System">
       <HintPath>C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.dll</HintPath>
     </Reference>
@@ -86,6 +87,7 @@
     <Compile Include="Action\MProc.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DAL\DB2Dal.cs" />
     <Compile Include="DAL\NoSql\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
     <Compile Include="Cache\AutoCache.cs" />

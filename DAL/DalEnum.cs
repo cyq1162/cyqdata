@@ -34,7 +34,8 @@ namespace CYQ.Data
         /// Xml DataBase
         /// </summary>
         Xml,
-        Sybase
+        Sybase,
+        DB2
     }
     /// <summary>
     /// 特殊参数类型[MProc SetCustom方法所使用的参数]

@@ -551,7 +551,7 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// Postgre 是否小写模式。
+            /// Postgre 是否小写模式(默认false)。
             /// </summary>
             public static bool IsPostgreLower
             {
@@ -768,8 +768,8 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// 删除字段名称（若表存在此设置的字段名称时，MActon的删除操作将变更变为更新操作）
-            /// 默认：IsDeleted
+            /// 软删除字段名称（若表存在此设置的字段名称时，MActon的删除操作将变更变为更新操作）
+            /// 默认：IsDeleted（若不想启用，配置为空。）
             /// </summary>
             public static string DeleteField
             {

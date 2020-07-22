@@ -116,6 +116,7 @@ namespace CYQ.Data.SQL
                                 case DataBaseType.MySql:
                                 case DataBaseType.Sybase:
                                 case DataBaseType.PostgreSQL:
+                                case DataBaseType.DB2:
                                     #region Sql
                                     string sql = string.Empty;
                                     if (dalType == DataBaseType.MsSql)
@@ -165,7 +166,12 @@ namespace CYQ.Data.SQL
                                     {
                                         sql = GetPostgreColumns(float.Parse(dbHelper.Version));
                                     }
-                                    helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
+                                    else if (dalType == DataBaseType.DB2)
+                                    {
+                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        sql = GetDB2Columns();
+                                    }
+                                        helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                                     DbDataReader sdr = helper.ExeDataReader(sql, false);
                                     if (sdr != null)
                                     {
@@ -963,7 +969,27 @@ and a.attnum > 0 and a.atttypid>0
 ORDER BY a.attnum", key);
         }
 
+        internal static string GetDB2Columns()
+        {
+            return @"select a.colname as ColumnName ,
+a.length as MaxSize,
+a.typename as SqlType,
+a.Scale,
+case a.Nulls when 'Y' then 1 else 0 end AS IsNullable,
+case a.keyseq when 1 then 1 ELSE 0 END as IsAutoIncrement,
+case c.type when 'P' then 1 else 0 end  as IsPrimaryKey,
+case c.type when 'U' then 1 else 0 end  as IsUniqueKey,
+a.remarks as Description,
+a.default as DefaultValue
+from SYSCAT.COLUMNS a 
+left join syscat.keycoluse b on a.tabname=b.tabname and a.colname=b.colname 
+left join syscat.tabconst c on b.tabname=c.tabname   and b.constname=c.constname  
+where a.tabname=@TableName 
+order by a.colno
 
+";
+        }
         #endregion
     }
+   
 }

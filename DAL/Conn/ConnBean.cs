@@ -173,7 +173,11 @@ namespace CYQ.Data
                 if (index > -1 && index < connString.Length - 5 && (connString[index + 8] == '=' || connString[index + 9] == '='))
                 {
                     int end = conn.IndexOf(';', index);
-                    if (end > index)
+                    if (end == -1)
+                    {
+                        connString = connString.Remove(index);
+                    }
+                    else
                     {
                         connString = connString.Remove(index, end - index + 1);
                     }
@@ -184,13 +188,40 @@ namespace CYQ.Data
         public static DataBaseType GetDataBaseType(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//去掉空格
-
-            #region 先处理容易判断规则的
-            if (connString.Contains("server=") && !connString.Contains("port="))
+            #region 其它简单或端口识别
+            if (connString.Contains("port=1433") || connString.Contains("provider=mssql"))
             {
-                //server=.;database=xx;uid=xx;pwd=xx;
                 return DataBaseType.MsSql;
             }
+            if (connString.Contains("provider=ase") || connString.Contains("port=5000") || connString.Contains("provider=sybase"))
+            {
+                //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
+                return DataBaseType.Sybase;
+            }
+            if (connString.Contains("port=5432") || connString.Contains("provider=postgre") || connString.Contains("provider=npgsql"))
+            {
+                ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
+                return DataBaseType.PostgreSQL;
+            }
+            if (connString.Contains("port=3306") || connString.Contains("provider=mysql"))
+            {
+                //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
+                return DataBaseType.MySql;
+            }
+            if (connString.Contains("port=50000") || connString.Contains("provider=db2"))
+            {
+                return DataBaseType.DB2;
+            }
+            if (connString.Contains("port=1521") || connString.Contains("provider=oracle") || connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle"))
+            {
+                //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
+                return DataBaseType.Oracle;
+            }
+            #endregion
+
+
+
+            #region 先处理容易判断规则的
             if (connString.Contains("txtpath="))
             {
                 // txt path={0}
@@ -212,52 +243,51 @@ namespace CYQ.Data
                 //Data Source={0}App_Data/demo.db;failifmissing=false
                 return DataBaseType.SQLite;
             }
-            if (connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle")
-               || connString.Contains("description=") || connString.Contains("fororacle"))
+            if (connString.Contains("description=") || connString.Contains("fororacle"))
             {
                 //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
                 return DataBaseType.Oracle;
             }
-
-            #endregion
-
-            #region 其它简单或端口识别
-            if (connString.Contains("provider=ase") || connString.Contains("port=5000"))
+            if (connString.Contains("hostname=") || connString.Contains("ibmdadb2"))
             {
-                //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
-                return DataBaseType.Sybase;
+                //Data Source={0}App_Data/demo.db;failifmissing=false
+                return DataBaseType.DB2;
             }
-            if (connString.Contains("port=5432"))
+            if (connString.Contains("server=") && !connString.Contains("port="))
             {
-                ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
-                return DataBaseType.PostgreSQL;
-            }
-            if (connString.Contains("port=3306"))
-            {
-                //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
-                return DataBaseType.MySql;
+                //server=.;database=xx;uid=xx;pwd=xx;
+                return DataBaseType.MsSql;
             }
             #endregion
 
-            if (connString.Contains("host=") && File.Exists(AppConfig.AssemblyPath + "MySql.Data.dll"))
-            {
-                return DataBaseType.MySql;
-            }
+
 
             if (connString.Contains("datasource") &&
-                (File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet2.AseClient.dll") || File.Exists(AppConfig.AssemblyPath + "Sybase.AdoNet4.AseClient.dll")))
+                (Exists("Sybase.AdoNet2.AseClient.dll") || Exists("Sybase.AdoNet4.AseClient.dll")))
             {
                 return DataBaseType.Sybase;
             }
-            //postgre和mssql的链接语句一样，为postgre
-            if (File.Exists(AppConfig.AssemblyPath + "Npgsql.dll"))
+            if (connString.TrimEnd(';').Split(';').Length == 3 && (Exists("IBM.Data.DB2.dll") || Exists("IBM.Data.DB2.Core.dll")))
             {
+                //database=xxx;uid=xxx;pwd=xxx;
+                return DataBaseType.DB2;
+            }
+            if (connString.Contains("host=") && Exists("MySql.Data.dll"))
+            {
+                return DataBaseType.MySql;
+            }
+            //postgre和mssql的链接语句一样，为postgre
+            if (Exists("Npgsql.dll"))
+            {
+                //host=xx;;port=xxx;database=xx;uid=xxx;pwd=xxx; || server=xx;port=xxx;database=xx;uid=xxx;pwd=xxx;
                 return DataBaseType.PostgreSQL;
             }
-
             return DataBaseType.MsSql;
 
         }
-
+        private static bool Exists(string dll)
+        {
+            return File.Exists(AppConfig.AssemblyPath + dll);
+        }
     }
 }

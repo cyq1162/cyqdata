@@ -195,7 +195,7 @@ namespace CYQ.Data.SQL
                     {
                         if (_action.dalHelper.DataBaseType == DataBaseType.Sybase)
                         {
-                            sql = sql + " select @@idENTITY as OutPutValue";
+                            sql = sql + " select @@IDENTITY as OutPutValue";
                         }
                         else if (_action.dalHelper.DataBaseType == DataBaseType.MsSql)
                         {
@@ -211,13 +211,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
-                //{
-                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                //}
-                //case DalType.Oracle:
-                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
-                //    break;
+                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
+                    //{
+                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                    //}
+                    //case DalType.Oracle:
+                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
+                    //    break;
             }
             return sql;
         }

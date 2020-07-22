@@ -68,6 +68,20 @@ namespace CYQ.Data
                     int i = _con.DataSource.LastIndexOf('=') + 1;
                     return _con.DataSource.Substring(i).Trim(' ', ')');
                 }
+                else if (DataBaseType == DataBaseType.DB2)
+                {
+                    string conn = _con.ConnectionString;
+                    int i = conn.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
+                    int end = conn.IndexOf(';', i);
+                    if (end == -1)
+                    {
+                        return conn.Substring(i + 9);
+                    }
+                    else
+                    {
+                        return conn.Substring(i + 9, end - i - 9);
+                    }
+                }
                 else
                 {
                     return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
@@ -553,7 +567,7 @@ namespace CYQ.Data
                     para.Size = -1;
                 }
             }
-            else if (dbType != DbType.Binary && size > -1)
+            else if (dbType != DbType.Binary && size > 0)
             {
                 if (size != para.Size)
                 {

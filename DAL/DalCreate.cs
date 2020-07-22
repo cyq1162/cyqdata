@@ -103,6 +103,8 @@ namespace CYQ.Data
                     return new SybaseDal(co);
                 case DataBaseType.PostgreSQL:
                     return new PostgreDal(co);
+                case DataBaseType.DB2:
+                    return new DB2Dal(co);
                 case DataBaseType.Txt:
                 case DataBaseType.Xml:
                     return new NoSqlDal(co);
@@ -127,9 +129,11 @@ namespace CYQ.Data
                 case "odbc":
                 case "ase":
                     return DataBaseType.Sybase;
-                case "PgSql":
-                case "Npgsql":
+                case "pgsql":
+                case "npgsql":
                     return DataBaseType.PostgreSQL;
+                case "db2":
+                    return DataBaseType.DB2;
                 default:
                     return DataBaseType.None;
 
