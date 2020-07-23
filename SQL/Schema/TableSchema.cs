@@ -66,6 +66,7 @@ namespace CYQ.Data.SQL
                         string fileName = dbHelper.Con.DataSource + tableName + (dalType == DataBaseType.Txt ? ".txt" : ".xml");
                         mdcs = MDataColumn.CreateFrom(fileName);
                         mdcs.DataBaseType = dalType;
+                        mdcs.DataBaseVersion = dbHelper.Version;
                         mdcs.Conn = conn;
                     }
 
@@ -78,6 +79,7 @@ namespace CYQ.Data.SQL
                     mdcs.Conn = conn;
                     mdcs.TableName = tableName;
                     mdcs.DataBaseType = dalType;
+                    mdcs.DataBaseVersion = dbHelper.Version;
 
                     tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);//加上关键字：引号
                     //如果table和helper不在同一个库
@@ -404,6 +406,7 @@ namespace CYQ.Data.SQL
                 keyDt = sdr.GetSchemaTable();
                 mdc = GetColumnByTable(keyDt, sdr, true);
                 mdc.DataBaseType = helper.DataBaseType;
+                mdc.DataBaseVersion = helper.Version;
             }
 
             return mdc;

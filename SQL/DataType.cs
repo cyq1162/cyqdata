@@ -122,10 +122,10 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static SqlDbType GetSqlType(string typeName)
         {
-           string name = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
-            if(name.Contains("."))
+            string name = typeName.ToLower().Replace("system.", "").Split('(')[0].Trim('"');
+            if (name.Contains("."))
             {
-                string[] items=name.Split('.');
+                string[] items = name.Split('.');
                 name = items[items.Length - 1];
             }
             switch (name)
@@ -546,15 +546,15 @@ namespace CYQ.Data.SQL
                         case DataBaseType.SQLite:
                         case DataBaseType.Oracle:
                         case DataBaseType.PostgreSQL:
+                        case DataBaseType.DB2:
                             return sqlType.ToString().ToLower();
                     }
                     return "datetime";
                 case SqlDbType.Timestamp:
-
                     if (isSameDalType) { return "timestamp"; }
-                    if (dalFrom == DataBaseType.MySql || dalFrom == DataBaseType.Oracle)
+                    if (dalFrom == DataBaseType.MySql || dalFrom == DataBaseType.Oracle || dalFrom == DataBaseType.PostgreSQL || dalFrom == DataBaseType.DB2)
                     {
-                        if (dalTo == DataBaseType.MySql || dalTo == DataBaseType.Oracle || dalTo == DataBaseType.PostgreSQL)
+                        if (dalTo == DataBaseType.MySql || dalTo == DataBaseType.Oracle || dalTo == DataBaseType.PostgreSQL || dalTo == DataBaseType.DB2)
                         {
                             return "timestamp";
                         }
@@ -609,6 +609,8 @@ namespace CYQ.Data.SQL
                             if (maxSize <= 1) { return "boolean"; }
                             string name = isSameDalType ? ms.SqlTypeName : "bit";
                             return name + "(" + maxSize + ")";
+                        case DataBaseType.DB2:
+                            return "char(1)";
 
                     }
                     if (maxSize > 1)
@@ -749,7 +751,7 @@ namespace CYQ.Data.SQL
                                 }
                                 return t + "(" + maxSize + ")";
                             }
-                            #endregion
+                        #endregion
                         case DataBaseType.SQLite:
                             return (maxSize < 1 || maxSize > 65535) ? "TEXT" : "TEXT(" + maxSize + ")";
                         case DataBaseType.MySql://mysql没有nchar之类的。
@@ -786,7 +788,7 @@ namespace CYQ.Data.SQL
                             {
                                 return t + "(" + maxSize + ")";
                             }
-                            #endregion
+                        #endregion
                         //return (maxSize < 1 || maxSize > 8000) ? "longtext" : ();
                         case DataBaseType.Oracle:
                             if (maxSize < 1 || maxSize > 4000 || (maxSize > 2000 && (sqlType == SqlDbType.NVarChar || sqlType == SqlDbType.Char))
@@ -811,6 +813,18 @@ namespace CYQ.Data.SQL
                                 if (!t.EndsWith(name)) { name = "char"; }
                             }
                             return name + (maxSize > -1 ? "(" + maxSize + ")" : "");
+                        case DataBaseType.DB2:
+                            name = "varchar";
+                            if (isSameDalType)
+                            {
+                                name = ms.SqlTypeName;
+                            }
+                            else
+                            {
+                                if (t.EndsWith("text")) { return "text"; }
+                                if (!t.EndsWith(name)) { name = "char"; }
+                            }
+                            return name + (maxSize > -1 && !name.StartsWith("long ", StringComparison.OrdinalIgnoreCase) ? "(" + maxSize + ")" : "");
                     }
                     break;
                 case SqlDbType.UniqueIdentifier:
@@ -821,6 +835,7 @@ namespace CYQ.Data.SQL
                         case DataBaseType.MySql:
                         case DataBaseType.Oracle:
                         case DataBaseType.Sybase:
+                        case DataBaseType.DB2:
                             return "char(36)";
                         case DataBaseType.PostgreSQL:
                             return "uuid";
@@ -848,6 +863,7 @@ namespace CYQ.Data.SQL
                         case DataBaseType.Access:
                             return "memo";
                         case DataBaseType.PostgreSQL:
+                        case DataBaseType.DB2:
                             return "Xml";
                     }
                     break;

@@ -43,6 +43,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.Oracle:
                 case DataBaseType.PostgreSQL:
                 case DataBaseType.MySql:
+                case DataBaseType.DB2:
                     StringBuilder sb = new StringBuilder();
                     foreach (MCellStruct mcs in columns)
                     {
@@ -52,7 +53,7 @@ namespace CYQ.Data.SQL
                             {
                                 sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}', N'column', N'{2}';\r\n", mcs.Description, tableName, mcs.ColumnName);
                             }
-                            else if (dalType == DataBaseType.Oracle)
+                            else if (dalType == DataBaseType.Oracle || dalType == DataBaseType.DB2)
                             {
                                 sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n", tableName.ToUpper(), mcs.ColumnName.ToUpper(), mcs.Description);
                             }
@@ -67,7 +68,7 @@ namespace CYQ.Data.SQL
                     {
                         sb.AppendFormat("exec sp_addextendedproperty N'MS_Description', N'{0}', N'user', N'dbo', N'table', N'{1}';\r\n", columns.Description, tableName);
                     }
-                    else if (dalType == DataBaseType.Oracle)
+                    else if (dalType == DataBaseType.Oracle || dalType == DataBaseType.DB2)
                     {
                         sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
                                 tableName.ToUpper(), columns.Description);
@@ -173,7 +174,7 @@ namespace CYQ.Data.SQL
                     case DataBaseType.MsSql:
                         if (column.IsAutoIncrement)
                         {
-                            key += " idENTITY(1,1)";
+                            key += " IDENTITY(1,1)";
                         }
                         else
                         {
@@ -192,7 +193,7 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Sybase:
                         if (column.IsAutoIncrement)
                         {
-                            key += " idENTITY";
+                            key += " IDENTITY";
                         }
                         else
                         {
@@ -223,6 +224,12 @@ namespace CYQ.Data.SQL
                         if (column.IsAutoIncrement && key.EndsWith("int"))
                         {
                             key = key.Substring(0, key.Length - 3) + "serial";
+                        }
+                        break;
+                    case DataBaseType.DB2:
+                        if (column.IsAutoIncrement)
+                        {
+                            key += " GENERATED ALWAYS AS IDENTITY";
                         }
                         break;
                 }
@@ -261,7 +268,11 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        key += column.IsCanNull ? " NULL" : " NOT NULL";
+                        if (dalType == DataBaseType.DB2 && column.IsCanNull) { }//db2 ≤ª”√null
+                        else
+                        {
+                            key += column.IsCanNull ? " NULL" : " NOT NULL";
+                        }
                     }
                 }
             }

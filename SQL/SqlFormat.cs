@@ -494,6 +494,20 @@ namespace CYQ.Data.SQL
                         }
                     }
                     break;
+                case DataBaseType.DB2:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim(' ', '\'');
+                        if (groupID == 0)
+                        {
+                            defaultValue = "'" + defaultValue.Trim('\'') + "'";
+                        }
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT TIMESTAMP");
+                    }
+                    break;
             }
             if (flag == 0)
             {

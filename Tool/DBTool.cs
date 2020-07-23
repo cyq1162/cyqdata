@@ -236,9 +236,33 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)的说明语句
         /// </summary>
+        public static string GetCreateTableDescriptionSql(string tableName)
+        {
+            return GetCreateTableDescriptionSql(tableName, AppConfig.DB.DefaultConn);
+        }
+        public static string GetCreateTableDescriptionSql(string tableName, string conn)
+        {
+            MDataColumn mdc = GetColumns(tableName, conn);
+            return GetCreateTableDescriptionSql(tableName, mdc, mdc.DataBaseType);
+        }
+        /// <summary>
+        /// 获取指定的表架构生成的SQL(Create Table)的说明语句
+        /// </summary>
         public static string GetCreateTableDescriptionSql(string tableName, MDataColumn columns, DataBaseType dalType)
         {
             return SqlCreateForSchema.CreateTableDescriptionSql(tableName, columns, dalType);
+        }
+        /// <summary>
+        /// 获取指定的表架构生成的SQL(Create Table)的说明语句
+        /// </summary>
+        public static string GetCreateTableSql(string tableName)
+        {
+            return GetCreateTableSql(tableName, AppConfig.DB.DefaultConn);
+        }
+        public static string GetCreateTableSql(string tableName,string conn)
+        {
+            MDataColumn mdc = GetColumns(tableName, conn);
+            return GetCreateTableSql(tableName, mdc, mdc.DataBaseType, mdc.DataBaseVersion);
         }
         /// <summary>
         /// 获取指定的表架构生成的SQL(Create Table)的说明语句

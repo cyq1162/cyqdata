@@ -130,6 +130,7 @@ namespace CYQ.Data.Table
         {
             MDataColumn mcs = new MDataColumn();
             mcs.DataBaseType = DataBaseType;
+            mcs.DataBaseVersion = DataBaseVersion;
             mcs.CheckDuplicate = false;
             mcs.isViewOwner = isViewOwner;
             mcs.TableName = TableName;
@@ -256,6 +257,7 @@ namespace CYQ.Data.Table
             row.TableName = tableName;
             row.Columns.CheckDuplicate = CheckDuplicate;
             row.Columns.DataBaseType = DataBaseType;
+            row.Columns.DataBaseVersion = DataBaseVersion;
             row.Columns.isViewOwner = isViewOwner;
             row.Columns.relationTables = relationTables;
             row.Conn = Conn;
@@ -353,6 +355,10 @@ namespace CYQ.Data.Table
         /// 当前的数据库类型。
         /// </summary>
         internal DataBaseType DataBaseType = DataBaseType.None;
+        /// <summary>
+        /// 当前的数据库版本号。
+        /// </summary>
+        internal string DataBaseVersion = string.Empty;
         /// <summary>
         /// 当前的数据库链接项（或语句）
         /// </summary>
