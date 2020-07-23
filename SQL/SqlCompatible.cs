@@ -104,6 +104,7 @@ namespace CYQ.Data.SQL
             {
                 case DataBaseType.Oracle:
                 case DataBaseType.PostgreSQL:
+                case DataBaseType.DB2:
                     return Replace(text, SqlValue.Contact, "||");
                 default:
                     return Replace(text, SqlValue.Contact, "+");
@@ -136,6 +137,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MySql:
                     return Replace(text, SqlValue.IsNull, "IfNull");
                 case DataBaseType.Oracle:
+                case DataBaseType.DB2:
                     return Replace(text, SqlValue.IsNull, "NVL");
                 case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.IsNull, "COALESCE");
@@ -154,17 +156,17 @@ namespace CYQ.Data.SQL
                 case DataBaseType.Access:
                     return Replace(text, SqlValue.Guid, "GenGUID()");
                 case DataBaseType.MySql:
-                    return Replace(text, SqlValue.Guid, "UUid()");
+                    return Replace(text, SqlValue.Guid, "UUID()");
                 case DataBaseType.MsSql:
                 case DataBaseType.Sybase:
                     return Replace(text, SqlValue.Guid, "newid()");
                 case DataBaseType.Oracle:
                     return Replace(text, SqlValue.Guid, "SYS_GUID()");
                 case DataBaseType.SQLite:
+                case DataBaseType.DB2:
                     return Replace(text, SqlValue.Guid, Guid.NewGuid().ToString());
                 case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.Guid, "uuid_generate_v4()");
-
             }
             return text;
         }
@@ -210,6 +212,7 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.Substring, "substring");
                 case DataBaseType.Oracle:
                 case DataBaseType.SQLite:
+                case DataBaseType.DB2:
                     text = Replace(text, SqlValue.Len, "length");
                     return Replace(text, SqlValue.Substring, "substr");
                 case DataBaseType.MySql:
@@ -326,6 +329,8 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.GetDate, "getdate()");
                 case DataBaseType.Oracle:
                     return Replace(text, SqlValue.GetDate, "current_date");
+                case DataBaseType.DB2:
+                    return Replace(text, SqlValue.GetDate, "CURRENT TIMESTAMP");
                 case DataBaseType.SQLite:
                     return Replace(text, SqlValue.GetDate, "datetime('now','localtime')");
                 case DataBaseType.Txt:
@@ -362,6 +367,7 @@ namespace CYQ.Data.SQL
                         text = text.Replace("#_", "#");
                         return Replace(text, key, "instr");
                     case DataBaseType.MySql:
+                    case DataBaseType.DB2:
                         return Replace(text, key, "locate");
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
@@ -513,6 +519,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.SQLite:
                 case DataBaseType.Sybase:
                 case DataBaseType.PostgreSQL:
+                case DataBaseType.DB2:
                     if (text.IndexOf(SqlValue.Case, StringComparison.OrdinalIgnoreCase) > -1 || text.IndexOf(SqlValue.CaseWhen, StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         text = Replace(text, SqlValue.Case, "Case");

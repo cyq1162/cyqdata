@@ -56,10 +56,10 @@ namespace CYQ.Data.SQL
         public const string Day = "[#DAY]";
 
         /// <summary>
-        /// 数据库函数 Substring 截取字符串：[#SUBSTRING](字段,起始索引int,长度int)
+        /// 数据库函数 Substring 截取字符串：[#SUBSTRING](字段,起始索引,1开始,长度int)
         /// <example>
         /// <code>
-        /// 示例： [#Substring](Title,0,2)
+        /// 示例： [#Substring](Title,1,2)
         /// </code>
         /// </example>
         /// </summary>
