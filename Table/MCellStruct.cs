@@ -215,8 +215,23 @@ namespace CYQ.Data.Table
             get { return _AlterOp; }
             set { _AlterOp = value; }
         }
+        internal int _ReaderIndex = -1;
         //内部使用的索引，在字段名为空时使用
-        internal int ReaderIndex = -1;
+        internal int ReaderIndex
+        {
+            get
+            {
+                if (_ReaderIndex == -1 && _MDataColumn!=null)
+                {
+                    return _MDataColumn.GetIndex(this.ColumnName);
+                }
+                return _ReaderIndex;
+            }
+            set
+            {
+                _ReaderIndex = value;
+            }
+        }
         /// <summary>
         /// 是否忽略Json转换
         /// </summary>

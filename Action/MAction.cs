@@ -1186,18 +1186,31 @@ namespace CYQ.Data
         /// <para>设置值状态[0:未更改；1:已赋值,值相同[可插入]；2:已赋值,值不同[可更新]]</para></param>
         public MAction Set(object key, object value, int state)
         {
-            MDataCell cell = _Data[key];
-            if (cell != null)
+            if (_Data[key] != null)
             {
-                cell.Value = value;
-                if (state >= 0 && state < 3)
-                {
-                    cell.State = state;
-                }
+                _Data.Set(key, value, state);
             }
             else
             {
                 dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + key);
+            }
+            return this;
+        }
+        /// <summary>
+        /// 为行连续设置值多个值
+        /// </summary>
+        /// <param name="startKey">起始行索引||起始列名</param>
+        /// <param name="values">多个值</param>
+        /// <returns></returns>
+        public MAction Sets(object startKey, params object[] values)
+        {
+            if (_Data[startKey] != null)
+            {
+                _Data.Sets(startKey, values);
+            }
+            else
+            {
+                dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
             }
             return this;
         }

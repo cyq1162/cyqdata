@@ -417,15 +417,17 @@ namespace CYQ.Data.Table
             return state;
         }
         /// <summary>
-        /// 为行设置值（批量设置多个值）
+        /// 为行连续设置值多个值
         /// </summary>
-        /// <param name="startIndex">起始行索引</param>
+        /// <param name="startKey">起始行索引||起始列名</param>
         /// <param name="values">多个值</param>
         /// <returns></returns>
-        internal MDataRow Sets(int startIndex, params object[] values)
+        public MDataRow Sets(object startKey, params object[] values)
         {
-            if (startIndex < this.Count)
+            MDataCell cell = this[startKey];
+            if (cell != null)
             {
+                int startIndex = cell.Struct.ReaderIndex;
                 for (int i = 0; i < values.Length; i++)
                 {
                     Set(startIndex + i, values[i]);
@@ -724,7 +726,7 @@ namespace CYQ.Data.Table
         {
             get
             {
-                if (index < Count)
+                if (index > -1 && index < Count)
                 {
                     return CellList[index];
                 }
