@@ -6,6 +6,7 @@ using System.Data.SqlTypes;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Web;
 
 namespace CYQ.Data.Tool
 {
@@ -29,6 +30,10 @@ namespace CYQ.Data.Tool
             if (t.FullName == "System.Type")
             {
                 return (Type)value;
+            }
+            if (t.FullName == "System.IO.Stream" && value is HttpPostedFile)
+            {
+                return ((HttpPostedFile)value).InputStream;
             }
             string strValue = Convert.ToString(value);
             if (t.IsGenericType && t.Name.StartsWith("Nullable"))
