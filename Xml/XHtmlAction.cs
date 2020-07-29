@@ -1070,7 +1070,18 @@ namespace CYQ.Data.Xml
             try
             {
                 #region »ù±¾ÅÐ¶Ï
-                if (node == null || _Table == null || _Table.Rows.Count == 0) { return; }
+                if (node == null)
+                {
+                    return;
+                }
+                if (_Table == null || _Table.Rows.Count == 0)
+                {
+                    if (node.Attributes["clearflag"] == null)
+                    {
+                        node.InnerXml = "";
+                    }
+                    return;
+                }
                 RemoveAttr(node, "clearflag");
                 #endregion
 
