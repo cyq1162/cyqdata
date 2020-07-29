@@ -51,6 +51,8 @@ namespace CYQ.Data.SQL
                     case DataBaseType.MySql:
                     case DataBaseType.PostgreSQL:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize);
+                    case DataBaseType.DB2:
+                        return string.Format(top1Pager, columns, tableName, where + " fetch first "+ pageSize + " rows only");
                 }
             }
             else
@@ -90,6 +92,7 @@ namespace CYQ.Data.SQL
             {
                 case DataBaseType.MsSql:
                 case DataBaseType.Oracle:
+                case DataBaseType.DB2://
                     if (version.StartsWith("08"))
                     {
                         goto temtable;
