@@ -16,7 +16,7 @@ namespace Microsoft.JScript
             }
             if (code.Contains("True") || code.Contains("False"))
             {
-                code = code.Replace("True?", "true?").Replace("False?","false?");
+                code = code.Replace("True?", "true?").Replace("False?", "false?").Replace("=True", "=true").Replace("=False", "=false");
             }
             return express.Eval(code);
             //if (v8 == null)
