@@ -822,4 +822,4 @@
 605：DB2：完善多数据库兼容、表结构及语句生成等。(2020-07-23)
 606：MDataRow，MAction 开放Sets方法（连续设置值）(2020-07-24)
 607：DB2：补上分页语句。(2020-07-29)
-608：XHtmlAction：taurus.mvc 绑定无数据时默认执行clearflag=0标签事件。(2020-07-29)
+608：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)

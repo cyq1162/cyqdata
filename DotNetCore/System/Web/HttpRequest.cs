@@ -92,7 +92,6 @@ namespace System.Web
                 {
                     foreach (string key in request.Cookies.Keys)
                     {
-                        //request.Cookies.
                         HttpCookie cookie = new HttpCookie(key, request.Cookies[key]);
                         nvc.Add(cookie, false);
                     }
