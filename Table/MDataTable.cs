@@ -258,14 +258,29 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public MDataRow NewRow(bool isAddToTable)
         {
+            return NewRow(isAddToTable, -1);
+        }
+        /// <summary>
+        /// 新建一行
+        /// </summary>
+        /// <param name="index">插入的索引</param>
+        /// <returns></returns>
+        public MDataRow NewRow(bool isAddToTable, int index)
+        {
             MDataRow mdr = new MDataRow(this);
             if (isAddToTable)
             {
-                Rows.Add(mdr, false);
+                if (index < 0)
+                {
+                    Rows.Add(mdr, false);
+                }
+                else
+                {
+                    Rows.Insert(index, mdr);
+                }
             }
             return mdr;
         }
-
         #region 准备新开始的方法
         /// <summary>
         /// 使用本查询，得到克隆后的数据
