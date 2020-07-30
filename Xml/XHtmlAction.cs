@@ -672,16 +672,18 @@ namespace CYQ.Data.Xml
                             string lowerValue = values[0].ToLower();
                             foreach (XmlNode option in node.ChildNodes)
                             {
+                                string opValue = option.InnerText.ToLower();
                                 if (option.Attributes["value"] != null)
                                 {
-                                    string opValue = option.Attributes["value"].Value.Split(',')[0].ToLower();
-                                    if (opValue == lowerValue || opValue == (lowerValue == "true" ? "1" : (lowerValue == "false" ? "0" : lowerValue)))
-                                    {
-                                        SetAttrValue(option, "selected", "selected");
-                                        break;
-                                    }
-
+                                    opValue = option.Attributes["value"].Value.Split(',')[0].ToLower();
                                 }
+                                if (opValue == lowerValue || opValue == (lowerValue == "true" ? "1" : (lowerValue == "false" ? "0" : lowerValue)))
+                                {
+                                    SetAttrValue(option, "selected", "selected");
+                                    break;
+                                }
+
+
                             }
                         }
                         break;
