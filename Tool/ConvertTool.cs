@@ -27,6 +27,10 @@ namespace CYQ.Data.Tool
             {
                 return null;
             }
+            if (t.FullName == "System.Object")
+            {
+                return value;
+            }
             if (t.FullName == "System.Type")
             {
                 return (Type)value;
