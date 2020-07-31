@@ -823,3 +823,5 @@
 606：MDataRow，MAction 开放Sets方法（连续设置值）(2020-07-24)
 607：DB2：补上分页语句。(2020-07-29)
 608：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)
+------------------------------------------------------------------------
+609：NetCore：调整HttpPostedFile以支持Taurus.MVC自动化API测试(2020-07-31)【V5.8.3.6】
