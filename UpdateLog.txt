@@ -825,3 +825,4 @@
 608：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)
 ------------------------------------------------------------------------
 609：NetCore：调整HttpPostedFile以支持Taurus.MVC自动化API测试(2020-07-31)【V5.8.3.6】
+610：Jsonhelper：增加重载方法(2020-08-04)
