@@ -9,7 +9,7 @@ using CYQ.Data.SQL;
 using System.IO;
 using System.Reflection;
 using CYQ.Data.Xml;
-
+using System.Linq;
 
 namespace CYQ.Data.Tool
 {
@@ -509,7 +509,32 @@ namespace CYQ.Data.Tool
         }
         public static string OutResult(bool result, object msgObj)
         {
-            return OutResult(result, ToJson(msgObj), true);
+            return OutResult(result, msgObj, null, null);
+        }
+        public static string OutResult(bool result, object msgObj, string name, object value, params object[] nameValues)
+        {
+
+            //JsonHelper js = new JsonHelper(false, false);
+            //js.Add("success", result.ToString().ToLower(), true);
+            //if (msgObj is string)
+            //{
+            //    js.Add("msg", Convert.ToString(msgObj));
+            //}
+            //else
+            //{
+            //    js.Add("msg", ToJson(msgObj), true);
+            //}
+            object[] nvs = new object[nameValues.Length+4];
+            nvs[0] = "msg";
+            nvs[1] = msgObj;
+            nvs[2] = name;
+            nvs[3] = value;
+            if (nameValues.Length > 0) 
+            {
+                nameValues.CopyTo(nvs, 4);
+            }
+            return OutResult("success", result, nvs);
+           
         }
         public static string OutResult(string name, object value, params object[] nameValues)
         {
@@ -1196,7 +1221,7 @@ namespace CYQ.Data.Tool
 
 
                             bool isKeyValue = table.Columns.Count == 2 && table.Columns[1].ColumnName == "Value" && (table.Columns[0].ColumnName == "Key" || table.Columns[0].ColumnName == "Name");
-                           
+
                             if (isKeyValue)
                             {
                                 foreach (KeyValuePair<string, string> item in keyValueDic)
