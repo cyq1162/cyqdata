@@ -54,7 +54,9 @@ namespace System.Web
 
         public void CopyTo(Stream target)
         {
-            throw new NotImplementedException();
+            Stream stream = OpenReadStream();
+            stream.CopyTo(target);
+            stream.Close();
         }
 
         public Task CopyToAsync(Stream target, CancellationToken cancellationToken = default)
