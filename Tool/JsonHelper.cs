@@ -524,17 +524,21 @@ namespace CYQ.Data.Tool
             //{
             //    js.Add("msg", ToJson(msgObj), true);
             //}
-            object[] nvs = new object[nameValues.Length+4];
+            int num = name == null ? 2 : 4;
+            object[] nvs = new object[nameValues.Length + num];
             nvs[0] = "msg";
             nvs[1] = msgObj;
-            nvs[2] = name;
-            nvs[3] = value;
-            if (nameValues.Length > 0) 
+            if (num == 4)
             {
-                nameValues.CopyTo(nvs, 4);
+                nvs[2] = name;
+                nvs[3] = value;
+            }
+            if (nameValues.Length > 0)
+            {
+                nameValues.CopyTo(nvs, num);
             }
             return OutResult("success", result, nvs);
-           
+
         }
         public static string OutResult(string name, object value, params object[] nameValues)
         {
