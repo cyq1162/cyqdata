@@ -63,6 +63,10 @@ namespace CYQ.Data
                 {
                     empty = 0;
                     SysLogs sys = _LogQueue.Dequeue();
+                    if(sys==null)
+                    {
+                        continue;
+                    }
                     if (!sys.IsWriteToTxt)
                     {
                         if (sys.Insert(InsertOp.None)) //直接写数据库。
