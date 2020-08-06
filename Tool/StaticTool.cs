@@ -75,13 +75,13 @@ namespace CYQ.Data.Tool
                 {
                     id = HttpContext.Current.Request.Headers["Token"];
                 }
-                else if (HttpContext.Current.Request["MasterSlaveid"] != null)
+                else if (HttpContext.Current.Request["MasterSlaveID"] != null)
                 {
-                    id = HttpContext.Current.Request["MasterSlaveid"];
+                    id = HttpContext.Current.Request["MasterSlaveID"];
                 }
                 if (string.IsNullOrEmpty(id))
                 {
-                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveid"];
+                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveID"];
                     if (cookie != null)
                     {
                         id = cookie.Value;
@@ -89,7 +89,7 @@ namespace CYQ.Data.Tool
                     else
                     {
                         id = Guid.NewGuid().ToString().Replace("-", "");
-                        cookie = new HttpCookie("MasterSlaveid", id);
+                        cookie = new HttpCookie("MasterSlaveID", id);
                         cookie.Expires = DateTime.Now.AddMonths(1);
                         HttpContext.Current.Response.Cookies.Add(cookie);
                     }
