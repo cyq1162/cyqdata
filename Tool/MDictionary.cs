@@ -44,7 +44,10 @@ namespace CYQ.Data.Tool
             {
                 lock (lockObj)
                 {
-                    base.Add(key, value);
+                    if (!ContainsKey(key))
+                    {
+                        base.Add(key, value);
+                    }
                 }
             }
             catch (Exception err)
@@ -74,9 +77,9 @@ namespace CYQ.Data.Tool
         {
             try
             {
-                if (ContainsKey(key))
+                lock (lockObj)
                 {
-                    lock (lockObj)
+                    if (ContainsKey(key))
                     {
                         return base.Remove(key);
                     }
@@ -234,10 +237,7 @@ namespace CYQ.Data.Tool
         public new bool ContainsKey(K key)
         {
             if (key == null) { return false; }
-            lock (lockObj)
-            {
-                return base.ContainsKey(key);
-            }
+            return base.ContainsKey(key);
         }
     }
 

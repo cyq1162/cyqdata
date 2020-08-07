@@ -89,16 +89,34 @@ namespace CYQ.Data.Tool
         }
         public void Add(T key)
         {
-            list.Add(key);
-            dic.Add(key, 0);
+            try
+            {
+                list.Add(key);
+                dic.Add(key, 0);
+            }
+            catch (Exception err)
+            {
+                Log.Write(err);
+                throw;
+            }
+
         }
         internal void Insert(int index, T key)
         {
-            list.Insert(index, key);
-            if (!dic.ContainsKey(key))
+            try
             {
-                dic.Add(key, 0);
+                list.Insert(index, key);
+                if (!dic.ContainsKey(key))
+                {
+                    dic.Add(key, 0);
+                }
             }
+            catch (Exception err)
+            {
+                Log.Write(err);
+                throw;
+            }
+
         }
         public bool Contains(T key)
         {
@@ -106,14 +124,31 @@ namespace CYQ.Data.Tool
         }
         public void Remove(T key)
         {
-            list.Remove(key);
-            dic.Remove(key);
+            try
+            {
+                list.Remove(key);
+                dic.Remove(key);
+            }
+            catch (Exception err)
+            {
+                Log.Write(err);
+                throw;
+            }
+
         }
         public void RemoveAt(int index)
         {
-            T key = list[index];
-            dic.Remove(key);
-            list.RemoveAt(index);
+            try
+            {
+                T key = list[index];
+                dic.Remove(key);
+                list.RemoveAt(index);
+            }
+            catch (Exception err)
+            {
+                Log.Write(err);
+                throw;
+            }
         }
         public void Clear()
         {
