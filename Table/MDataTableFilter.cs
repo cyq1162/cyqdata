@@ -208,7 +208,7 @@ namespace CYQ.Data.Table
                 if (filters.Count > 0)
                 {
 
-                    rows = table.Rows.FindAll(delegate(MDataRow row)
+                    rows = table.Rows.FindAll(delegate (MDataRow row)
                      {
                          return CompareMore(row, filters) && (group2.Count == 0 || CompareMore(row, group2));
                      }
@@ -668,11 +668,11 @@ namespace CYQ.Data.Table
                                     case Op.NotEqual:
                                         moreResult = a != b;
                                         break;
-                                    //case Op.In:
+                                        //case Op.In:
 
-                                    //    break;
-                                    //case Op.NotIn:
-                                    //    break;
+                                        //    break;
+                                        //case Op.NotIn:
+                                        //    break;
                                 }
                                 #endregion
                             }
@@ -837,9 +837,9 @@ namespace CYQ.Data.Table
                 for (int i = 0; i < table.Columns.Count; i++)
                 {
                     contain = false;
-                    foreach (string columnName in selectColumns)
+                    foreach (object columnName in selectColumns)
                     {
-                        string[] items = columnName.Split(' ');//a as b
+                        string[] items = Convert.ToString(columnName).Split(' ');//a as b
                         if (string.Compare(table.Columns[i].ColumnName, items[0], true) == 0)
                         {
                             contain = true;
