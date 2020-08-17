@@ -23,7 +23,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static object ChangeType(object value, Type t)
         {
-            if (t == null)
+            if (value == null || t == null)
             {
                 return null;
             }
