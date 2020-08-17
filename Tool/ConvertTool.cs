@@ -132,7 +132,7 @@ namespace CYQ.Data.Tool
                             break;
                     }
 
-                    if (t.Name.StartsWith("Int"))
+                    if (t.Name.StartsWith("Int") || t.Name=="Byte")
                     {
                         if (strValue.IndexOf('.') > -1)//11.22
                         {
