@@ -99,7 +99,8 @@ namespace CYQ.Data.SQL
             StringBuilder _TempSql = new StringBuilder();
             StringBuilder _TempSql2 = new StringBuilder();
             _TempSql.Append("insert into " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + "(");
-            _TempSql2.Append(") Values(");
+            _TempSql2.Append(" Values(");
+            string endChar = ")";
             MDataCell primaryCell = _action.Data[_action.Data.Columns.FirstPrimary.ColumnName];
             int groupID = DataType.GetGroup(primaryCell.Struct.SqlType);
             string defaultValue = Convert.ToString(primaryCell.Struct.DefaultValue);
@@ -162,9 +163,15 @@ namespace CYQ.Data.SQL
                         _TempSql2.Append(AutoID + ".nextval,");
                     }
                     break;
+                case DataBaseType.PostgreSQL:
+                    if(_action.AllowInsertID && primaryCell.Struct.IsAutoIncrement && !primaryCell.IsNullOrEmpty)
+                    {
+                        endChar = ") OVERRIDING SYSTEM  VALUE ";
+                    }
+                    break;
             }
 
-            string sql = _TempSql.ToString().TrimEnd(',') + _TempSql2.ToString().TrimEnd(',') + ")";
+            string sql = _TempSql.ToString().TrimEnd(',') + endChar + _TempSql2.ToString().TrimEnd(',') + ")";
             switch (_action.dalHelper.DataBaseType)
             {
                 case DataBaseType.PostgreSQL:
