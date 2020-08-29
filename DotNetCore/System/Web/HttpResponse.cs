@@ -224,7 +224,7 @@ namespace System.Web
         }
         public void WriteFile(string fileName)
         {
-            if (!isEnd)
+            if (!IsEnd)
             {
                 BinaryWrite(File.ReadAllBytes(fileName));
             }
