@@ -125,7 +125,7 @@ namespace System.Web
         public void BinaryWrite(byte[] data)
         {
             // response.Body = new MemoryStream(data);
-            if (!isEnd)
+            if (!isEnd || !response.HasStarted)
             {
                 response.Body.WriteAsync(data, 0, data.Length);
             }
@@ -210,13 +210,12 @@ namespace System.Web
         }
         public void Write(string text)
         {
-            if (!isEnd)
+            if (!isEnd || !response.HasStarted)
             {
                 //try
                 //{
                     //System.Diagnostics.Debug.WriteLine(System.Threading.Thread.CurrentThread.ManagedThreadId + ":" + context.TraceIdentifier);
                     response.WriteAsync(text);
-
                 //}
                 //catch (Exception err)
                 //{
