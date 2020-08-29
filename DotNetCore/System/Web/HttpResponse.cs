@@ -7,9 +7,11 @@ using System.Collections.Specialized;
 using Microsoft.AspNetCore.Http;
 namespace System.Web
 {
+    /// <summary>
+    /// 输出对象（单例存在，不该有自己的属性）
+    /// </summary>
     public class HttpResponse
     {
-        bool isEnd = false;
         Microsoft.AspNetCore.Http.HttpContext context
         {
             get
@@ -27,10 +29,15 @@ namespace System.Web
         #region 兼容Web
         public void End()
         {
-            isEnd = true;
-            //context.Abort();
+            context.TraceIdentifier = "IsEnd:" + context.TraceIdentifier;
         }
-
+        private bool IsEnd
+        {
+            get
+            {
+                return context.TraceIdentifier.StartsWith("IsEnd:");
+            }
+        }
         public string Charset
         {
             get
@@ -125,7 +132,7 @@ namespace System.Web
         public void BinaryWrite(byte[] data)
         {
             // response.Body = new MemoryStream(data);
-            if (!isEnd || !response.HasStarted)
+            if (!IsEnd)
             {
                 response.Body.WriteAsync(data, 0, data.Length);
             }
@@ -210,17 +217,9 @@ namespace System.Web
         }
         public void Write(string text)
         {
-            if (!isEnd || !response.HasStarted)
+            if (!IsEnd)
             {
-                //try
-                //{
-                    //System.Diagnostics.Debug.WriteLine(System.Threading.Thread.CurrentThread.ManagedThreadId + ":" + context.TraceIdentifier);
-                    response.WriteAsync(text);
-                //}
-                //catch (Exception err)
-                //{
-
-                //}
+               response.WriteAsync(text);
             }
         }
         public void WriteFile(string fileName)

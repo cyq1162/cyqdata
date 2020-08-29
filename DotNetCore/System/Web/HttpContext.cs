@@ -34,8 +34,8 @@ namespace System.Web
             NetCoreContext.Abort();
         }
 
-        //private static HttpContext _Current = new HttpContext();
-        // public static readonly object o = new object();
+        private static HttpContext _Current;
+       // public static readonly object o = new object();
         public static HttpContext Current
         {
             get
@@ -45,17 +45,24 @@ namespace System.Web
                 {
                     return null;
                 }
-                string key = contextAccessor.HttpContext.TraceIdentifier;
-                if (CacheManage.LocalInstance.Contains(key))
+                if (_Current == null)
                 {
-                    return (HttpContext)CacheManage.LocalInstance.Get(key);
+                    _Current = new HttpContext();
                 }
-                else
+                return _Current;
+
+                HttpContext context = null;
+                string key = Thread.CurrentThread.ManagedThreadId + contextAccessor.HttpContext.TraceIdentifier+DateTime.Now.Second;
+                //if (CacheManage.LocalInstance.Contains(key))
+                //{
+                //    context=(HttpContext)CacheManage.LocalInstance.Get(key);
+                //}
+                if(context==null)
                 {
-                    HttpContext context = new HttpContext();
-                    CacheManage.LocalInstance.Set(key, context, 0.1);
-                    return context;
+                    context = new HttpContext();
+                   // CacheManage.LocalInstance.Set(key, context, 0.05);
                 }
+                return context;
                 // return _Current;
                 // return new HttpContext();
                 //lock (o)
