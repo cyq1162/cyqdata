@@ -173,7 +173,7 @@ namespace CYQ.Data.SQL
                                         tableName = SqlFormat.NotKeyword(tableName).ToUpper();
                                         sql = GetDB2Columns();
                                     }
-                                        helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
+                                    helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                                     DbDataReader sdr = helper.ExeDataReader(sql, false);
                                     if (sdr != null)
                                     {
@@ -360,7 +360,7 @@ namespace CYQ.Data.SQL
                     #endregion
                 }
             }
-            if (mdcs.Count > 0)
+            if (mdcs != null && mdcs.Count > 0)
             {
                 //移除被标志的列：
                 string[] fields = AppConfig.DB.HiddenFields.Split(',');
@@ -372,24 +372,25 @@ namespace CYQ.Data.SQL
                         mdcs.Remove(field);
                     }
                 }
-            }
-            #region 缓存设置
+                #region 缓存设置
 
-            if (!_ColumnCache.ContainsKey(key) && mdcs.Count > 0)
-            {
-                _ColumnCache.Add(key, mdcs.Clone());
-                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                if (!_ColumnCache.ContainsKey(key) && mdcs.Count > 0)
                 {
-                    string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
-
-                    if (!System.IO.Directory.Exists(folderPath))
+                    _ColumnCache.Add(key, mdcs.Clone());
+                    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                     {
-                        System.IO.Directory.CreateDirectory(folderPath);
+                        string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+
+                        if (!System.IO.Directory.Exists(folderPath))
+                        {
+                            System.IO.Directory.CreateDirectory(folderPath);
+                        }
+                        mdcs.WriteSchema(folderPath + key + ".ts");
                     }
-                    mdcs.WriteSchema(folderPath + key + ".ts");
                 }
+                #endregion
             }
-            #endregion
+
             return mdcs;
         }
 
@@ -994,5 +995,5 @@ order by a.colno
         }
         #endregion
     }
-   
+
 }
