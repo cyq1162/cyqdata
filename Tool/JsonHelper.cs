@@ -9,7 +9,6 @@ using CYQ.Data.SQL;
 using System.IO;
 using System.Reflection;
 using CYQ.Data.Xml;
-using System.Linq;
 
 namespace CYQ.Data.Tool
 {
