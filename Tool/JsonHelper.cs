@@ -1394,7 +1394,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>(false);
+            return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json

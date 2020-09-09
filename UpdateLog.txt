@@ -829,3 +829,4 @@
 611：Log：winform 下的日志路径允许设置绝路路径。(2020-08-24)
 612：Postgre：修正插入主键的问题(2020-08-26)
 612：NetCore：修正Aries 因 调用 Response.End 引发的问题。(2020-08-29)
+613：MDataTable：ToEntity<T>优化FastToT<T>：Emit的实体转换方法（原来仅支持简单类型，现在支持复杂类型）。(2020-09-09)
