@@ -36,7 +36,7 @@ namespace CYQ.Data.SQL
                     if (!_DBScheams.ContainsKey(hash))
                     {
                         DBInfo dbSchema = GetSchemaDic(cb.ConnName);
-                        if (dbSchema != null)
+                        if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
                         {
                             _DBScheams.Add(hash, dbSchema);
                         }
@@ -66,11 +66,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in tables)
                     {
-                       int hash=TableInfo.GetHashCode(item.Key);
-                       if (!dic.ContainsKey(hash))
-                       {
-                           dic.Add(hash, new TableInfo(item.Key, "U", item.Value, info));
-                       }
+                        int hash = TableInfo.GetHashCode(item.Key);
+                        if (!dic.ContainsKey(hash))
+                        {
+                            dic.Add(hash, new TableInfo(item.Key, "U", item.Value, info));
+                        }
                     }
                     info.Tables = dic;
                 }
@@ -81,11 +81,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in views)
                     {
-                         int hash=TableInfo.GetHashCode(item.Key);
-                         if (!dic.ContainsKey(hash))
-                         {
-                             dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
-                         }
+                        int hash = TableInfo.GetHashCode(item.Key);
+                        if (!dic.ContainsKey(hash))
+                        {
+                            dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
+                        }
                     }
                     info.Views = dic;
                 }
@@ -95,11 +95,11 @@ namespace CYQ.Data.SQL
                     Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
                     foreach (KeyValuePair<string, string> item in procs)
                     {
-                         int hash=TableInfo.GetHashCode(item.Key);
-                         if (!dic.ContainsKey(hash))
-                         {
-                             dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
-                         }
+                        int hash = TableInfo.GetHashCode(item.Key);
+                        if (!dic.ContainsKey(hash))
+                        {
+                            dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
+                        }
                     }
                     info.Procs = dic;
                 }
