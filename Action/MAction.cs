@@ -1212,7 +1212,7 @@ namespace CYQ.Data
             }
             else
             {
-                string msg = "MAction Set : can't find the ColumnName:" + key;
+                string msg = "MAction Set : can't find the ColumnName:" + startKey;
                 Log.Write(msg, LogType.DataBase.ToString());
                // dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
             }
