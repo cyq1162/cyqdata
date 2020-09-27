@@ -1192,7 +1192,9 @@ namespace CYQ.Data
             }
             else
             {
-                dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + key);
+                string msg = "MAction Set : can't find the ColumnName:" + key;
+                Log.Write(msg, LogType.DataBase.ToString());
+                //dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + key);
             }
             return this;
         }
@@ -1210,7 +1212,9 @@ namespace CYQ.Data
             }
             else
             {
-                dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
+                string msg = "MAction Set : can't find the ColumnName:" + key;
+                Log.Write(msg, LogType.DataBase.ToString());
+               // dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
             }
             return this;
         }
