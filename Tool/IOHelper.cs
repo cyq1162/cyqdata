@@ -205,7 +205,7 @@ namespace CYQ.Data.Tool
                             if (!isAppend && fileName.EndsWith(".txt"))
                             {
                                 //写入bom头
-                                
+
                             }
                             writer.Write(text);
 
@@ -305,6 +305,30 @@ namespace CYQ.Data.Tool
 
         }
 
+    }
+
+    public static partial class IOHelper
+    {
+        /// <summary>
+        /// 检测并返回文件编码。
+        /// </summary>
+        /// <param name="fileName">文件路径。</param>
+        /// <returns></returns>
+        public static Encoding DetectEncode(string fileName)
+        {
+            TextEncodingDetect detect = new TextEncodingDetect();
+            return detect.GetEncoding(File.ReadAllBytes(fileName));
+        }
+        /// <summary>
+        /// 检测并返回文件编码。
+        /// </summary>
+        /// <param name="bytes">检测字节</param>
+        /// <returns></returns>
+        public static Encoding DetectEncode(byte[] bytes)
+        {
+            TextEncodingDetect detect = new TextEncodingDetect();
+            return detect.GetEncoding(bytes);
+        }
     }
     internal class IOInfo : FileSystemInfo
     {
