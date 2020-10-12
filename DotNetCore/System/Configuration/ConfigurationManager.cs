@@ -28,7 +28,8 @@ namespace System.Configuration
         static ConfigurationManager()
         {
             AppConfig.IsAspNetCore = true;
-            ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
+            RegGB2312(null);
+            //ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
             string filePath = AppConfig.RunPath + "appsettings.json";
             ReInitConfig(filePath);
             IOWatch.On(filePath, delegate (FileSystemEventArgs e)
