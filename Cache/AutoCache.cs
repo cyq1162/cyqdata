@@ -663,7 +663,7 @@ namespace CYQ.Data.Cache
                     break;
             }
 
-            return StaticTool.GetHashKey(sb.ToString());
+            return StaticTool.GetHashKey(sb.ToString().ToLower());
         }
         private static List<string> GetRelationTables(AopInfo para)
         {
