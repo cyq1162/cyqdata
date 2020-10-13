@@ -65,7 +65,7 @@ namespace CYQ.Data.Tool
             foreach (FieldInfo field in fileds)
             {
                 string fieldName = field.Name;
-                if(fieldName[0]=='<')
+                if(fieldName[0]=='<')//<ID>k__BackingField
                 {
                     fieldName=fieldName.Substring(1,fieldName.IndexOf('>')-1);
                 }
