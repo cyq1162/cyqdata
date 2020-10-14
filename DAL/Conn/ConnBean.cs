@@ -141,7 +141,7 @@ namespace CYQ.Data
                 return null;
             }
             //¼ì²â»º´æÖÐÓÐÄ¾ÓÐ
-            int hash = connNameOrString.GetHashCode();
+            int hash = connString.GetHashCode();
             lock (o)
             {
                 if (connBeanDicCache.ContainsKey(hash))
