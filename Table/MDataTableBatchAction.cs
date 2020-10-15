@@ -453,7 +453,7 @@ namespace CYQ.Data.Table
 
 
         #region 批量插入
-        internal bool MsSqlBulkCopyInsert(bool keepid)
+        internal bool MsSqlBulkCopyInsert(bool keepID)
         {
             SqlTransaction sqlTran = null;
             SqlConnection con = null;
@@ -497,7 +497,7 @@ namespace CYQ.Data.Table
                 }
                 if (isGoOn)
                 {
-                    using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepid ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
+                    using (SqlBulkCopy sbc = new SqlBulkCopy(con, (keepID ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default) | SqlBulkCopyOptions.FireTriggers, sqlTran))
                     {
                         sbc.BatchSize = 100000;
                         sbc.DestinationTableName = SqlFormat.Keyword(mdt.TableName, DataBaseType.MsSql);
