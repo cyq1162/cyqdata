@@ -601,7 +601,14 @@ namespace CYQ.Data.Table
             {
                 if (item._Op == Op.None || item._columnAIndex == -1)
                 {
-                    moreResult = true;//如果条件的列不属于当前表，直接忽略该条件
+                    if (item._columnBIndex == -1)
+                    {
+                        moreResult = Convert.ToString(item._valueA) == Convert.ToString(item._valueB);
+                    }
+                    else
+                    {
+                        moreResult = true;//如果条件的列不属于当前表，直接忽略该条件
+                    }
                 }
                 else
                 {

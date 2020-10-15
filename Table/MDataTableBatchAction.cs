@@ -300,7 +300,7 @@ namespace CYQ.Data.Table
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
 
-                if ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1))
+                if (mdt.Rows.Count > 10 && ((jointPrimaryIndex != null && jointPrimaryIndex.Count == 1) || (jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1)))
                 //jointPrimaryIndex == null && mdt.Columns.JointPrimary.Count == 1 && mdt.Rows.Count <= 10000
                 //&& (!action.DalVersion.StartsWith("08") || mdt.Rows.Count < 1001)) //只有一个主键-》组合成In远程查询返回数据-》
                 {

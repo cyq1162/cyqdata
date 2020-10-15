@@ -832,3 +832,5 @@
 613：MDataTable：ToEntity<T>优化FastToT<T>：Emit的实体转换方法（原来仅支持简单类型，现在支持复杂类型）。(2020-09-09)
 614：IOHelper：开放：DetectEncode(...) 检测编码功能。(2020-10-12)
 615：NetCore：修正Aries 读取appsetting.json 编码问题(2020-10-12)
+616：DBTool：GetColumn 获取视图时增加字段描述(2020-10-13)
+617：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
