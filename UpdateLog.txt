@@ -834,3 +834,4 @@
 615：NetCore：修正Aries 读取appsetting.json 编码问题(2020-10-12)
 616：DBTool：GetColumn 获取视图时增加字段描述(2020-10-13)
 617：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
+618：SqlInjection：加强sql未参数化使用时的注入处理。(2020-10-16)
