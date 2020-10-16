@@ -55,7 +55,7 @@ namespace CYQ.Data.SQL
                     //多个%20组合
                     Log.Write("SqlInjection error:" + text, LogType.Warn);
                     Error.Throw("SqlInjection error:" + text);
-                    
+
                 }
             }
             else
@@ -75,11 +75,11 @@ namespace CYQ.Data.SQL
                         break;
                 }
             }
-           
+
             if (FilterKeyList.Count > 0)
             {
                 string lowerText = text.ToLower();
-                items = lowerText.Split(' ', '(', ')');
+                items = lowerText.Split(' ', '(', ')', '/', ';', '=', '-', '\'', '|', '!', '%', '^');
 
                 int keyIndex = -1;
                 bool isOK = false;
@@ -103,8 +103,11 @@ namespace CYQ.Data.SQL
                     {
                         foreach (string item in items) // 用户传进来的每一个单独的词
                         {
-                            string tempKey = item.Trim('\'', '|', '!', '%', '^');
-                            if (tempKey.IndexOf(filterKey) > -1 && tempKey.Length > filterKey.Length)
+                            if (string.IsNullOrEmpty(item))
+                            {
+                                continue;
+                            }
+                            if (item.IndexOf(filterKey) > -1 && item.Length > filterKey.Length)
                             {
                                 isOK = true;
                                 break;
