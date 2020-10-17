@@ -407,7 +407,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static bool IsJson(string json)
         {
-            return JsonSplit.IsJson(json);
+            return JsonSplit.IsJson(json, true);
         }
 
 
@@ -415,7 +415,7 @@ namespace CYQ.Data.Tool
         /// <para>错误的字符索引</para></param>
         public static bool IsJson(string json, out int errIndex)
         {
-            return JsonSplit.IsJson(json, out errIndex);
+            return JsonSplit.IsJson(json, true, out errIndex);
         }
         public static string GetValue(string json, string key)
         {

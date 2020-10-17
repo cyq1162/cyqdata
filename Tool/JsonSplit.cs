@@ -12,10 +12,14 @@ namespace CYQ.Data.Tool
     {
         internal static bool IsJson(string json)
         {
-            int errIndex;
-            return IsJson(json, out errIndex);
+            return IsJson(json, false);
         }
-        internal static bool IsJson(string json, out int errIndex)
+        internal static bool IsJson(string json, bool isStrictMode)
+        {
+            int errIndex;
+            return IsJson(json, isStrictMode, out errIndex);
+        }
+        internal static bool IsJson(string json, bool isStrictMode, out int errIndex)
         {
             errIndex = 0;
 
@@ -24,7 +28,7 @@ namespace CYQ.Data.Tool
             {
                 return false;
             }
-            CharState cs = new CharState();
+            CharState cs = new CharState(isStrictMode);
             char c;
             for (int i = 0; i < json.Length; i++)
             {
@@ -33,7 +37,7 @@ namespace CYQ.Data.Tool
                 {
                     string item = json.Substring(i);
                     int err;
-                    int length = GetValueLength(item, true, out err);
+                    int length = GetValueLength(isStrictMode, item, true, out err);
                     cs.childrenStart = false;
                     if (err > 0)
                     {
@@ -67,7 +71,7 @@ namespace CYQ.Data.Tool
                 Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 string key = string.Empty;
                 StringBuilder value = new StringBuilder();
-                CharState cs = new CharState();
+                CharState cs = new CharState(false);
                 try
                 {
                     #region 核心逻辑
@@ -98,7 +102,7 @@ namespace CYQ.Data.Tool
                         {
                             string item = json.Substring(i);
                             int temp;
-                            int length = GetValueLength(item, false, out temp);
+                            int length = GetValueLength(false, item, false, out temp);
                             //value = item.Substring(0, length);
                             value.Length = 0;
                             value.Append(item.Substring(0, length));
@@ -158,13 +162,13 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取值的长度（当Json值嵌套以"{"或"["开头时）
         /// </summary>
-        private static int GetValueLength(string json, bool breakOnErr, out int errIndex)
+        private static int GetValueLength(bool isStrictMode, string json, bool breakOnErr, out int errIndex)
         {
             errIndex = 0;
             int len = json.Length - 1;
             if (!string.IsNullOrEmpty(json))
             {
-                CharState cs = new CharState();
+                CharState cs = new CharState(isStrictMode);
                 char c;
                 for (int i = 0; i < json.Length; i++)
                 {
@@ -178,7 +182,7 @@ namespace CYQ.Data.Tool
                     }
                     else if (cs.childrenStart)//正常字符，值状态下。
                     {
-                        int length = GetValueLength(json.Substring(i), breakOnErr, out errIndex);//递归子值，返回一个长度。。。
+                        int length = GetValueLength(isStrictMode, json.Substring(i), breakOnErr, out errIndex);//递归子值，返回一个长度。。。
                         cs.childrenStart = false;
                         cs.valueStart = 0;
                         //cs.state = 0;
@@ -203,6 +207,14 @@ namespace CYQ.Data.Tool
         /// </summary>
         private class CharState
         {
+            /// <summary>
+            /// 是否格式格式【true属性必须双引号，false属性可以单引号和无引号。】
+            /// </summary>
+            internal bool isStrictMode = false;
+            public CharState(bool isStrictMode)
+            {
+                this.isStrictMode = isStrictMode;
+            }
             internal bool jsonStart = false;//以 "{"开始了...
             internal bool setDicValue = false;// 可以设置字典值了。
             internal bool escapeChar = false;//以"\"转义符号开始了
@@ -236,6 +248,10 @@ namespace CYQ.Data.Tool
                         break;
                     case '}':
                         isError = !jsonStart || (keyStart > 0 && state == 0);//重复结束错误 或者 提前结束。
+                        if (!isError && isStrictMode)
+                        {
+                            isError = !((keyStart == 3 && state == 0) || (valueStart != 2  && state == 1) || valueStart == -2 || (jsonStart && keyStart==-1));
+                        }
                         break;
                     case '[':
                         isError = arrayStart && state == 0;//重复开始错误
@@ -247,7 +263,11 @@ namespace CYQ.Data.Tool
                         isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
                         break;
                     case '\'':
-                        isError = !jsonStart && !arrayStart;//未开始Json
+                        isError = (!jsonStart && !arrayStart);//未开始Json
+                        if (!isError && isStrictMode)
+                        {
+                            isError = !((keyStart == 3 && state == 0) || (valueStart == 3 && state == 1));
+                        }
                         break;
                     case ':':
                         isError = (!jsonStart && !arrayStart) || (jsonStart && keyStart < 2 && valueStart < 2 && state == 1);//未开始Json 同时 只能处理在取值之前。
@@ -261,16 +281,16 @@ namespace CYQ.Data.Tool
                         isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && state == 0);//
                         if (!isError && keyStart < 2)
                         {
-                            if ((jsonStart && !arrayStart) && state != 1)
+                            //if ((jsonStart && !arrayStart) && state != 1)
+                            if (jsonStart  && state != 1)
                             {
                                 //不是引号开头的，只允许字母 {aaa:1}
-                                isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                                isError = isStrictMode || (c < 65 || (c > 90 && c < 97) || c > 122);
                             }
                             else if (!jsonStart && arrayStart && valueStart < 2)//
                             {
                                 //不是引号开头的，只允许数字[1]
                                 isError = c < 48 || c > 57;
-
                             }
                         }
                         break;
@@ -357,6 +377,10 @@ namespace CYQ.Data.Tool
                 case '"':
                 case '\'':
                     cs.CheckIsError(c);
+                    if (cs.isStrictMode && c == '\'')
+                    {
+                        break;
+                    }
                     #region 引号
                     if (cs.jsonStart || cs.arrayStart)
                     {
