@@ -1185,6 +1185,11 @@ namespace CYQ.Data.Table
         {
             if (dic != null)
             {
+                if (dic is MDataRow)
+                {
+                    LoadFrom(dic as MDataRow, RowOp.None, true);
+                    return;
+                }
                 bool isNameValue = dic is NameValueCollection;
                 bool isAddColumn = Columns.Count == 0;
                 SqlDbType sdt = SqlDbType.NVarChar;
