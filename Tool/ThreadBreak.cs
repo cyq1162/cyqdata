@@ -131,7 +131,7 @@ namespace CYQ.Data.Tool
             }
         }
         */
-        private static List<ParameterizedThreadStart> globalThread = new List<ParameterizedThreadStart>();
+        private static List<string> globalThread = new List<string>();
         private static readonly object lockThreadObj = new object();
         /// <summary>
         /// 添加全局线程[通常该线程是个死循环，定时处理事情]
@@ -147,15 +147,16 @@ namespace CYQ.Data.Tool
                 //ClearSchema();// 表结构外置（解决第一次加载的问题，后续表结构都缓存在内存中）！因此不能清空~
                 ClearThreadBreak(string.Empty);
             }
-            if (!globalThread.Contains(start))
+            string key = Convert.ToString(start.Target) + start.Method.ToString();
+            if (!globalThread.Contains(key))
             {
                 lock (lockThreadObj)
                 {
                     try
                     {
-                        if (!globalThread.Contains(start))
+                        if (!globalThread.Contains(key))
                         {
-                            globalThread.Add(start);
+                            globalThread.Add(key);
                             Thread thread = new Thread(start);
                             thread.IsBackground = true;
                             thread.Start(para ?? thread.ManagedThreadId);

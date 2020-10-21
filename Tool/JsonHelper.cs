@@ -327,7 +327,8 @@ namespace CYQ.Data.Tool
                     sb.Append("[");
                 }
                 char left = '{', right = '}';
-                if (jsonItems[0] != brFlag && !jsonItems[0].Contains(":"))
+                string[] items = jsonItems[0].Split(':');
+                if (jsonItems[0] != brFlag && (items.Length == 1 || !jsonItems[0].Trim('"').Contains("\"")))
                 {
                     //说明为数组
                     left = '[';
