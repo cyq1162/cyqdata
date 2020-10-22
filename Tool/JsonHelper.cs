@@ -576,7 +576,7 @@ namespace CYQ.Data.Tool
                     return result[0];
                 }
             }
-            return null;
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
         //public static List<Dictionary<string, string>> SplitArray(string jsonArray)
         //{
@@ -1029,7 +1029,7 @@ namespace CYQ.Data.Tool
                             else if (o is String || o is DateTime || o is Enum || o is Guid)
                             {
                                 string str = o.ToString();
-                                if (str.Length>0 && (str[0] == '{' || str[0] == '[') && JsonSplit.IsJson(str))
+                                if (str.Length > 0 && (str[0] == '{' || str[0] == '[') && JsonSplit.IsJson(str))
                                 {
                                     Fill(MDataRow.CreateFrom(o));
                                 }
