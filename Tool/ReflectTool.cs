@@ -135,11 +135,23 @@ namespace CYQ.Data.Tool
                     }
                     else
                     {
-                        System.Reflection.MethodInfo mi = t.GetMethod("Add");
-                        if (mi != null)
+                        System.Reflection.MethodInfo[] mis = t.GetMethods();
+                        if (mis != null)
                         {
-                            len = mi.GetParameters().Length;
+                            foreach (System.Reflection.MethodInfo mi in mis)
+                            {
+                                if (mi.Name == "Add")
+                                {
+                                    len = mi.GetParameters().Length;
+                                    break;
+                                }
+                            }
                         }
+                        //System.Reflection.MethodInfo mi = t.GetMethod("Add");
+                        //if (mi != null)
+                        //{
+                        //    len = mi.GetParameters().Length;
+                        //}
                     }
                     argTypes = new Type[len];
                     for (int i = 0; i < argTypes.Length; i++)
