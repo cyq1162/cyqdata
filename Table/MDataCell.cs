@@ -255,7 +255,7 @@ namespace CYQ.Data.Table
                         //}
                         //else
                         //{
-                            
+
                         //}
                         break;
                 }
@@ -406,7 +406,7 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public override string ToString()
         {
-            return StringValue ?? "";
+            return _CellStruct.SqlType == SqlDbType.Int ? Convert.ToString(Value) : (StringValue ?? "");//int 是处理枚举判断。
         }
         /// <summary>
         /// 是否值相同[已重写该方法]

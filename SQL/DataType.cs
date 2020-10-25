@@ -96,7 +96,7 @@ namespace CYQ.Data.SQL
             string name = type.Name.ToString();
             if (type.IsEnum)
             {
-                name = "string";//int
+                name = "int";//当初为什么要设置为string呢？ "string";//int
             }
             else if (type.IsGenericType)
             {
