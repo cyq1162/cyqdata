@@ -33,7 +33,7 @@ namespace CYQ.Data.Tool
             for (int i = 0; i < json.Length; i++)
             {
                 c = json[i];
-                if (SetCharState(c, ref cs) && cs.childrenStart)//设置关键符号状态。
+                if (cs.IsKeyword(c) && cs.childrenStart)//设置关键符号状态。
                 {
                     string item = json.Substring(i);
                     int err;
@@ -79,7 +79,7 @@ namespace CYQ.Data.Tool
                     for (int i = 0; i < json.Length; i++)
                     {
                         c = json[i];
-                        if (!SetCharState(c, ref cs))//设置关键符号状态。
+                        if (!cs.IsKeyword(c))//设置关键符号状态。
                         {
                             if (cs.jsonStart)//Json进行中。。。
                             {
@@ -173,7 +173,7 @@ namespace CYQ.Data.Tool
                 for (int i = 0; i < json.Length; i++)
                 {
                     c = json[i];
-                    if (!SetCharState(c, ref cs))//设置关键符号状态。
+                    if (!cs.IsKeyword(c))//设置关键符号状态。
                     {
                         if (!cs.jsonStart && !cs.arrayStart)//json结束，又不是数组，则退出。
                         {
@@ -202,302 +202,8 @@ namespace CYQ.Data.Tool
             }
             return len;
         }
-        /// <summary>
-        /// 字符状态
-        /// </summary>
-        private class CharState
-        {
-            /// <summary>
-            /// 是否格式格式【true属性必须双引号，false属性可以单引号和无引号。】
-            /// </summary>
-            internal bool isStrictMode = false;
-            public CharState(bool isStrictMode)
-            {
-                this.isStrictMode = isStrictMode;
-            }
-            internal bool jsonStart = false;//以 "{"开始了...
-            internal bool setDicValue = false;// 可以设置字典值了。
-            internal bool escapeChar = false;//以"\"转义符号开始了
-            /// <summary>
-            /// 数组开始【仅第一开头才算】，值嵌套的以【childrenStart】来标识。
-            /// </summary>
-            internal bool arrayStart = false;//以"[" 符号开始了
-            internal bool childrenStart = false;//子级嵌套开始了。
-            /// <summary>
-            /// 【-1 未初始化】【0 取名称中】；【1 取值中】
-            /// </summary>
-            internal int state = -1;
 
-            /// <summary>
-            /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
-            /// </summary>
-            internal int keyStart = -1;
-            /// <summary>
-            /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
-            /// </summary>
-            internal int valueStart = -1;
 
-            internal bool isError = false;//是否语法错误。
-
-            internal void CheckIsError(char c)//只当成一级处理（因为GetLength会递归到每一个子项处理）
-            {
-                switch (c)
-                {
-                    case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
-                        isError = jsonStart && state == 0;//重复开始错误 同时不是值处理。
-                        break;
-                    case '}':
-                        isError = !jsonStart || (keyStart > 0 && state == 0);//重复结束错误 或者 提前结束。
-                        if (!isError && isStrictMode)
-                        {
-                            isError = !((keyStart == 3 && state == 0) || (valueStart != 2  && state == 1) || valueStart == -2 || (jsonStart && keyStart==-1));
-                        }
-                        break;
-                    case '[':
-                        isError = arrayStart && state == 0;//重复开始错误
-                        break;
-                    case ']':
-                        isError = !arrayStart || (state == 1 && valueStart == 0);//重复开始错误[{},]1,0  正常：[111,222] 1,1 [111,"22"] 1,-2 
-                        break;
-                    case '"':
-                        isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
-                        break;
-                    case '\'':
-                        isError = (!jsonStart && !arrayStart);//未开始Json
-                        if (!isError && isStrictMode)
-                        {
-                            isError = !((keyStart == 3 && state == 0) || (valueStart == 3 && state == 1));
-                        }
-                        break;
-                    case ':':
-                        isError = (!jsonStart && !arrayStart) || (jsonStart && keyStart < 2 && valueStart < 2 && state == 1);//未开始Json 同时 只能处理在取值之前。
-                        break;
-                    case ',':
-                        isError = (!jsonStart && !arrayStart)
-                            || (!jsonStart && arrayStart && state == -1) //[,111]
-                            || (jsonStart && keyStart < 2 && valueStart < 2 && state == 0);//未开始Json 同时 只能处理在取值之后。
-                        break;
-                    default: //值开头。。
-                        isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && state == 0);//
-                        if (!isError && keyStart < 2)
-                        {
-                            //if ((jsonStart && !arrayStart) && state != 1)
-                            if (jsonStart  && state != 1)
-                            {
-                                //不是引号开头的，只允许字母 {aaa:1}
-                                isError = isStrictMode || (c < 65 || (c > 90 && c < 97) || c > 122);
-                            }
-                            else if (!jsonStart && arrayStart && valueStart < 2)//
-                            {
-                                //不是引号开头的，只允许数字[1]
-                                isError = c < 48 || c > 57;
-                            }
-                        }
-                        break;
-                }
-                //if (isError)
-                //{
-
-                //}
-            }
-        }
-        /// <summary>
-        /// 设置字符状态(返回true则为关键词，返回false则当为普通字符处理）
-        /// </summary>
-        private static bool SetCharState(char c, ref CharState cs)
-        {
-            switch (c)
-            {
-                case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
-                    #region 大括号
-                    if (cs.keyStart <= 0 && cs.valueStart <= 0)
-                    {
-                        cs.CheckIsError(c);
-                        if (cs.jsonStart && cs.state == 1)
-                        {
-                            cs.valueStart = 0;
-                            cs.childrenStart = true;
-                        }
-                        else
-                        {
-                            cs.state = 0;
-                        }
-                        cs.jsonStart = true;//开始。
-                        return true;
-                    }
-                    #endregion
-                    break;
-                case '}':
-                    #region 大括号结束
-                    if (cs.keyStart <= 0 && cs.valueStart < 2)
-                    {
-                        cs.CheckIsError(c);
-                        if (cs.jsonStart)
-                        {
-                            cs.jsonStart = false;//正常结束。
-                            cs.valueStart = -1;
-                            cs.state = 0;
-                            cs.setDicValue = true;
-                        }
-                        return true;
-                    }
-                    // cs.isError = !cs.jsonStart && cs.state == 0;
-                    #endregion
-                    break;
-                case '[':
-                    #region 中括号开始
-                    if (!cs.jsonStart)
-                    {
-                        cs.CheckIsError(c);
-                        cs.arrayStart = true;
-                        return true;
-                    }
-                    else if (cs.jsonStart && cs.state == 1 && cs.valueStart < 2)
-                    {
-                        cs.CheckIsError(c);
-                        //cs.valueStart = 1;
-                        cs.childrenStart = true;
-                        return true;
-                    }
-                    #endregion
-                    break;
-                case ']':
-                    #region 中括号结束
-                    if (!cs.jsonStart && (cs.keyStart <= 0 && cs.valueStart <= 0) || (cs.keyStart == -1 && cs.valueStart == 1))
-                    {
-                        cs.CheckIsError(c);
-                        if (cs.arrayStart)// && !cs.childrenStart
-                        {
-                            cs.arrayStart = false;
-                        }
-                        return true;
-                    }
-                    #endregion
-                    break;
-                case '"':
-                case '\'':
-                    cs.CheckIsError(c);
-                    if (cs.isStrictMode && c == '\'')
-                    {
-                        break;
-                    }
-                    #region 引号
-                    if (cs.jsonStart || cs.arrayStart)
-                    {
-                        if (!cs.jsonStart && cs.arrayStart)
-                        {
-                            cs.state = 1;//如果是数组，只有取值，没有Key，所以直接跳过0
-                        }
-                        if (cs.state == 0)//key阶段
-                        {
-                            cs.keyStart = (cs.keyStart <= 0 ? (c == '"' ? 3 : 2) : -2);
-                            return true;
-                        }
-                        else if (cs.state == 1)//值阶段
-                        {
-                            if (cs.valueStart <= 0)
-                            {
-                                cs.valueStart = (c == '"' ? 3 : 2);
-                                return true;
-                            }
-                            else if ((cs.valueStart == 2 && c == '\'') || (cs.valueStart == 3 && c == '"'))
-                            {
-                                if (!cs.escapeChar)
-                                {
-                                    cs.valueStart = -2;
-                                    return true;
-                                }
-                                else
-                                {
-                                    cs.escapeChar = false;
-                                }
-                            }
-
-                        }
-                    }
-                    #endregion
-                    break;
-                case ':':
-                    cs.CheckIsError(c);
-                    #region 冒号
-                    if (cs.jsonStart && cs.keyStart < 2 && cs.valueStart < 2 && cs.state == 0)
-                    {
-                        cs.keyStart = 0;
-                        cs.state = 1;
-                        return true;
-                    }
-                    #endregion
-                    break;
-                case ',':
-                    cs.CheckIsError(c);
-                    #region 逗号 {"a": [11,"22", ], "Type": 2}
-                    if (cs.jsonStart && cs.keyStart < 2 && cs.valueStart < 2 && cs.state == 1)
-                    {
-                        cs.state = 0;
-                        cs.valueStart = 0;
-                        cs.setDicValue = true;
-                        return true;
-                    }
-                    else if (cs.arrayStart && !cs.jsonStart) //[a,b]  [",",33] [{},{}]
-                    {
-                        if ((cs.state == -1 && cs.valueStart == -1) || (cs.valueStart < 2 && cs.state == 1))
-                        {
-                            cs.valueStart = 0;
-                            return true;
-                        }
-                    }
-                    #endregion
-                    break;
-                case ' ':
-                case '\r':
-                case '\n':
-                case '\t':
-                    if (cs.jsonStart && cs.keyStart <= 0 && cs.valueStart <= 0)
-                    {
-                        return true;//跳过空格。
-                    }
-                    break;
-                default: //值开头。。
-                    cs.CheckIsError(c);
-                    if (c == '\\') //转义符号
-                    {
-                        if (cs.escapeChar)
-                        {
-                            cs.escapeChar = false;
-                        }
-                        else
-                        {
-                            cs.escapeChar = true;
-                            //return true;
-                        }
-                    }
-                    else
-                    {
-                        cs.escapeChar = false;
-                    }
-                    if (cs.jsonStart)
-                    {
-                        if (cs.keyStart <= 0 && cs.state <= 0)
-                        {
-                            cs.keyStart = 1;//无引号的
-                        }
-                        else if (cs.valueStart <= 0 && cs.state == 1)
-                        {
-                            cs.valueStart = 1;//无引号的
-                        }
-                    }
-                    else if (cs.arrayStart)
-                    {
-                        cs.state = 1;
-                        if (cs.valueStart < 1)
-                        {
-                            cs.valueStart = 1;//无引号的
-                        }
-                    }
-                    break;
-            }
-            return false;
-        }
 
 
     }
@@ -564,6 +270,365 @@ namespace CYQ.Data.Tool
                 }
             }
             return num;
+        }
+    }
+
+    /// <summary>
+    /// 字符状态
+    /// </summary>
+    internal class CharState
+    {
+        internal char lastKeywordChar = ' ';
+        internal char lastChar = ' ';
+        /// <summary>
+        /// 是否格式格式【true属性必须双引号，false属性可以单引号和无引号。】
+        /// </summary>
+        internal bool isStrictMode = false;
+        public CharState(bool isStrictMode)
+        {
+            this.isStrictMode = isStrictMode;
+        }
+        internal bool jsonStart = false;//以 "{"开始了...
+        internal bool setDicValue = false;// 可以设置字典值了。
+        internal bool escapeChar = false;//以"\"转义符号开始了
+        /// <summary>
+        /// 数组开始【仅第一开头才算】，值嵌套的以【childrenStart】来标识。
+        /// </summary>
+        internal bool arrayStart = false;//以"[" 符号开始了
+        internal bool childrenStart = false;//子级嵌套开始了。
+        /// <summary>
+        /// 【-1 未初始化】【0取名阶段】【1 取值阶段】
+        /// </summary>
+        internal int keyValueState = -1;
+
+        /// <summary>
+        /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
+        /// </summary>
+        internal int keyStart = -1;
+        /// <summary>
+        /// 【-2 已结束】【-1 未初始化】【0 未开始】【1 无引号开始】【2 单引号开始】【3 双引号开始】
+        /// </summary>
+        internal int valueStart = -1;
+
+        internal bool isError = false;//是否语法错误。
+
+        internal void CheckIsError(char c)//只当成一级处理（因为GetLength会递归到每一个子项处理）
+        {
+            switch (c)
+            {
+                case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
+                    isError = jsonStart && keyValueState == 0;//重复开始错误 同时不是值处理。
+                    break;
+                case '}':
+                    isError = !jsonStart || (keyStart > 0 && keyValueState == 0);//重复结束错误 或者 提前结束。
+                    if (!isError && isStrictMode)
+                    {
+                        isError = !((keyStart == 3 && keyValueState == 0) || (valueStart != 2 && keyValueState == 1) || valueStart == -2 || (jsonStart && keyStart == -1));
+                    }
+                    break;
+                case '[':
+                    isError = arrayStart && keyValueState == 0;//重复开始错误
+                    break;
+                case ']':
+                    isError = !arrayStart || (keyValueState == 1 && valueStart == 0);//重复开始错误[{},]1,0  正常：[111,222] 1,1 [111,"22"] 1,-2 
+                    break;
+                case '"':
+                    isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
+                    break;
+                case '\'':
+                    isError = (!jsonStart && !arrayStart);//未开始Json
+                    if (!isError && isStrictMode)
+                    {
+                        isError = !((keyStart == 3 && keyValueState == 0) || (valueStart == 3 && keyValueState == 1));
+                    }
+                    break;
+                case ':':
+                    isError = (!jsonStart && !arrayStart) || (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 1);//未开始Json 同时 只能处理在取值之前。
+                    break;
+                case ',':
+                    isError = (!jsonStart && !arrayStart)
+                        || (!jsonStart && arrayStart && keyValueState == -1) //[,111]
+                        || (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 0);//未开始Json 同时 只能处理在取值之后。
+                    break;
+                //case 't'://true
+                //case 'f'://false
+
+                //  break;
+                default: //值开头。。
+                    isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && keyValueState == 0);//
+                    if (!isError && keyStart < 2)
+                    {
+                        //if ((jsonStart && !arrayStart) && state != 1)
+                        if (jsonStart && keyValueState != 1)
+                        {
+                            //不是引号开头的，只允许字母 {aaa:1}
+                            isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                        }
+                        else if (!jsonStart && arrayStart && valueStart < 2)//
+                        {
+                            //不是引号开头的，只允许数字[1]
+                            isError = c < 48 || c > 57;
+                        }
+                    }
+                    if (!isError && isStrictMode)
+                    {
+                        if (jsonStart && valueStart == 1)//检测值value:true 或value:false
+                        {
+                            switch (c)
+                            {
+                                case 'r'://true
+                                    isError = lastChar != 't';
+                                    break;
+                                case 'u':
+                                    isError = lastChar != 'r';
+                                    break;
+                                case 'e':
+                                    isError = !((lastKeywordChar == 't' && lastChar == 'u') || (lastKeywordChar == 'f' && lastChar == 's'));
+                                    break;
+                                case 'a'://false
+                                    isError = lastChar != 'f';
+                                    break;
+                                case 'l':
+                                    isError = lastChar != 'a';
+                                    break;
+                                case 's':
+                                    isError = lastChar != 'l';
+                                    break;
+                                default:
+                                    isError = true;
+                                    break;
+                            }
+                        }
+                        //值开头的，只能是：["xxx"] {[{}]
+                    }
+                    break;
+            }
+            if (isError)
+            {
+                //
+            }
+        }
+
+        /// <summary>
+        /// 设置字符状态(返回true则为关键词，返回false则当为普通字符处理）
+        /// </summary>
+        internal bool IsKeyword(char c)
+        {
+            bool isKeyword = false;
+            switch (c)
+            {
+                case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
+                    #region 大括号
+                    if (keyStart <= 0 && valueStart <= 0)
+                    {
+                        // CheckIsError(c);
+                        if (jsonStart && keyValueState == 1)
+                        {
+                            valueStart = 0;
+                            childrenStart = true;
+                        }
+                        else
+                        {
+                            keyValueState = 0;
+                        }
+                        jsonStart = true;//开始。
+                        isKeyword = true;
+                    }
+                    #endregion
+                    break;
+                case '}':
+                    #region 大括号结束
+                    if (keyStart <= 0 && valueStart < 2)
+                    {
+                        //CheckIsError(c);
+                        if (jsonStart)
+                        {
+                            jsonStart = false;//正常结束。
+                            valueStart = -1;
+                            keyValueState = 0;
+                            setDicValue = true;
+                        }
+                        isKeyword = true;
+                    }
+                    // isError = !jsonStart && state == 0;
+                    #endregion
+                    break;
+                case '[':
+                    #region 中括号开始
+                    if (!jsonStart)
+                    {
+                        // CheckIsError(c);
+                        arrayStart = true;
+                        isKeyword = true;
+                    }
+                    else if (jsonStart && keyValueState == 1 && valueStart < 2)
+                    {
+                        //CheckIsError(c);
+                        //valueStart = 1;
+                        childrenStart = true;
+                        isKeyword = true;
+                    }
+                    #endregion
+                    break;
+                case ']':
+                    #region 中括号结束
+                    if (!jsonStart && (keyStart <= 0 && valueStart <= 0) || (keyStart == -1 && valueStart == 1))
+                    {
+                        //CheckIsError(c);
+                        if (arrayStart)// && !childrenStart
+                        {
+                            arrayStart = false;
+                        }
+                        isKeyword = true;
+                    }
+                    #endregion
+                    break;
+                case '"':
+                case '\'':
+                    // CheckIsError(c);
+                    if (isStrictMode && c == '\'')
+                    {
+                        break;
+                    }
+                    #region 引号
+                    if (jsonStart || arrayStart)
+                    {
+                        if (!jsonStart && arrayStart)
+                        {
+                            keyValueState = 1;//如果是数组，只有取值，没有Key，所以直接跳过0
+                        }
+                        if (keyValueState == 0)//key阶段
+                        {
+                            keyStart = (keyStart <= 0 ? (c == '"' ? 3 : 2) : -2);
+                            isKeyword = true;
+                        }
+                        else if (keyValueState == 1)//值阶段
+                        {
+                            if (valueStart <= 0)
+                            {
+                                valueStart = (c == '"' ? 3 : 2);
+                                isKeyword = true;
+                            }
+                            else if ((valueStart == 2 && c == '\'') || (valueStart == 3 && c == '"'))
+                            {
+                                if (!escapeChar)
+                                {
+                                    valueStart = -2;
+                                    isKeyword = true;
+                                }
+                                else
+                                {
+                                    escapeChar = false;
+                                }
+                            }
+
+                        }
+                    }
+                    #endregion
+                    break;
+                case ':':
+                    // CheckIsError(c);
+                    #region 冒号
+                    if (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 0)
+                    {
+                        keyStart = -2;//0 结束key
+                        keyValueState = 1;
+                        isKeyword = true;
+                    }
+                    #endregion
+                    break;
+                case ',':
+                    //CheckIsError(c);
+                    #region 逗号 {"a": [11,"22", ], "Type": 2}
+                    if (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 1)
+                    {
+                        keyValueState = 0;
+                        valueStart = 0;
+                        setDicValue = true;
+                        isKeyword = true;
+                    }
+                    else if (arrayStart && !jsonStart) //[a,b]  [",",33] [{},{}]
+                    {
+                        if ((keyValueState == -1 && valueStart == -1) || (valueStart < 2 && keyValueState == 1))
+                        {
+                            valueStart = 0;
+                            isKeyword = true;
+                        }
+                    }
+                    #endregion
+                    break;
+                case ' ':
+                case '\r':
+                case '\n':
+                case '\t':
+                    if (jsonStart && keyStart <= 0 && valueStart <= 0)
+                    {
+                        isKeyword = true;
+                        // return true;//跳过空格。
+                    }
+                    break;
+                case 't'://true
+                case 'f'://false
+                    if ((arrayStart && !jsonStart && keyStart == -1) ||
+                    (jsonStart && keyValueState == 1 && valueStart <= 0))
+                    {
+                        //只改状态，不是关键字
+                        valueStart = 1;
+                        lastChar = c;
+                        lastKeywordChar = c;
+                        return false;//直接返回，不检测错误。
+                    }
+                    break;
+                default: //值开头。。
+                    // CheckIsError(c);
+                    if (c == '\\') //转义符号
+                    {
+                        if (escapeChar)
+                        {
+                            escapeChar = false;
+                        }
+                        else
+                        {
+                            escapeChar = true;
+                            //return true;
+                        }
+                    }
+                    else
+                    {
+                        escapeChar = false;
+                    }
+                    if (jsonStart)
+                    {
+                        if (keyStart <= 0 && keyValueState <= 0)
+                        {
+                            keyStart = 1;//无引号的
+                        }
+                        else if (valueStart <= 0 && keyValueState == 1)
+                        {
+                            valueStart = 1;//无引号的
+                        }
+                    }
+                    else if (arrayStart)
+                    {
+                        keyValueState = 1;
+                        if (valueStart < 1)
+                        {
+                            valueStart = 1;//无引号的
+                        }
+                    }
+                    break;
+            }
+
+            if (!isKeyword)
+            {
+                CheckIsError(c);
+            }
+            else
+            {
+                lastKeywordChar = c;
+            }
+            lastChar = c;
+            return isKeyword;
         }
     }
 }
