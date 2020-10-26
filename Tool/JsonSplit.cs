@@ -394,6 +394,9 @@ namespace CYQ.Data.Tool
                                 case 's':
                                     isError = lastChar != 'l';
                                     break;
+                                case '.'://数字可以出现小数点，但不能重复出现
+                                    isError = keyValueState != 1 || lastKeywordChar == '.';
+                                    break;
                                 default:
                                     //不是引号开头的，只允许数字[1]
                                     isError = c < 48 || c > 57;
@@ -578,6 +581,13 @@ namespace CYQ.Data.Tool
                         lastChar = c;
                         lastKeywordChar = c;
                         return false;//直接返回，不检测错误。
+                    }
+                    break;
+                case '.':
+                    if (jsonStart && keyValueState == 1 && valueStart == 1 && lastKeywordChar != c)
+                    {
+                        lastKeywordChar = c;//记录符号，数字只能有一个符号。
+                        return false;//不检测错误。
                     }
                     break;
                 default: //值开头。。
