@@ -395,7 +395,8 @@ namespace CYQ.Data.Tool
                                     isError = lastChar != 'l';
                                     break;
                                 default:
-                                    isError = true;
+                                    //不是引号开头的，只允许数字[1]
+                                    isError = c < 48 || c > 57;
                                     break;
                             }
                         }
@@ -590,7 +591,6 @@ namespace CYQ.Data.Tool
                         else
                         {
                             escapeChar = true;
-                            //return true;
                         }
                     }
                     else
