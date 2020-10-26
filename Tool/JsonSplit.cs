@@ -402,6 +402,13 @@ namespace CYQ.Data.Tool
                                 case '.'://数字可以出现小数点，但不能重复出现
                                     isError = keyValueState != 1 || lastKeywordChar == '.';
                                     break;
+                                case ' ':
+                                    if (lastChar == '.') { isError = true; }
+                                    else
+                                    {
+                                        valueStart = -2;//遇到空格，结束取值。
+                                    }
+                                    break;
                                 default:
                                     //不是引号开头的，只允许数字[1]
                                     isError = c < 48 || c > 57;
@@ -430,7 +437,6 @@ namespace CYQ.Data.Tool
                     #region 大括号
                     if (keyStart <= 0 && valueStart <= 0)
                     {
-                        // CheckIsError(c);
                         if (jsonStart && keyValueState == 1)
                         {
                             valueStart = 0;
@@ -447,48 +453,49 @@ namespace CYQ.Data.Tool
                     break;
                 case '}':
                     #region 大括号结束
-                    if (keyStart <= 0 && valueStart < 2)
+                    if (lastChar != '.')
                     {
-                        //CheckIsError(c);
-                        if (jsonStart)
+                        if (keyStart <= 0 && valueStart < 2)
                         {
-                            jsonStart = false;//正常结束。
-                            valueStart = -1;
-                            keyValueState = 0;
-                            setDicValue = true;
+                            if (jsonStart)
+                            {
+                                jsonStart = false;//正常结束。
+                                valueStart = -1;
+                                keyValueState = 0;
+                                setDicValue = true;
+                            }
+                            isKeyword = true;
                         }
-                        isKeyword = true;
                     }
-                    // isError = !jsonStart && state == 0;
                     #endregion
                     break;
                 case '[':
                     #region 中括号开始
                     if (!jsonStart)
                     {
-                        // CheckIsError(c);
                         arrayStart = true;
                         isKeyword = true;
                     }
                     else if (jsonStart && keyValueState == 1 && valueStart < 2)
                     {
-                        //CheckIsError(c);
-                        //valueStart = 1;
                         childrenStart = true;
                         isKeyword = true;
                     }
                     #endregion
                     break;
                 case ']':
+                    
                     #region 中括号结束
-                    if (!jsonStart && (keyStart <= 0 && valueStart <= 0) || (keyStart == -1 && valueStart == 1))
+                    if (lastChar != '.')
                     {
-                        //CheckIsError(c);
-                        if (arrayStart)// && !childrenStart
+                        if (!jsonStart && (keyStart <= 0 && valueStart <= 0) || (keyStart == -1 && valueStart == 1))
                         {
-                            arrayStart = false;
+                            if (arrayStart)// && !childrenStart
+                            {
+                                arrayStart = false;
+                            }
+                            isKeyword = true;
                         }
-                        isKeyword = true;
                     }
                     #endregion
                     break;
@@ -547,21 +554,23 @@ namespace CYQ.Data.Tool
                     #endregion
                     break;
                 case ',':
-                    //CheckIsError(c);
-                    #region 逗号 {"a": [11,"22", ], "Type": 2}
-                    if (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 1)
+                    #region 逗号 {"a": [11,"22", ], "Type": 2.}
+                    if (lastChar != '.')
                     {
-                        keyValueState = 0;
-                        valueStart = 0;
-                        setDicValue = true;
-                        isKeyword = true;
-                    }
-                    else if (arrayStart && !jsonStart) //[a,b]  [",",33] [{},{}]
-                    {
-                        if ((keyValueState == -1 && valueStart == -1) || (valueStart < 2 && keyValueState == 1))
+                        if (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 1)
                         {
+                            keyValueState = 0;
                             valueStart = 0;
+                            setDicValue = true;
                             isKeyword = true;
+                        }
+                        else if (arrayStart && !jsonStart) //[a,b]  [",",33] [{},{}]
+                        {
+                            if ((keyValueState == -1 && valueStart == -1) || (valueStart < 2 && keyValueState == 1))
+                            {
+                                valueStart = 0;
+                                isKeyword = true;
+                            }
                         }
                     }
                     #endregion
@@ -592,6 +601,7 @@ namespace CYQ.Data.Tool
                 case '.':
                     if (jsonStart && keyValueState == 1 && valueStart == 1 && lastKeywordChar != c)
                     {
+                        lastChar = c;
                         lastKeywordChar = c;//记录符号，数字只能有一个符号。
                         return false;//不检测错误。
                     }
