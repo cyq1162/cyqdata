@@ -366,8 +366,25 @@ namespace CYQ.Data.Tool
                         }
                         else if (!jsonStart && arrayStart && valueStart < 2)//
                         {
-                            //不是引号开头的，只允许数字[1]
-                            isError = c < 48 || c > 57;
+                            switch (c)
+                            {
+                                case ' ':
+                                case 'n'://null
+                                case 'u':
+                                case 'l':
+                                case 't'://true
+                                case 'r':
+                                case 'e':
+                                case 'f'://false
+                                case 'a':
+                                case 's':
+                                    break;
+                                default:
+                                    //不是引号开头的，只允许数字[1] 空格、null,true,false
+                                    isError = c < 48 || c > 57;
+                                    break;
+                            }
+
                         }
                     }
                     if (!isError && isStrictMode)
@@ -390,10 +407,10 @@ namespace CYQ.Data.Tool
                                     break;
                                 case 'l'://false,null 
                                     isError = !((lastKeywordChar == 'f' && lastChar == 'a') || (lastKeywordChar == 'n' && (lastChar == 'u' || lastChar == 'l')));
-                                    if (!isError && lastKeywordChar == 'n' && lastChar == 'l') 
+                                    if (!isError && lastKeywordChar == 'n' && lastChar == 'l')
                                     {
                                         //取消关键字，避免出现 nulllll多个l
-                                        lastKeywordChar=' ';
+                                        lastKeywordChar = ' ';
                                     }
                                     break;
                                 case 's'://false
@@ -404,7 +421,7 @@ namespace CYQ.Data.Tool
                                     break;
                                 case ' ':
                                     if (lastChar == '.') { isError = true; }
-                                    else
+                                    else if (jsonStart && !arrayStart)
                                     {
                                         valueStart = -2;//遇到空格，结束取值。
                                     }
@@ -484,7 +501,7 @@ namespace CYQ.Data.Tool
                     #endregion
                     break;
                 case ']':
-                    
+
                     #region 中括号结束
                     if (lastChar != '.')
                     {
@@ -599,7 +616,7 @@ namespace CYQ.Data.Tool
                     }
                     break;
                 case '.':
-                    if (jsonStart && keyValueState == 1 && valueStart == 1 && lastKeywordChar != c)
+                    if ((jsonStart || arrayStart) && keyValueState == 1 && valueStart == 1 && lastKeywordChar != c)
                     {
                         lastChar = c;
                         lastKeywordChar = c;//记录符号，数字只能有一个符号。
