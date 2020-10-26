@@ -379,19 +379,24 @@ namespace CYQ.Data.Tool
                                 case 'r'://true
                                     isError = lastChar != 't';
                                     break;
-                                case 'u':
-                                    isError = lastChar != 'r';
+                                case 'u'://true,null
+                                    isError = !((lastKeywordChar == 't' && lastChar == 'r') || (lastKeywordChar == 'n' && lastChar == 'n'));
                                     break;
-                                case 'e':
+                                case 'e'://true
                                     isError = !((lastKeywordChar == 't' && lastChar == 'u') || (lastKeywordChar == 'f' && lastChar == 's'));
                                     break;
                                 case 'a'://false
                                     isError = lastChar != 'f';
                                     break;
-                                case 'l':
-                                    isError = lastChar != 'a';
+                                case 'l'://false,null 
+                                    isError = !((lastKeywordChar == 'f' && lastChar == 'a') || (lastKeywordChar == 'n' && (lastChar == 'u' || lastChar == 'l')));
+                                    if (!isError && lastKeywordChar == 'n' && lastChar == 'l') 
+                                    {
+                                        //取消关键字，避免出现 nulllll多个l
+                                        lastKeywordChar=' ';
+                                    }
                                     break;
-                                case 's':
+                                case 's'://false
                                     isError = lastChar != 'l';
                                     break;
                                 case '.'://数字可以出现小数点，但不能重复出现
@@ -573,6 +578,7 @@ namespace CYQ.Data.Tool
                     break;
                 case 't'://true
                 case 'f'://false
+                case 'n'://null
                     if ((arrayStart && !jsonStart && keyStart == -1) ||
                     (jsonStart && keyValueState == 1 && valueStart <= 0))
                     {
