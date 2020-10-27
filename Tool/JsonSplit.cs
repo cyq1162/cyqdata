@@ -359,10 +359,10 @@ namespace CYQ.Data.Tool
                     if (!isError && keyStart < 2)
                     {
                         //if ((jsonStart && !arrayStart) && state != 1)
-                        if (jsonStart && keyValueState != 1)
+                        if (jsonStart && keyValueState <= 0)//取名阶段
                         {
                             //不是引号开头的，只允许字母 {aaa:1}
-                            isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                            isError = isStrictMode || (c < 65 || (c > 90 && c < 97) || c > 122);
                         }
                         else if (!jsonStart && arrayStart && valueStart < 2)//
                         {
