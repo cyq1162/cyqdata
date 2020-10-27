@@ -605,14 +605,18 @@ namespace CYQ.Data.Tool
                 case 't'://true
                 case 'f'://false
                 case 'n'://null
-                    if ((arrayStart && !jsonStart && keyStart == -1) ||
-                    (jsonStart && keyValueState == 1 && valueStart <= 0))
+                case '-'://-388.8 //负的数字符号
+                    if (lastKeywordChar != c && lastKeywordChar != '.')
                     {
-                        //只改状态，不是关键字
-                        valueStart = 1;
-                        lastChar = c;
-                        lastKeywordChar = c;
-                        return false;//直接返回，不检测错误。
+                        if ((arrayStart && !jsonStart && keyStart == -1) ||
+                        (jsonStart && keyValueState == 1 && valueStart <= 0))
+                        {
+                            //只改状态，不是关键字
+                            valueStart = 1;
+                            lastChar = c;
+                            lastKeywordChar = c;
+                            return false;//直接返回，不检测错误。
+                        }
                     }
                     break;
                 case '.':
