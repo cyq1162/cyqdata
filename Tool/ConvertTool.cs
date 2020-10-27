@@ -23,7 +23,38 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static object ChangeType(object value, Type t)
         {
-            if (value == null || t == null)
+            if (t == null) { return null; }
+            string strValue = Convert.ToString(value);
+            if (t.IsEnum)
+            {
+
+                if (strValue != "")
+                {
+                    if (Enum.IsDefined(t, strValue))
+                    {
+                        return Enum.Parse(t, strValue);
+                    }
+                    string[] names = Enum.GetNames(t);
+                    string lower=strValue.ToLower();
+                    foreach (string name in names)
+                    {
+                        if (name.ToLower() == lower)
+                        {
+                            return Enum.Parse(t, name);
+                        }
+                    }
+                }
+
+                //取第一个值。
+                string firstKey = Enum.GetName(t, -1);
+                if (!string.IsNullOrEmpty(firstKey))
+                {
+                    return Enum.Parse(t, firstKey);
+                }
+                return Enum.Parse(t, Enum.GetNames(t)[0]);
+
+            }
+            if (value == null)
             {
                 return null;
             }
@@ -39,7 +70,7 @@ namespace CYQ.Data.Tool
             {
                 return ((HttpPostedFile)value).InputStream;
             }
-            string strValue = Convert.ToString(value);
+
             if (t.IsGenericType && t.Name.StartsWith("Nullable"))
             {
                 t = Nullable.GetUnderlyingType(t);
@@ -132,7 +163,7 @@ namespace CYQ.Data.Tool
                             break;
                     }
 
-                    if (t.Name.StartsWith("Int") || t.Name=="Byte")
+                    if (t.Name.StartsWith("Int") || t.Name == "Byte")
                     {
                         if (strValue.IndexOf('.') > -1)//11.22
                         {
@@ -142,10 +173,6 @@ namespace CYQ.Data.Tool
                         {
                             return (int)value;
                         }
-                    }
-                    else if (t.IsEnum)
-                    {
-                        return Enum.Parse(t, strValue, true);
                     }
                 }
                 return Convert.ChangeType(strValue, t);
