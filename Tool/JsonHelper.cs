@@ -418,6 +418,16 @@ namespace CYQ.Data.Tool
         {
             return JsonSplit.IsJson(json, true, out errIndex);
         }
+        public static T GetValue<T>(string json, string key)
+        {
+            string v = GetValue(json, key);
+            return ConvertTool.ChangeType<T>(v);
+        }
+        public static T GetValue<T>(string json, string key, EscapeOp op)
+        {
+            string v = GetValue(json, key, op);
+            return ConvertTool.ChangeType<T>(v);
+        }
         public static string GetValue(string json, string key)
         {
             return GetValue(json, key, DefaultEscape);
