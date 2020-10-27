@@ -30,12 +30,22 @@ namespace CYQ.Data.Tool
 
                 if (strValue != "")
                 {
+
                     if (Enum.IsDefined(t, strValue))
                     {
                         return Enum.Parse(t, strValue);
                     }
+                    int v = 0;
+                    if (int.TryParse(strValue, out v))
+                    {
+                        object v1 = Enum.Parse(t, strValue);
+                        if (v1.ToString() != strValue)
+                        {
+                            return v1;
+                        }
+                    }
                     string[] names = Enum.GetNames(t);
-                    string lower=strValue.ToLower();
+                    string lower = strValue.ToLower();
                     foreach (string name in names)
                     {
                         if (name.ToLower() == lower)
@@ -43,6 +53,7 @@ namespace CYQ.Data.Tool
                             return Enum.Parse(t, name);
                         }
                     }
+
                 }
 
                 //取第一个值。
