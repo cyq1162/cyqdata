@@ -835,3 +835,4 @@
 616：DBTool：GetColumn 获取视图时增加字段描述(2020-10-13)
 617：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
 618：SqlInjection：加强sql未参数化使用时的注入处理。(2020-10-16)
+619：修正MDataTable.AcceptChange 值状态丢失导致无法更新问题。(2020-11-04)
