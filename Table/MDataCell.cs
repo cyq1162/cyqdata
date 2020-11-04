@@ -66,6 +66,10 @@ namespace CYQ.Data.Table
                 {
                     _CellValue = new MCellValue();
                 }
+                else// if(isNewValue && !IsNull)
+                {
+                   // CheckNewValue();//修正延时值的问题。
+                }
                 return _CellValue;
             }
         }
@@ -266,7 +270,7 @@ namespace CYQ.Data.Table
                 CellValue.IsNull = true;
                 CellValue.StringValue = null;
                 isNewValue = false;
-                string msg = string.Format("ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
+                string msg = string.Format("【MDataCell.ChangeValue】ChangeType Error：ColumnName【{0}】({1}) ， Value：【{2}】\r\n", _CellStruct.ColumnName, _CellStruct.ValueType.FullName, StringValue);
 
                 Log.Write(msg, LogType.Error);
                 return null;
@@ -369,6 +373,7 @@ namespace CYQ.Data.Table
         internal void LoadValue(MDataCell cell, bool isWithState)
         {
             isNewValue = true;
+            cell.CheckNewValue();//还原完整的值状态。
             CellValue.LoadValue(cell.CellValue, isWithState);
             if (isWithState) { isAllowChangeState = false; }
         }

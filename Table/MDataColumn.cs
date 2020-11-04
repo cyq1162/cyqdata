@@ -436,14 +436,18 @@ namespace CYQ.Data.Table
         {
             Add(columnName, sqlType, isAutoIncrement, isCanNull, maxSize, false, null);
         }
-
-        /// <param name="defaultValue">默认值[日期类型请传入SqlValue.GetDate]</param>
         public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize, bool isPrimaryKey, object defaultValue)
+        {
+            Add(columnName, sqlType, isAutoIncrement, isCanNull, maxSize, false, null, -1);
+        }
+        /// <param name="defaultValue">默认值[日期类型请传入SqlValue.GetDate]</param>
+        public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize, bool isPrimaryKey, object defaultValue, short scale)
         {
             string[] items = columnName.Split(',');
             foreach (string item in items)
             {
                 MCellStruct mdcStruct = new MCellStruct(item, sqlType, isAutoIncrement, isCanNull, maxSize);
+                mdcStruct.Scale = scale;
                 mdcStruct.IsPrimaryKey = isPrimaryKey;
                 mdcStruct.DefaultValue = defaultValue;
                 Add(mdcStruct);

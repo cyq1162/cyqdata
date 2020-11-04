@@ -216,26 +216,28 @@ namespace CYQ.Data.Table
         {
             try
             {
-                if (dalTypeTo == DataBaseType.MsSql)
+                if (mdt.Rows.Count > 10)
                 {
-                    return MsSqlBulkCopyInsert(keepID);
-                }
-                else if (dalTypeTo == DataBaseType.Oracle && _dalHelper == null && !IsTruncate)
-                {
-                    if (OracleDal.clientType == 1 && keepID)
+                    if (dalTypeTo == DataBaseType.MsSql)
                     {
-                        return OracleBulkCopyInsert();//不支持外部事务合并（因为参数只能传链接字符串。）
+                        return MsSqlBulkCopyInsert(keepID);
                     }
-                    //else if (IsAllowBulkCopy(DalType.Oracle))
-                    //{
-                    //    return LoadDataInsert(dalTypeTo, keepid);
-                    //}
+                    else if (dalTypeTo == DataBaseType.Oracle && _dalHelper == null && !IsTruncate)
+                    {
+                        if (OracleDal.clientType == 1 && keepID)
+                        {
+                            return OracleBulkCopyInsert();//不支持外部事务合并（因为参数只能传链接字符串。）
+                        }
+                        //else if (IsAllowBulkCopy(DalType.Oracle))
+                        //{
+                        //    return LoadDataInsert(dalTypeTo, keepid);
+                        //}
+                    }
+                    else if (dalTypeTo == DataBaseType.MySql && IsAllowBulkCopy(DataBaseType.MySql))
+                    {
+                        return LoadDataInsert(dalTypeTo, keepID);
+                    }
                 }
-                else if (dalTypeTo == DataBaseType.MySql && IsAllowBulkCopy(DataBaseType.MySql))
-                {
-                    return LoadDataInsert(dalTypeTo, keepID);
-                }
-
                 //if (dalTypeTo == DalType.Txt || dalTypeTo == DalType.Xml)
                 //{
                 //    NoSqlAction.ResetStaticVar();//重置一下缓存
@@ -273,7 +275,7 @@ namespace CYQ.Data.Table
                     hasFK = mdt.Columns.Contains(AppConfig.DB.DeleteField);
                 }
             }
-            if (hasFK)
+            if (hasFK || mdt.Rows.Count < 10)
             {
                 return NormalUpdate();
             }
