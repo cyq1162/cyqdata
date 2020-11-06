@@ -59,7 +59,7 @@ namespace System.Web
                     HttpFileCollection files = new HttpFileCollection();
                     foreach (IFormFile file in request.Form.Files)
                     {
-                        files.Add(file.Name, new HttpPostedFile(file));
+                        files.Add(new HttpPostedFile(file),file.Name);
                     }
                     return files;
                 }
