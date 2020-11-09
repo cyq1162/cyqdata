@@ -330,7 +330,7 @@ namespace CYQ.Data.Tool
                     isError = arrayStart && keyValueState == 0;//重复开始错误
                     break;
                 case ']':
-                    isError = !arrayStart || (keyValueState == 1 && valueStart == 0);//重复开始错误[{},]1,0  正常：[111,222] 1,1 [111,"22"] 1,-2 
+                    isError = (!arrayStart && valueStart!=3 && keyStart!=3)  || (keyValueState == 1 && valueStart == 0);//重复开始错误[{},]1,0  正常：[111,222] 1,1 [111,"22"] 1,-2 
                     break;
                 case '"':
                     isError = !jsonStart && !arrayStart;//未开始Json，同时也未开始数组。
