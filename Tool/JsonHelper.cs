@@ -971,6 +971,7 @@ namespace CYQ.Data.Tool
                 {
                     Add("ColumnName", item.ColumnName);
                     Add("SqlType", item.ValueType.FullName);
+                    Add("SqlTypeName", item.SqlTypeName);
                     Add("IsAutoIncrement", item.IsAutoIncrement.ToString().ToLower(), true);
                     Add("IsCanNull", item.IsCanNull.ToString().ToLower(), true);
                     Add("MaxSize", item.MaxSize.ToString(), true);
