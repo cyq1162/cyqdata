@@ -737,6 +737,7 @@ namespace CYQ.Data.Table
                                 cs.IsUniqueKey = row.Get<bool>("IsUniqueKey", false);
                                 cs.IsForeignKey = row.Get<bool>("IsForeignKey", false);
                                 cs.FKTableName = row.Get<string>("FKTableName");
+                                cs.SqlTypeName = row.Get<string>("SqlTypeName");
                                 mdc.Add(cs);
                             }
                             mdc.TableName = dt.TableName;
