@@ -325,11 +325,12 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_WebRootPath))
                 {
-                   
-                    if(IsAspNetCore)
+
+                    if (IsAspNetCore)
                     {
                         string path = Environment.CurrentDirectory + "/wwwroot";
-                        if (Directory.Exists(path)){
+                        if (Directory.Exists(path))
+                        {
                             _WebRootPath = path;
                         }
                     }
@@ -353,7 +354,13 @@ namespace CYQ.Data
         {
             get
             {
-                return HttpContext.Current != null;
+                bool isWeb = HttpContext.Current != null;
+                if (!isWeb)
+                {
+                    string[] files = Directory.GetFiles(AppConst.AssemblyPath, "*.exe", SearchOption.TopDirectoryOnly);
+                    return files == null || files.Length == 0;
+                }
+                return isWeb;
             }
         }
         internal static Uri WebUri
