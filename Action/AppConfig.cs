@@ -350,17 +350,21 @@ namespace CYQ.Data
                 _WebRootPath = value;
             }
         }
+        private static bool _IsWeb = false;
         internal static bool IsWeb
         {
             get
             {
-                bool isWeb = HttpContext.Current != null;
-                if (!isWeb)
+                if (!_IsWeb)
                 {
-                    string[] files = Directory.GetFiles(AppConst.AssemblyPath, "*.exe", SearchOption.TopDirectoryOnly);
-                    return files == null || files.Length == 0;
+                    _IsWeb = HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config");
+                    if (!_IsWeb)
+                    {
+                        string[] files = Directory.GetFiles(AppConst.AssemblyPath, "*.exe", SearchOption.TopDirectoryOnly);
+                        _IsWeb = files == null || files.Length == 0;
+                    }
                 }
-                return isWeb;
+                return _IsWeb;
             }
         }
         internal static Uri WebUri
@@ -383,6 +387,10 @@ namespace CYQ.Data
         {
             get
             {
+                if (!_IsAspNetCore)
+                {
+                    _IsAspNetCore = File.Exists(AppConst.AssemblyPath + "appsettings.json");
+                }
                 return _IsAspNetCore;
             }
             set
