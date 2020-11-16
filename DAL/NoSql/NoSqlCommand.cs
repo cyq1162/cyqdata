@@ -314,21 +314,21 @@ namespace CYQ.Data
         {
             if (list.Count > 0 && !string.IsNullOrEmpty(where) && where.IndexOf('@') > -1)
             {
-                foreach (KeyValuePair<string, NoSqlParameter> item in list)
+                foreach (NoSqlParameter item in list)
                 {
                     //aa=@aa and bb=@aab
-                    if (where.IndexOf(item.Value.ParameterName + " ", StringComparison.OrdinalIgnoreCase) > -1)
+                    if (where.IndexOf(item.ParameterName + " ", StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        where = Regex.Replace(where, item.Value.ParameterName + " ", "'" + item.Value.Value + "' ", RegexOptions.IgnoreCase);
+                        where = Regex.Replace(where, item.ParameterName + " ", "'" + item.Value + "' ", RegexOptions.IgnoreCase);
                     }
                     //aa=@aa,bb=@aab
-                    else if (where.IndexOf(item.Value.ParameterName + ",", StringComparison.OrdinalIgnoreCase) > -1)
+                    else if (where.IndexOf(item.ParameterName + ",", StringComparison.OrdinalIgnoreCase) > -1)
                     {
-                        where = Regex.Replace(where, item.Value.ParameterName + ",", "'" + item.Value.Value + "',", RegexOptions.IgnoreCase);
+                        where = Regex.Replace(where, item.ParameterName + ",", "'" + item.Value + "',", RegexOptions.IgnoreCase);
                     }
                     else
                     {
-                        where = Regex.Replace(where, item.Value.ParameterName, "'" + item.Value.Value + "'", RegexOptions.IgnoreCase);
+                        where = Regex.Replace(where, item.ParameterName, "'" + item.Value + "'", RegexOptions.IgnoreCase);
                     }
                 }
             }
