@@ -67,7 +67,7 @@ namespace CYQ.Data.Tool
             }
             if (value == null)
             {
-                return null;
+                return t.IsValueType ? Activator.CreateInstance(t) : null;  
             }
             if (t.FullName == "System.Object")
             {
