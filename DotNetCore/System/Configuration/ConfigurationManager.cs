@@ -44,6 +44,8 @@ namespace System.Configuration
             _AppSettings = null;
             _ConnectionStrings = null;
             AppConfig.Clear();
+            ConnBean.Clear();
+            ConnObject.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。
         }
         private static readonly object o = new object();
