@@ -841,5 +841,7 @@
 622：优化NetCore下HttpFileCollection方法兼容。(2020-11-06)
 623：修正JsonHelper.IsJson方法判断。(2020-11-09)
 624：修正NoSqlCommand.FormatParas参数Bug。(2020-11-16)
-625：修正NetCore监控appsettings.json的链接缓存重置。(2020-11-17)
+625：修正AppConfig.IsWeb在子线程下的判断问题。(2020-11-16)
+626：修正：AppConfig.DB.SchemaMapPath 配置表结构外置缓存【MDataColumn（WriteSchema、CreateFrom）方法增加SqlTypeName输出和加载还原】(2020-11-16)
+627：修正NetCore监控appsettings.json的链接缓存重置。(2020-11-17)
 ------------------------------------------------------------------------------
