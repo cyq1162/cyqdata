@@ -104,7 +104,11 @@ namespace CYQ.Data
         /// 所有链接的对象集合
         /// </summary>
         private static MDictionary<int, ConnBean> connBeanDicCache = new MDictionary<int, ConnBean>();
-        public static void ClearCache(string key)
+        public static void Clear()
+        {
+            connBeanDicCache.Clear();
+        }
+        public static void Remove(string key)
         {
             if (!string.IsNullOrEmpty(key))
             {

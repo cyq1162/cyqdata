@@ -176,7 +176,11 @@ namespace CYQ.Data
                 connDicCache.Add(key, this);
             }
         }
-        public static void ClearCache(string key)
+        public static void Clear()
+        {
+            connDicCache.Clear();
+        }
+        public static void Remove(string key)
         {
             connDicCache.Remove(key);
         }

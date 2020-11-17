@@ -83,8 +83,8 @@ namespace CYQ.Data
                             break;
                         }
                     }
-                    ConnObject.ClearCache(item.Key);
-                    ConnBean.ClearCache(item.Key);
+                    ConnObject.Remove(item.Key);
+                    ConnBean.Remove(item.Key);
                 }
             }
         }
