@@ -825,7 +825,7 @@
 608：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)
 ------------------------------------------------------------------------
 609：NetCore：调整HttpPostedFile以支持Taurus.MVC自动化API测试(2020-07-31)【V5.8.3.6】
-610：Jsonhelper：增加重载方法(2020-08-04)
+610：JsonHelper：增加重载方法(2020-08-04)
 611：Log：winform 下的日志路径允许设置绝路路径。(2020-08-24)
 612：Postgre：修正插入主键的问题(2020-08-26)
 612：NetCore：修正Aries 因 调用 Response.End 引发的问题。(2020-08-29)
@@ -833,6 +833,13 @@
 614：IOHelper：开放：DetectEncode(...) 检测编码功能。(2020-10-12)
 615：NetCore：修正Aries 读取appsetting.json 编码问题(2020-10-12)
 616：DBTool：GetColumn 获取视图时增加字段描述(2020-10-13)
-617：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
-618：SqlInjection：加强sql未参数化使用时的注入处理。(2020-10-16)
-619：修正MDataTable.AcceptChange 值状态丢失导致无法更新问题。(2020-11-04)
+617：自动缓存：细节优化【缓存key不区分大小写】(2020-10-13)
+618：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
+619：SqlInjection：加强sql未参数化使用时的注入处理。(2020-10-16)
+620：ConvertTool：加强枚举类型的转换。(2020-10-27)
+621：修正MDataTable.AcceptChange 值状态丢失导致无法更新问题。(2020-11-04)
+622：优化NetCore下HttpFileCollection方法兼容。(2020-11-06)
+623：修正JsonHelper.IsJson方法判断。(2020-11-09)
+624：修正NoSqlCommand.FormatParas参数Bug。(2020-11-16)
+625：修正NetCore监控appsettings.json的链接缓存重置。(2020-11-17)
+------------------------------------------------------------------------------
