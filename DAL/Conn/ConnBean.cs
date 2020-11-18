@@ -142,6 +142,9 @@ namespace CYQ.Data
             string connString = string.Format(AppConfig.GetConn(connNameOrString), AppConfig.WebRootPath);
             if (string.IsNullOrEmpty(connString))
             {
+                string err = "ConnBean.Create can't create by " + connNameOrString;
+                Log.Write(err, LogType.DataBase);
+                Error.Throw(err);
                 return null;
             }
             //¼ì²â»º´æÖÐÓÐÄ¾ÓÐ
