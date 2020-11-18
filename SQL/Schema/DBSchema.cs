@@ -28,25 +28,28 @@ namespace CYQ.Data.SQL
         public static DBInfo GetSchema(string conn)
         {
             ConnBean cb = ConnBean.Create(conn);
-            int hash = cb.GetHashCode();
-            if (!_DBScheams.ContainsKey(hash))
+            if (cb != null)
             {
-                lock (o)
+                int hash = cb.GetHashCode();
+                if (!_DBScheams.ContainsKey(hash))
                 {
-                    if (!_DBScheams.ContainsKey(hash))
+                    lock (o)
                     {
-                        DBInfo dbSchema = GetSchemaDic(cb.ConnName);
-                        if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
+                        if (!_DBScheams.ContainsKey(hash))
                         {
-                            _DBScheams.Add(hash, dbSchema);
+                            DBInfo dbSchema = GetSchemaDic(cb.ConnName);
+                            if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
+                            {
+                                _DBScheams.Add(hash, dbSchema);
+                            }
+                            return dbSchema;
                         }
-                        return dbSchema;
                     }
                 }
-            }
-            if (_DBScheams.ContainsKey(hash))
-            {
-                return _DBScheams[hash];
+                if (_DBScheams.ContainsKey(hash))
+                {
+                    return _DBScheams[hash];
+                }
             }
             return null;
         }

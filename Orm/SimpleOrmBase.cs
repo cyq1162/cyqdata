@@ -235,6 +235,12 @@ namespace CYQ.Data.Orm
                     }
                     Columns = TableSchema.GetColumnByType(typeInfo, conn);
                     ConnBean connBean = ConnBean.Create(conn);//下面指定链接，才不会在主从备时被切换到其它库。
+                    if (connBean == null)
+                    {
+                        string err = "SimpleOrmBase<T>.SetDelayInit ConnBean can't create by " + conn;
+                        Log.Write(err, LogType.DataBase);
+                        Error.Throw(err);
+                    }
                     if (!DBTool.Exists(tableName, "U", connBean.ConnString))
                     {
                         DBTool.ErrorMsg = null;

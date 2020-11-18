@@ -75,7 +75,10 @@ namespace CYQ.Data
                 value = string.IsNullOrEmpty(value) ? defaultValue : value;
                 try
                 {
-                    appConfigs.Add(key, value);
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        appConfigs.Add(key, value);
+                    }
                 }
                 catch
                 {

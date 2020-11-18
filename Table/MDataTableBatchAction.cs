@@ -542,8 +542,16 @@ namespace CYQ.Data.Table
         }
         internal bool OracleBulkCopyInsert()
         {
+            ConnBean bean=ConnBean.Create(_Conn);
+            if(bean==null)
+            {
+                string err = "MDataTableBatchAction.OracleBulkCopyInsert ConnBean can't create by " + _Conn;
+                Log.Write(err, LogType.DataBase);
+                Error.Throw(err);
+            }
+            string conn =bean.ConnString;
             CheckGUIDAndDateTime(DataBaseType.Oracle);
-            string conn = ConnBean.Create(_Conn).ConnString;
+           
             Assembly ass = OracleDal.GetAssembly();
             object sbc = ass.CreateInstance("Oracle.DataAccess.Client.OracleBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
             Type sbcType = sbc.GetType();

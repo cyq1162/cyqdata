@@ -409,7 +409,12 @@ namespace CYQ.Data
             string newConn = AppConfig.GetConn(dbName + "Conn");
             if (!string.IsNullOrEmpty(newConn))
             {
-                return ConnBean.Create(newConn).ConnString;
+                ConnBean bean = ConnBean.Create(newConn);
+                if (bean != null)
+                {
+                    return bean.ConnString;
+                }
+                return "";
             }
             return UsingConnBean.ConnString.Replace(DataBaseName, dbName);
         }

@@ -177,7 +177,14 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static int GetHashCode(string connNameOrString)
         {
-            return ConnBean.Create(connNameOrString).GetHashCode();
+            ConnBean connBean = ConnBean.Create(connNameOrString);
+            if (connBean == null)
+            {
+                string err = "DBInfo.GetHashCode ConnBean can't create by " + connNameOrString;
+                Log.Write(err, LogType.DataBase);
+                Error.Throw(err);
+            }
+            return connBean.GetHashCode();
         }
     }
 }

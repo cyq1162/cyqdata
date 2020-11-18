@@ -45,7 +45,14 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static DataBaseType GetDataBaseType(string conn)
         {
-            return ConnBean.Create(conn).ConnDataBaseType;
+            ConnBean connBean = ConnBean.Create(conn);
+            if (connBean == null)
+            {
+                string err = "DBTool.GetDataBaseType ConnBean can't create by " + conn;
+                Log.Write(err, LogType.DataBase);
+                Error.Throw(err);
+            }
+            return connBean.ConnDataBaseType;
         }
         /// <summary>
         /// 获取指定数据库的数据类型
