@@ -170,7 +170,8 @@ namespace CYQ.Data.Aop
             }
             if (aop != null)
             {
-                return aop.Clone();
+                IAop cloneAop= aop.Clone();
+                return cloneAop == null ? aop : cloneAop;
             }
             return null;
         }
