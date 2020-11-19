@@ -844,4 +844,6 @@
 625：修正AppConfig.IsWeb在子线程下的判断问题。(2020-11-16)
 626：修正：AppConfig.DB.SchemaMapPath 配置表结构外置缓存【MDataColumn（WriteSchema、CreateFrom）方法增加SqlTypeName输出和加载还原】(2020-11-16)
 627：修正NetCore监控appsettings.json的链接缓存重置。(2020-11-17)
+628：DBTool.Exists等相关方法【CrossDB内部】优化跨库检测。(2020-11-19)
+629：MAction：优化跨库事务链接的设置。(2020-11-19)
 ------------------------------------------------------------------------------

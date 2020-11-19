@@ -333,7 +333,7 @@ namespace CYQ.Data
         /// </summary>
         internal DBResetResult ChangeDatabase(string dbName)
         {
-            if (_con.State == ConnectionState.Closed)//事务中。。不允许切换
+            if (_con.State == ConnectionState.Closed && !IsOpenTrans)//事务中。。不允许切换
             {
                 try
                 {

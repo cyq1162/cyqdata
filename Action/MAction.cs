@@ -341,38 +341,20 @@ namespace CYQ.Data
             }
             if (tableObj is String)
             {
-                string fixName;
-                conn = CrossDB.GetConn(tableName, out fixName, conn);
+                string fixName, dbName;
+                conn = CrossDB.GetConn(tableName, out fixName, conn,out dbName);
                 tableObj = fixName;
+                if (string.IsNullOrEmpty(newDbName) && !string.IsNullOrEmpty(dbName))
+                {
+                    newDbName = dbName;
+                }
 
             }
-            //string dbName = null;
-            //if (tableObj is String)
-            //{
-            //    if (string.IsNullOrEmpty(conn))//不指定Conn时。
-            //    {
-            //        string conn = CrossDB.GetConn(tableObj);
-            //        tableObj = CrossDB.GetTableName(tableObj, conn);
-            //        tableObj = SqlCreate.SqlToViewSql(tableObj);
-            //        dbName = CrossDB.GetDBName(ref tableObj);
-            //        if (conn == AppConfig.DB.DefaultConn && !string.IsNullOrEmpty(dbName))
-            //        {
-            //            if (!string.IsNullOrEmpty(AppConfig.GetConn(dbName + "Conn")))
-            //            {
-            //                conn = dbName + "Conn";
-            //            }
-            //        }
-            //    }
-            //}
+
             MDataRow newRow = CreateRow(tableObj, conn);//尝试从MDataRow提取新的Conn链接
             InitDalHelper(newRow, newDbName);
             InitRowSchema(newRow, resetState);
             InitGlobalObject(isFirstInit);
-            //Aop.IAop myAop = Aop.InterAop.Instance.GetFromConfig();//试图从配置文件加载自定义Aop
-            //if (myAop != null)
-            //{
-            //    SetAop(myAop);
-            //}
         }
         private MDataRow CreateRow(object tableObj, string conn)
         {
@@ -1214,7 +1196,7 @@ namespace CYQ.Data
             {
                 string msg = "MAction Set : can't find the ColumnName:" + startKey;
                 Log.Write(msg, LogType.DataBase.ToString());
-               // dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
+                // dalHelper.DebugInfo.Append(AppConst.HR + "Alarm : can't find the ColumnName:" + startKey);
             }
             return this;
         }

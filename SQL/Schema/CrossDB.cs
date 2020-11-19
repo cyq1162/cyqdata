@@ -38,24 +38,31 @@ namespace CYQ.Data.SQL
             }
             return null;
         }
+        public static string GetConn(string nameOrSql, out string fixName, string priorityConn)
+        {
+            string dbName;
+            return GetConn(nameOrSql, out fixName, priorityConn, out dbName);
+        }
         /// <summary>
         /// 获得链接的配置或语句。
         /// </summary>
         /// <param name="nameOrSql">表名、视图名、存储过程名</param>
         /// <returns></returns>
-        public static string GetConn(string nameOrSql, out string fixName, string priorityConn)
+        public static string GetConn(string nameOrSql, out string fixName, string priorityConn, out string dbName)
         {
             string firstTableName = null;
             string conn = null;
             nameOrSql = nameOrSql.Trim();
             fixName = nameOrSql;
+            dbName = string.Empty;
             if (nameOrSql.IndexOf(' ') == -1)//单表。
             {
                 #region 单表
                 if (nameOrSql.IndexOf('.') > -1) //dbname.tablename
                 {
                     string[] items = nameOrSql.Split('.');
-                    conn = items[0] + "Conn";
+                    dbName = items[0];
+                    conn = dbName + "Conn";
                     fixName = items[items.Length - 1];
                 }
                 else
@@ -189,7 +196,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
-            conn = GetConn(name, out name,conn);
+            conn = GetConn(name, out name, conn);
             if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
             {
                 DBSchema.GetSchema(conn);
