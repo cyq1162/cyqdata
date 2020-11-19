@@ -189,6 +189,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
+            conn = GetConn(name, out name,conn);
             if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
             {
                 DBSchema.GetSchema(conn);
@@ -238,6 +239,7 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
+                conn = GetConn(name, out name, conn);
                 int tableHash = TableInfo.GetHashCode(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
@@ -265,11 +267,11 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
+                conn = GetConn(name, out name, conn);
                 int tableHash = TableInfo.GetHashCode(name);
                 int dbHash = ConnBean.GetHashCode(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))
                 {
-
                     return DBSchema.DBScheams[dbHash].Add(tableHash, type, name);
                 }
 
