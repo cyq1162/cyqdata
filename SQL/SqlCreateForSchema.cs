@@ -406,10 +406,10 @@ where a.id = object_id('" + tableName + "') and a.name ='" + ms.ColumnName + "'i
                     //}
                     else if (op == AlterOp.AddOrModify)
                     {
-                        string alterSql = SqlFormat.Keyword(ms.ColumnName, dalType) + " " + DataType.GetDataType(ms, dalType, version);
                         //智能判断
                         if (isContains) // 存在，则修改
                         {
+                            string alterSql = SqlFormat.Keyword(ms.ColumnName, dalType) + " " + DataType.GetDataType(ms, dalType, version);
                             //检测是否相同
                             MCellStruct dbStruct = dbColumn[ms.ColumnName] ?? dbColumn[ms.OldName];
                             if (dbStruct.IsCanNull != ms.IsCanNull || dbStruct.SqlType != ms.SqlType || dbStruct.MaxSize != ms.MaxSize || dbStruct.Scale != ms.Scale)

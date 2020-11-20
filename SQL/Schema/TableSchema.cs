@@ -560,7 +560,7 @@ namespace CYQ.Data.SQL
         public static MDataColumn GetColumnByType(Type typeInfo, string conn)
         {
             if (typeInfo == null) { return null; }
-            string key = "ColumnCache_" + typeInfo.FullName;
+            string key = "ColumnsCache_" + typeInfo.FullName;
 
             if (_ColumnCache.ContainsKey(key))
             {

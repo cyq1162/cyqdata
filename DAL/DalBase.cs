@@ -256,24 +256,24 @@ namespace CYQ.Data
         #region 拿表、视图、存储过程等元数据。
         public virtual Dictionary<string, string> GetTables()
         {
-            return GetSchemaDic(GetSchemaSql("U"));
+            return GetSchemaDic(GetSchemaSql("U"), "U");
         }
         public virtual Dictionary<string, string> GetViews()
         {
-            return GetSchemaDic(GetSchemaSql("V"));
+            return GetSchemaDic(GetSchemaSql("V"), "V");
         }
         public virtual Dictionary<string, string> GetProcs()
         {
-            return GetSchemaDic(GetSchemaSql("P"));
+            return GetSchemaDic(GetSchemaSql("P"), "P");
         }
-        protected Dictionary<string, string> GetSchemaDic(string sql)
+        protected Dictionary<string, string> GetSchemaDic(string sql, string type)
         {
             if (string.IsNullOrEmpty(sql))
             {
                 return null;
             }
             Dictionary<string, string> dic = null;
-            string key = "UVPCache_" + StaticTool.GetHashKey(sql + ConnName);
+            string key = type + "Cache_" + ConnBean.GetHashCode(ConnName) + "_" + StaticTool.GetHashKey(sql);
             #region 缓存检测
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
