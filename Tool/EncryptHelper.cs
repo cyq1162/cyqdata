@@ -82,7 +82,7 @@ namespace CYQ.Data.Tool
 
                 byte[] Buffer = ASCIIEncoding.UTF8.GetBytes(text);
                 string pass = Convert.ToBase64String(DESEncrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
-                result = pass.Replace('=', '#');
+                result = pass.Replace('=', '#').Replace("+", "-").Replace("/", "_");
             }
 
             return result;
@@ -130,7 +130,7 @@ namespace CYQ.Data.Tool
         private static string Decrypt(string text, byte[] hashKey)
         {
             string result = "";
-            text = text.Replace('#', '=');
+            text = text.Replace('#', '=').Replace("-", "+").Replace("_", "/");
             using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
             {
                 DES.Key = hashKey;
