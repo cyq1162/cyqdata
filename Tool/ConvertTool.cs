@@ -106,7 +106,7 @@ namespace CYQ.Data.Tool
             {
                 return value as Encoding;
             }
-            if (strValue == "")
+            if (strValue.Trim() == "")
             {
                 if (t.Name.EndsWith("[]")) { return null; }
                 return Activator.CreateInstance(t);
