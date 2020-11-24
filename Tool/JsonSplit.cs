@@ -640,10 +640,6 @@ namespace CYQ.Data.Tool
                             escapeChar = true;
                         }
                     }
-                    else
-                    {
-                        escapeChar = false;
-                    }
                     if (jsonStart)
                     {
                         if (keyStart <= 0 && keyValueState <= 0)
@@ -665,7 +661,10 @@ namespace CYQ.Data.Tool
                     }
                     break;
             }
-
+            if (escapeChar && c != '\\')
+            {
+                escapeChar = false;
+            }
             if (!isKeyword)
             {
                 CheckIsError(c);
