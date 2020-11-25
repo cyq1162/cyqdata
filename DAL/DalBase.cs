@@ -751,13 +751,12 @@ namespace CYQ.Data
                         return false;//上一个执行语句发生了异常（特殊情况在ExeReader guid='xxx' 但不抛异常)
                     }
                     _tran.Commit();
-
+                    return true;
                 }
                 catch (Exception err)
                 {
                     RollBack();
                     WriteError("EndTransaction():" + err.Message);
-                    return false;
                 }
                 finally
                 {
@@ -765,7 +764,7 @@ namespace CYQ.Data
                     CloseCon();
                 }
             }
-            return true;
+            return false;
         }
         /// <summary>
         /// 事务（有则）回滚
@@ -780,18 +779,19 @@ namespace CYQ.Data
                     if (_tran.Connection != null)
                     {
                         _tran.Rollback();
+                        return true;
                     }
                 }
-                catch (Exception)
+                catch (Exception err)
                 {
-                    return false;
+                    WriteError("RollBack():" + err.Message);
                 }
                 finally
                 {
                     _tran = null;//以便重启事务，避免无法二次回滚。
                 }
             }
-            return true;
+            return false;
         }
 
         #endregion
