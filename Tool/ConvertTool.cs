@@ -134,6 +134,10 @@ namespace CYQ.Data.Tool
                     {
                         return Guid.NewGuid();
                     }
+                    else if (strValue.ToLower() == "null")
+                    {
+                        return Guid.Empty;
+                    }
                     return new Guid(strValue);
                 }
                 else
