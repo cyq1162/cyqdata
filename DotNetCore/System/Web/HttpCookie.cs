@@ -40,7 +40,7 @@ namespace System.Web
         public CookieOptions ToCookieOptions()
         {
             CookieOptions op = new CookieOptions();
-            op.SameSite = SameSiteMode.None;
+            op.SameSite = SameSiteMode.Lax;
             op.Domain = this.Domain;
             op.Expires = ConverFromDateTime(this.Expires);
             op.HttpOnly = this.HttpOnly;
