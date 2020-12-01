@@ -19,6 +19,7 @@ namespace System.Web
         public DateTime Expires { get; set; }
         public string Path { get; set; }
         public bool HttpOnly { get; set; }
+        public bool Secure { get; set; }
         public string Value { get; set; }
         public string Domain { get; set; }
         /// <summary>
@@ -33,6 +34,7 @@ namespace System.Web
             {
                 cookie.Expires = ConvertFromDateTimeOffset(op.Expires.Value);
             }
+            cookie.Secure = op.Secure;
             cookie.HttpOnly = op.HttpOnly;
             cookie.Path = op.Path;
             return cookie;
@@ -40,7 +42,11 @@ namespace System.Web
         public CookieOptions ToCookieOptions()
         {
             CookieOptions op = new CookieOptions();
-            op.SameSite = SameSiteMode.Lax;
+            if (op.SameSite == SameSiteMode.None)//NETCore 2.1 默认是None，3.1 默认是：Unspecified
+            {
+                op.SameSite = SameSiteMode.Lax;
+            }
+            op.Secure = this.Secure;
             op.Domain = this.Domain;
             op.Expires = ConverFromDateTime(this.Expires);
             op.HttpOnly = this.HttpOnly;
