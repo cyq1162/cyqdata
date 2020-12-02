@@ -316,6 +316,10 @@ namespace CYQ.Data.Tool
         {
             switch (c)
             {
+                case '\r':
+                case '\n':
+                case '\t':
+                    return;
                 case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
                     isError = jsonStart && keyValueState == 0;//重复开始错误 同时不是值处理。
                     break;
