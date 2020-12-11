@@ -26,7 +26,6 @@ namespace CYQ.Data.Tool
             return BitConverter.ToString(new Guid(guid).ToByteArray()).Replace("-", "");
         }
 
-        static MDictionary<string, string> hashKeyCache = new MDictionary<string, string>(32);
         /// <summary>
         /// 【用于分布式】
         /// </summary>
@@ -34,32 +33,12 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         internal static string GetHashKey(string sourceString)
         {
-            try
+            if (string.IsNullOrEmpty(sourceString))
             {
-                if (string.IsNullOrEmpty(sourceString))
-                {
-                    return "K" + HashCreator.Create(sourceString);
-                }
-                if (hashKeyCache.ContainsKey(sourceString))
-                {
-                    return hashKeyCache[sourceString];
-                }
-                else
-                {
-                    if (hashKeyCache.Count > 1024)
-                    {
-                        hashKeyCache.Clear();
-                        hashKeyCache = new MDictionary<string, string>(64);
-                    }
-                    string value = "K" + Math.Abs(HashCreator.Create(sourceString)) + sourceString.Length;
-                    hashKeyCache.Add(sourceString, value);
-                    return value;
-                }
+                return "K" + HashCreator.Create(sourceString);
             }
-            catch
-            {
-                return sourceString;
-            }
+            return "K" + HashCreator.Create(sourceString) + sourceString.Length;
+
         }
         /// <summary>
         /// 用于标识（以用户为单位）的 主从 的唯一标识
