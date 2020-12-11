@@ -98,7 +98,6 @@
     <Compile Include="Cache\LocalCache.cs" />
     <Compile Include="Cache\MemCache.cs" />
     <Compile Include="Cache\MemRedis\ClientBase.cs" />
-    <Compile Include="Cache\MemRedis\HashAlgorithms.cs" />
     <Compile Include="Cache\MemRedis\HostConfigWatch.cs" />
     <Compile Include="Cache\MemRedis\LogAdapter.cs" />
     <Compile Include="Cache\MemCache\MemcachedClient.cs" />
@@ -173,6 +172,7 @@
     <Compile Include="Tool\DBEntity\TableInfo.cs" />
     <Compile Include="Tool\DBEntity\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
+    <Compile Include="Tool\HashAlgorithms.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
     <Compile Include="Tool\SysTypeEnum.cs" />

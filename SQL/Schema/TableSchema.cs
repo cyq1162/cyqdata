@@ -479,7 +479,7 @@ namespace CYQ.Data.SQL
             {
                 conn = CrossDB.GetConn(tableName, out tableName, conn);
             }
-            return "ColumnsCache_" + ConnBean.GetHashCode(conn) + "_" + TableInfo.GetHashCode(tableName);
+            return "ColumnsCache_" + ConnBean.GetHashKey(conn) + "_" + TableInfo.GetHashKey(tableName);
         }
         //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
         //    {

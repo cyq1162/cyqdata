@@ -50,12 +50,9 @@ namespace CYQ.Data.Tool
         /// 获取指定（表、视图、存储过程）名称的Hash值
         /// </summary>
         /// <returns></returns>
-        public static int GetHashCode(string name)
+        public static string GetHashKey(string name)
         {
-            if (string.IsNullOrEmpty(name)) {
-                return "".GetHashCode();
-            }
-            return Math.Abs(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower().GetHashCode());
+            return StaticTool.GetHashKey(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower());
         }
         /// <summary>
         /// 获取相关的列架构（对表和视图有效）

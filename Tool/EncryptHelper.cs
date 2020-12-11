@@ -7,10 +7,30 @@ using CYQ.Data;
 namespace CYQ.Data.Tool
 {
     /// <summary>
-    /// 密码加密类
+    /// 密码加密类【含Hash算法】
     /// </summary>
     public static class EncryptHelper
     {
+        #region 对外公开的两个Hash接口（和内部的加密没啥关系）
+        /// <summary>
+        /// 【用于分布式】根据字符串获取相应的HashKey
+        /// </summary>
+        /// <param name="key">字符串</param>
+        /// <returns></returns>
+        public static string GetHashKey(string key)
+        {
+            return StaticTool.GetHashKey(key);
+        }
+        /// <summary>
+        /// 【用于分布式】根据字符串获取相应的HashCode
+        /// </summary>
+        /// <param name="key">字符串</param>
+        /// <returns></returns>
+        public static uint GetHashCode(string key)
+        {
+            return HashCreator.Create(key);
+        }
+        #endregion
         internal static byte[] GetHash(string key)
         {
             using (MD5CryptoServiceProvider hashMD5 = new MD5CryptoServiceProvider())

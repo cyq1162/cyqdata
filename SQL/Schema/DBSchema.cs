@@ -9,8 +9,8 @@ namespace CYQ.Data.SQL
 {
     internal partial class DBSchema
     {
-        private static Dictionary<int, DBInfo> _DBScheams = new Dictionary<int, DBInfo>();
-        public static Dictionary<int, DBInfo> DBScheams
+        private static Dictionary<string, DBInfo> _DBScheams = new Dictionary<string, DBInfo>();
+        public static Dictionary<string, DBInfo> DBScheams
         {
             get
             {
@@ -30,7 +30,7 @@ namespace CYQ.Data.SQL
             ConnBean cb = ConnBean.Create(conn);
             if (cb != null)
             {
-                int hash = cb.GetHashCode();
+                string hash = cb.GetHashKey();
                 if (!_DBScheams.ContainsKey(hash))
                 {
                     lock (o)
@@ -66,10 +66,10 @@ namespace CYQ.Data.SQL
                 Dictionary<string, string> tables = dal.GetTables();
                 if (tables != null && tables.Count > 0)
                 {
-                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
                     foreach (KeyValuePair<string, string> item in tables)
                     {
-                        int hash = TableInfo.GetHashCode(item.Key);
+                        string hash = TableInfo.GetHashKey(item.Key);
                         if (!dic.ContainsKey(hash))
                         {
                             dic.Add(hash, new TableInfo(item.Key, "U", item.Value, info));
@@ -81,10 +81,10 @@ namespace CYQ.Data.SQL
                 Dictionary<string, string> views = dal.GetViews();
                 if (views != null && views.Count > 0)
                 {
-                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
                     foreach (KeyValuePair<string, string> item in views)
                     {
-                        int hash = TableInfo.GetHashCode(item.Key);
+                        string hash = TableInfo.GetHashKey(item.Key);
                         if (!dic.ContainsKey(hash))
                         {
                             dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
@@ -95,10 +95,10 @@ namespace CYQ.Data.SQL
                 Dictionary<string, string> procs = dal.GetProcs();
                 if (procs != null && procs.Count > 0)
                 {
-                    Dictionary<int, TableInfo> dic = new Dictionary<int, TableInfo>();
+                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
                     foreach (KeyValuePair<string, string> item in procs)
                     {
-                        int hash = TableInfo.GetHashCode(item.Key);
+                        string hash = TableInfo.GetHashKey(item.Key);
                         if (!dic.ContainsKey(hash))
                         {
                             dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));

@@ -12,8 +12,6 @@ using System.Threading;
 
 namespace CYQ.Data.Tool
 {
-
-
     /// <summary>
     /// 静态方法工具类
     /// </summary>
@@ -29,22 +27,31 @@ namespace CYQ.Data.Tool
         }
 
         static MDictionary<string, string> hashKeyCache = new MDictionary<string, string>(32);
+        /// <summary>
+        /// 【用于分布式】
+        /// </summary>
+        /// <param name="sourceString"></param>
+        /// <returns></returns>
         internal static string GetHashKey(string sourceString)
         {
             try
             {
+                if (string.IsNullOrEmpty(sourceString))
+                {
+                    return "K" + HashCreator.Create(sourceString);
+                }
                 if (hashKeyCache.ContainsKey(sourceString))
                 {
                     return hashKeyCache[sourceString];
                 }
                 else
                 {
-                    if (hashKeyCache.Count > 512)
+                    if (hashKeyCache.Count > 1024)
                     {
                         hashKeyCache.Clear();
                         hashKeyCache = new MDictionary<string, string>(64);
                     }
-                    string value = "K" + Math.Abs(sourceString.GetHashCode()) + sourceString.Length;
+                    string value = "K" + Math.Abs(HashCreator.Create(sourceString)) + sourceString.Length;
                     hashKeyCache.Add(sourceString, value);
                     return value;
                 }
@@ -124,7 +131,7 @@ namespace CYQ.Data.Tool
                 }
                 key = id + key;
             }
-            int hash = ConnBean.GetHashCode(conn);
+            string hash = ConnBean.GetHashKey(conn);
             return "Transation_" + key + hash;
         }
     }

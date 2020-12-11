@@ -73,8 +73,8 @@ namespace CYQ.Data.Tool
                 _DataBaseType = value;
             }
         }
-        private Dictionary<int, TableInfo> _Tables = new Dictionary<int, TableInfo>();
-        public Dictionary<int, TableInfo> Tables
+        private Dictionary<string, TableInfo> _Tables = new Dictionary<string, TableInfo>();
+        public Dictionary<string, TableInfo> Tables
         {
             get
             {
@@ -85,8 +85,8 @@ namespace CYQ.Data.Tool
                 _Tables = value;
             }
         }
-        private Dictionary<int, TableInfo> _Views = new Dictionary<int, TableInfo>();
-        public Dictionary<int, TableInfo> Views
+        private Dictionary<string, TableInfo> _Views = new Dictionary<string, TableInfo>();
+        public Dictionary<string, TableInfo> Views
         {
             get
             {
@@ -97,8 +97,8 @@ namespace CYQ.Data.Tool
                 _Views = value;
             }
         }
-        private Dictionary<int, TableInfo> _Procs = new Dictionary<int, TableInfo>();
-        public Dictionary<int, TableInfo> Procs
+        private Dictionary<string, TableInfo> _Procs = new Dictionary<string, TableInfo>();
+        public Dictionary<string, TableInfo> Procs
         {
             get
             {
@@ -111,11 +111,11 @@ namespace CYQ.Data.Tool
         }
 
 
-        internal TableInfo GetTableInfo(int tableHash)
+        internal TableInfo GetTableInfo(string tableHash)
         {
             return GetTableInfo(tableHash, null);
         }
-        internal TableInfo GetTableInfo(int tableHash, string type)
+        internal TableInfo GetTableInfo(string tableHash, string type)
         {
             if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
             {
@@ -131,7 +131,7 @@ namespace CYQ.Data.Tool
             }
             return null;
         }
-        internal bool Remove(int tableHash, string type)
+        internal bool Remove(string tableHash, string type)
         {
             if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
             {
@@ -147,7 +147,7 @@ namespace CYQ.Data.Tool
             }
             return false;
         }
-        internal bool Add(int tableHash, string type, string name)
+        internal bool Add(string tableHash, string type, string name)
         {
             try
             {
@@ -171,11 +171,11 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 获取指定数据库链接的Hash值
+        /// 获取指定数据库链接的HashKey
         /// </summary>
         /// <param name="connNameOrString">配置名或链接字符串</param>
         /// <returns></returns>
-        public static int GetHashCode(string connNameOrString)
+        public static string GetHashKey(string connNameOrString)
         {
             ConnBean connBean = ConnBean.Create(connNameOrString);
             if (connBean == null)
@@ -184,7 +184,7 @@ namespace CYQ.Data.Tool
                 Log.Write(err, LogType.DataBase);
                 Error.Throw(err);
             }
-            return connBean.GetHashCode();
+            return connBean.GetHashKey();
         }
     }
 }

@@ -517,7 +517,7 @@ namespace CYQ.Data.Cache
             {
                 conn = CrossDB.GetConn(tableName, out tableName, conn);
             }
-            return "AutoCache:" + ConnBean.GetHashCode(conn) + "." + tableName;
+            return "AutoCache:" + ConnBean.GetHashKey(conn) + "." + tableName;
         }
 
         private static string GetBaseKey(AopInfo para, string tableName)
@@ -538,7 +538,7 @@ namespace CYQ.Data.Cache
                     {
                         if (para.TableName.Contains(" "))
                         {
-                            tableName = "View_" +TableInfo.GetHashCode(para.TableName);
+                            tableName = "View_" +TableInfo.GetHashKey(para.TableName);
                         }
                         else
                         {

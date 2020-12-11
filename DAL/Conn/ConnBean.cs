@@ -93,9 +93,9 @@ namespace CYQ.Data
             }
             return IsOK;
         }
-        public override int GetHashCode()
+        public string GetHashKey()
         {
-            return Math.Abs(ConnString.Replace(" ", "").ToLower().GetHashCode());
+            return StaticTool.GetHashKey(ConnString.Replace(" ", "").ToLower());
         }
     }
     internal partial class ConnBean
@@ -122,15 +122,14 @@ namespace CYQ.Data
                 }
             }
         }
-        public static int GetHashCode(string conn)
+        public static string GetHashKey(string conn)
         {
             ConnBean co = Create(conn);
             if (co == null)
             {
-                if (conn == null) { return "".GetHashCode(); }
-                return conn.GetHashCode();
+                StaticTool.GetHashKey(conn);
             }
-            return co.GetHashCode();
+            return co.GetHashKey();
         }
         static readonly object o = new object();
         /// <summary>

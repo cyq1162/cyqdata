@@ -152,10 +152,10 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name))
             {
                 name = SqlFormat.NotKeyword(name);
-                int tableHash = TableInfo.GetHashCode(name);
+                string tableHash = TableInfo.GetHashKey(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
-                    int dbHash = ConnBean.GetHashCode(conn);
+                    string dbHash = ConnBean.GetHashKey(conn);
                     if (DBSchema.DBScheams.Count > 0 && DBSchema.DBScheams.ContainsKey(dbHash))
                     {
                         TableInfo info = DBSchema.DBScheams[dbHash].GetTableInfo(tableHash);
@@ -177,7 +177,7 @@ namespace CYQ.Data.SQL
                         }
                     }
                 }
-                foreach (KeyValuePair<int, DBInfo> item in DBSchema.DBScheams)
+                foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
                 {
                     TableInfo info = item.Value.GetTableInfo(tableHash);
                     if (info != null)
@@ -203,10 +203,10 @@ namespace CYQ.Data.SQL
             }
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                int tableHash = TableInfo.GetHashCode(name);
+                string tableHash = TableInfo.GetHashKey(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
-                    int dbHash = ConnBean.GetHashCode(conn);
+                    string dbHash = ConnBean.GetHashKey(conn);
                     if (DBSchema.DBScheams.ContainsKey(dbHash))
                     {
                         TableInfo info = DBSchema.DBScheams[dbHash].GetTableInfo(tableHash, type);
@@ -230,7 +230,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    foreach (KeyValuePair<int, DBInfo> item in DBSchema.DBScheams)
+                    foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
                     {
                         TableInfo info = item.Value.GetTableInfo(tableHash, type);
                         if (info != null)
@@ -247,10 +247,10 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
                 conn = GetConn(name, out name, conn);
-                int tableHash = TableInfo.GetHashCode(name);
+                string tableHash = TableInfo.GetHashKey(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
-                    int dbHash = ConnBean.GetHashCode(conn);
+                    string dbHash = ConnBean.GetHashKey(conn);
                     if (DBSchema.DBScheams.ContainsKey(dbHash))
                     {
 
@@ -259,7 +259,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    foreach (KeyValuePair<int, DBInfo> item in DBSchema.DBScheams)
+                    foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
                     {
                         if (item.Value.Remove(tableHash, type))
                         {
@@ -275,8 +275,8 @@ namespace CYQ.Data.SQL
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
                 conn = GetConn(name, out name, conn);
-                int tableHash = TableInfo.GetHashCode(name);
-                int dbHash = ConnBean.GetHashCode(conn);
+                string tableHash = TableInfo.GetHashKey(name);
+                string dbHash = ConnBean.GetHashKey(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))
                 {
                     return DBSchema.DBScheams[dbHash].Add(tableHash, type, name);
