@@ -143,6 +143,7 @@ namespace CYQ.Data
                 {
                     log.RefererUrl = request.UrlReferrer.ToString();
                 }
+                log.HttpMethod = request.HttpMethod;
             }
             LogWorker.Add(log);
         }

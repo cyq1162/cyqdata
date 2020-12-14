@@ -85,6 +85,23 @@ namespace CYQ.Data
             }
         }
 
+        private string _HttpMethod;
+        /// <summary>
+        /// 请求方法
+        /// </summary>
+        [Length(10)]
+        public string HttpMethod
+        {
+            get
+            {
+                return _HttpMethod;
+            }
+            set
+            {
+                _HttpMethod = value;
+            }
+        }
+
         private string _PageUrl;
         /// <summary>
         /// 请求的地址
@@ -170,8 +187,8 @@ namespace CYQ.Data
         /// <returns></returns>
         internal string GetFormatterText()
         {
-            string title = string.Format("V{0} Record On : {1} : {2}",
-                AppConfig.Version, DateTime.Now.ToString(), PageUrl ?? "");// + Log.Url;
+            string title = string.Format("V{0} Record On : {1} : {2} {3}",
+                AppConfig.Version, DateTime.Now.ToString(), HttpMethod, PageUrl ?? "");// + Log.Url;
             if (!string.IsNullOrEmpty(RefererUrl))
             {
                 title += AppConst.NewLine + AppConst.NewLine + "Referer : " + RefererUrl;
