@@ -127,7 +127,7 @@ namespace CYQ.Data
             ConnBean co = Create(conn);
             if (co == null)
             {
-                StaticTool.GetHashKey(conn);
+                return StaticTool.GetHashKey(conn);
             }
             return co.GetHashKey();
         }

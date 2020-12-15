@@ -31,7 +31,7 @@ namespace CYQ.Data.SQL
             }
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts";
+                string fullPath = GetSchemaFile(key);
                 if (System.IO.File.Exists(fullPath))
                 {
                     MDataColumn columns = MDataColumn.CreateFrom(fullPath);
@@ -404,13 +404,8 @@ namespace CYQ.Data.SQL
                     _ColumnCache.Add(key, mdcs.Clone());
                     if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                     {
-                        string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
-
-                        if (!System.IO.Directory.Exists(folderPath))
-                        {
-                            System.IO.Directory.CreateDirectory(folderPath);
-                        }
-                        mdcs.WriteSchema(folderPath + key + ".ts");
+                        string path = GetSchemaFile(key);
+                        mdcs.WriteSchema(path);
                     }
                 }
                 #endregion
@@ -469,6 +464,16 @@ namespace CYQ.Data.SQL
             //}
         }
 
+        internal static string GetSchemaFile(string key)
+        {
+            string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+
+            if (!System.IO.Directory.Exists(folderPath))
+            {
+                System.IO.Directory.CreateDirectory(folderPath);
+            }
+            return folderPath + key + ".ts";
+        }
         /// <summary>
         /// 缓存表架构Key
         /// </summary>

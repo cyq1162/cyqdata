@@ -165,7 +165,7 @@ namespace CYQ.Data.Tool
                     if (conn.ToLower().Contains(";ts=0"))//不写入表架构。
                     {
                         //增加缓存
-                        
+
                         result = true;
                     }
                     else
@@ -266,7 +266,7 @@ namespace CYQ.Data.Tool
         {
             return GetCreateTableSql(tableName, AppConfig.DB.DefaultConn);
         }
-        public static string GetCreateTableSql(string tableName,string conn)
+        public static string GetCreateTableSql(string tableName, string conn)
         {
             MDataColumn mdc = GetColumns(tableName, conn);
             return GetCreateTableSql(tableName, mdc, mdc.DataBaseType, mdc.DataBaseVersion);
@@ -612,9 +612,15 @@ namespace CYQ.Data.Tool
 
         private static void RemoveCache(string tableName, string conn)
         {
-            //清缓存
+            //清内存
             string key = Cache.CacheManage.GetKey(Cache.CacheKeyType.Schema, tableName, conn);
             Cache.CacheManage.LocalInstance.Remove(key);
+            //清外置的表结构.tx：
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            {
+                string file = TableSchema.GetSchemaFile(key);
+                IOHelper.Delete(file);
+            }
             key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, conn);
             Cache.AutoCache.ReadyForRemove(key);
         }
