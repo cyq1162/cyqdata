@@ -285,9 +285,9 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 使用本查询，得到克隆后的数据
         /// </summary>
-        public MDataTable Select(object where, params object[] selectColumns)
+        public MDataTable Select(object where)
         {
-            return Select(0, 0, where, selectColumns);
+            return Select(0, 0, where);
         }
         /// <summary>
         /// 使用本查询，得到克隆后的数据
