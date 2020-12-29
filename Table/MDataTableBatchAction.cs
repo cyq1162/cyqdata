@@ -411,7 +411,7 @@ namespace CYQ.Data.Table
                             }
                             else
                             {
-                                action.Data.SetState(2);
+                                action.Data.SetState(2, BreakOp.Null);
                                 result = action.Update(where);
                             }
                         }
