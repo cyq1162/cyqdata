@@ -1329,8 +1329,23 @@ namespace CYQ.Data.Table
                         int len = ReflectTool.GetArgumentLength(ref t, out types);
                         if (len == 2)//×Öµä
                         {
-                            dt.Columns.Add("Key", DataType.GetSqlType(types[0]));
-                            dt.Columns.Add("Value", DataType.GetSqlType(types[1]));
+                            if(t.Name == "KeyCollection")
+                            {
+                                Type objType = types[0];
+                                dt.TableName = objType.Name;
+                                dt.Columns = TableSchema.GetColumnByType(objType);
+                            }
+                            else if (t.Name == "ValueCollection")
+                            {
+                                Type objType = types[1];
+                                dt.TableName = objType.Name;
+                                dt.Columns = TableSchema.GetColumnByType(objType);
+                            }
+                            else
+                            {
+                                dt.Columns.Add("Key", DataType.GetSqlType(types[0]));
+                                dt.Columns.Add("Value", DataType.GetSqlType(types[1]));
+                            }
                         }
                         else
                         {
