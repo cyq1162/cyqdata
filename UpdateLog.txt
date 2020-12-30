@@ -851,3 +851,5 @@
 631：修正：分布式缓存【Hash】问题(2020-12-11)
 632：SysLogs： 增加 HttpMethod 属性。(2020-12-14)
 633：MSSQL2012：修正获取表结构问题【可能：发布订阅后sysobjects表的category值从0变更为32】(2020-12-15)
+634：修正： LocalCache.Remove 未同步移除表结构的问题(2020-12-30)
+635：MDataTable.CreateFrom 增加对Dicationary.Keys、Dicationary.Values的支持。(2020-12-30)
