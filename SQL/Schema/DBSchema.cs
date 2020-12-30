@@ -111,6 +111,10 @@ namespace CYQ.Data.SQL
 
         }
 
+        public static void Remove(string key)
+        {
+            _DBScheams.Remove(key);
+        }
         public static void Clear()
         {
             _DBScheams.Clear();

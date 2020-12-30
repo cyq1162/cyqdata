@@ -327,6 +327,8 @@ namespace CYQ.Data.Cache
         public override bool Remove(string key)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
+            DBSchema.Remove(key);
+            TableSchema.Remove(key);
             return theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>

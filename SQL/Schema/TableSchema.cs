@@ -434,7 +434,10 @@ namespace CYQ.Data.SQL
 
         }
 
-
+        public static void Remove(string key)
+        {
+            _ColumnCache.Remove(key);
+        }
         public static void Clear()
         {
             _ColumnCache.Clear();

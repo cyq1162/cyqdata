@@ -80,7 +80,7 @@ namespace CYQ.Data.Tool
             }
             if (!string.IsNullOrEmpty(key))
             {
-                result = Encrypt(result, GetHash(key)) + "=2";//设置二级加密标识
+                result = Encrypt(result, GetHash(key)) + "$2";//设置二级加密标识
             }
             return result;
         }
@@ -102,7 +102,7 @@ namespace CYQ.Data.Tool
 
                 byte[] Buffer = ASCIIEncoding.UTF8.GetBytes(text);
                 string pass = Convert.ToBase64String(DESEncrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
-                result = pass.Replace('=', '#').Replace("+", "-").Replace("/", "_");
+                result = pass.Replace('=', '$').Replace("+", "-").Replace("/", "_");
             }
 
             return result;
@@ -132,7 +132,7 @@ namespace CYQ.Data.Tool
                 {
                     key = AppConfig.GetApp("EncryptKey", "");
                 }
-                if (!string.IsNullOrEmpty(key) && text.EndsWith("=2"))
+                if (!string.IsNullOrEmpty(key) && (text.EndsWith("=2") || text.EndsWith("$2")))
                 {
                     text = Decrypt(text.Substring(0, text.Length - 2), GetHash(key));//先解一次Key
                 }
@@ -150,7 +150,7 @@ namespace CYQ.Data.Tool
         private static string Decrypt(string text, byte[] hashKey)
         {
             string result = "";
-            text = text.Replace('#', '=').Replace("-", "+").Replace("_", "/");
+            text = text.Replace('#', '=').Replace("$", "=").Replace("-", "+").Replace("_", "/");
             using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
             {
                 DES.Key = hashKey;
