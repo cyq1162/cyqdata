@@ -107,31 +107,36 @@ namespace CYQ.Data.SQL
                         {
                             string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);
                             mdcs = GetViewColumns(sqlText, ref helper);
-                            Dictionary<string, MDataColumn> dic = new Dictionary<string, MDataColumn>();
-                            MDataColumn temp;
-                            //处理字段描述
-                            for (int i = 0; i < mdcs.Count; i++)
+                            if (mdcs != null && mdcs.Count > 0)
                             {
-                                MCellStruct cell = mdcs[i];
-                                if (string.IsNullOrEmpty(cell.Description) && !string.IsNullOrEmpty(cell.TableName))
+                                #region  处理字段描述
+                                Dictionary<string, MDataColumn> dic = new Dictionary<string, MDataColumn>();
+                                MDataColumn temp;
+
+                                for (int i = 0; i < mdcs.Count; i++)
                                 {
-                                    if (!dic.ContainsKey(cell.TableName))
+                                    MCellStruct cell = mdcs[i];
+                                    if (string.IsNullOrEmpty(cell.Description) && !string.IsNullOrEmpty(cell.TableName) && string.Compare(cell.TableName, SqlFormat.NotKeyword(tableName), true) != 0)
                                     {
-                                        temp = GetColumns(cell.TableName, conn);
-                                        dic.Add(cell.TableName, temp);
-                                    }
-                                    else
-                                    {
-                                        temp = dic[cell.TableName];
-                                    }
-                                    if (temp != null && temp.Contains(cell.ColumnName))
-                                    {
-                                        cell.Description = temp[cell.ColumnName].Description;
+                                        if (!dic.ContainsKey(cell.TableName))
+                                        {
+                                            temp = GetColumns(cell.TableName, conn);
+                                            dic.Add(cell.TableName, temp);
+                                        }
+                                        else
+                                        {
+                                            temp = dic[cell.TableName];
+                                        }
+                                        if (temp != null && temp.Contains(cell.ColumnName))
+                                        {
+                                            cell.Description = temp[cell.ColumnName].Description;
+                                        }
                                     }
                                 }
+                                dic.Clear();
+                                dic = null;
+                                #endregion
                             }
-                            dic.Clear();
-                            dic = null;
                         }
                         else
                         {
