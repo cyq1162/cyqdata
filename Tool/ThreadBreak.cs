@@ -158,6 +158,7 @@ namespace CYQ.Data.Tool
                         {
                             globalThread.Add(key);
                             Thread thread = new Thread(start);
+                            thread.Name = "GlobalThread";
                             thread.IsBackground = true;
                             thread.Start(para ?? thread.ManagedThreadId);
                         }

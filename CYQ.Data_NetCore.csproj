@@ -5,31 +5,24 @@
     <AssemblyName>CYQ.Data</AssemblyName>
     <RootNamespace>CYQ.Data</RootNamespace>
     <PackageId>cyqdatacore</PackageId>
-    <Version>5.8.3.7</Version>
+    <Version>5.8.3.8</Version>
     <Authors>路过秋天</Authors>
     <Description>cyq.data is a high-performance and the most powerful orm.（.NET 最好用的ORM数据层框架，木有之一！支持.NET Core）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2020-12-01）</Company>
+    <Company>路过秋天 （2021-01-06）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>596：MySql：修正tiny的几种类型处理(2020-04-30)
-597：XHtmlAction：增加对模板语法 &lt;%# %&gt; 内部执行js eval语法(2020-04-30)
-598：NetCore：由于597的原因，NETCore改成3.1(已优化回2.1）。(2020-04-30)
-599：因升级可视化调试工具【优化一些表格和Json数据转换相关】(2020-05-28)【V5.8.3.2】
-600：ConvertTool 增强数据类型转换(2020-06-03)
-601：Table 系列：内部优化(2020-06-03)
-602：Postgre 处理大小写兼容问题，增加IsPostgreLower配置项（默认false）(2020-07-01)
-603：MSSQL:兼容处理hierarchyid数据类型。(2020-07-13)
-604：DB2：开始支持(2020-07-22)【V5.8.3.5】
-605：DB2：完善多数据库兼容、表结构及语句生成等。(2020-07-23)
-606：MDataRow，MAction 开放Sets方法（连续设置值）(2020-07-24)
-607：DB2：补上分页语句。(2020-07-29)
-608：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)</PackageReleaseNotes>
+    <PackageReleaseNotes>630：修正：JsonHelper.IsJson 对\r\n\t和-符号的判断问题(2020-12-10)【V5.8.3.7】
+631：修正：分布式缓存【Hash】问题(2020-12-11)
+632：SysLogs： 增加 HttpMethod 属性。(2020-12-14)
+633：MSSQL2012：修正获取表结构问题【可能：发布订阅后sysobjects表的category值从0变更为32】(2020-12-15)
+634：修正： LocalCache.Remove 未同步移除表结构的问题(2020-12-30)
+635：MDataTable.CreateFrom 增加对Dicationary.Keys、Dicationary.Values的支持。(2020-12-30)</PackageReleaseNotes>
     <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.8.3.7</AssemblyVersion>
-    <FileVersion>5.8.3.7</FileVersion>
+    <AssemblyVersion>5.8.3.8</AssemblyVersion>
+    <FileVersion>5.8.3.8</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

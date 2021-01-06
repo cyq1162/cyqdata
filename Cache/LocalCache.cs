@@ -329,6 +329,24 @@ namespace CYQ.Data.Cache
             if (string.IsNullOrEmpty(key)) { return false; }
             DBSchema.Remove(key);
             TableSchema.Remove(key);
+            if (key.StartsWith("CCache_"))
+            {
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                {
+
+                    IOHelper.Delete(AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".ts");
+                    //顺带移除数据库表、视图、存储过程 名称列表缓存。
+                    string[] files = Directory.GetFiles(AppConfig.RunPath + AppConfig.DB.SchemaMapPath, "*.json");
+                    if (files != null && files.Length > 0)
+                    {
+                        foreach (string file in files)
+                        {
+                            IOHelper.Delete(file);
+                        }
+                    }
+
+                }
+            }
             return theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>
@@ -401,6 +419,13 @@ namespace CYQ.Data.Cache
                     }
                     theFolderWatcher.Clear();
                     theFolderKeys.Clear();
+                    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                    {
+                        if (Directory.Exists(AppConfig.RunPath + AppConfig.DB.SchemaMapPath))
+                        {
+                            Directory.Delete(AppConfig.RunPath + AppConfig.DB.SchemaMapPath, true);
+                        }
+                    }
                 }
             }
             catch
