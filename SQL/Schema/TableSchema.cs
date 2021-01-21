@@ -95,10 +95,18 @@ namespace CYQ.Data.SQL
                         }
                         if (!isView)
                         {
-                            TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
-                            if (info != null)
+                            Dictionary<string, string> tables = helper.GetTables();
+                            if (tables.ContainsKey(mdcs.TableName))
                             {
-                                mdcs.Description = info.Description;
+                                mdcs.Description = tables[mdcs.TableName];
+                            }
+                            else
+                            {
+                                TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
+                                if (info != null)
+                                {
+                                    mdcs.Description = info.Description;
+                                }
                             }
                         }
                         MCellStruct mStruct = null;

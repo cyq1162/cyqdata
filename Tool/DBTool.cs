@@ -250,6 +250,7 @@ namespace CYQ.Data.Tool
         public static string GetCreateTableDescriptionSql(string tableName, string conn)
         {
             MDataColumn mdc = GetColumns(tableName, conn);
+            if (mdc == null) { return ErrorMsg; }
             return GetCreateTableDescriptionSql(tableName, mdc, mdc.DataBaseType);
         }
         /// <summary>
@@ -514,7 +515,12 @@ namespace CYQ.Data.Tool
         public static MDataColumn GetColumns(string tableName, string conn)
         {
             string err;
-            return GetColumns(tableName, conn, out err);
+            MDataColumn mdc = GetColumns(tableName, conn, out err);
+            if (mdc == null)
+            {
+                _ErrorMsg.Append(err);
+            }
+            return mdc;
         }
         #endregion
 

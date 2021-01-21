@@ -855,3 +855,4 @@
 635：MDataTable.CreateFrom 增加对Dicationary.Keys、Dicationary.Values的支持。(2020-12-30)
 ------------------------------------------------------------------------------
 636：优化：LocalCache.Remove 如果是表结构，则检测并同步移除文件配置SchemaMapPath后的*.tx和*.json文件(2021-01-06)【V5.8.3.8】
+637：优化：Mysql 表描述的获取与生成。(2021-01-21)

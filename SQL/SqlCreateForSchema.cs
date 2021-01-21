@@ -80,7 +80,7 @@ namespace CYQ.Data.SQL
                     }
                     else if (dalType == DataBaseType.MySql)
                     {
-                        sb.AppendFormat("comment = '{0}';\r\n", columns.Description);
+                        sb.AppendFormat("alter table {0} comment = '{1}';\r\n", SqlFormat.Keyword(tableName, DataBaseType.MySql), columns.Description);
                     }
                     result = sb.ToString().TrimEnd(';');
                     break;

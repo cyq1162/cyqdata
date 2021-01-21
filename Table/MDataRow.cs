@@ -68,7 +68,6 @@ namespace CYQ.Data.Table
                 return Table.Columns;
             }
         }
-
         public static implicit operator MDataRow(DataRow row)
         {
             if (row == null)
