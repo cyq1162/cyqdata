@@ -11,7 +11,18 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class IOHelper
     {
-        private static CacheManage cache = CacheManage.LocalInstance;
+        private static CacheManage _cache = null;
+        private static CacheManage cache
+        {
+            get
+            {
+                if (_cache == null)
+                {
+                    _cache = CacheManage.LocalInstance;
+                }
+                return _cache;
+            }
+        }
         internal static Encoding DefaultEncoding = Encoding.Default;
 
         private static List<object> tenObj = new List<object>(10);
