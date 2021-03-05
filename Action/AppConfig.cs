@@ -142,8 +142,12 @@ namespace CYQ.Data
                 {
                     return ConnConfigWatch.Start(name, connString);
                 }
+                //允许配置文件里加密。
+                if (connString.Length > 32 && connString.Split(';', '=', ' ').Length == 1)
+                {
+                    connString = EncryptHelper.Decrypt(connString);
+                }
                 //启动高可用配置加载方式
-
                 if (connString.Length < 32 && connString.Split(' ').Length == 1)
                 {
                     return GetConn(connString);
