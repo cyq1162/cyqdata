@@ -1381,7 +1381,30 @@ namespace CYQ.Data.Table
             int index = Columns.GetIndex(name);
             if (index > -1)
             {
+               
                 object objValue = p != null ? p.GetValue(entity, null) : f.GetValue(entity);
+
+                Type type = p != null ? p.PropertyType : f.FieldType;
+                if (type.IsEnum)
+                {
+                    if (ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToStringAttribute>(p, f) != null)
+                    {
+                        objValue = objValue.ToString();
+                    }
+                    else if(ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToDescriptionAttribute>(p, f) != null)
+                    {
+                        FieldInfo field = type.GetField(objValue.ToString());
+                        if (field != null)
+                        {
+                            DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                            if (da != null)
+                            {
+                                objValue = da.Description;
+                            }
+                        }
+                    }
+
+                }
                 switch (op)
                 {
                     case BreakOp.Null:

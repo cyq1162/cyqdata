@@ -858,3 +858,6 @@
 637：优化：Mysql 表描述的获取与生成。(2021-01-21)
 638：修正：IOHelper内部_cache初始化调整，避免项目没有配置文件的时候，可能引发内部死循环的问题。(2021-03-01)
 639：优化：AppConfig.GetConn 增加解密（支持配置文件配置加密的链接字符串【调用EncryptHelper.Encrypt("...")所生成的】）(2021-03-05)
+640：修正：MDataTable.Distinct() 方法调用后无法修改表结构问题。(2021-03-05)
+641：新增：JsonHelper 增加：IsConvertEnumToString、IsConvertEnumToDescription 两个属性，允许构造Json时定义枚举的值是取字符串或描述文字。(2021-03-05)
+642：新增：CYQ.Data.Orm 下增加：JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute 两个特性，允许实体类通过特性定义枚举的值是取字符串或描述文字。(2021-03-05)

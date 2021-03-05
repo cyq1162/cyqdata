@@ -174,4 +174,20 @@ namespace CYQ.Data.Orm
     {
 
     }
+    /// <summary>
+    /// Json Ã¶¾Ù×Ö¶Î×ª×Ö·û´®
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class JsonEnumToStringAttribute : Attribute
+    {
+
+    }
+    /// <summary>
+    /// Json Ã¶¾Ù×Ö¶Î×ªÊôÐÔÃèÊö
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
+    public class JsonEnumToDescriptionAttribute : Attribute
+    {
+
+    }
 }

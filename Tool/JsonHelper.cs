@@ -9,7 +9,7 @@ using CYQ.Data.SQL;
 using System.IO;
 using System.Reflection;
 using CYQ.Data.Xml;
-
+using System.ComponentModel;
 namespace CYQ.Data.Tool
 {
     /// <summary>
@@ -80,6 +80,16 @@ namespace CYQ.Data.Tool
         /// <para>是否将名称转为小写</para>
         /// </summary>
         public bool IsConvertNameToLower = false;
+        /// <summary>
+        /// convert enum to string
+        /// <para>是否将枚举转字符串</para>
+        /// </summary>
+        public bool IsConvertEnumToString = false;
+        /// <summary>
+        /// convert enum to DescriptionAttribute
+        /// <para>是否将枚举转属性描述</para>
+        /// </summary>
+        public bool IsConvertEnumToDescription = false;
         /// <summary>
         /// formate datetime
         /// <para>日期的格式化（默认：yyyy-MM-dd HH:mm:ss）</para>
@@ -236,8 +246,33 @@ namespace CYQ.Data.Tool
                 Type t = value.GetType();
                 if (t.IsEnum)
                 {
-                    value = (int)value;
-                    Add(name, value.ToString(), true);
+                    bool descriptionNoValue = true;
+                    if (IsConvertEnumToDescription)
+                    {
+                        FieldInfo field = t.GetField(value.ToString());
+                        if (field != null)
+                        {
+                            DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                            if (da != null)
+                            {
+                                Add(name, da.Description, false);
+                                descriptionNoValue = false;
+                            }
+                        }
+
+                    }
+                    if (descriptionNoValue)
+                    {
+                        if (IsConvertEnumToString)
+                        {
+                            Add(name, value.ToString(), false);
+                        }
+                        else
+                        {
+                            Add(name, ((int)value).ToString(), true);
+                        }
+                    }
+
                 }
                 else
                 {

@@ -877,6 +877,10 @@ namespace CYQ.Data.Table
         /// </summary>
         public void Distinct(out MDataTable filterRows)
         {
+            Distinct(out filterRows, true);
+        }
+        private void Distinct(out MDataTable filterRows, bool isNeedOut)
+        {
             filterRows = null;
             if (Rows.Count > 0)
             {
@@ -900,7 +904,10 @@ namespace CYQ.Data.Table
                         }
                         if (eqCount == cCount)
                         {
-                            rowList.Add(Rows[j]);
+                            if (isNeedOut)
+                            {
+                                rowList.Add(Rows[j]);
+                            }
                             Rows.RemoveAt(j);
                         }
                     }
@@ -908,6 +915,8 @@ namespace CYQ.Data.Table
                 if (rowList.Count > 0)
                 {
                     filterRows = rowList;
+                    filterRows.Columns = filterRows.Columns.Clone();//重置头部引用
+                    Columns._Table = this;
                 }
             }
         }
@@ -917,7 +926,7 @@ namespace CYQ.Data.Table
         public void Distinct()
         {
             MDataTable filterRows;
-            Distinct(out filterRows);
+            Distinct(out filterRows, false);
             filterRows = null;
         }
         #endregion
@@ -1329,7 +1338,7 @@ namespace CYQ.Data.Table
                         int len = ReflectTool.GetArgumentLength(ref t, out types);
                         if (len == 2)//字典
                         {
-                            if(t.Name == "KeyCollection")
+                            if (t.Name == "KeyCollection")
                             {
                                 Type objType = types[0];
                                 dt.TableName = objType.Name;

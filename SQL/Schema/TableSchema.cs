@@ -685,18 +685,25 @@ namespace CYQ.Data.SQL
         private static void SetStruct(MDataColumn mdc, PropertyInfo pi, FieldInfo fi, int i, int count)
         {
             Type type = pi != null ? pi.PropertyType : fi.FieldType;
-            string name = pi != null ? pi.Name : fi.Name;
-            SqlDbType sqlType = SQL.DataType.GetSqlType(type);
-            JsonIgnoreAttribute jia = GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
+            JsonIgnoreAttribute jia = ReflectTool.GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
             if (jia != null)
             {
                 return;//被Json忽略的列，不在返回列结构中。
             }
-
+            string name = pi != null ? pi.Name : fi.Name;
+            SqlDbType sqlType = SQL.DataType.GetSqlType(type);
+            
+            if (type.IsEnum)
+            {
+                if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(pi, fi) != null || ReflectTool.GetAttr<JsonEnumToDescriptionAttribute>(pi, fi) != null)//获取Json忽略标识
+                {
+                    sqlType = SqlDbType.NVarChar;
+                }
+            }
             mdc.Add(name, sqlType);
             MCellStruct column = mdc[mdc.Count - 1];
 
-            LengthAttribute la = GetAttr<LengthAttribute>(pi, fi);//获取长度设置
+            LengthAttribute la = ReflectTool.GetAttr<LengthAttribute>(pi, fi);//获取长度设置
             if (la != null)
             {
                 column.MaxSize = la.MaxSize;
@@ -707,7 +714,7 @@ namespace CYQ.Data.SQL
                 column.MaxSize = DataType.GetMaxSize(sqlType);
             }
 
-            KeyAttribute ka = GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
+            KeyAttribute ka =ReflectTool.GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
             if (ka != null)
             {
                 column.IsPrimaryKey = ka.IsPrimaryKey;
@@ -723,7 +730,7 @@ namespace CYQ.Data.SQL
                     column.IsAutoIncrement = true;
                 }
             }
-            DefaultValueAttribute dva = GetAttr<DefaultValueAttribute>(pi, fi);
+            DefaultValueAttribute dva = ReflectTool.GetAttr<DefaultValueAttribute>(pi, fi);
             if (dva != null && dva.DefaultValue != null)
             {
                 if (column.SqlType == SqlDbType.Bit)
@@ -739,31 +746,12 @@ namespace CYQ.Data.SQL
             {
                 column.DefaultValue = SqlValue.GetDate;
             }
-            DescriptionAttribute da = GetAttr<DescriptionAttribute>(pi, fi);//看是否有字段描述属性。
+            DescriptionAttribute da = ReflectTool.GetAttr<DescriptionAttribute>(pi, fi);//看是否有字段描述属性。
             if (da != null)
             {
                 column.Description = da.Description;
             }
 
-        }
-        private static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
-        {
-            Type type = typeof(T);
-            object[] attr = null;
-            if (pi != null)
-            {
-                attr = ReflectTool.GetAttributes(pi, type);
-            }
-            else
-            {
-                attr = ReflectTool.GetAttributes(fi, type);
-            }
-
-            if (attr != null && attr.Length == 1)
-            {
-                return (T)attr[0];
-            }
-            return default(T);
         }
     }
     /// <summary>

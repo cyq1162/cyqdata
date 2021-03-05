@@ -239,7 +239,25 @@ namespace CYQ.Data.Tool
                 return null;
             }
         }
+        internal static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
+        {
+            Type type = typeof(T);
+            object[] attr = null;
+            if (pi != null)
+            {
+                attr = GetAttributes(pi, type);
+            }
+            else
+            {
+                attr = GetAttributes(fi, type);
+            }
 
+            if (attr != null && attr.Length == 1)
+            {
+                return (T)attr[0];
+            }
+            return default(T);
+        }
         /// <summary>
         /// 获取系统类型，若是Nullable类型，则转为基础类型。
         ///  </summary>
