@@ -81,7 +81,7 @@ namespace CYQ.Data
 
         protected override string GetSchemaSql(string type)
         {
-            return "SELECT name as TableName,'' as Description FROM sysobjects where type='" + type + "'";
+            return "SELECT name as TableName,'' as Description FROM sysobjects where type='" + type + "' order by name";
         }
     }
 }

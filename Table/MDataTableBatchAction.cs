@@ -91,7 +91,7 @@ namespace CYQ.Data.Table
             if (!DBTool.Exists(mdt.TableName, "U", _Conn))
             {
                 DBTool.ErrorMsg = null;
-                if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn))
+                if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn) && (DBTool.ErrorMsg == null || !DBTool.ErrorMsg.Contains("数据库中已存在名为")))
                 {
                     Error.Throw("Create Table Error:" + mdt.TableName + DBTool.ErrorMsg);
                 }
@@ -542,16 +542,16 @@ namespace CYQ.Data.Table
         }
         internal bool OracleBulkCopyInsert()
         {
-            ConnBean bean=ConnBean.Create(_Conn);
-            if(bean==null)
+            ConnBean bean = ConnBean.Create(_Conn);
+            if (bean == null)
             {
                 string err = "MDataTableBatchAction.OracleBulkCopyInsert ConnBean can't create by " + _Conn;
                 Log.Write(err, LogType.DataBase);
                 Error.Throw(err);
             }
-            string conn =bean.ConnString;
+            string conn = bean.ConnString;
             CheckGUIDAndDateTime(DataBaseType.Oracle);
-           
+
             Assembly ass = OracleDal.GetAssembly();
             object sbc = ass.CreateInstance("Oracle.DataAccess.Client.OracleBulkCopy", false, BindingFlags.CreateInstance, null, new object[] { conn }, null, null);
             Type sbcType = sbc.GetType();

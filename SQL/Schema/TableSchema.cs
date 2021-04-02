@@ -495,11 +495,12 @@ namespace CYQ.Data.SQL
         /// </summary>
         internal static string GetSchemaKey(string tableName, string conn)
         {
-            tableName = SqlFormat.NotKeyword(tableName);
+            tableName = SqlFormat.NotKeyword(tableName);//xxx..[TTTT]
             if (string.IsNullOrEmpty(conn))
             {
-                conn = CrossDB.GetConn(tableName, out tableName, conn);
+                conn = CrossDB.GetConn(tableName, out tableName, conn);//[TTTT]
             }
+            tableName = SqlFormat.NotKeyword(tableName);
             return "CCache_" + ConnBean.GetHashKey(conn) + "_" + TableInfo.GetHashKey(tableName);
         }
         //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)

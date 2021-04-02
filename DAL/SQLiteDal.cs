@@ -146,9 +146,9 @@ namespace CYQ.Data
             switch (type)
             {
                 case "U":
-                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='table'";
+                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='table' order by name";
                 case "V":
-                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='view'";
+                    return "SELECT name as TableName,'' as Description FROM sqlite_master where type='view' order by name";
             }
             return "";
         }

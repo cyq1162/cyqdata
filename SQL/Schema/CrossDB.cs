@@ -63,11 +63,11 @@ namespace CYQ.Data.SQL
                     string[] items = nameOrSql.Split('.');
                     dbName = items[0];
                     conn = dbName + "Conn";
-                    fixName = items[items.Length - 1];
+                    fixName = SqlFormat.NotKeyword(items[items.Length - 1]);
                 }
                 else
                 {
-                    firstTableName = nameOrSql;
+                    firstTableName = SqlFormat.NotKeyword(nameOrSql);
                 }
                 #endregion
             }

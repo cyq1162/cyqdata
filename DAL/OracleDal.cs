@@ -232,15 +232,15 @@ namespace CYQ.Data
         {
             if (type == "U")
             {
-                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='TABLE' and TABLE_NAME not like 'BIN$%'";
+                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='TABLE' and TABLE_NAME not like 'BIN$%' order by TABLE_NAME";
             }
             else if (type == "V")
             {
-                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='VIEW'";
+                return "select TABLE_NAME AS TableName,COMMENTS AS Description from user_tab_comments where TABLE_TYPE='VIEW' order by TABLE_NAME";
             }
             else if (type == "P")
             {
-                return "select object_name as TableName,'' as Description from user_objects where object_type = 'PROCEDURE'";
+                return "select object_name as TableName,'' as Description from user_objects where object_type = 'PROCEDURE' order by object_name";
             }
             return "";
         }

@@ -84,7 +84,7 @@ namespace CYQ.Data
         {
             if (type == "P")
             {
-                return "select ROUTINE_NAME as TableName,'P' as Description from information_schema.ROUTINES where ROUTINE_SCHEMA='" + DataBaseName + "'";
+                return "select ROUTINE_NAME as TableName,'P' as Description from information_schema.ROUTINES where ROUTINE_SCHEMA='" + DataBaseName + "' order by ROUTINE_NAME";
             }
             else
             {
@@ -93,7 +93,7 @@ namespace CYQ.Data
                 {
                     type = "VIEW";
                 }
-                return string.Format("select TABLE_NAME as TableName,TABLE_COMMENT as Description from `information_schema`.`TABLES`  where TABLE_SCHEMA='{0}' and TABLE_TYPE='{1}'", DataBaseName, type);
+                return string.Format("select TABLE_NAME as TableName,TABLE_COMMENT as Description from `information_schema`.`TABLES`  where TABLE_SCHEMA='{0}' and TABLE_TYPE='{1}' order by TABLE_NAME", DataBaseName, type);
             }
         }
     }

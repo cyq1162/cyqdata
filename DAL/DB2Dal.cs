@@ -104,11 +104,11 @@ namespace CYQ.Data
         {
             if (type == "U")
             {
-                return "select name as TableName,remarks as Description from sysibm.systables where type = 'T' and creator<>'SYSIBM'";
+                return "select name as TableName,remarks as Description from sysibm.systables where type = 'T' and creator<>'SYSIBM' order by name";
             }
             else if (type == "V")
             {
-                return "select name as TableName,remarks as Description from sysibm.systables where type = 'V' and creator<>'SYSCAT'";
+                return "select name as TableName,remarks as Description from sysibm.systables where type = 'V' and creator<>'SYSCAT' order by name";
             }
             return "";
         }

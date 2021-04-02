@@ -483,7 +483,7 @@
 270：取消AppConfig.DB.ReplaceSqlInjection配置项，新增加AppConfig.DB.EditTimeFields项，指定字段时，MAction的Update方法会自动更新该时间字段为当前时间（2016-06-29）
 271：数据结构MCellStruct增加IsUniqueKey,IsForeignKey,FKTableName三个属性，对于where条件的单值，增加内部推导功能：action.Exists("路过秋天") 值为字符串，主键为int或guid，会切为唯一键字段去处理（2016-07-01）
 272：MDataRow的LoadFrom(MDataRow row)：改为默认不影响表结构，即不追加字段（2016-07-02）
-273：增加MDataRow和MDataColumn的调试可视化查看：源码SVN下载地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Visualizer/  （2016-07-02）
+273：增加MDataRow和MDataColumn的调试可视化查看（2016-07-02）
 274：处理mysql批量导数据的分隔符问题（2016-07-03）
 275：为MDataTable的相关查询方法增加智能推导【原本只有MAction有】（2016-07-03）
 276：处理处理mysql批量导数据的符号转义问题（2016-07-03）
@@ -517,7 +517,7 @@
 303：修正MDataTable的SetOrdinal方法（2016-07-15)
 304：修正AcceptChanges的批量更新（2016-07-15)
 //------------到此，所有的Demmo都已写完，写Demo过程中发现的小Bug也处理完了。
-//项目Demo示例SVN地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
+//项目Demo示例SVN地址：https://github.com/cyq1162/CYQ.Data.Demo
 305：处理视图名重复时的问题，同时简化MDataTable的代码，取消MDataTable的ReadFromDbDataReader（统一用CreateFrom(sdr)方法读取。（2016-07-16)
 306：优化通过Reader获取列结构（该方法不靠谱，需要重新修正元数据的DataType、Size、Scale、DalType等参数）（2016-07-16)
 307：为MDataTable和MAction的Set方法增加重载Set(key,value,state)，在循环赋值时，产生批量更新时，可以对state赋值2（2016-07-21)
@@ -861,3 +861,5 @@
 640：修正：MDataTable.Distinct() 方法调用后无法修改表结构问题。(2021-03-05)
 641：新增：JsonHelper 增加：IsConvertEnumToString、IsConvertEnumToDescription 两个属性，允许构造Json时定义枚举的值是取字符串或描述文字。(2021-03-05)
 642：新增：CYQ.Data.Orm 下增加：JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute 两个特性，允许实体类通过特性定义枚举的值是取字符串或描述文字。(2021-03-05)
+643：优化：系统获取数据库表名时增加名称排序。(2021-04-02)
+643：修复：特殊表名格式XXXX..[TTTT]生成的hashkey检测（会影响表是否存在的判断）。(2021-04-02)
