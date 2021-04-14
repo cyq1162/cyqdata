@@ -91,16 +91,20 @@ namespace CYQ.Data.Table
             if (!DBTool.Exists(mdt.TableName, "U", _Conn))
             {
                 DBTool.ErrorMsg = null;
-                if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn) && (DBTool.ErrorMsg == null || !DBTool.ErrorMsg.Contains("数据库中已存在名为")))
+                if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn) && (DBTool.ErrorMsg == null || !DBTool.ErrorMsg.Contains("已存在")))
                 {
-                    Error.Throw("Create Table Error:" + mdt.TableName + DBTool.ErrorMsg);
+                    string err = "MDataTableBatchAction.Init Create Table Error:" + mdt.TableName + DBTool.ErrorMsg;
+                    Log.Write(err);
+                    Error.Throw(err);
                 }
             }
             MDataColumn column = DBTool.GetColumns(mdt.TableName, _Conn);
             FixTable(column);//
             if (mdt.Columns.Count == 0)
             {
-                Error.Throw("After fix table columns, length can't be zero");
+                string err = "After fix table columns, length can't be zero";
+                Log.Write(err);
+                Error.Throw(err);
             }
             dalTypeTo = column.DataBaseType;
             SetDalBaseForTransaction();
