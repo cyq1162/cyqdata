@@ -246,7 +246,9 @@ namespace CYQ.Data.Orm
                         DBTool.ErrorMsg = null;
                         if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
                         {
-                            Error.Throw("SimpleOrmBase £ºCreate Table " + tableName + " Error:" + DBTool.ErrorMsg);
+                            string err = "SimpleOrmBase £ºCreate Table " + tableName + " Error:" + DBTool.ErrorMsg;
+                            Log.Write(err);
+                            Error.Throw(err);
                         }
                     }
                 }

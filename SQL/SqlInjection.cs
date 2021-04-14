@@ -11,7 +11,7 @@ namespace CYQ.Data.SQL
         //select;from,
         internal const string filterSqlInjection = "select;into,delete;from,drop;table,drop;database,update;set,truncate;table,create;table,exists;select,insert;into,xp_cmdshell,declare;@,exec;master,waitfor;delay";
         //internal const string replaceSqlInjection = "--";
-        private static List<string> filterKeyList = null;
+        private static List<string> filterKeyList = new List<string>();
         /// <summary>
         /// 用List 也是因为内存读写异常问题（所有的[]数组，看似都有这问题）
         /// </summary>
@@ -19,9 +19,12 @@ namespace CYQ.Data.SQL
         {
             get
             {
-                if (filterKeyList == null)
+                if (filterKeyList == null || filterKeyList.Count == 0)
                 {
-                    filterKeyList = new List<string>();
+                    if (filterKeyList == null)
+                    {
+                        filterKeyList = new List<string>();
+                    }
                     filterKeyList.AddRange(filterSqlInjection.TrimEnd(',').Split(','));
                 }
                 return filterKeyList;
@@ -34,96 +37,103 @@ namespace CYQ.Data.SQL
         public static string Filter(string text, DataBaseType dalType)
         {
             if (string.IsNullOrEmpty(text)) { return text; }
-            if (text.IndexOf("--") > -1)
+            try
             {
-                string[] ts = text.Split(new string[] { "--" }, StringSplitOptions.None);
-                for (int i = 0; i < ts.Length - 1; i++)
+                if (text.IndexOf("--") > -1)
                 {
-                    if (ts[i].Split('\'').Length % 2 == (i == 0 ? 1 : 0))
+                    string[] ts = text.Split(new string[] { "--" }, StringSplitOptions.None);
+                    for (int i = 0; i < ts.Length - 1; i++)
                     {
-                        text = text.Replace("--", string.Empty);//name like'% --aaa' --or name='--aa'  前面的 ' 号必须是单数
-                        break;
-                    }
-                }
-            }
-
-            string[] items = text.Split(' ', '(', ')');
-            if (items.Length == 1 && text.Length > 30)
-            {
-                if (text.IndexOf("%20") > -1 && text.IndexOf("%20") != text.LastIndexOf("%20"))
-                {
-                    //多个%20组合
-                    Log.Write("SqlInjection error:" + text, LogType.Warn);
-                    Error.Throw("SqlInjection error:" + text);
-
-                }
-            }
-            else
-            {
-                switch (dalType)
-                {
-                    case DataBaseType.MySql:
-                    case DataBaseType.Oracle:
-                    case DataBaseType.SQLite:
-                        for (int i = 0; i < items.Length; i++)//去掉字段的[字段]，两个符号
+                        if (ts[i].Split('\'').Length % 2 == (i == 0 ? 1 : 0))
                         {
-                            if (!items[i].StartsWith("[#") && items[i].StartsWith("[") && items[i].EndsWith("]"))
-                            {
-                                text = text.Replace(items[i], items[i].Replace("[", string.Empty).Replace("]", string.Empty));
-                            }
+                            text = text.Replace("--", string.Empty);//name like'% --aaa' --or name='--aa'  前面的 ' 号必须是单数
+                            break;
                         }
-                        break;
+                    }
                 }
-            }
 
-            if (FilterKeyList.Count > 0)
-            {
-                string lowerText = text.ToLower();
-                items = lowerText.Split(' ', '(', ')', '/', ';', '=', '-', '\'', '|', '!', '%', '^');
-
-                int keyIndex = -1;
-                bool isOK = false;
-                for (int i = 0; i < FilterKeyList.Count; i++)
+                string[] items = text.Split(' ', '(', ')');
+                if (items.Length == 1 && text.Length > 30)
                 {
-                    string[] filterSpitItems = filterKeyList[i].Split(';');//分隔
-                    string filterKey = filterSpitItems[0];//取第一个为关键词
-                    if (filterSpitItems.Length > 2)
+                    if (text.IndexOf("%20") > -1 && text.IndexOf("%20") != text.LastIndexOf("%20"))
                     {
-                        continue;
+                        //多个%20组合
+                        Log.Write("SqlInjection error:" + text, LogType.Warn);
+                        Error.Throw("SqlInjection error:" + text);
+
                     }
-                    else if (filterSpitItems.Length == 2) // 如果是两个词的。
+                }
+                else
+                {
+                    switch (dalType)
                     {
-                        keyIndex = Math.Min(lowerText.IndexOf(filterKey), lowerText.IndexOf(filterSpitItems[1]));
+                        case DataBaseType.MySql:
+                        case DataBaseType.Oracle:
+                        case DataBaseType.SQLite:
+                            for (int i = 0; i < items.Length; i++)//去掉字段的[字段]，两个符号
+                            {
+                                if (!items[i].StartsWith("[#") && items[i].StartsWith("[") && items[i].EndsWith("]"))
+                                {
+                                    text = text.Replace(items[i], items[i].Replace("[", string.Empty).Replace("]", string.Empty));
+                                }
+                            }
+                            break;
                     }
-                    else
+                }
+
+                if (FilterKeyList.Count > 0)
+                {
+                    string lowerText = text.ToLower();
+                    items = lowerText.Split(' ', '(', ')', '/', ';', '=', '-', '\'', '|', '!', '%', '^');
+
+                    int keyIndex = -1;
+                    bool isOK = false;
+                    for (int i = 0; i < filterKeyList.Count; i++)
                     {
-                        keyIndex = lowerText.IndexOf(filterKey);//过滤的关键词或词组
-                    }
-                    if (keyIndex > -1)
-                    {
-                        foreach (string item in items) // 用户传进来的每一个单独的词
+                        string[] filterSpitItems = filterKeyList[i].Split(';');//分隔
+                        string filterKey = filterSpitItems[0];//取第一个为关键词
+                        if (filterSpitItems.Length > 2)
                         {
-                            if (string.IsNullOrEmpty(item))
-                            {
-                                continue;
-                            }
-                            if (item.IndexOf(filterKey) > -1 && item.Length > filterKey.Length)
-                            {
-                                isOK = true;
-                                break;
-                            }
+                            continue;
                         }
-                        if (!isOK)
+                        else if (filterSpitItems.Length == 2) // 如果是两个词的。
                         {
-                            Log.Write("SqlInjection error:" + FilterKeyList[i] + ":" + text, LogType.Warn);
-                            Error.Throw("SqlInjection error:" + text);
+                            keyIndex = Math.Min(lowerText.IndexOf(filterKey), lowerText.IndexOf(filterSpitItems[1]));
                         }
                         else
                         {
-                            isOK = false;
+                            keyIndex = lowerText.IndexOf(filterKey);//过滤的关键词或词组
+                        }
+                        if (keyIndex > -1)
+                        {
+                            foreach (string item in items) // 用户传进来的每一个单独的词
+                            {
+                                if (string.IsNullOrEmpty(item))
+                                {
+                                    continue;
+                                }
+                                if (item.IndexOf(filterKey) > -1 && item.Length > filterKey.Length)
+                                {
+                                    isOK = true;
+                                    break;
+                                }
+                            }
+                            if (!isOK)
+                            {
+                                Log.Write("SqlInjection error:" + FilterKeyList[i] + ":" + text, LogType.Warn);
+                                Error.Throw("SqlInjection error:" + text);
+                            }
+                            else
+                            {
+                                isOK = false;
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception err)
+            {
+                Log.Write("SqlInjection error:" + err.Message + ":" + text, LogType.Warn);
             }
             return text;
 
