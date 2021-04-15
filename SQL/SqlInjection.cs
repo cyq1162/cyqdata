@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace CYQ.Data.SQL
 {
-    internal static class SqlInjection
+    public static class SqlInjection
     {
         //select;from,
         internal const string filterSqlInjection = "select;into,delete;from,drop;table,drop;database,update;set,truncate;table,create;table,exists;select,insert;into,xp_cmdshell,declare;@,exec;master,waitfor;delay";
@@ -58,8 +58,8 @@ namespace CYQ.Data.SQL
                     if (text.IndexOf("%20") > -1 && text.IndexOf("%20") != text.LastIndexOf("%20"))
                     {
                         //多个%20组合
-                        Log.Write("SqlInjection error:" + text, LogType.Warn);
-                        Error.Throw("SqlInjection error:" + text);
+                        Log.Write("SqlInjection %20 Error:" + text, LogType.Warn);
+                        Error.Throw("SqlInjection %20 Error:" + text);
 
                     }
                 }
@@ -83,6 +83,8 @@ namespace CYQ.Data.SQL
 
                 if (FilterKeyList.Count > 0)
                 {
+                    #region Filter Keys
+
                     string lowerText = text.ToLower();
                     items = lowerText.Split(' ', '(', ')', '/', ';', '=', '-', '\'', '|', '!', '%', '^');
 
@@ -120,8 +122,8 @@ namespace CYQ.Data.SQL
                             }
                             if (!isOK)
                             {
-                                Log.Write("SqlInjection error:" + FilterKeyList[i] + ":" + text, LogType.Warn);
-                                Error.Throw("SqlInjection error:" + text);
+                                Log.Write("SqlInjection FilterKey Error:" + filterKeyList[i] + ":" + text, LogType.Warn);
+                                Error.Throw("SqlInjection FilterKey Error:" + text);
                             }
                             else
                             {
@@ -129,6 +131,7 @@ namespace CYQ.Data.SQL
                             }
                         }
                     }
+                    #endregion
                 }
             }
             catch (Exception err)

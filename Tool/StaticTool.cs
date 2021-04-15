@@ -100,13 +100,16 @@ namespace CYQ.Data.Tool
                 {
                     id = HttpContext.Current.Session.SessionID;
                 }
-                else if (HttpContext.Current.Request["Token"] != null)
+                if (string.IsNullOrEmpty(id))
                 {
-                    id = HttpContext.Current.Request["Token"];
-                }
-                else if (HttpContext.Current.Request.Headers["Token"] != null)
-                {
-                    id = HttpContext.Current.Request.Headers["Token"];
+                    if (HttpContext.Current.Request["Token"] != null)
+                    {
+                        id = HttpContext.Current.Request["Token"];
+                    }
+                    else if (HttpContext.Current.Request.Headers["Token"] != null)
+                    {
+                        id = HttpContext.Current.Request.Headers["Token"];
+                    }
                 }
                 key = id + key;
             }
