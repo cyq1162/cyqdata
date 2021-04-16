@@ -145,24 +145,31 @@ namespace CYQ.Data
             }
             //检测缓存中有木有
             int hash = connString.GetHashCode();
+            if (connBeanDicCache.ContainsKey(hash))
+            {
+                ConnBean cbCache = connBeanDicCache[hash];
+                if (cbCache != null)
+                {
+                    return cbCache;
+                }
+            }
+            ConnBean cb = new ConnBean();
+            cb.ConnName = connNameOrString;
+            cb.ConnDataBaseType = GetDataBaseType(connString);
+            cb.ConnString = RemoveConnProvider(cb.ConnDataBaseType, connString);
             lock (o)
             {
-                if (connBeanDicCache.ContainsKey(hash))
-                {
-                    return connBeanDicCache[hash];
-                }
-                ConnBean cb = new ConnBean();
-                cb.ConnName = connNameOrString;
-                cb.ConnDataBaseType = GetDataBaseType(connString);
-                cb.ConnString = RemoveConnProvider(cb.ConnDataBaseType, connString);
-                connBeanDicCache.Add(hash, cb);
-                hash = cb.ConnString.GetHashCode();
                 if (!connBeanDicCache.ContainsKey(hash))
                 {
-                    connBeanDicCache.Add(hash, cb);//存两份，以connName,connString为key
+                    connBeanDicCache.Set(hash, cb);//设置缓存
                 }
-                return cb;
+                int hash2 = cb.ConnString.GetHashCode();
+                if (hash != hash2 && !connBeanDicCache.ContainsKey(hash2))
+                {
+                    connBeanDicCache.Set(hash2, cb);//存两份，以connName,connString为key
+                }
             }
+            return cb;
         }
         /// <summary>
         /// 去掉 链接中的 provider=xxxx;

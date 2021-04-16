@@ -41,54 +41,53 @@ namespace System.Configuration
         static void ReInitConfig(string filePath)
         {
             appSettingJson = JsonHelper.ReadJson(filePath);
-            _AppSettings = null;
-            _ConnectionStrings = null;
+            _AppSettings.Clear();
+            _ConnectionStrings.Clear();
             AppConfig.Clear();
             ConnBean.Clear();
             ConnObject.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。
         }
         private static readonly object o = new object();
-        private static NameValueCollection _AppSettings;
+        private static NameValueCollection _AppSettings = new NameValueCollection();
         public static NameValueCollection AppSettings
         {
             get
             {
-                if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
+                if (_AppSettings.Count == 0 && !string.IsNullOrEmpty(appSettingJson))
                 {
                     lock (o)
                     {
-                        if (_AppSettings == null && !string.IsNullOrEmpty(appSettingJson))
+                        if (_AppSettings.Count == 0 && !string.IsNullOrEmpty(appSettingJson))
                         {
                             //EscapeOp.Default 参数若不设置，会造成死循环
                             string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings", EscapeOp.Default);
                             if (!string.IsNullOrEmpty(settingValue))
                             {
-                                _AppSettings = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
+                                NameValueCollection nvc = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
+                                if (nvc != null && nvc.Count > 0)
+                                {
+                                    _AppSettings = nvc;
+                                }
                             }
                         }
                     }
-                }
-                if (_AppSettings == null)
-                {
-                    return new NameValueCollection();
                 }
                 return _AppSettings;
             }
         }
         private static readonly object oo = new object();
-        private static ConnectionStringSettingsCollection _ConnectionStrings;
+        private static ConnectionStringSettingsCollection _ConnectionStrings = new ConnectionStringSettingsCollection();
         public static ConnectionStringSettingsCollection ConnectionStrings
         {
             get
             {
-                if (_ConnectionStrings == null)
+                if (_ConnectionStrings.Count == 0)
                 {
                     lock (oo)
                     {
-                        if (_ConnectionStrings == null)
+                        if (_ConnectionStrings.Count == 0)
                         {
-                            _ConnectionStrings = new ConnectionStringSettingsCollection();
                             if (!string.IsNullOrEmpty(appSettingJson))
                             {
                                 string settingValue = JsonHelper.GetValue(appSettingJson, "connectionStrings");
