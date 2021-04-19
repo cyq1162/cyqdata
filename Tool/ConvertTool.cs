@@ -158,6 +158,7 @@ namespace CYQ.Data.Tool
                         case "0":
                         case "":
                         case "否":
+                        case "null":
                             if (t.Name == "Boolean")
                                 return false;
                             else strValue = "0";
