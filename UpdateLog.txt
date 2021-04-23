@@ -863,3 +863,5 @@
 642：新增：CYQ.Data.Orm 下增加：JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute 两个特性，允许实体类通过特性定义枚举的值是取字符串或描述文字。(2021-03-05)
 643：优化：系统获取数据库表名时增加名称排序。(2021-04-02)
 643：修复：特殊表名格式XXXX..[TTTT]生成的hashkey检测（会影响表是否存在的判断）。(2021-04-02)
+644：优化：各种细节：（提示Conn找不到 和 SqlInjection error:Index was outside）(2021-04-15)
+645：优化：MDataTable.AcceptChange 增加重载参数（允许指定事务级别）(2021-04-23)
