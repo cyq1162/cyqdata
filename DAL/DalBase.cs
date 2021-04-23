@@ -273,7 +273,7 @@ namespace CYQ.Data
                 return null;
             }
             Dictionary<string, string> dic = null;
-            string key = type + "Cache_" + ConnBean.GetHashKey(ConnName) + "_" + StaticTool.GetHashKey(sql);
+            string key = ConnBean.GetHashKey(ConnName) + "_" + DataBaseName + "_" + type + "_" + StaticTool.GetHashKey(sql);
             #region 缓存检测
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {

@@ -27,6 +27,7 @@ namespace CYQ.Data.Table
         List<int> jointPrimaryIndex;
         MDataTable mdt, sourceTable;
         internal DataBaseType dalTypeTo = DataBaseType.None;
+        internal IsolationLevel TranLevel = IsolationLevel.Unspecified;
         internal string database = string.Empty;
         private bool _IsTruncate;
         /// <summary>
@@ -303,6 +304,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录 2000数据库大量的In条件会超时。
 
@@ -474,12 +479,21 @@ namespace CYQ.Data.Table
                     {
                         isCreateDal = true;
                         _dalHelper = DalCreate.CreateDal(conn);
+                        if (TranLevel != IsolationLevel.Unspecified)
+                        {
+                            _dalHelper.TranLevel = TranLevel;
+                        }
                     }
                     else
                     {
                         con = new SqlConnection(conn);
                         con.Open();
+                        if (TranLevel != IsolationLevel.Unspecified)
+                        {
+                            sqlTran = con.BeginTransaction(TranLevel);
+                        }
                     }
+
                 }
                 bool isGoOn = true;
                 if (_dalHelper != null)
@@ -499,6 +513,7 @@ namespace CYQ.Data.Table
                         con = _dalHelper.Con as SqlConnection;
                         _dalHelper.OpenCon(null, AllowConnLevel.MasterBackup);//如果未开启，则开启，打开链接后，如果以前没执行过数据，事务对象为空，这时会产生事务对象
                         sqlTran = _dalHelper._tran as SqlTransaction;
+
                     }
                 }
                 if (isGoOn)
@@ -520,7 +535,12 @@ namespace CYQ.Data.Table
                         {
                             sbc.WriteToServer(mdt);
                         }
+                        if (_dalHelper == null && sqlTran != null)
+                        {
+                            sqlTran.Commit();
+                        }
                     }
+                    
                 }
                 return true;
             }
@@ -646,6 +666,10 @@ namespace CYQ.Data.Table
             {
                 _dalHelper = DalCreate.CreateDal(_Conn);
                 _dalHelper.IsWriteLogOnError = false;
+                if (TranLevel!= IsolationLevel.Unspecified)//设置事务等级。
+                {
+                    _dalHelper.TranLevel = TranLevel;
+                }
             }
             string path = MDataTableToFile(mdt, fillGUID ? true : keepid, dalType);
             string formatSql = dalType == DataBaseType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
@@ -840,6 +864,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
 
 
@@ -907,6 +935,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
 
                 MCellStruct keyColumn = jointPrimaryIndex != null ? mdt.Columns[jointPrimaryIndex[0]] : mdt.Columns.FirstPrimary;
@@ -1020,6 +1052,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();//事务由外部控制
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
                 if (keepid)
@@ -1087,6 +1123,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
 
@@ -1152,6 +1192,10 @@ namespace CYQ.Data.Table
                 else
                 {
                     action.BeginTransation();
+                    if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
+                    {
+                        action.SetTransLevel(TranLevel);
+                    }
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
 

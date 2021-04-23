@@ -22,7 +22,14 @@ namespace CYQ.Data.SQL
 
         public static MDataColumn GetColumns(string tableName, string conn)
         {
-
+            //先修正Conn，否则之前的key和修正后的key对不上。
+            string fixName;
+            conn = CrossDB.GetConn(tableName, out fixName, conn ?? AppConfig.DB.DefaultConn);
+            tableName = fixName;
+            if (conn == null)
+            {
+                return null;
+            }
             string key = GetSchemaKey(tableName, conn);
             #region 缓存检测
             if (_ColumnCache.ContainsKey(key))
@@ -43,13 +50,7 @@ namespace CYQ.Data.SQL
                 }
             }
             #endregion
-            string fixName;
-            conn = CrossDB.GetConn(tableName, out fixName, conn ?? AppConfig.DB.DefaultConn);
-            tableName = fixName;
-            if (conn == null)
-            {
-                return null;
-            }
+            
             MDataColumn mdcs = null;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {
@@ -501,7 +502,30 @@ namespace CYQ.Data.SQL
                 conn = CrossDB.GetConn(tableName, out tableName, conn);//[TTTT]
             }
             tableName = SqlFormat.NotKeyword(tableName);
-            return "CCache_" + ConnBean.GetHashKey(conn) + "_" + TableInfo.GetHashKey(tableName);
+            return ConnBean.GetHashKey(conn) + "_" + "C_" + GetKey(tableName) + "_" + TableInfo.GetHashKey(tableName);
+        }
+        private static string GetKey(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName)) { return tableName; }
+            int i = tableName.LastIndexOf(')');
+            if (i > 0)
+            {
+                tableName = tableName.Substring(i + 1);
+            }
+            tableName = tableName.Replace("-", "").Replace("_", "").Replace(".", "").Replace("*", "").Replace(" ", "");
+            if (i > 0)
+            {
+                tableName = "S_" + tableName;
+            }
+            else
+            {
+                tableName = "T_" + tableName;
+            }
+            if (tableName.Length > 30)
+            {
+                return tableName.Substring(0, 30);
+            }
+            return tableName;
         }
         //    private static bool FillSchemaFromCache(ref MDataRow row, string tableName, string sourceTableName)
         //    {
@@ -693,7 +717,7 @@ namespace CYQ.Data.SQL
             }
             string name = pi != null ? pi.Name : fi.Name;
             SqlDbType sqlType = SQL.DataType.GetSqlType(type);
-            
+
             if (type.IsEnum)
             {
                 if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(pi, fi) != null || ReflectTool.GetAttr<JsonEnumToDescriptionAttribute>(pi, fi) != null)//获取Json忽略标识
@@ -715,7 +739,7 @@ namespace CYQ.Data.SQL
                 column.MaxSize = DataType.GetMaxSize(sqlType);
             }
 
-            KeyAttribute ka =ReflectTool.GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
+            KeyAttribute ka = ReflectTool.GetAttr<KeyAttribute>(pi, fi);//获取关键字判断
             if (ka != null)
             {
                 column.IsPrimaryKey = ka.IsPrimaryKey;
