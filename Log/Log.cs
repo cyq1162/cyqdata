@@ -138,10 +138,10 @@ namespace CYQ.Data
             if (AppConfig.IsWeb && System.Web.HttpContext.Current != null)
             {
                 System.Web.HttpRequest request = System.Web.HttpContext.Current.Request;
-                log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + request.RawUrl;
+                log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + System.Web.HttpUtility.UrlDecode(request.RawUrl);
                 if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
                 {
-                    log.RefererUrl = request.UrlReferrer.ToString();
+                    log.RefererUrl =  System.Web.HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                 }
                 log.HttpMethod = request.HttpMethod;
             }
