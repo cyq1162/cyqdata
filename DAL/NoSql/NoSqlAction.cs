@@ -13,6 +13,18 @@ namespace CYQ.Data
     internal class NoSqlAction : IDisposable
     {
         /// <summary>
+        /// 清除缓存数据
+        /// </summary>
+        internal static void Clear()
+        {
+            ResetStaticVar();
+            _needToSaveState.Clear();
+            _lockNextIDObj.Clear();
+            _maxID.Clear();
+            _lastWriteTimeList.Clear();
+            _isDeleteAll.Clear();
+        }
+        /// <summary>
         /// 重置静态变量（方便回收内存，避免大量导数据后内存不回收）
         /// </summary>
         internal static void ResetStaticVar()

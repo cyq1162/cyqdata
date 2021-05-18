@@ -33,12 +33,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         internal static string GetHashKey(string sourceString)
         {
-            if (string.IsNullOrEmpty(sourceString))
-            {
-                return "K" + HashCreator.Create(sourceString);
-            }
-            return "K" + HashCreator.Create(sourceString) + sourceString.Length;
-
+            return HashCreator.CreateKey(sourceString);
         }
         /// <summary>
         /// 用于标识（以用户为单位）的 主从 的唯一标识

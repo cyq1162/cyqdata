@@ -29,7 +29,10 @@ namespace System.Web
         #region 兼容Web
         public void End()
         {
-            context.TraceIdentifier = "IsEnd:" + context.TraceIdentifier;
+            if (string.IsNullOrEmpty(context.TraceIdentifier) || !context.TraceIdentifier.StartsWith("IsEnd:"))
+            {
+                context.TraceIdentifier = "IsEnd:" + context.TraceIdentifier;
+            }
         }
         private bool IsEnd
         {

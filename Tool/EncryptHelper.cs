@@ -28,7 +28,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static uint GetHashCode(string key)
         {
-            return HashCreator.Create(key);
+            return HashCreator.CreateCode(key);
         }
         #endregion
         internal static byte[] GetHash(string key)

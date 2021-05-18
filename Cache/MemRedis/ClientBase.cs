@@ -26,7 +26,7 @@ namespace CYQ.Data.Cache
         protected uint hash(string key)
         {
             checkKey(key);
-            return HashCreator.Create(key);
+            return HashCreator.CreateCode(key);
         }
 
         /// <summary>

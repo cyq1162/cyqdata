@@ -51,18 +51,18 @@ namespace System.Web
                 }
                 return _Current;
 
-                HttpContext context = null;
-                string key = Thread.CurrentThread.ManagedThreadId + contextAccessor.HttpContext.TraceIdentifier+DateTime.Now.Second;
-                //if (CacheManage.LocalInstance.Contains(key))
+                //HttpContext context = null;
+                //string key = Thread.CurrentThread.ManagedThreadId + contextAccessor.HttpContext.TraceIdentifier+DateTime.Now.Second;
+                ////if (CacheManage.LocalInstance.Contains(key))
+                ////{
+                ////    context=(HttpContext)CacheManage.LocalInstance.Get(key);
+                ////}
+                //if(context==null)
                 //{
-                //    context=(HttpContext)CacheManage.LocalInstance.Get(key);
+                //    context = new HttpContext();
+                //   // CacheManage.LocalInstance.Set(key, context, 0.05);
                 //}
-                if(context==null)
-                {
-                    context = new HttpContext();
-                   // CacheManage.LocalInstance.Set(key, context, 0.05);
-                }
-                return context;
+                //return context;
                 // return _Current;
                 // return new HttpContext();
                 //lock (o)

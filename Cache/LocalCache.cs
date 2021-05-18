@@ -405,8 +405,9 @@ namespace CYQ.Data.Cache
             {
                 lock (lockObj)
                 {
-                    DBSchema.Clear();
-                    TableSchema.Clear();
+                    DBSchema.Clear();//清空数据库缓存
+                    TableSchema.Clear();//清空表结构缓存
+                    NoSqlAction.Clear();//清空文本数据库相关缓存
 
                     theCache.Clear();
                     theTime.Clear();

@@ -317,7 +317,7 @@ namespace CYQ.Data.Cache
                 {
                     for (int i = 0; i < 200; i++)
                     {
-                        uint hostHashKey = HashCreator.Create(host + "-" + i);
+                        uint hostHashKey = HashCreator.CreateCode(host + "-" + i);
                         if (hashHostDic.ContainsKey(hostHashKey))
                         {
                             hashHostDic.Remove(hostHashKey);
@@ -335,7 +335,7 @@ namespace CYQ.Data.Cache
                 //Create keys for this pool, store each key in the hostDictionary, as well as in the list of keys.
                 for (int i = 0; i < 200; i++)
                 {
-                    uint hostHashKey = HashCreator.Create(host + "-" + i);
+                    uint hostHashKey = HashCreator.CreateCode(host + "-" + i);
                     if (!hashHostDic.ContainsKey(hostHashKey) && hostList.ContainsKey(host))
                     {
                         hashHostDic.Add(hostHashKey, hostList[host]);

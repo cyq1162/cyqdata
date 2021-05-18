@@ -42,41 +42,41 @@ namespace CYQ.Data.Tool
     //    }
     //}
 
-    /// <summary>
-    /// Fowler-Noll-Vo hash, variant 1a, 32-bit version.
-    /// http://www.isthe.com/chongo/tech/comp/fnv/
-    /// </summary>
-    internal class FNV1a_32 : HashAlgorithm
-    {
-        private static readonly uint FNV_prime = 16777619;
-        private static readonly uint offset_basis = 2166136261;
+    ///// <summary>
+    ///// Fowler-Noll-Vo hash, variant 1a, 32-bit version.
+    ///// http://www.isthe.com/chongo/tech/comp/fnv/
+    ///// </summary>
+    //internal class FNV1a_32 : HashAlgorithm
+    //{
+    //    private static readonly uint FNV_prime = 16777619;
+    //    private static readonly uint offset_basis = 2166136261;
 
-        protected uint hash;
+    //    protected uint hash;
 
-        public FNV1a_32()
-        {
-            HashSizeValue = 32;
-        }
+    //    public FNV1a_32()
+    //    {
+    //        HashSizeValue = 32;
+    //    }
 
-        public override void Initialize()
-        {
-            hash = offset_basis;
-        }
+    //    public override void Initialize()
+    //    {
+    //        hash = offset_basis;
+    //    }
 
-        protected override void HashCore(byte[] array, int ibStart, int cbSize)
-        {
-            int length = ibStart + cbSize;
-            for (int i = ibStart; i < length; i++)
-            {
-                hash = (hash ^ array[i]) * FNV_prime;
-            }
-        }
+    //    protected override void HashCore(byte[] array, int ibStart, int cbSize)
+    //    {
+    //        int length = ibStart + cbSize;
+    //        for (int i = ibStart; i < length; i++)
+    //        {
+    //            hash = (hash ^ array[i]) * FNV_prime;
+    //        }
+    //    }
 
-        protected override byte[] HashFinal()
-        {
-            return BitConverter.GetBytes(hash);
-        }
-    }
+    //    protected override byte[] HashFinal()
+    //    {
+    //        return BitConverter.GetBytes(hash);
+    //    }
+    //}
 
     ///// <summary>
     ///// Modified Fowler-Noll-Vo hash, 32-bit version.
@@ -101,8 +101,25 @@ namespace CYQ.Data.Tool
     /// </summary>
     internal class HashCreator
     {
-        private static readonly FNV1a_32 fnv1 = new FNV1a_32();
-        public static uint Create(string key)
+        /// <summary>
+        /// 创建HashKey，重复概率低一些。
+        /// </summary>
+        /// <returns></returns>
+        public static string CreateKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                return "K" + CreateCode(key);
+            }
+            return "K" + (int)key[0] + CreateCode(key) + key.Length;
+        }
+        //private static readonly FNV1a_32 fnv1 = new FNV1a_32();//不受进程影响，但受cpu影响，所以不能用。
+        /// <summary>
+        /// 创建HashCode，有一定重复概率。
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static uint CreateCode(string key)
         {
             if (key == null)
             {
@@ -112,10 +129,24 @@ namespace CYQ.Data.Tool
             {
                 return uint.MaxValue;
             }
-            // return GetHashCode(key);
-               return BitConverter.ToUInt32(fnv1.ComputeHash(Encoding.Unicode.GetBytes(key)), 0);
+            return GetHashCode(key);
+            //return BitConverter.ToUInt32(fnv1.ComputeHash(Encoding.Unicode.GetBytes(key)), 0);
         }
+        /// <summary>
+        /// 取自java的字符串hash算法(有一定重复的概率)。
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private static uint GetHashCode(string value)
+        {
+            uint h = 0;
+            foreach (char c in value)
+            {
+                h = 31 * h + c;
+            }
+            return h;
 
+        }
         //[System.Security.SecuritySafeCritical]  // auto-generated
         //[ReliabilityContract(Consistency.WillNotCorruptState, Cer.MayFail)]
         //private static uint GetHashCode(string key)
