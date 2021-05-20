@@ -162,6 +162,10 @@ namespace CYQ.Data
             {
                 return name;
             }
+            if (name == "Conn" && name != DB.DefaultConn)
+            {
+                return GetConn(DB.DefaultConn);
+            }
             return "";
         }
 
