@@ -299,7 +299,12 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if (connIsChange && action.TableName != mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
@@ -859,7 +864,12 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange=_dalHelper.DataBaseName!=action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if(connIsChange && action.TableName!=mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
@@ -930,7 +940,12 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if (connIsChange && action.TableName != mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
@@ -1047,7 +1062,12 @@ namespace CYQ.Data.Table
                 action.SetAopState(Aop.AopOp.CloseAll);
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if (connIsChange && action.TableName != mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
@@ -1118,7 +1138,12 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if (connIsChange && action.TableName != mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
@@ -1187,7 +1212,12 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    action.dalHelper = _dalHelper;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
+                    action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
+                    if (connIsChange && action.TableName != mdt.TableName)
+                    {
+                        action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
+                    }
                 }
                 else
                 {
