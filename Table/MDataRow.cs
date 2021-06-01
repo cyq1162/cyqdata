@@ -358,7 +358,7 @@ namespace CYQ.Data.Table
             return dt;
         }
         /// <summary>
-        /// 将行的数据转成两列（ColumnName、Value）的表
+        /// 将行的数据转成两列（ColumnName、Value、State）的表
         /// </summary>
         /// <param name="onlyData">仅数据（不含列头结构）</param>
         /// <returns></returns>
@@ -369,10 +369,14 @@ namespace CYQ.Data.Table
                 MDataTable dt = new MDataTable(this.TableName);
                 dt.Columns.Add("ColumnName", SqlDbType.NVarChar);
                 dt.Columns.Add("Value", SqlDbType.Variant);
+                dt.Columns.Add("State", SqlDbType.Int);
                 for (int i = 0; i < Count; i++)
                 {
-                    dt.NewRow(true).Set(0, this[i].ColumnName)
-                        .Set(1, this[i].Value);
+                    MDataCell cell = this[i];
+                    dt.NewRow(true)
+                        .Set(0, cell.ColumnName)
+                        .Set(1, cell.Value)
+                        .Set(2, cell.State);
                 }
                 return dt;
             }
@@ -1381,7 +1385,7 @@ namespace CYQ.Data.Table
             int index = Columns.GetIndex(name);
             if (index > -1)
             {
-               
+
                 object objValue = p != null ? p.GetValue(entity, null) : f.GetValue(entity);
 
                 Type type = p != null ? p.PropertyType : f.FieldType;
@@ -1391,7 +1395,7 @@ namespace CYQ.Data.Table
                     {
                         objValue = objValue.ToString();
                     }
-                    else if(ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToDescriptionAttribute>(p, f) != null)
+                    else if (ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToDescriptionAttribute>(p, f) != null)
                     {
                         FieldInfo field = type.GetField(objValue.ToString());
                         if (field != null)
