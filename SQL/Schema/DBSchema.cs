@@ -156,16 +156,4 @@ namespace CYQ.Data.SQL
             }
         }
     }
-
-    internal class SchemaPara
-    {
-        public SchemaPara(string conn, bool isGetColumn)
-        {
-            Conn = conn;
-            IsGetColumn = isGetColumn;
-        }
-        public string Conn;
-        public bool IsGetColumn;
-    }
-
 }

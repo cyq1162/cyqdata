@@ -622,6 +622,10 @@ namespace CYQ.Data
 
         private void SetCommandText(string commandText, bool isProc)
         {
+            if (_com == null && DebugInfo.Length > 0)
+            {
+                throw new Exception("DalBase.SetCommandText stop running because : " + DebugInfo.ToString());
+            }
             if (OracleDal.clientType > 0)
             {
                 Type t = _com.GetType();
