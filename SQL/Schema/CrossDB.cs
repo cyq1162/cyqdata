@@ -196,7 +196,11 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
-            conn = GetConn(name, out name, conn);
+            string newConn = GetConn(name, out name, conn);
+            if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+            {
+                conn = newConn;
+            }
             if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
             {
                 DBSchema.GetSchema(conn);
