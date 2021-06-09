@@ -24,7 +24,7 @@ namespace System.Web
         {
             get
             {
-                if (context.Session == null)
+                if (context == null || context.Session == null)
                 {
                     return null;
                 }
@@ -36,7 +36,7 @@ namespace System.Web
         {
             get
             {
-                if (context.Session == null)
+                if (context == null || context.Session == null)
                 {
                     return false;
                 }
@@ -50,7 +50,7 @@ namespace System.Web
         {
             get
             {
-                if (context.Session == null)
+                if (context == null || context.Session == null)
                 {
                     return null;
                 }
@@ -61,7 +61,7 @@ namespace System.Web
 
         public void Clear()
         {
-            if (context.Session == null)
+            if (context == null || context.Session == null)
             {
                 return;
             }
@@ -80,7 +80,7 @@ namespace System.Web
 
         public void Remove(string key)
         {
-            if (context.Session == null)
+            if (context == null || context.Session == null)
             {
                 return;
             }
@@ -89,7 +89,7 @@ namespace System.Web
 
         public void Set(string key, byte[] value)
         {
-            if (context.Session == null)
+            if (context == null || context.Session == null)
             {
                 return;
             }
@@ -98,7 +98,7 @@ namespace System.Web
 
         public bool TryGetValue(string key, out byte[] value)
         {
-            if (context.Session == null)
+            if (context == null || context.Session == null)
             {
                 value = null;
                 return false;
