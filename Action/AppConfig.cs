@@ -624,7 +624,7 @@ namespace CYQ.Data
                         value = string.Empty;
                     }
                     _DefaultConn = value;
-
+                    SetConn("Conn", value);
                 }
             }
             /*
