@@ -44,7 +44,7 @@ namespace CYQ.Data.SQL
             return GetConn(nameOrSql, out fixName, priorityConn, out dbName);
         }
         /// <summary>
-        /// 获得链接的配置或语句。
+        /// 获得最优（可能会切换数据库）链接的配置或语句。
         /// </summary>
         /// <param name="nameOrSql">表名、视图名、存储过程名</param>
         /// <returns></returns>
@@ -250,7 +250,11 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                conn = GetConn(name, out name, conn);
+                string newConn = GetConn(name, out name, conn);//可能移到别的库去？
+                if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+                {
+                    conn = newConn;
+                }
                 string tableHash = TableInfo.GetHashKey(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
@@ -278,7 +282,11 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
-                conn = GetConn(name, out name, conn);
+                string newConn = GetConn(name, out name, conn);
+                if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+                {
+                    conn = newConn;
+                }
                 string tableHash = TableInfo.GetHashKey(name);
                 string dbHash = ConnBean.GetHashKey(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))

@@ -872,3 +872,4 @@
 648：优化：MDataRow ToTable(true)方法新增State值状态列。(2021-06-01)
 649：修正：CrossDB.Exists 修正判断问题。(2021-06-08)
 650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16)
+651：优化：CrossDB.Remove、CrossDB.Add判断问题。(2021-06-16)
