@@ -2,8 +2,10 @@
 using CYQ.Data.Table;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.SqlTypes;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Web;
@@ -67,7 +69,7 @@ namespace CYQ.Data.Tool
             }
             if (value == null)
             {
-                return t.IsValueType ? Activator.CreateInstance(t) : null;  
+                return t.IsValueType ? Activator.CreateInstance(t) : null;
             }
             if (t.FullName == "System.Object")
             {
@@ -238,6 +240,58 @@ namespace CYQ.Data.Tool
         {
             return (T)ChangeType(value, typeof(T));
         }
+        /// <summary>
+        /// DbDataReader To List
+        /// </summary>
+        internal static List<T> ChangeReaderToList<T>(DbDataReader reader)
+        {
+            List<T> list = new List<T>();
+            if (reader != null)
+            {
+                if (reader.HasRows)
+                {
+                    Dictionary<string, Type> kv = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        kv.Add(reader.GetName(i), reader.GetFieldType(i));
+                    }
 
+                    Type t = typeof(T);
+                    List<PropertyInfo> pis = ReflectTool.GetPropertyList(t);
+                    while (reader.Read())
+                    {
+                        object obj = Activator.CreateInstance(t);
+
+                        if (pis.Count > 0)
+                        {
+                            foreach (PropertyInfo p in pis)//遍历实体
+                            {
+                                if (p.CanWrite)
+                                {
+
+                                    object objValue = reader[p.Name];
+                                    if (objValue != null && objValue != DBNull.Value)
+                                    {
+                                        if (p.PropertyType != kv[p.Name])
+                                        {
+                                            objValue = ChangeType(objValue, p.PropertyType);//尽量避免类型转换
+                                        }
+                                        p.SetValue(obj, objValue, null);
+                                    }
+                                }
+                            }
+                        }
+                        list.Add((T)obj);
+                    }
+                    kv.Clear();
+                    kv = null;
+                }
+                reader.Close();
+                reader.Dispose();
+                reader = null;
+            }
+            return list;
+            //return List<default(T)>;
+        }
     }
 }

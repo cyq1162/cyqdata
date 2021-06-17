@@ -62,7 +62,7 @@ namespace CYQ.Data.SQL
                 info.ConnString = dal.ConnObj.Master.ConnString;
                 info.DataBaseName = dal.DataBaseName;
                 info.DataBaseType = dal.DataBaseType;
-                info.DataBaseVersion = dal.Version;
+                
                 Dictionary<string, string> tables = dal.GetTables();
                 if (tables != null && tables.Count > 0)
                 {
@@ -77,34 +77,40 @@ namespace CYQ.Data.SQL
                     }
                     info.Tables = dic;
                 }
-
-                Dictionary<string, string> views = dal.GetViews();
-                if (views != null && views.Count > 0)
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))//未配置架构外围的，延迟加载。
                 {
-                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
-                    foreach (KeyValuePair<string, string> item in views)
+                    info.isGetVersion = true;
+                    info.DataBaseVersion = dal.Version;
+                    Dictionary<string, string> views = dal.GetViews();
+                    if (views != null && views.Count > 0)
                     {
-                        string hash = TableInfo.GetHashKey(item.Key);
-                        if (!dic.ContainsKey(hash))
+                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        foreach (KeyValuePair<string, string> item in views)
                         {
-                            dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
+                            string hash = TableInfo.GetHashKey(item.Key);
+                            if (!dic.ContainsKey(hash))
+                            {
+                                dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
+                            }
                         }
+                        info.isGetViews = true;
+                        info.Views = dic;
                     }
-                    info.Views = dic;
-                }
-                Dictionary<string, string> procs = dal.GetProcs();
-                if (procs != null && procs.Count > 0)
-                {
-                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
-                    foreach (KeyValuePair<string, string> item in procs)
+                    Dictionary<string, string> procs = dal.GetProcs();
+                    if (procs != null && procs.Count > 0)
                     {
-                        string hash = TableInfo.GetHashKey(item.Key);
-                        if (!dic.ContainsKey(hash))
+                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        foreach (KeyValuePair<string, string> item in procs)
                         {
-                            dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
+                            string hash = TableInfo.GetHashKey(item.Key);
+                            if (!dic.ContainsKey(hash))
+                            {
+                                dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
+                            }
                         }
+                        info.isGetProcs = true;
+                        info.Procs = dic;
                     }
-                    info.Procs = dic;
                 }
             }
             return info;

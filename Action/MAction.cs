@@ -342,7 +342,7 @@ namespace CYQ.Data
             if (tableObj is String)
             {
                 string fixName, dbName;
-                conn = CrossDB.GetConn(tableName, out fixName, conn,out dbName);
+                conn = CrossDB.GetConn(tableName, out fixName, conn, out dbName);
                 tableObj = fixName;
                 if (string.IsNullOrEmpty(newDbName) && !string.IsNullOrEmpty(dbName))
                 {
@@ -941,6 +941,101 @@ namespace CYQ.Data
                 _sqlCreate.selectColumns = null;
             }
             return _aop.Para.Table;
+        }
+
+        /// <summary>
+        /// ORM 实体查询（DBFast、OrmBase、SimpleOrmBase 节省一次转实体的时间），未公开选项。
+        /// </summary>
+        internal List<T> Select<T>(int pageIndex, int pageSize, object where, out int rowCount) where T : class
+        {
+            List<T> list = new List<T>();
+            if (CheckDisposed()) { rowCount = -1; return list; }
+            rowCount = 0;
+            AopResult aopResult = AopResult.Default;
+            if (_aop.IsLoadAop)
+            {
+                _aop.Para.MAction = this;
+                _aop.Para.PageIndex = pageIndex;
+                _aop.Para.PageSize = pageSize;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                _aop.Para.SelectColumns = _sqlCreate.selectColumns;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.SelectList);
+            }
+            if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
+            {
+                string primaryKey = SqlFormat.Keyword(_Data.Columns.FirstPrimary.ColumnName, dalHelper.DataBaseType);//主键列名。
+                ClearParameters();//------------------------参数清除
+                DbDataReader sdReader = null;
+                string whereSql = string.Empty;//已格式化过的原生whereSql语句
+                if (_sqlCreate != null)
+                {
+                    whereSql = _sqlCreate.FormatWhere(where);
+                }
+                else
+                {
+                    whereSql = SqlFormat.Compatible(where, dalHelper.DataBaseType, dalHelper.Com.Parameters.Count == 0);
+                }
+                bool byPager = pageIndex > 0 && pageSize > 0;//分页查询(第一页也要分页查询，因为要计算总数）
+
+                #region SQL语句分页执行
+                if (byPager)
+                {
+                    rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                    _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
+                    _aop.isHasCache = false;//不能影响Select的后续操作。
+                    //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
+                }
+                if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
+                {
+                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                    sdReader = dalHelper.ExeDataReader(sql, false);
+                }
+                //else if (_sqlCreate.selectColumns != null)
+                //{
+                //    //没有数据，只返回表结构。
+                //    _aop.Para.Table = _aop.Para.Table.Select(0, 0, null, _sqlCreate.selectColumns);
+                //}
+                #endregion
+
+                if (sdReader != null)
+                {
+                    list = ConvertTool.ChangeReaderToList<T>(sdReader);
+                    _aop.Para.ExeResult = list;
+                    if (!byPager)
+                    {
+                        rowCount = list.Count;
+                    }
+                }
+                _aop.Para.RowCount = rowCount;
+                _aop.Para.IsSuccess = list.Count > 0;
+                ClearParameters();//------------------------参数清除
+            }
+            else if (_aop.Para.ExeResult != null)
+            {
+                rowCount = _aop.Para.RowCount;//返回记录总数
+                if (_aop.Para.ExeResult is String)
+                {
+                    string result = _aop.Para.ExeResult as String;
+                    list = JsonHelper.ToList<T>(result);
+                }
+                else
+                {
+                    list = _aop.Para.ExeResult as List<T>;
+                }
+            }
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            {
+                _aop.End(Aop.AopEnum.SelectList);
+            }
+
+            if (_sqlCreate != null)
+            {
+                _sqlCreate.selectColumns = null;
+            }
+            return list;
         }
 
         /// <summary>

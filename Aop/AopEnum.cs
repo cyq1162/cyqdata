@@ -10,6 +10,10 @@ namespace CYQ.Data.Aop
     public enum AopEnum
     {
         Select,
+        /// <summary>
+        /// Orm (DBFast、SimpleOrmBase等查询返回实体列表）
+        /// </summary>
+        SelectList,
         Insert,
         Update,
         Delete,
@@ -19,7 +23,11 @@ namespace CYQ.Data.Aop
         ExeMDataTableList,
         ExeMDataTable,
         ExeNonQuery,
-        ExeScalar
+        ExeScalar,
+        /// <summary>
+        /// 未公开选项。
+        /// </summary>
+        ExeList
     }
     /// <summary>
     /// Aop函数的处理结果

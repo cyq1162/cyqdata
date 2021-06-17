@@ -867,9 +867,13 @@
 645：优化：MDataTable.AcceptChange 增加重载参数（允许指定事务级别）(2021-04-23)
 646：修正：分布式缓存【Hash不同CPU产生不一致】的问题(2021-05-18)
 ------------------------------------------------------------------------------
-646：修正：AppConfig.GetConn 方法【解决NetCore下提示找不到Conn项的问题】。(2021-04-20)【V5.8.3.9】
+646：修正：AppConfig.GetConn 方法【解决NetCore下提示找不到Conn项的问题】。(2021-04-20)【V5.8.3.9】【性能提升版本】
 647：修正：MDataTable.AcceptChange 跨库批量事务的问题。(2021-05-31)
 648：优化：MDataRow ToTable(true)方法新增State值状态列。(2021-06-01)
 649：修正：CrossDB.Exists 修正判断问题。(2021-06-08)
 650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16)
 651：优化：CrossDB.Remove、CrossDB.Add判断问题。(2021-06-16)
+652：优化：Orm相关（DBFast、SimpleOrmBase的Select<T>提升性能（原DataReader=>MDataTable=>List<T> 调整为：DataReader=>List<T>，节省中间过程）(2021-06-16)
+653：优化：DBSchema 首次初始结构缓存时，对未配置架构缓存外围时，将【视图、存储过程、版本号】部分调整为延迟加载。(2021-06-17)
+654：优化：AutoCache 自动缓存机制，提升单机（LocalCache状态）时的性能。(2021-06-17)
+655：优化：JsonHelper Split、GetValue 两个方法，提升性能。(2021-06-17)

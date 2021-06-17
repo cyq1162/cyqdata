@@ -91,7 +91,7 @@ namespace CYQ.Data.Orm
         /// <param name="where">条件</param>
         /// <param name="columns">指定查询的列（可选）</param>
         /// <returns></returns>
-        public static T Find<T>(object where, params string[] columns)
+        public static T Find<T>(object where, params string[] columns) where T : class
         {
             T result = default(T);
             MDataRow row = null;
@@ -112,7 +112,7 @@ namespace CYQ.Data.Orm
             }
             return result;
         }
-        public static List<T> Select<T>()
+        public static List<T> Select<T>() where T : class
         {
             int count;
             return Select<T>(0, 0, null, out count, null);
@@ -122,7 +122,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public static List<T> Select<T>(string where, params string[] columns)
+        public static List<T> Select<T>(string where, params string[] columns) where T : class
         {
             int count;
             return Select<T>(0, 0, where, out count, columns);
@@ -133,17 +133,17 @@ namespace CYQ.Data.Orm
         /// <param name="topN">查询几条</param>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public static List<T> Select<T>(int topN, string where, params string[] columns)
+        public static List<T> Select<T>(int topN, string where, params string[] columns) where T : class
         {
             int count;
             return Select<T>(1, topN, where, out count, columns);
         }
-        public static List<T> Select<T>(int pageIndex, int pageSize, params string[] columns)
+        public static List<T> Select<T>(int pageIndex, int pageSize, params string[] columns) where T : class
         {
             int count;
             return Select<T>(pageIndex, pageSize, null, out count, columns);
         }
-        public static List<T> Select<T>(int pageIndex, int pageSize, string where, params string[] columns)
+        public static List<T> Select<T>(int pageIndex, int pageSize, string where, params string[] columns) where T : class
         {
             int count;
             return Select<T>(pageIndex, pageSize, where, out count, columns);
@@ -158,18 +158,19 @@ namespace CYQ.Data.Orm
         /// <param name="count">返回记录总数</param>
         /// <param name="columns">指定查询的列（可选）</param>
         /// <returns></returns>
-        public static List<T> Select<T>(int pageIndex, int pageSize, object where, out int count, params string[] columns)
+        public static List<T> Select<T>(int pageIndex, int pageSize, object where, out int count, params string[] columns) where T : class
         {
-            MDataTable dt = null;
+            //MDataTable dt = null;
             using (MAction action = GetMAction<T>())
             {
                 if (columns != null && columns.Length > 0)
                 {
                     action.SetSelectColumns(columns);
                 }
-                dt = action.Select(pageIndex, pageSize, where, out count);
+                return action.Select<T>(pageIndex, pageSize, where, out count);
+                //dt = action.Select(pageIndex, pageSize, where, out count);
             }
-            return dt.ToList<T>();
+           // return dt.ToList<T>();
         }
 
         /// <summary>
@@ -178,11 +179,11 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="where">条件</param>
         /// <returns></returns>
-        public static bool Delete<T>(object where)
+        public static bool Delete<T>(object where) where T : class
         {
             return Delete<T>(where, false);
         }
-        public static bool Delete<T>(object where, bool isIgnoreDeleteField)
+        public static bool Delete<T>(object where, bool isIgnoreDeleteField) where T : class
         {
             if (where == null) { return false; }
             using (MAction action = GetMAction<T>())
@@ -200,11 +201,11 @@ namespace CYQ.Data.Orm
 
             }
         }
-        public static bool Insert<T>(T t)
+        public static bool Insert<T>(T t) where T : class
         {
             return Insert<T>(t, InsertOp.ID, false);
         }
-        public static bool Insert<T>(T t, InsertOp op)
+        public static bool Insert<T>(T t, InsertOp op) where T : class
         {
             return Insert<T>(t, op, false);
         }
@@ -214,7 +215,7 @@ namespace CYQ.Data.Orm
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
         /// <returns></returns>
-        public static bool Insert<T>(T t, InsertOp op, bool insertID)
+        public static bool Insert<T>(T t, InsertOp op, bool insertID) where T : class
         {
             bool result = false;
             MDataRow row = null;
@@ -234,7 +235,7 @@ namespace CYQ.Data.Orm
             }
             return result;
         }
-        public static bool Update<T>(T t)
+        public static bool Update<T>(T t) where T : class
         {
             return Update<T>(t, null);
         }
@@ -246,7 +247,7 @@ namespace CYQ.Data.Orm
         /// <param name="where">条件</param>
         /// <param name="updateColumns">指定要更新列</param>
         /// <returns></returns>
-        public static bool Update<T>(T t, object where, params string[] updateColumns)
+        public static bool Update<T>(T t, object where, params string[] updateColumns) where T : class
         {
             using (MAction action = GetMAction<T>())
             {
@@ -273,14 +274,14 @@ namespace CYQ.Data.Orm
         /// <summary>
         /// 是否存在指定的条件
         /// </summary>
-        public static bool Exists<T>(object where)
+        public static bool Exists<T>(object where) where T : class
         {
             using (MAction action = GetMAction<T>())
             {
                 return action.Exists(where);
             }
         }
-        public static int GetCount<T>(object where)
+        public static int GetCount<T>(object where) where T : class
         {
             using (MAction action = GetMAction<T>())
             {

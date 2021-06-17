@@ -34,7 +34,7 @@ namespace CYQ.Data.Orm
     /// <summary>
     /// 简单ORM基类（纯数据交互功能）
     /// </summary>
-    public class SimpleOrmBase<T> : SimpleOrmBase
+    public class SimpleOrmBase<T> : SimpleOrmBase where T : class
     {
         public new T Get(object where)
         {
@@ -448,7 +448,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public virtual T Get<T>(object where)
+        public virtual T Get<T>(object where) where T : class
         {
             bool result = Action.Fill(where);
             if (result)
@@ -460,7 +460,7 @@ namespace CYQ.Data.Orm
         /// <summary>
         /// 列表查询
         /// </summary>
-        public virtual List<T> Select<T>()
+        public virtual List<T> Select<T>() where T : class
         {
             int count = 0;
             return Select<T>(0, 0, null, out count);
@@ -470,7 +470,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public virtual List<T> Select<T>(string where)
+        public virtual List<T> Select<T>(string where) where T : class
         {
             int count = 0;
             return Select<T>(0, 0, where, out count);
@@ -481,17 +481,17 @@ namespace CYQ.Data.Orm
         /// <param name="topN">查询几条</param>
         /// <param name="where">查询条件[可附带 order by 语句]</param>
         /// <returns></returns>
-        public virtual List<T> Select<T>(int topN, string where)
+        public virtual List<T> Select<T>(int topN, string where) where T : class
         {
             int count = 0;
             return Select<T>(0, topN, where, out count);
         }
-        public virtual List<T> Select<T>(int pageIndex, int pageSize)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize) where T : class
         {
             int count = 0;
             return Select<T>(pageIndex, pageSize, null, out count);
         }
-        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where) where T : class
         {
             int count = 0;
             return Select<T>(pageIndex, pageSize, where, out count);
@@ -504,9 +504,10 @@ namespace CYQ.Data.Orm
         /// <param name="where"> 查询条件[可附带 order by 语句]</param>
         /// <param name="count">返回的记录总数</param>
         /// <param name="selectColumns">指定返回的列</param>
-        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count)
+        public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count) where T : class
         {
-            return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
+           // return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
+            return Action.Select<T>(pageIndex, pageSize, where, out count);
         }
 
         internal MDataTable Select(int pageIndex, int pageSize, string where, out int count)

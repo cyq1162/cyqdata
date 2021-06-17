@@ -3,8 +3,10 @@ using CYQ.Data.SQL;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -41,12 +43,23 @@ namespace CYQ.Data.Cache
                     if (obj != null)
                     {
                         List<MDataTable> list = new List<MDataTable>();
-                        Dictionary<string, string> jd = JsonHelper.Split(obj.ToString());
-                        if (jd != null && jd.Count > 0)
+                        if (_AutoCache.CacheType == CacheType.LocalCache)
                         {
-                            foreach (KeyValuePair<string, string> item in jd)
+                            List<MDataTable> listObj = obj as List<MDataTable>;
+                            foreach (MDataTable table in listObj)
                             {
-                                list.Add(MDataTable.CreateFrom(item.Value, null, EscapeOp.Encode));
+                                listObj.Add(table.Clone());
+                            }
+                        }
+                        else
+                        {
+                            Dictionary<string, string> jd = JsonHelper.Split(obj.ToString());
+                            if (jd != null && jd.Count > 0)
+                            {
+                                foreach (KeyValuePair<string, string> item in jd)
+                                {
+                                    list.Add(MDataTable.CreateFrom(item.Value, null, EscapeOp.Encode));
+                                }
                             }
                         }
                         aopInfo.TableList = list;
@@ -56,7 +69,21 @@ namespace CYQ.Data.Cache
                 case AopEnum.ExeMDataTable:
                     if (obj != null)
                     {
-                        aopInfo.Table = MDataTable.CreateFrom(obj.ToString(), null, EscapeOp.Encode);
+                        if (_AutoCache.CacheType == CacheType.LocalCache)
+                        {
+                            aopInfo.Table = (obj as MDataTable).Clone();
+                        }
+                        else
+                        {
+                            aopInfo.Table = MDataTable.CreateFrom(obj.ToString(), null, EscapeOp.Encode);
+                        }
+                    }
+                    break;
+                case AopEnum.ExeList:
+                case AopEnum.SelectList:
+                    if (obj != null)
+                    {
+                        aopInfo.ExeResult = obj;
                     }
                     break;
                 case AopEnum.ExeScalar:
@@ -68,10 +95,14 @@ namespace CYQ.Data.Cache
                 case AopEnum.Fill:
                     if (obj != null)
                     {
-                        MDataRow row = obj as MDataRow;
+                        MDataRow row;
                         if (_AutoCache.CacheType == CacheType.LocalCache)
                         {
-                            row = row.Clone();
+                            row = (obj as MDataRow).Clone();
+                        }
+                        else
+                        {
+                            row = MDataRow.CreateFrom(obj);
                         }
                         aopInfo.Row = row;
                         aopInfo.IsSuccess = true;
@@ -142,29 +173,70 @@ namespace CYQ.Data.Cache
             switch (action)
             {
                 case AopEnum.ExeMDataTableList:
-                    if (IsCanCache(aopInfo.TableList))
+                    if (IsCanSetCache(aopInfo.TableList))
                     {
-                        JsonHelper js = new JsonHelper(false, false);
-                        foreach (MDataTable table in aopInfo.TableList)
+                        if (_AutoCache.CacheType == CacheType.LocalCache)
                         {
-                            js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode));
+                            List<MDataTable> cloneList = new List<MDataTable>(aopInfo.TableList.Count);
+                            foreach (MDataTable table in aopInfo.TableList)
+                            {
+                                cloneList.Add(table.Clone());
+                            }
+                            _AutoCache.Set(key, cloneList, cacheTime);
                         }
-                        js.AddBr();
-                        _AutoCache.Set(key, js.ToString(), cacheTime);
+                        else
+                        {
+                            JsonHelper js = new JsonHelper(false, false);
+                            foreach (MDataTable table in aopInfo.TableList)
+                            {
+                                js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode));
+                            }
+                            js.AddBr();
+                            _AutoCache.Set(key, js.ToString(), cacheTime);
+                        }
                     }
                     break;
                 case AopEnum.Select:
                 case AopEnum.ExeMDataTable:
-                    if (IsCanCache(aopInfo.Table))
+                    if (IsCanSetCache(aopInfo.Table))
                     {
-                        _AutoCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                        if (_AutoCache.CacheType == CacheType.LocalCache)
+                        {
+                            _AutoCache.Set(key, aopInfo.Table.Clone(), cacheTime);
+                        }
+                        else
+                        {
+                            _AutoCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                        }
+                    }
+                    break;
+                case AopEnum.ExeList:
+                case AopEnum.SelectList:
+                    if (IsCanSetCache(aopInfo.ExeResult))
+                    {
+                        //if (_AutoCache.CacheType == CacheType.LocalCache)
+                        //{
+                        //    _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);//无法克隆
+                        //}
+                        //else
+                        //{
+                            
+                        //}
+                        _AutoCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult, false, RowOp.IgnoreNull, EscapeOp.Encode), cacheTime);
                     }
                     break;
                 case AopEnum.ExeScalar:
                     _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
                 case AopEnum.Fill:
-                    _AutoCache.Set(key, aopInfo.Row.Clone(), cacheTime);
+                    if (_AutoCache.CacheType == CacheType.LocalCache)
+                    {
+                        _AutoCache.Set(key, aopInfo.Row.Clone(), cacheTime);
+                    }
+                    else
+                    {
+                        _AutoCache.Set(key, aopInfo.Row.ToJson(RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                    }
                     break;
                 case AopEnum.GetCount:
                     _AutoCache.Set(key, aopInfo.RowCount, cacheTime);
@@ -177,30 +249,63 @@ namespace CYQ.Data.Cache
         }
 
         #region 检测过滤
-        static bool IsCanCache(List<MDataTable> dtList)
+        static bool IsCanSetCache(List<MDataTable> dtList)
         {
             foreach (MDataTable item in dtList)
             {
-                if (!IsCanCache(item))
+                if (!IsCanSetCache(item))
                 {
                     return false;
                 }
             }
             return true;
         }
-        static bool IsCanCache(MDataTable dt)
+        static bool IsCanSetCache(MDataTable dt)
         {
-            if (dt == null || dt.Rows.Count > 100000)
+            if (dt == null || dt.Rows.Count > 1000)
             {
-                return false;// 大于10万条的不缓存。
+                return false;// 大于1000条的不缓存,1000这个数字，性能调节上相对合适。
             }
-            foreach (MCellStruct item in dt.Columns)
+            if (_AutoCache.CacheType != CacheType.LocalCache)
             {
-                if (DataType.GetGroup(item.SqlType) == 999)//只存档基础类型
+                foreach (MCellStruct item in dt.Columns)
+                {
+                    if (DataType.GetGroup(item.SqlType) == 999)//只存档基础类型
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        static bool IsCanSetCache(object listResult)
+        {
+            //return false;
+            if (listResult == null)
+            {
+                return false;
+            }
+            int i = 0;
+            foreach (object o in listResult as IEnumerable)
+            {
+                if (i == 0)// && _AutoCache.CacheType != CacheType.LocalCache
+                {
+                    List<PropertyInfo> pis = ReflectTool.GetPropertyList(o.GetType());
+                    foreach (PropertyInfo item in pis)
+                    {
+                        if (DataType.GetGroup(DataType.GetSqlType(item.PropertyType)) == 999)//只存档基础类型
+                        {
+                            return false;
+                        }
+                    }
+                }
+                i++;
+                if (i > 100)// 大于N条的不缓存。List<T> 的缓存，在存和取间都要转2次（ JsonString=>MDataTable=>List<T>），所以限制条数少一些，性能调节上相对合适。
                 {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -449,6 +554,7 @@ namespace CYQ.Data.Cache
                     case AopEnum.Fill:
                     case AopEnum.GetCount:
                     case AopEnum.Select:
+                    case AopEnum.SelectList:
                         if (para.MAction.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
                         {
                             return false;
@@ -457,6 +563,7 @@ namespace CYQ.Data.Cache
                     case AopEnum.ExeMDataTable:
                     case AopEnum.ExeMDataTableList:
                     case AopEnum.ExeScalar:
+                    case AopEnum.ExeList:
                         if (para.MProc.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
                         {
                             return false;
@@ -538,7 +645,7 @@ namespace CYQ.Data.Cache
                     {
                         if (para.TableName.Contains(" "))
                         {
-                            tableName = "View_" +TableInfo.GetHashKey(para.TableName);
+                            tableName = "View_" + TableInfo.GetHashKey(para.TableName);
                         }
                         else
                         {

@@ -485,39 +485,39 @@ namespace CYQ.Data.Tool
             string result = string.Empty;
             if (!string.IsNullOrEmpty(json))
             {
-                List<Dictionary<string, string>> jsonList = JsonSplit.Split(json);
-                if (jsonList.Count > 0)
+                string[] items = key.Split('.');
+                string fKey = items[0];
+                int i = -1;
+                int fi = key.IndexOf('.');
+                if (int.TryParse(fKey, out i))//数字
                 {
-                    string[] items = key.Split('.');
-                    string fKey = items[0];
-                    int i = -1;
-                    int fi = key.IndexOf('.');
-                    if (int.TryParse(fKey, out i))//数字
+                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(json, i + 1);
+                    if (i < jsonList.Count)
                     {
-                        if (i < jsonList.Count)
+                        Dictionary<string, string> numJson = jsonList[i];
+                        if (items.Length == 1)
                         {
-                            Dictionary<string, string> numJson = jsonList[i];
-                            if (items.Length == 1)
+                            result = ToJson(numJson);
+                        }
+                        else if (items.Length == 2) // 0.xxx
+                        {
+                            string sKey = items[1];
+                            if (numJson.ContainsKey(sKey))
                             {
-                                result = ToJson(numJson);
-                            }
-                            else if (items.Length == 2) // 0.xxx
-                            {
-                                string sKey = items[1];
-                                if (numJson.ContainsKey(sKey))
-                                {
-                                    result = numJson[sKey];
-                                }
-                            }
-                            else
-                            {
-                                return GetSourceValue(ToJson(numJson), key.Substring(fi + 1));
+                                result = numJson[sKey];
                             }
                         }
+                        else
+                        {
+                            return GetSourceValue(ToJson(numJson), key.Substring(fi + 1));
+                        }
                     }
-                    else // 非数字
+                }
+                else // 非数字
+                {
+                    Dictionary<string, string> jsonDic = Split(json);//只取top1
+                    if (jsonDic != null && jsonDic.Count > 0)
                     {
-                        Dictionary<string, string> jsonDic = jsonList[0];
                         if (items.Length == 1)
                         {
                             if (jsonDic.ContainsKey(fKey))
@@ -527,7 +527,6 @@ namespace CYQ.Data.Tool
                         }
                         else if (jsonDic.ContainsKey(fKey)) // 取子集
                         {
-
                             return GetSourceValue(jsonDic[fKey], key.Substring(fi + 1));
                         }
                     }
@@ -615,7 +614,7 @@ namespace CYQ.Data.Tool
                 {
                     json = ToJson(json);
                 }
-                List<Dictionary<string, string>> result = JsonSplit.Split(json);
+                List<Dictionary<string, string>> result = JsonSplit.Split(json, 1);
                 if (result != null && result.Count > 0)
                 {
                     return result[0];

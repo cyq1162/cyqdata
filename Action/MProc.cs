@@ -324,7 +324,38 @@ namespace CYQ.Data
                 return _aop.Para.Table;
             }
         }
-
+        /// <summary>
+        /// Get List T 预先实现，后续再考虑是否开放。
+        /// </summary>
+        internal List<T> ExeList<T>() where T : class
+        {
+            CheckDisposed();
+            List<T> list;
+            AopResult aopResult = SetAopResult(AopEnum.ExeList);
+            if (aopResult == AopResult.Return)
+            {
+                if (_aop.Para.ExeResult is String)
+                {
+                    string result = _aop.Para.ExeResult as String;
+                    return JsonHelper.ToList<T>(result);
+                }
+                return _aop.Para.ExeResult as List<T>;
+            }
+            else
+            {
+                if (aopResult != AopResult.Break)
+                {
+                    list = ConvertTool.ChangeReaderToList<T>(dalHelper.ExeDataReader(_procName, _isProc));
+                    _aop.Para.ExeResult = list;
+                    _aop.Para.IsSuccess = list.Count > 0;
+                }
+                if (aopResult != AopResult.Default)
+                {
+                    _aop.End(AopEnum.ExeList);
+                }
+                return _aop.Para.ExeResult as List<T>;
+            }
+        }
         /// <summary>
         /// Get MDataTables
         /// </summary>

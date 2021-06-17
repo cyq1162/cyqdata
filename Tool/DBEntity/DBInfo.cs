@@ -54,6 +54,10 @@ namespace CYQ.Data.Tool
         {
             get
             {
+                if (!isGetVersion && string.IsNullOrEmpty(_DataBaseVersion))
+                {
+                    GetVersion();
+                }
                 return _DataBaseVersion;
             }
             internal set
@@ -90,6 +94,11 @@ namespace CYQ.Data.Tool
         {
             get
             {
+                if (!isGetViews && _Views.Count == 0)
+                {
+                    isGetViews = true;
+                    GetViews();////延迟加载
+                }
                 return _Views;
             }
             internal set
@@ -102,6 +111,11 @@ namespace CYQ.Data.Tool
         {
             get
             {
+                if (!isGetProcs && _Procs.Count == 0)
+                {
+                    isGetProcs = true;
+                    GetProcs();//延迟加载
+                }
                 return _Procs;
             }
             internal set
@@ -117,15 +131,15 @@ namespace CYQ.Data.Tool
         }
         internal TableInfo GetTableInfo(string tableHash, string type)
         {
-            if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
+            if ((type == null || type == "U") && Tables != null && Tables.ContainsKey(tableHash))
             {
                 return Tables[tableHash];
             }
-            if (Views != null && (type == null || type == "V") && Views.ContainsKey(tableHash))
+            if ((type == null || type == "V") && Views != null && Views.ContainsKey(tableHash))
             {
                 return Views[tableHash];
             }
-            if (Procs != null && (type == null || type == "P") && Procs.ContainsKey(tableHash))
+            if ((type == null || type == "P") && Procs != null && Procs.ContainsKey(tableHash))
             {
                 return Procs[tableHash];
             }
@@ -186,5 +200,79 @@ namespace CYQ.Data.Tool
             }
             return connBean.GetHashKey();
         }
+
+        #region 延迟加载
+        internal bool isGetViews = false, isGetProcs = false, isGetVersion = false;
+        private readonly object lockViewObj = new object();
+        private void GetViews()
+        {
+            if (_Views.Count == 0)
+            {
+                lock (lockViewObj)
+                {
+                    if (_Views.Count == 0)
+                    {
+                        using (DalBase dal = DalCreate.CreateDal(ConnString))
+                        {
+                            Dictionary<string, string> views = dal.GetViews();
+                            if (views != null && views.Count > 0)
+                            {
+                                Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                                foreach (KeyValuePair<string, string> item in views)
+                                {
+                                    string hash = TableInfo.GetHashKey(item.Key);
+                                    if (!dic.ContainsKey(hash))
+                                    {
+                                        dic.Add(hash, new TableInfo(item.Key, "V", item.Value, this));
+                                    }
+                                }
+                                _Views = dic;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private readonly object lockProcObj = new object();
+        private void GetProcs()
+        {
+            if (_Procs.Count == 0)
+            {
+                lock (lockProcObj)
+                {
+                    if (_Procs.Count == 0)
+                    {
+                        using (DalBase dal = DalCreate.CreateDal(ConnString))
+                        {
+                            Dictionary<string, string> procs = dal.GetProcs();
+                            if (procs != null && procs.Count > 0)
+                            {
+                                Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                                foreach (KeyValuePair<string, string> item in procs)
+                                {
+                                    string hash = TableInfo.GetHashKey(item.Key);
+                                    if (!dic.ContainsKey(hash))
+                                    {
+                                        dic.Add(hash, new TableInfo(item.Key, "P", item.Value, this));
+                                    }
+                                }
+                                _Procs = dic;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void GetVersion()
+        {
+            if (string.IsNullOrEmpty(_DataBaseVersion))
+            {
+                using (DalBase dal = DalCreate.CreateDal(ConnString))
+                {
+                    _DataBaseVersion = dal.Version;
+                }
+            }
+        }
+        #endregion
     }
 }

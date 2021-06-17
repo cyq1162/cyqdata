@@ -55,21 +55,23 @@ namespace CYQ.Data.Tool
 
             return !cs.arrayStart && !cs.jsonStart; //只要不是正常关闭，则失败
         }
-
+        internal static List<Dictionary<string, string>> Split(string json)
+        {
+            return Split(json, 0);
+        }
         /// <summary>
         /// 解析Json
         /// </summary>
-        /// <param name="json"></param>
-        /// <param name="op">除了NO，其它项都会消掉转义符，默认是：YES</param>
         /// <returns></returns>
-        internal static List<Dictionary<string, string>> Split(string json)
+        internal static List<Dictionary<string, string>> Split(string json, int topN)
         {
             List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
 
             if (!string.IsNullOrEmpty(json))
             {
-                Dictionary<string, string> dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                string key = string.Empty;
+                Dictionary<string, string> dic = new Dictionary<string, string>(16, StringComparer.OrdinalIgnoreCase);
+                //string key = string.Empty;
+                StringBuilder key = new StringBuilder(32);
                 StringBuilder value = new StringBuilder();
                 CharState cs = new CharState(false);
                 try
@@ -85,12 +87,11 @@ namespace CYQ.Data.Tool
                             {
                                 if (cs.keyStart > 0)
                                 {
-                                    key += c;
+                                    key.Append(c);
                                 }
                                 else if (cs.valueStart > 0)
                                 {
                                     value.Append(c);
-                                    //value += c;
                                 }
                             }
                             else if (!cs.arrayStart)//json结束，又不是数组，则退出。
@@ -102,7 +103,7 @@ namespace CYQ.Data.Tool
                         {
                             string item = json.Substring(i);
                             int temp;
-                            int length = GetValueLength(false, item, false, out temp);
+                            int length = GetValueLength(false, item, false, out temp);//这里应该有优化的空间，传json和i，不重新生成string
                             //value = item.Substring(0, length);
                             value.Length = 0;
                             value.Append(item.Substring(0, length));
@@ -114,32 +115,35 @@ namespace CYQ.Data.Tool
                         }
                         if (cs.setDicValue)//设置键值对。
                         {
-                            if (!string.IsNullOrEmpty(key) && !dic.ContainsKey(key))
+                            if (key.Length > 0)
                             {
-                                //if (value != string.Empty)
-                                //{
-                                string val = value.ToString();
-                                bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
-                                if (isNull)
+                                string k = key.ToString();
+                                if (!dic.ContainsKey(k))
                                 {
-                                    val = "";
+                                    string val = value.ToString();
+                                    bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
+                                    if (isNull)
+                                    {
+                                        val = "";
+                                    }
+                                    dic.Add(k, val);
                                 }
-
-                                dic.Add(key, val);
-
-                                //}
                             }
                             cs.setDicValue = false;
-                            key = string.Empty;
+                            key.Length = 0;
                             value.Length = 0;
                         }
 
                         if (!cs.jsonStart && dic.Count > 0)
                         {
                             result.Add(dic);
+                            if (topN > 0 && result.Count >= topN)
+                            {
+                                return result;
+                            }
                             if (cs.arrayStart)//处理数组。
                             {
-                                dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                                dic = new Dictionary<string, string>(16, StringComparer.OrdinalIgnoreCase);
                             }
                         }
                     }
@@ -152,8 +156,6 @@ namespace CYQ.Data.Tool
                 finally
                 {
                     key = null;
-                    value.Length = 0;
-                    value.Capacity = 16;
                     value = null;
                 }
             }
