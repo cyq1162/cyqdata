@@ -203,8 +203,8 @@ namespace CYQ.Data.SQL
             {
                 foreach (MCellStruct item in mdc)
                 {
-                    int groupID = DataType.GetGroup(item.SqlType);
-                    if (groupID == 1 || groupID == 3)//视图模式里取到的bit是bigint,所以数字一并处理
+                    DataGroupType group = DataType.GetGroup(item.SqlType);
+                    if (group == DataGroupType.Number || group == DataGroupType.Bool)//视图模式里取到的bit是bigint,所以数字一并处理
                     {
                         if (where.IndexOf(item.ColumnName, StringComparison.OrdinalIgnoreCase) > -1)
                         {
@@ -223,7 +223,7 @@ namespace CYQ.Data.SQL
 
                 foreach (MCellStruct item in mdc)
                 {
-                    if (DataType.GetGroup(item.SqlType) == 2 && where.IndexOf(item.ColumnName, StringComparison.OrdinalIgnoreCase) > -1)
+                    if (DataType.GetGroup(item.SqlType) == DataGroupType.Date && where.IndexOf(item.ColumnName, StringComparison.OrdinalIgnoreCase) > -1)
                     {
                         string pattern = @"(\s?" + item.ColumnName + @"\s*[><]{1}[=]?\s*)('.{19,23}')";
                         Regex reg = new Regex(pattern, RegexOptions.IgnoreCase);
@@ -324,17 +324,17 @@ namespace CYQ.Data.SQL
             {
                 return null;
             }
-            int groupID = DataType.GetGroup(sqlDbType);
+            DataGroupType group = DataType.GetGroup(sqlDbType);
             if (flag == 0)
             {
                 #region 转标准值
 
 
-                if (groupID == 2)//日期的标准值
+                if (group == DataGroupType.Date)//日期的标准值
                 {
                     return SqlValue.GetDate;
                 }
-                else if (groupID == 4)
+                else if (group == DataGroupType.Guid)
                 {
                     return SqlValue.Guid;
                 }
@@ -392,7 +392,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "Now()").Replace("\"", "\"\"");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -415,7 +415,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "getdate()").Replace("'", "''");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "(N'" + defaultValue + "')";
                         }
@@ -429,7 +429,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "sysdate").Replace("'", "''");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "'" + defaultValue + "'";
                         }
@@ -443,7 +443,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("'", "\\'").Replace("\"", "\\\"");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -453,7 +453,7 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
-                        if (groupID > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        if (group > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
                         {
                             defaultValue = defaultValue.Trim('\'');
                         }
@@ -461,7 +461,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("\"", "\"\"");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -471,11 +471,11 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
                         }
-                        if (groupID > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        if (group != DataGroupType.Text)//兼容一些不规范的写法。像数字型的加了引号 '0'
                         {
                             defaultValue = defaultValue.Trim('\'');
                         }
@@ -483,12 +483,12 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "now()").Replace("\"", "\"\"");
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
                             defaultValue = "'" + defaultValue.Trim('\'') + "'";
                         }
-                        else if (groupID == 3) // bool
+                        else if (group == DataGroupType.Bool) // bool
                         {
                             defaultValue = defaultValue.Replace("1", "true").Replace("0", "false");
                         }
@@ -498,7 +498,7 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim(' ', '\'');
-                        if (groupID == 0)
+                        if (group == 0)
                         {
                             defaultValue = "'" + defaultValue.Trim('\'') + "'";
                         }

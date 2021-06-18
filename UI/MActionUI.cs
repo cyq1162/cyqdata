@@ -585,8 +585,8 @@ namespace CYQ.Data.UI
                         if (requestValue.Trim().Length == 0)//空字符串
                         {
                             #region Set Value
-                            int groupID = DataType.GetGroup(cell.Struct.SqlType);
-                            if (groupID > 0)
+                            DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
+                            if (group > 0)
                             {
                                 if (cell.Struct.DefaultValue == null)
                                 {
@@ -594,7 +594,7 @@ namespace CYQ.Data.UI
                                 }
                                 else
                                 {
-                                    if (groupID == 2)
+                                    if (group == DataGroupType.Date)
                                     {
                                         cell.Value = DateTime.Now;
                                     }

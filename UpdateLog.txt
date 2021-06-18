@@ -877,3 +877,4 @@
 653：优化：DBSchema 首次初始结构缓存时，对未配置架构缓存外围时，将【视图、存储过程、版本号】部分调整为延迟加载。(2021-06-17)
 654：优化：AutoCache 自动缓存机制，提升单机（LocalCache状态）时的性能。(2021-06-17)
 655：优化：JsonHelper Split、GetValue 两个方法，提升性能。(2021-06-17)
+656：优化：DataType.GetGroup 返回类型由int调整为DataGroupType枚举类型。(2021-06-18)

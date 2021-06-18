@@ -195,10 +195,10 @@ namespace CYQ.Data.Table
         internal void FixValue()
         {
             object value = CellValue.SourceValue;
-            int groupID = DataType.GetGroup(_CellStruct.SqlType);
+            DataGroupType group = DataType.GetGroup(_CellStruct.SqlType);
             if (_CellStruct.SqlType != SqlDbType.Variant)
             {
-                value = ChangeValue(value, _CellStruct.ValueType, groupID);
+                value = ChangeValue(value, _CellStruct.ValueType, group);
                 if (value == null)
                 {
                     return;
@@ -210,7 +210,7 @@ namespace CYQ.Data.Table
                 {
                     CellValue.State = 2;
                 }
-                else if (CellValue.Value.Equals(value) || (groupID != 999 && CellValue.Value.ToString() == StringValue))//对象的比较值，用==号则比例引用地址。
+                else if (CellValue.Value.Equals(value) || (group != DataGroupType.Object && CellValue.Value.ToString() == StringValue))//对象的比较值，用==号则比例引用地址。
                 {
                     CellValue.State = 1;
                 }
@@ -229,16 +229,16 @@ namespace CYQ.Data.Table
         /// </summary>
         /// <param name="value">要被转换的值</param>
         /// <param name="convertionType">要转换成哪种类型</param>
-        /// <param name="groupID">数据库类型的组号</param>
+        /// <param name="group">数据库类型的组号</param>
         /// <returns></returns>
-        internal object ChangeValue(object value, Type convertionType, int groupID)
+        internal object ChangeValue(object value, Type convertionType, DataGroupType group)
         {
             //值不为null
             try
             {
-                switch (groupID)
+                switch (group)
                 {
-                    case 0:
+                    case DataGroupType.Text:
                         if (_CellStruct.SqlType == SqlDbType.Time)//time类型的特殊处理。
                         {
                             string[] items = StringValue.Split(' ');
@@ -386,10 +386,10 @@ namespace CYQ.Data.Table
             {
                 switch (DataType.GetGroup(_CellStruct.SqlType))
                 {
-                    case 2:
+                    case DataGroupType.Date:
                         Value = DateTime.Now;
                         break;
-                    case 4:
+                    case DataGroupType.Guid:
                         if (_CellStruct.DefaultValue.ToString().Length == 36)
                         {
                             Value = new Guid(_CellStruct.DefaultValue.ToString());
@@ -449,7 +449,7 @@ namespace CYQ.Data.Table
             string text = StringValue ?? "";
             switch (DataType.GetGroup(_CellStruct.SqlType))
             {
-                case 999:
+                case DataGroupType.Object:
                     MDataRow row = null;
                     MDataTable table = null;
                     Type t = Value.GetType();

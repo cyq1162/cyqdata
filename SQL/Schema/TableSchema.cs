@@ -264,7 +264,7 @@ namespace CYQ.Data.SQL
                                         if (dalType == DataBaseType.Oracle && mdcs.Count > 0)//默认没有自增概念，只能根据情况判断。
                                         {
                                             MCellStruct firstColumn = mdcs[0];
-                                            if (firstColumn.IsPrimaryKey && firstColumn.ColumnName.ToLower().Contains("id") && firstColumn.Scale == 0 && DataType.GetGroup(firstColumn.SqlType) == 1 && mdcs.JointPrimary.Count == 1)
+                                            if (firstColumn.IsPrimaryKey && firstColumn.ColumnName.ToLower().Contains("id") && firstColumn.Scale == 0 && DataType.GetGroup(firstColumn.SqlType) == DataGroupType.Number && mdcs.JointPrimary.Count == 1)
                                             {
                                                 firstColumn.IsAutoIncrement = true;
                                             }

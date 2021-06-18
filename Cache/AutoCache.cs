@@ -270,7 +270,7 @@ namespace CYQ.Data.Cache
             {
                 foreach (MCellStruct item in dt.Columns)
                 {
-                    if (DataType.GetGroup(item.SqlType) == 999)//只存档基础类型
+                    if (DataType.GetGroup(item.SqlType) == DataGroupType.Object)//只存档基础类型
                     {
                         return false;
                     }
@@ -293,7 +293,7 @@ namespace CYQ.Data.Cache
                     List<PropertyInfo> pis = ReflectTool.GetPropertyList(o.GetType());
                     foreach (PropertyInfo item in pis)
                     {
-                        if (DataType.GetGroup(DataType.GetSqlType(item.PropertyType)) == 999)//只存档基础类型
+                        if (DataType.GetGroup(DataType.GetSqlType(item.PropertyType)) == DataGroupType.Object)//只存档基础类型
                         {
                             return false;
                         }

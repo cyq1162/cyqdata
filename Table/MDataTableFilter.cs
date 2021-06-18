@@ -549,7 +549,7 @@ namespace CYQ.Data.Table
                 tFilter = new TFilter(Ao.None, columnAName, columnAIndex, op, valueB, columnBIndex);
                 if (columnBIndex == -1 && !string.IsNullOrEmpty(Convert.ToString(valueB)))//右侧是值类型，转换值的类型。
                 {
-                    if (columnAIndex > -1 && DataType.GetGroup(mdc[columnAIndex].SqlType) == 3)//bool型
+                    if (columnAIndex > -1 && DataType.GetGroup(mdc[columnAIndex].SqlType) == DataGroupType.Bool)//bool型
                     {
                         switch (Convert.ToString(tFilter._valueB).ToLower())
                         {
@@ -723,9 +723,9 @@ namespace CYQ.Data.Table
                     case Op.BigEqual:
                         switch (DataType.GetGroup(sqlType))
                         {
-                            case 1://int
+                            case DataGroupType.Number://int
                                 return op == Op.Big ? Convert.ToDecimal(valueA) > Convert.ToDecimal(valueB) : Convert.ToDecimal(valueA) >= Convert.ToDecimal(valueB);
-                            case 2://datetime
+                            case DataGroupType.Date://datetime
                                 return op == Op.Big ? Convert.ToDateTime(valueA) > Convert.ToDateTime(valueB) : Convert.ToDateTime(valueA) >= Convert.ToDateTime(valueB);
                             default:
                                 int value = Convert.ToString(valueA).CompareTo(valueB);
@@ -740,9 +740,9 @@ namespace CYQ.Data.Table
                     case Op.SmallEqual:
                         switch (DataType.GetGroup(sqlType))
                         {
-                            case 1://int
+                            case DataGroupType.Number://int
                                 return op == Op.Small ? Convert.ToDecimal(valueA) < Convert.ToDecimal(valueB) : Convert.ToDecimal(valueA) <= Convert.ToDecimal(valueB);
-                            case 2://datetime
+                            case DataGroupType.Date://datetime
                                 return op == Op.Small ? Convert.ToDateTime(valueA) < Convert.ToDateTime(valueB) : Convert.ToDateTime(valueA) <= Convert.ToDateTime(valueB);
                             default:
                                 int value = Convert.ToString(valueA).CompareTo(valueB);

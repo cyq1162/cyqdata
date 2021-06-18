@@ -237,7 +237,8 @@ namespace CYQ.Data.Table
     {
         private int lastIndex = -1;//上一个索引,在多重排序中，如果二次排序遇到相同的值，采用上一个索引字段进行比较
         private bool lastIsAsc = true;
-        private int index = -1, groupID = -1;
+        private int index = -1;
+        DataGroupType group = DataGroupType.None;
         private bool isAsc = true;
         private int useLastIndexState = 0;//0未使用,1开启使用,2正在使用
         // private object objAValue, objBValue;
@@ -250,13 +251,13 @@ namespace CYQ.Data.Table
             }
             int cellIndex = index;
             bool cellIsAsc = isAsc;
-            int cellGroupid = groupID;
+            DataGroupType cellGroup = group;
             if (useLastIndexState == 1)//出于多重排序的需要这么使用。
             {
                 cellIndex = lastIndex;
                 cellIsAsc = lastIsAsc;
                 useLastIndexState = 2;
-                cellGroupid = DataType.GetGroup(x[cellIndex].Struct.SqlType);
+                cellGroup = DataType.GetGroup(x[cellIndex].Struct.SqlType);
             }
             else if (useLastIndexState == 2)
             {
@@ -277,12 +278,12 @@ namespace CYQ.Data.Table
             }
             object objAValue = x[cellIndex].Value;
             object objBValue = y[cellIndex].Value;
-            switch (cellGroupid)
+            switch (cellGroup)
             {
-                case 1:
-                case 3:
+                case DataGroupType.Number:
+                case DataGroupType.Bool:
                     double vA, vB;
-                    if (cellGroupid == 1)
+                    if (cellGroup == DataGroupType.Number)
                     {
                         double.TryParse(objAValue.ToString(), out vA);
                         double.TryParse(objBValue.ToString(), out vB);
@@ -305,7 +306,7 @@ namespace CYQ.Data.Table
                         }
                         return 0;
                     }
-                case 2:
+                case DataGroupType.Date:
                     return cellIsAsc ? Comparer<DateTime>.Default.Compare((DateTime)objAValue, (DateTime)objBValue) : Comparer<DateTime>.Default.Compare((DateTime)objBValue, (DateTime)objAValue);
                 default:
                     //直接性能差一点return cellIsAsc ? Comparer<string>.Default.Compare((string)objAValue, (string)objBValue) : Comparer<string>.Default.Compare((string)objBValue, (string)objAValue);
@@ -345,7 +346,7 @@ namespace CYQ.Data.Table
                 if (index > -1)
                 {
                     isAsc = (orderbyItems.Length > 1 && orderbyItems[1].ToLower() == "desc") ? false : true;
-                    groupID = DataType.GetGroup(this[0][index].Struct.SqlType);
+                    group = DataType.GetGroup(this[0][index].Struct.SqlType);
                     // cCount = 0;
                     RowList.Sort(Compare);
                     lastIndex = index;

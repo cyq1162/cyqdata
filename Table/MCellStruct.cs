@@ -85,8 +85,8 @@ namespace CYQ.Data.Table
             get { return _DefaultValue; }
             set
             {
-                int groupID = DataType.GetGroup(SqlType);
-                if (groupID == 1 || groupID == 3)
+                DataGroupType group = DataType.GetGroup(SqlType);
+                if (group == DataGroupType.Number || group == DataGroupType.Bool)
                 {
                     string defaultValue = Convert.ToString(value);
                     if (!string.IsNullOrEmpty(defaultValue) && (defaultValue[0] == 'N' || defaultValue[0] == '('))

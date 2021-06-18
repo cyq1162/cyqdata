@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace CYQ.Data
-{ /// <summary>
+{
+    /// <summary>
     /// 操作的数据库类型
     /// </summary>
     public enum DataBaseType
@@ -72,6 +73,42 @@ namespace CYQ.Data
         Structured
     }
 
+    /// <summary>
+    /// 数据类型分组
+    /// 字母型返回0；数字型返回1；日期型返回2；bool返回3；guid返回4；其它返回999
+    /// </summary>
+    public enum DataGroupType
+    {
+        /// <summary>
+        /// 未定义
+        /// </summary>
+        None=-1,
+        /// <summary>
+        /// 文本类型0
+        /// </summary>
+        Text = 0,
+        /// <summary>
+        /// 数字型返回1
+        /// </summary>
+        Number = 1,
+        /// <summary>
+        /// 日期型返回2
+        /// </summary>
+        Date = 2,
+        /// <summary>
+        /// bool返回3
+        /// </summary>
+        Bool = 3,
+        /// <summary>
+        /// guid返回4
+        /// </summary>
+        Guid = 4,
+        /// <summary>
+        /// 其它返回999
+        /// </summary>
+        Object = 999
+
+    }
     /// <summary>
     /// 重置数据库的结果
     /// </summary>

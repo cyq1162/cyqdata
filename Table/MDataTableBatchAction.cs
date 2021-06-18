@@ -269,7 +269,7 @@ namespace CYQ.Data.Table
                 foreach (MCellStruct item in mdt.Columns)
                 {
                     if ((item.IsForeignKey && string.IsNullOrEmpty(item.FKTableName))
-                        || item.MaxSize > 8000 || DataType.GetGroup(item.SqlType) == 999)
+                        || item.MaxSize > 8000 || DataType.GetGroup(item.SqlType) == DataGroupType.Object)
                     {
                         hasFK = true;
                         break;
@@ -639,7 +639,7 @@ namespace CYQ.Data.Table
                 {
                     switch (DataType.GetGroup(st.SqlType))
                     {
-                        case 999:
+                        case DataGroupType.Object:
                             return false;
                     }
                 }
@@ -802,12 +802,12 @@ namespace CYQ.Data.Table
         private bool CheckGUIDAndDateTime(DataBaseType dal)
         {
             bool fillGUID = false;
-            int groupID;
+            DataGroupType group;
             for (int i = 0; i < mdt.Columns.Count; i++)
             {
                 MCellStruct ms = mdt.Columns[i];
-                groupID = DataType.GetGroup(ms.SqlType);
-                if (groupID == 2)
+                group = DataType.GetGroup(ms.SqlType);
+                if (group == DataGroupType.Date)
                 {
                     for (int j = 0; j < mdt.Rows.Count; j++)
                     {
@@ -821,7 +821,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                else if (ms.IsPrimaryKey && (groupID == 4 || (groupID == 0 && ms.MaxSize >= 36)))
+                else if (ms.IsPrimaryKey && (group == DataGroupType.Guid || (group == 0 && ms.MaxSize >= 36)))
                 {
                     string defaultValue = Convert.ToString(ms.DefaultValue);
                     bool isGuid = defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid;

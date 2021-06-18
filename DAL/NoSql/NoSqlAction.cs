@@ -166,7 +166,7 @@ namespace CYQ.Data
                     {
                         maxID++;
                     }
-                    else if (DataType.GetGroup(Table.Columns.FirstPrimary.SqlType) == 1)//自增id仅对int有效
+                    else if (DataType.GetGroup(Table.Columns.FirstPrimary.SqlType) == DataGroupType.Number)//自增id仅对int有效
                     {
                         try
                         {
@@ -336,32 +336,32 @@ namespace CYQ.Data
                 if (!cell.Struct.IsCanNull && (cell.Struct.IsAutoIncrement || cell.Struct.IsPrimaryKey))
                 {
                     #region 给主键赋值
-                    int groupID = DataType.GetGroup(cell.Struct.SqlType);
-                    string existWhere = cell.ColumnName + (groupID == 1 ? "={0}" : "='{0}'");
+                    DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
+                    string existWhere = cell.ColumnName + (group == DataGroupType.Number ? "={0}" : "='{0}'");
                     if (cell.IsNull || cell.State == 0 || cell.StringValue == "0" || Exists(string.Format(existWhere, cell.Value)))//这里检测存在，避免id重复
                     {
-                        switch (groupID)
+                        switch (group)
                         {
-                            case 1:
+                            case DataGroupType.Number:
                                 cell.Value = NextID;
                                 break;
-                            case 4:
+                            case DataGroupType.Guid:
                                 cell.Value = Guid.NewGuid();
                                 break;
-                            case 0:
+                            case DataGroupType.Text:
                                 cell.Value = Guid.NewGuid().ToString();
                                 break;
                             default:
                                 return (bool)Error.Throw("first column value can't be null");
                         }
                     }
-                    if (groupID == 1 || groupID == 4)//再检测是否已存在
+                    if (group == DataGroupType.Number || group == DataGroupType.Guid)//再检测是否已存在
                     {
                         if (!isOpenTrans && Exists(string.Format(existWhere, cell.Value)))//事务时，由于自动补id，避开检测，提升性能
                         {
                             Error.Throw("first column value must be unique:(" + cell.ColumnName + ":" + cell.Value + ")");
                         }
-                        else if (groupID == 1)
+                        else if (group == DataGroupType.Number)
                         {
                             maxID = (int)cell.Value;
                         }

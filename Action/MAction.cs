@@ -545,8 +545,8 @@ namespace CYQ.Data
                         default:
                             #region MyRegion
                             bool isTrans = dalHelper.IsOpenTrans;
-                            int groupID = DataType.GetGroup(_Data.PrimaryCell.Struct.SqlType);
-                            bool isNum = groupID == 1 && _Data.PrimaryCell.Struct.Scale <= 0;
+                            DataGroupType group = DataType.GetGroup(_Data.PrimaryCell.Struct.SqlType);
+                            bool isNum = group == DataGroupType.Number && _Data.PrimaryCell.Struct.Scale <= 0;
                             if (!isTrans && (isNum || _Data.PrimaryCell.Struct.IsAutoIncrement) && (!AllowInsertID || _Data.PrimaryCell.IsNullOrEmpty)) // 数字自增加
                             {
                                 dalHelper.IsOpenTrans = true;//开启事务。

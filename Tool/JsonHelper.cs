@@ -276,16 +276,16 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    int groupID = DataType.GetGroup(DataType.GetSqlType(t));
-                    bool noQuotes = groupID == 1 || groupID == 3;
-                    if (groupID == 999)
+                    DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
+                    bool noQuotes = group == DataGroupType.Number || group == DataGroupType.Bool;
+                    if (group == DataGroupType.Object)
                     {
                         v = ToJson(value);
                     }
                     else
                     {
                         v = Convert.ToString(value);
-                        if (groupID == 3)
+                        if (group == DataGroupType.Bool)
                         {
                             v = v.ToLower();
                         }
@@ -857,8 +857,8 @@ namespace CYQ.Data.Tool
                     }
 
                     string value = cell.ToString();
-                    int groupID = DataType.GetGroup(cell.Struct.SqlType);
-                    bool noQuot = groupID == 1 || groupID == 3;
+                    DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
+                    bool noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
                     if (cell.IsNull)
                     {
                         value = "null";
@@ -867,11 +867,11 @@ namespace CYQ.Data.Tool
                     else
                     {
 
-                        if (groupID == 3 || (cell.Struct.MaxSize == 1 && groupID == 1)) // oracle 下的number 1会处理成bool类型
+                        if (group == DataGroupType.Bool || (cell.Struct.MaxSize == 1 && group == DataGroupType.Number)) // oracle 下的number 1会处理成bool类型
                         {
                             value = value.ToLower();
                         }
-                        else if (groupID == 2)
+                        else if (group == DataGroupType.Date)
                         {
                             DateTime dt;
                             if (DateTime.TryParse(value, out dt))
@@ -879,7 +879,7 @@ namespace CYQ.Data.Tool
                                 value = dt.ToString(DateTimeFormatter);
                             }
                         }
-                        else if (groupID == 999)
+                        else if (group == DataGroupType.Object)
                         {
                             int hash = cell.Value.GetHashCode();
                             //检测是否循环引用

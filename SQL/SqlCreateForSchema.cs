@@ -135,7 +135,7 @@ namespace CYQ.Data.SQL
         private static string GetKey(MCellStruct column, DataBaseType dalType, ref List<MCellStruct> primaryKeyList, string version)
         {
             string key = SqlFormat.Keyword(column.ColumnName, dalType);//列名。
-            int groupID = DataType.GetGroup(column.SqlType);//数据库类型。
+            DataGroupType group = DataType.GetGroup(column.SqlType);//数据库类型。
             bool isAutoOrPKey = column.IsPrimaryKey || column.IsAutoIncrement;//是否主键或自增列。
             if (dalType != DataBaseType.Access || !isAutoOrPKey || !column.IsAutoIncrement)
             {
@@ -165,7 +165,7 @@ namespace CYQ.Data.SQL
                         }
                         else// 主键。
                         {
-                            if (groupID == 4)//主键又是GUID
+                            if (group == DataGroupType.Guid)//主键又是GUID
                             {
                                 key += " default GenGUID()";
                             }
@@ -178,7 +178,7 @@ namespace CYQ.Data.SQL
                         }
                         else
                         {
-                            if (groupID == 4)//主键又是GUID
+                            if (group == DataGroupType.Guid)//主键又是GUID
                             {
                                 key += " Default (newid())";
                             }
@@ -197,7 +197,7 @@ namespace CYQ.Data.SQL
                         }
                         else
                         {
-                            if (groupID == 4)//主键又是GUID
+                            if (group == DataGroupType.Guid)//主键又是GUID
                             {
                                 key += " Default (newid())";
                             }
@@ -238,11 +238,11 @@ namespace CYQ.Data.SQL
             else
             {
                 string defaultValue = string.Empty;
-                if (Convert.ToString(column.DefaultValue).Length > 0 && groupID < 5)//默认值只能是基础类型有。
+                if (Convert.ToString(column.DefaultValue).Length > 0 && group != DataGroupType.Object)//默认值只能是基础类型有。
                 {
                     if (dalType == DataBaseType.MySql)
                     {
-                        if ((groupID == 0 && (column.MaxSize < 1 || column.MaxSize > 8000)) || (groupID == 2 && key.Contains("datetime"))) //只能对TIMESTAMP类型的赋默认值。
+                        if ((group == 0 && (column.MaxSize < 1 || column.MaxSize > 8000)) || (group == DataGroupType.Date && key.Contains("datetime"))) //只能对TIMESTAMP类型的赋默认值。
                         {
                             goto er;
                         }

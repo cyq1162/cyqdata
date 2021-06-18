@@ -397,7 +397,7 @@ namespace CYQ.Data.SQL
         /// </summary>
         /// <param name="sqlDbType"></param>
         /// <returns></returns>
-        public static int GetGroup(SqlDbType sqlDbType)
+        public static DataGroupType GetGroup(SqlDbType sqlDbType)
         {
             return GetGroup(sqlDbType, DataBaseType.None);
         }
@@ -406,10 +406,19 @@ namespace CYQ.Data.SQL
         /// </summary>
         /// <param name="sqlDbType"></param>
         /// <returns></returns>
-        public static int GetGroup(SqlDbType sqlDbType, DataBaseType dalType)
+        public static DataGroupType GetGroup(SqlDbType sqlDbType, DataBaseType dalType)
         {
             switch (sqlDbType)
             {
+                case SqlDbType.Xml:
+                case SqlDbType.NVarChar:
+                case SqlDbType.VarChar:
+                case SqlDbType.NChar:
+                case SqlDbType.Char:
+                case SqlDbType.Text:
+                case SqlDbType.NText:
+                case SqlDbType.Time:
+                    return DataGroupType.Text;
                 case SqlDbType.Int:
                 case SqlDbType.TinyInt:
                 case SqlDbType.BigInt:
@@ -419,35 +428,27 @@ namespace CYQ.Data.SQL
                 case SqlDbType.Decimal:
                 case SqlDbType.Money:
                 case SqlDbType.SmallMoney:
-                    return 1;
-                case SqlDbType.Xml:
-                case SqlDbType.NVarChar:
-                case SqlDbType.VarChar:
-                case SqlDbType.NChar:
-                case SqlDbType.Char:
-                case SqlDbType.Text:
-                case SqlDbType.NText:
-                case SqlDbType.Time:
-                    return 0;
+                    return DataGroupType.Number;
+
                 case SqlDbType.Date:
                 case SqlDbType.DateTimeOffset:
                 case SqlDbType.DateTime:
                 case SqlDbType.SmallDateTime:
                 case SqlDbType.DateTime2:
-                    return 2;
+                    return DataGroupType.Date;
                 case SqlDbType.Bit:
-                    return 3;
+                    return DataGroupType.Bool;
                 case SqlDbType.UniqueIdentifier:
-                    return 4;
+                    return DataGroupType.Guid;
                 default:
                     if (sqlDbType == SqlDbType.Timestamp)
                     {
                         if (dalType != DataBaseType.MsSql && dalType != DataBaseType.Sybase)
                         {
-                            return 2;
+                            return DataGroupType.Date;
                         }
                     }
-                    return 999;
+                    return DataGroupType.Object;
             }
         }
 

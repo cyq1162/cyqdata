@@ -102,9 +102,9 @@ namespace CYQ.Data.SQL
             _TempSql2.Append(" Values(");
             string endChar = ")";
             MDataCell primaryCell = _action.Data[_action.Data.Columns.FirstPrimary.ColumnName];
-            int groupID = DataType.GetGroup(primaryCell.Struct.SqlType);
+            DataGroupType group = DataType.GetGroup(primaryCell.Struct.SqlType);
             string defaultValue = Convert.ToString(primaryCell.Struct.DefaultValue);
-            if (primaryCell.IsNullOrEmpty && (groupID == 4 || (groupID == 0 && (primaryCell.Struct.MaxSize <= 0 || primaryCell.Struct.MaxSize >= 36) &&
+            if (primaryCell.IsNullOrEmpty && (group == DataGroupType.Guid || (group == 0 && (primaryCell.Struct.MaxSize <= 0 || primaryCell.Struct.MaxSize >= 36) &&
                 (defaultValue == "" || defaultValue == "newid" || defaultValue == SqlValue.Guid))))//guid类型
             {
                 primaryCell.Value = Guid.NewGuid();
@@ -157,7 +157,7 @@ namespace CYQ.Data.SQL
             switch (_action.dalHelper.DataBaseType)
             {
                 case DataBaseType.Oracle:
-                    if (!_action.AllowInsertID && DataType.GetGroup(primaryCell.Struct.SqlType) == 1)
+                    if (!_action.AllowInsertID && DataType.GetGroup(primaryCell.Struct.SqlType) == DataGroupType.Number)
                     {
                         _TempSql.Append(primaryCell.ColumnName + ",");
                         _TempSql2.Append(AutoID + ".nextval,");
@@ -175,7 +175,7 @@ namespace CYQ.Data.SQL
             switch (_action.dalHelper.DataBaseType)
             {
                 case DataBaseType.PostgreSQL:
-                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
+                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && group == DataGroupType.Number)
                     {
                         string key = Convert.ToString(primaryCell.Struct.DefaultValue);
                         if (!string.IsNullOrEmpty(key))
@@ -198,7 +198,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MsSql:
                 case DataBaseType.Sybase:
 
-                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && groupID == 1)
+                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && group == DataGroupType.Number)
                     {
                         if (_action.dalHelper.DataBaseType == DataBaseType.Sybase)
                         {
@@ -532,8 +532,8 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Xml:
                         switch (DataType.GetGroup(cell.Struct.SqlType))
                         {
-                            case 1:
-                            case 3:
+                            case DataGroupType.Number:
+                            case DataGroupType.Bool:
                                 where = cell.ColumnName + "=" + cell.Value;
                                 break;
                             default:
@@ -637,10 +637,10 @@ namespace CYQ.Data.SQL
                     if (items.Length == 1)
                     {
                         //只处理单个值的情况
-                        int primaryGroupid = DataType.GetGroup(ms.SqlType);//优先匹配主键
-                        switch (primaryGroupid)
+                        DataGroupType primaryGroup = DataType.GetGroup(ms.SqlType);//优先匹配主键
+                        switch (primaryGroup)
                         {
-                            case 4:
+                            case DataGroupType.Guid:
                                 bool isOK = false;
                                 if (where.Length == 36)
                                 {
@@ -658,7 +658,7 @@ namespace CYQ.Data.SQL
                                     ms = mdc.FirstUnique;
                                 }
                                 break;
-                            case 1:
+                            case DataGroupType.Number:
                                 long v;
                                 if (!long.TryParse(where.Trim('\''), out v))
                                 {
@@ -686,24 +686,24 @@ namespace CYQ.Data.SQL
 
             return where;
         }
-        private static string GetWhereEqual(int groupID, string columnName, string where, DataBaseType dalType)
+        private static string GetWhereEqual(DataGroupType group, string columnName, string where, DataBaseType dalType)
         {
             if (string.IsNullOrEmpty(where))
             {
                 return string.Empty;
             }
-            if (groupID != 0)
+            if (group != 0)
             {
                 where = where.Trim('\'');
             }
             columnName = SqlFormat.Keyword(columnName, dalType);
-            if (groupID == 1)//int 类型的，主键不为bit型。
+            if (group == DataGroupType.Number)//int 类型的，主键不为bit型。
             {
                 where = columnName + "=" + where;
             }
             else
             {
-                if (groupID == 4)
+                if (group == DataGroupType.Guid)
                 {
 
                     switch (dalType)
@@ -765,19 +765,19 @@ namespace CYQ.Data.SQL
                 {
                     where += (isAnd ? " and " : " or ");
                 }
-                int groupID = DataType.GetGroup(cell.Struct.SqlType);
+                DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
                 string columnName = SqlFormat.Keyword(cell.ColumnName, dalType);
-                switch (groupID)
+                switch (group)
                 {
-                    case 1:
+                    case DataGroupType.Number:
                         where += columnName + "=" + (cell.IsNullOrEmpty ? -9999 : cell.Value);
                         break;
-                    case 3:
+                    case DataGroupType.Bool:
                         where += columnName + "=" + (cell.Value.ToString().ToLower() == "true" ? SqlValue.True : SqlValue.False);
                         break;
                     default:
 
-                        if (groupID == 4)
+                        if (group == DataGroupType.Guid)
                         {
                             string guid = cell.StringValue;
                             if (string.IsNullOrEmpty(guid) || guid.Length != 36)
@@ -797,7 +797,7 @@ namespace CYQ.Data.SQL
                                 where += columnName + "='" + guid + "'";
                             }
                         }
-                        else if (groupID == 2 && dalType == DataBaseType.Oracle) // Oracle的日期时间要转类型
+                        else if (group == DataGroupType.Date && dalType == DataBaseType.Oracle) // Oracle的日期时间要转类型
                         {
                             if (cell.Struct.SqlType == SqlDbType.Timestamp)
                             {
@@ -808,7 +808,7 @@ namespace CYQ.Data.SQL
                                 where += columnName + "=to_date('" + cell.StringValue + "','yyyy-mm-dd hh24:mi:ss')";
                             }
                         }
-                        else if (groupID == 0 && dalType == DataBaseType.MsSql && cell.Struct.SqlTypeName.EndsWith("hierarchyId"))
+                        else if (group == 0 && dalType == DataBaseType.MsSql && cell.Struct.SqlTypeName.EndsWith("hierarchyId"))
                         {
                             where += columnName + "=HierarchyID::Parse('" + cell.StringValue + "')";
                         }
@@ -833,7 +833,7 @@ namespace CYQ.Data.SQL
             StringBuilder sb = new StringBuilder();
             sb.Append(SqlFormat.Keyword(ms.ColumnName, dalType));
             sb.Append(" In (");
-            int groupID = DataType.GetGroup(ms.SqlType);
+            DataGroupType group = DataType.GetGroup(ms.SqlType);
             string item;
             for (int i = 0; i < items.Count; i++)
             {
@@ -842,7 +842,7 @@ namespace CYQ.Data.SQL
                 {
                     continue;
                 }
-                if (groupID != 0)
+                if (group != DataGroupType.Text)
                 {
                     item = item.Trim('\'');//不是字母都尝试去掉分号
                 }
@@ -853,17 +853,17 @@ namespace CYQ.Data.SQL
                 }
                 if (!string.IsNullOrEmpty(item))
                 {
-                    if (groupID == 1)
+                    if (group == DataGroupType.Number)
                     {
                         sb.Append(item + ",");
                     }
                     else
                     {
-                        if (groupID == 4 && dalType == DataBaseType.SQLite)
+                        if (group == DataGroupType.Guid && dalType == DataBaseType.SQLite)
                         {
                             sb.Append("x'" + StaticTool.ToGuidByteString(item) + "',");
                         }
-                        else if (groupID == 2 && dalType == DataBaseType.Oracle)
+                        else if (group == DataGroupType.Date && dalType == DataBaseType.Oracle)
                         {
                             if (ms.SqlType == SqlDbType.Timestamp)
                             {
@@ -906,7 +906,7 @@ namespace CYQ.Data.SQL
                     continue;
                 }
                 sb.Append(SqlFormat.Keyword(ms.ColumnName, dalType));
-                if (dalType == DataBaseType.Oracle && DataType.GetGroup(ms.SqlType) == 2)
+                if (dalType == DataBaseType.Oracle && DataType.GetGroup(ms.SqlType) == DataGroupType.Date)
                 {
                     //日期
                     sb.Append(" DATE \"YYYY-MM-DD HH24:MI:SS\" NULLIF (" + ms.ColumnName + "=\"NULL\")");
