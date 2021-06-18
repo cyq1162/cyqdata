@@ -78,6 +78,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 架构所引用的表
         /// </summary>
+        [JsonIgnore]
         public MDataTable Table
         {
             get

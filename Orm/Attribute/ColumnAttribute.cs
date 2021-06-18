@@ -165,7 +165,9 @@ namespace CYQ.Data.Orm
             _TableName = tableName;
         }
     }
-
+}
+namespace CYQ.Data
+{
     /// <summary>
     /// Json ×ª»»ºöÂÔµÄ×Ö¶Î
     /// </summary>

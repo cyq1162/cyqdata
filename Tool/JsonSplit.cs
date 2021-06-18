@@ -35,9 +35,9 @@ namespace CYQ.Data.Tool
                 c = json[i];
                 if (cs.IsKeyword(c) && cs.childrenStart)//设置关键符号状态。
                 {
-                    string item = json.Substring(i);
                     int err;
-                    int length = GetValueLength(isStrictMode, item, true, out err);
+                    // int length = GetValueLength(isStrictMode, json.Substring(i), true, out err);
+                    int length = GetValueLength(isStrictMode,json, i, true, out err);
                     cs.childrenStart = false;
                     if (err > 0)
                     {
@@ -101,12 +101,13 @@ namespace CYQ.Data.Tool
                         }
                         else if (cs.childrenStart)//正常字符，值状态下。
                         {
-                            string item = json.Substring(i);
+                            //string item = json.Substring(i);
                             int temp;
-                            int length = GetValueLength(false, item, false, out temp);//这里应该有优化的空间，传json和i，不重新生成string
-                            //value = item.Substring(0, length);
+                            // int length = GetValueLength(false, json.Substring(i), false, out temp);//这里应该有优化的空间，传json和i，不重新生成string
+                            int length = GetValueLength(false,json, i, false, out temp);//优化后，速度快了10倍
+
                             value.Length = 0;
-                            value.Append(item.Substring(0, length));
+                            value.Append(json.Substring(i, length));
                             cs.childrenStart = false;
                             cs.valueStart = 0;
                             //cs.state = 0;
@@ -161,6 +162,7 @@ namespace CYQ.Data.Tool
             }
             return result;
         }
+        /*
         /// <summary>
         /// 获取值的长度（当Json值嵌套以"{"或"["开头时）
         /// </summary>
@@ -204,8 +206,50 @@ namespace CYQ.Data.Tool
             }
             return len;
         }
-
-
+        */
+        /// <summary>
+        /// 获取值的长度（当Json值嵌套以"{"或"["开头时），【优化后】
+        /// </summary>
+        private static int GetValueLength(bool isStrictMode,string json, int startIndex, bool breakOnErr, out int errIndex)
+        {
+            errIndex = 0;
+            int len = json.Length - 1 - startIndex;
+            if (!string.IsNullOrEmpty(json))
+            {
+                CharState cs = new CharState(isStrictMode);
+                char c;
+                for (int i = startIndex; i < json.Length; i++)
+                {
+                    c = json[i];
+                    if (!cs.IsKeyword(c))//设置关键符号状态。
+                    {
+                        if (!cs.jsonStart && !cs.arrayStart)//json结束，又不是数组，则退出。
+                        {
+                            break;
+                        }
+                    }
+                    else if (cs.childrenStart)//正常字符，值状态下。
+                    {
+                        int length = GetValueLength(isStrictMode,json, i, breakOnErr, out errIndex);//递归子值，返回一个长度。。。
+                        cs.childrenStart = false;
+                        cs.valueStart = 0;
+                        i = i + length - 1;
+                    }
+                    if (breakOnErr && cs.isError)
+                    {
+                        errIndex = i;
+                        return i - startIndex;
+                    }
+                    if (!cs.jsonStart && !cs.arrayStart)//记录当前结束位置。
+                    {
+                        len = i + 1;//长度比索引+1
+                        len = len - startIndex;
+                        break;
+                    }
+                }
+            }
+            return len;
+        }
 
 
     }

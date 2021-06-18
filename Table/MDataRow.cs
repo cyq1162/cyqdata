@@ -215,6 +215,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 获取该行拥有其架构的 MDataTable。
         /// </summary>
+        [JsonIgnore]
         public MDataTable Table
         {
             get
@@ -243,6 +244,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 通过一个数组来获取或设置此行的所有值。
         /// </summary>
+        [JsonIgnore]
         public object[] ItemArray
         {
             get
@@ -1391,11 +1393,11 @@ namespace CYQ.Data.Table
                 Type type = p != null ? p.PropertyType : f.FieldType;
                 if (type.IsEnum)
                 {
-                    if (ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToStringAttribute>(p, f) != null)
+                    if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(p, f) != null)
                     {
                         objValue = objValue.ToString();
                     }
-                    else if (ReflectTool.GetAttr<CYQ.Data.Orm.JsonEnumToDescriptionAttribute>(p, f) != null)
+                    else if (ReflectTool.GetAttr<JsonEnumToDescriptionAttribute>(p, f) != null)
                     {
                         FieldInfo field = type.GetField(objValue.ToString());
                         if (field != null)

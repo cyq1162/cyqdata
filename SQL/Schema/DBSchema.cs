@@ -14,13 +14,24 @@ namespace CYQ.Data.SQL
         {
             get
             {
-                if (_DBScheams.Count == 0)
+                if (isInitDbCompleted)
                 {
-                    InitDBSchemasForCache(null);
+                    return _DBScheams;
                 }
-                return _DBScheams;
+                else
+                {
+                    lock (o)
+                    {
+                        if (_DBScheams.Count == 0)
+                        {
+                            InitDBSchemasForCache(null);
+                        }
+                    }
+                    return _DBScheams;
+                }
             }
         }
+        private static bool isInitDbCompleted = false;
         private static readonly object o = new object();
         /// <summary>
         /// 获取(并缓存)数据库的“表、视图、存储过程”名称列表。
@@ -33,18 +44,20 @@ namespace CYQ.Data.SQL
                 string hash = cb.GetHashKey();
                 if (!_DBScheams.ContainsKey(hash))
                 {
-                    lock (o)
+                    //去掉lock(o)
+                    if (!_DBScheams.ContainsKey(hash))
                     {
-                        if (!_DBScheams.ContainsKey(hash))
+                        DBInfo dbSchema = GetSchemaDic(cb.ConnName);
+                        if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
                         {
-                            DBInfo dbSchema = GetSchemaDic(cb.ConnName);
-                            if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
+                            if (!_DBScheams.ContainsKey(hash))
                             {
                                 _DBScheams.Add(hash, dbSchema);
                             }
-                            return dbSchema;
                         }
+                        return dbSchema;
                     }
+
                 }
                 if (_DBScheams.ContainsKey(hash))
                 {
@@ -62,7 +75,7 @@ namespace CYQ.Data.SQL
                 info.ConnString = dal.ConnObj.Master.ConnString;
                 info.DataBaseName = dal.DataBaseName;
                 info.DataBaseType = dal.DataBaseType;
-                
+
                 Dictionary<string, string> tables = dal.GetTables();
                 if (tables != null && tables.Count > 0)
                 {
@@ -157,6 +170,7 @@ namespace CYQ.Data.SQL
                                 GetSchema(item);
                             }
                         }
+                        isInitDbCompleted = true;
                     }
                 }
             }

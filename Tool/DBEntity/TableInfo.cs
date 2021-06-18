@@ -1,4 +1,5 @@
-﻿using CYQ.Data.SQL;
+﻿using CYQ.Data.Orm;
+using CYQ.Data.SQL;
 using CYQ.Data.Table;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 数据库信息（只读）
         /// </summary>
+        [JsonIgnore]
         public DBInfo DBInfo { get { return _DBInfo; } }
         /// <summary>
         /// 获取指定（表、视图、存储过程）名称的Hash值

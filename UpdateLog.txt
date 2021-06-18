@@ -878,3 +878,5 @@
 654：优化：AutoCache 自动缓存机制，提升单机（LocalCache状态）时的性能。(2021-06-17)
 655：优化：JsonHelper Split、GetValue 两个方法，提升性能。(2021-06-17)
 656：优化：DataType.GetGroup 返回类型由int调整为DataGroupType枚举类型。(2021-06-18)
+657：优化：JsonSplit 优化GetValueLength方法，提升：IsJson、Split 两个方法性能。(2021-06-18)
+658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)

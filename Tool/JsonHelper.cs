@@ -192,8 +192,9 @@ namespace CYQ.Data.Tool
         }
         #endregion
 
-        private List<string> jsonItems = new List<string>();
-
+        private List<string> bodyItems = new List<string>(128);
+        private StringBuilder headText = new StringBuilder();
+        private StringBuilder footText = new StringBuilder();
 
         /// <summary>
         /// flag a json is end and start a new json
@@ -201,11 +202,10 @@ namespace CYQ.Data.Tool
         /// </summary>
         public void AddBr()
         {
-            jsonItems.Add(brFlag);
+            bodyItems.Add(brFlag);
             rowCount++;
         }
-        StringBuilder headText = new StringBuilder();
-        StringBuilder footText = new StringBuilder();
+        
         /// <summary>
         /// attach json data (AddHead must be true)
         /// <para>添加底部数据（只有AddHead为true情况才能添加数据）</para>
@@ -219,7 +219,8 @@ namespace CYQ.Data.Tool
         {
             if (_AddHead)
             {
-                footText.Append("," + Format(name, value, noQuotes));
+                footText.Append(",");
+                footText.Append(Format(name, value, noQuotes));
             }
         }
 
@@ -229,14 +230,14 @@ namespace CYQ.Data.Tool
         /// </summary>
         public void Add(string name, string value)
         {
-            jsonItems.Add(Format(name, value, false));
+            bodyItems.Add(Format(name, value, false));
         }
 
         /// <param name="noQuotes">value is no quotes
         /// <para>值不带引号</para></param>
         public void Add(string name, string value, bool noQuotes)
         {
-            jsonItems.Add(Format(name, value, noQuotes));
+            bodyItems.Add(Format(name, value, noQuotes));
         }
         public void Add(string name, object value)
         {
@@ -312,7 +313,15 @@ namespace CYQ.Data.Tool
             {
                 SetEscape(ref value);
             }
-            return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
+            StringBuilder sb = new StringBuilder();
+            sb.Append("\"");
+            sb.Append(name);
+            sb.Append("\":");
+            sb.Append(!children ? "\"" : "");
+            sb.Append(value);
+            sb.Append(!children ? "\"" : "");
+            return sb.ToString();
+            //return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
         }
 
         /// <summary>
@@ -322,21 +331,32 @@ namespace CYQ.Data.Tool
         public override string ToString()
         {
             int capacity = 100;
-            if (jsonItems.Count > 0)
+            if (bodyItems.Count > 0)
             {
-                capacity = jsonItems.Count * jsonItems[0].Length;
+                capacity = bodyItems.Count * bodyItems[0].Length;
             }
-            StringBuilder sb = new StringBuilder(capacity);
+            StringBuilder sb = new StringBuilder(capacity);//
 
             if (_AddHead)
             {
                 if (headText.Length == 0)
                 {
                     sb.Append("{");
-                    sb.Append("\"rowcount\":" + rowCount + ",");
-                    sb.Append("\"total\":" + Total + ",");
-                    sb.Append("\"errorMsg\":\"" + errorMsg + "\",");
-                    sb.Append("\"success\":" + Success.ToString().ToLower() + ",");
+                    sb.Append("\"rowcount\":");
+                    sb.Append(rowCount);
+                    sb.Append(",");
+
+                    sb.Append("\"total\":");
+                    sb.Append(Total);
+                    sb.Append(",");
+
+                    sb.Append("\"errorMsg\":\"");
+                    sb.Append(errorMsg);
+                    sb.Append("\",");
+
+                    sb.Append("\"success\":");
+                    sb.Append(Success.ToString().ToLower());
+                    sb.Append(",");
                     sb.Append("\"rows\":");
                 }
                 else
@@ -344,7 +364,7 @@ namespace CYQ.Data.Tool
                     sb.Append(headText.ToString());
                 }
             }
-            if (jsonItems.Count == 0)
+            if (bodyItems.Count == 0)
             {
                 if (_AddHead)
                 {
@@ -353,7 +373,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                if (jsonItems[jsonItems.Count - 1] != brFlag)
+                if (bodyItems[bodyItems.Count - 1] != brFlag)
                 {
                     AddBr();
                 }
@@ -362,8 +382,8 @@ namespace CYQ.Data.Tool
                     sb.Append("[");
                 }
                 char left = '{', right = '}';
-                string[] items = jsonItems[0].Split(':');
-                if (jsonItems[0] != brFlag && (items.Length == 1 || !jsonItems[0].Trim('"').Contains("\"")))
+                string[] items = bodyItems[0].Split(':');
+                if (bodyItems[0] != brFlag && (items.Length == 1 || !bodyItems[0].Trim('"').Contains("\"")))
                 {
                     //说明为数组
                     left = '[';
@@ -371,7 +391,7 @@ namespace CYQ.Data.Tool
                 }
                 sb.Append(left);
                 int index = 0;
-                foreach (string val in jsonItems)
+                foreach (string val in bodyItems)
                 {
                     index++;
 
@@ -387,8 +407,9 @@ namespace CYQ.Data.Tool
                             sb.Remove(sb.Length - 1, 1);//性能优化（内部时，必须多了一个“，”号）。
                             // sb = sb.Replace(",", "", sb.Length - 1, 1);
                         }
-                        sb.Append(right + ",");
-                        if (index < jsonItems.Count)
+                        sb.Append(right);
+                        sb.Append(",");
+                        if (index < bodyItems.Count)
                         {
                             sb.Append(left);
                         }
@@ -407,7 +428,8 @@ namespace CYQ.Data.Tool
             }
             if (_AddHead)
             {
-                sb.Append(footText.ToString() + "}");
+                sb.Append(footText.ToString());
+                sb.Append("}");
             }
             return sb.ToString();
             //string json = sb.ToString();
@@ -1081,12 +1103,12 @@ namespace CYQ.Data.Tool
                                 else
                                 {
                                     if (o is String) { SetEscape(ref str); }
-                                    jsonItems.Add("\"" + str + "\"");
+                                    bodyItems.Add("\"" + str + "\"");
                                 }
                             }
                             else if (o is ValueType)
                             {
-                                jsonItems.Add(o.ToString());
+                                bodyItems.Add(o.ToString());
                             }
                             else
                             {
