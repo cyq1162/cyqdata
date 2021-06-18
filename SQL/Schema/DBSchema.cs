@@ -20,13 +20,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    lock (o)
-                    {
-                        if (_DBScheams.Count == 0)
-                        {
-                            InitDBSchemasForCache(null);
-                        }
-                    }
+                    InitDBSchemasForCache(null);
                     return _DBScheams;
                 }
             }
@@ -45,17 +39,20 @@ namespace CYQ.Data.SQL
                 if (!_DBScheams.ContainsKey(hash))
                 {
                     //去掉lock(o)
-                    if (!_DBScheams.ContainsKey(hash))
+                    lock (o)
                     {
-                        DBInfo dbSchema = GetSchemaDic(cb.ConnName);
-                        if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
+                        if (!_DBScheams.ContainsKey(hash))
                         {
-                            if (!_DBScheams.ContainsKey(hash))
+                            DBInfo dbSchema = GetSchemaDic(cb.ConnName);
+                            if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
                             {
-                                _DBScheams.Add(hash, dbSchema);
+                                if (!_DBScheams.ContainsKey(hash))
+                                {
+                                    _DBScheams.Add(hash, dbSchema);
+                                }
                             }
+                            return dbSchema;
                         }
-                        return dbSchema;
                     }
 
                 }
@@ -145,7 +142,7 @@ namespace CYQ.Data.SQL
         /// <param name="para"></param>
         public static void InitDBSchemasForCache(object para)
         {
-            if (_DBScheams.Count == 0)
+            if (_DBScheams.Count == 0 || !isInitDbCompleted)
             {
                 lock (oo)
                 {
@@ -170,8 +167,8 @@ namespace CYQ.Data.SQL
                                 GetSchema(item);
                             }
                         }
-                        isInitDbCompleted = true;
                     }
+                    isInitDbCompleted = true;
                 }
             }
         }
