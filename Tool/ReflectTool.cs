@@ -17,6 +17,7 @@ namespace CYQ.Data.Tool
         static MDictionary<string, List<FieldInfo>> fieldCache = new MDictionary<string, List<FieldInfo>>();
         static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
         static MDictionary<string, Type[]> argumentCache = new MDictionary<string, Type[]>();
+        static Dictionary<int, bool> attrExistsCache = new Dictionary<int, bool>();
         /// <summary>
         /// 获取属性列表
         /// </summary>
@@ -182,24 +183,29 @@ namespace CYQ.Data.Tool
             return argTypes.Length;
         }
 
-        public static object[] GetAttributes(FieldInfo t, Type searchType)
+        public static object[] GetAttributes(FieldInfo fi, Type searchType)
         {
-            return GetAttributes(t.DeclaringType, searchType, null, t);
+            return GetAttributes(fi.DeclaringType, searchType, null, fi);
         }
-        public static object[] GetAttributes(PropertyInfo t, Type searchType)
+        public static object[] GetAttributes(PropertyInfo pi, Type searchType)
         {
-            return GetAttributes(t.DeclaringType, searchType, t, null);
+            return GetAttributes(pi.DeclaringType, searchType, pi, null);
         }
         public static object[] GetAttributes(Type t, Type searchType)
         {
             return GetAttributes(t, searchType, null, null);
         }
+
         /// <summary>
         /// 获取特性列表
         /// </summary>
         private static object[] GetAttributes(Type t, Type searchType, PropertyInfo pi, FieldInfo fi)
         {
-            string key = t.GUID.ToString() + (searchType == null ? "" : searchType.Name);
+            string key = t.GUID.ToString();
+            if (searchType != null)
+            {
+                key += searchType.Name;
+            }
             if (pi != null)
             {
                 key += pi.Name;
@@ -208,6 +214,7 @@ namespace CYQ.Data.Tool
             {
                 key += fi.Name;
             }
+            //key = key.GetHashCode().ToString();
             if (attrCache.ContainsKey(key))
             {
                 return attrCache[key];
@@ -257,6 +264,30 @@ namespace CYQ.Data.Tool
                 return (T)attr[0];
             }
             return default(T);
+        }
+
+        /// <summary>
+        /// 判断是否存在指定的属性
+        /// </summary>
+        /// <param name="attrType"></param>
+        /// <param name="pi"></param>
+        /// <returns></returns>
+        internal static bool ExistsAttr(Type attrType, PropertyInfo pi, FieldInfo fi)
+        {
+            string key = pi.DeclaringType.FullName + pi != null ? pi.Name : fi.Name + attrType.Name;
+            int code = key.GetHashCode();
+            if (attrExistsCache.ContainsKey(code))
+            {
+                return attrExistsCache[code];
+            }
+            object[] items = pi != null ? pi.GetCustomAttributes(attrType, true) : fi.GetCustomAttributes(attrType, true);
+            if (items != null && items.Length > 0)
+            {
+                attrExistsCache.Add(code, true);
+                return true;
+            }
+            attrExistsCache.Add(code, false);
+            return false;
         }
         /// <summary>
         /// 获取系统类型，若是Nullable类型，则转为基础类型。

@@ -623,8 +623,11 @@ namespace CYQ.Data
                     {
                         value = string.Empty;
                     }
+                    ConnObject.Remove("Conn");//移除原有配置文件的Conn项的链接缓存。
+                    ConnBean.Remove("Conn");
                     _DefaultConn = value;
                     SetConn("Conn", value);
+                   
                 }
             }
             /*

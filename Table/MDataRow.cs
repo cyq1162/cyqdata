@@ -302,6 +302,19 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 此方法被Emit所调用
         /// </summary>
+        public object GetItemValue(string index)//必须Public
+        {
+            MDataCell cell = this[index];
+            if (cell == null || cell.Value == null || cell.Value == DBNull.Value)
+            {
+                return null;
+            }
+            return cell.Value;
+        }
+
+        /// <summary>
+        /// 此方法被Emit所调用
+        /// </summary>
         public object GetItemValue(int index)//必须Public
         {
             MDataCell cell = this[index];
@@ -956,17 +969,10 @@ namespace CYQ.Data.Table
         /// <typeparam name="T">实体名称</typeparam>
         public T ToEntity<T>()
         {
-            //Type t = typeof(T);
-            //switch (ReflectTool.GetSystemType(ref t))
-            //{
-            //    case SysType.Base:
-            //        return (T)ConvertTool.ChangeType(this[0].Value, t);
+            FastToT<T>.EmitHandle emit = FastToT<T>.Create();
+            return emit(this);
 
-            //}
-            //object obj = Activator.CreateInstance(t);
-            //SetToEntity(ref obj, this);
-            //return (T)obj;
-            return (T)ToEntity(typeof(T));
+            //return (T)ToEntity(typeof(T));
         }
         internal object ToEntity(Type t)
         {
@@ -974,12 +980,14 @@ namespace CYQ.Data.Table
             {
                 return this;
             }
+
             switch (ReflectTool.GetSystemType(ref t))
             {
                 case SysType.Base:
                     return ConvertTool.ChangeType(this[0].Value, t);
 
             }
+            //return FastToT.Create(t)(this);
             object obj = Activator.CreateInstance(t);
             SetToEntity(ref obj, this);
             return obj;

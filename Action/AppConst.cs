@@ -123,5 +123,12 @@ namespace CYQ.Data
             }
         }
         #endregion
+
+        #region  Ù–‘≥£¡ø
+
+        public static Type JsonIgnoreType = typeof(JsonIgnoreAttribute);
+        public static Type JsonEnumToStringType = typeof(JsonEnumToStringAttribute);
+        public static Type JsonEnumToDescriptionType = typeof(JsonEnumToDescriptionAttribute);
+        #endregion
     }
 }

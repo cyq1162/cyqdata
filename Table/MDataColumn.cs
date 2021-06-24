@@ -156,13 +156,24 @@ namespace CYQ.Data.Table
         /// </summary>
         public int GetIndex(string columnName)
         {
+            if (Count == 0) { return -1; }
             columnName = columnName.Trim();
-            if (columnIndex.Count == 0 || IsColumnNameChanged || columnIndex.Count != Count)
+            if (columnIndex.Count == 0 || IsColumnNameChanged || columnIndex.Count % Count != 0)//columnIndex.Count != Count
             {
                 columnIndex.Clear();
+                string[] items = AppConfig.UI.AutoPrefixs.Split(',');
                 for (int i = 0; i < Count; i++)
                 {
-                    columnIndex.Add(this[i].ColumnName.Replace("_", ""), i);
+                    string name = this[i].ColumnName;
+                    if (name.IndexOf('_') > -1)
+                    {
+                        name = name.Replace("_", "");
+                    }
+                    columnIndex.Add(name, i);
+                    foreach (string item in items)
+                    {
+                        columnIndex.Add(item + name, i);//事先存好，加快速度。
+                    }
                 }
                 IsColumnNameChanged = false;
             }
@@ -177,22 +188,22 @@ namespace CYQ.Data.Table
                 {
                     return columnIndex[columnName];
                 }
-                else
-                {
-                    //开启默认前缀检测
-                    string[] items = AppConfig.UI.AutoPrefixs.Split(',');
-                    if (items != null && items.Length > 0)
-                    {
-                        foreach (string item in items)
-                        {
-                            columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
-                            if (columnIndex.ContainsKey(columnName))
-                            {
-                                return columnIndex[columnName];
-                            }
-                        }
-                    }
-                }
+                //else 提前存好，避开后续查询。
+                //{
+                //    //开启默认前缀检测
+                //    string[] items = AppConfig.UI.AutoPrefixs.Split(',');
+                //    if (items != null && items.Length > 0)
+                //    {
+                //        foreach (string item in items)
+                //        {
+                //            columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
+                //            if (columnIndex.ContainsKey(columnName))
+                //            {
+                //                return columnIndex[columnName];
+                //            }
+                //        }
+                //    }
+                //}
                 //for (int i = 0; i < Count; i++)
                 //{
                 //    if (string.Compare(this[i].ColumnName.Replace("_", ""), columnName, StringComparison.OrdinalIgnoreCase) == 0)//第三个参数用StringComparison.OrdinalIgnoreCase比用true快。

@@ -7,27 +7,66 @@ using CYQ.Data.Table;
 
 namespace CYQ.Data.Tool
 {
-    /// <summary>
-    /// 快速转换类[数据量越大[500条起],性能越高]
-    /// </summary>
     internal class FastToT<T>
     {
         public delegate T EmitHandle(MDataRow row);
-        /// <summary>
-        /// 构建一个ORM实体转换器
-        /// </summary>
-        /// <typeparam name="T">转换的目标类型</typeparam>
-        /// <param name="schema">表数据架构</param>
-        public static EmitHandle Create(MDataTable schema)
+        private static EmitHandle emit;
+        public static EmitHandle Create()
         {
-            Type tType = typeof(T);
+            if (emit == null)
+            {
+                emit = Create(null);
+            }
+            return emit;
+        }
+        public static EmitHandle Create(MDataColumn schema)
+        {
+            DynamicMethod method = FastToT.CreateMethod(typeof(T), schema);
+            return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
+        }
+    }
+    /// <summary>
+    /// 快速转换类[数据量越大[500条起],性能越高]
+    /// </summary>
+    internal class FastToT
+    {
+        public delegate object EmitHandle(MDataRow row);
+        private static EmitHandle emit;
+        public static EmitHandle Create(Type tType)
+        {
+            if (emit == null)
+            {
+                emit = Create(tType, null);
+            }
+            return emit;
+        }
+        public static EmitHandle Create(Type tType, MDataColumn schema)
+        {
+            DynamicMethod method = CreateMethod(tType, schema);
+            return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
+        }
+        /// <summary>
+        /// 构建一个ORM实体转换器（第1次构建有一定开销时间）
+        /// </summary>
+        /// <param name="tType">转换的目标类型</param>
+        /// <param name="schema">表数据架构</param>
+        internal static DynamicMethod CreateMethod(Type tType, MDataColumn schema)
+        {
+            //Type tType = typeof(T);
             Type rowType = typeof(MDataRow);
             Type toolType = typeof(ConvertTool);
             DynamicMethod method = new DynamicMethod("RowToT", tType, new Type[] { rowType }, tType);
+            MethodInfo getValue = null;
+            if (schema == null)
+            {
+                getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(string) }, null);
+            }
+            else
+            {
+                getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(int) }, null);
+            }
 
-
-            MethodInfo getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(int) }, null);
-            MethodInfo changeType = toolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(object),typeof(Type) }, null);
+            MethodInfo changeType = toolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(object), typeof(Type) }, null);
 
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
 
@@ -55,7 +94,7 @@ namespace CYQ.Data.Tool
                             break;
                         }
                     }
-                    
+
                     if (isAdd)
                     {
                         fileds.Add(item);
@@ -65,20 +104,31 @@ namespace CYQ.Data.Tool
             foreach (FieldInfo field in fileds)
             {
                 string fieldName = field.Name;
-                if(fieldName[0]=='<')//<ID>k__BackingField
+                if (fieldName[0] == '<')//<ID>k__BackingField
                 {
-                    fieldName=fieldName.Substring(1,fieldName.IndexOf('>')-1);
+                    fieldName = fieldName.Substring(1, fieldName.IndexOf('>') - 1);
                 }
-                ordinal = schema.Columns.GetIndex(fieldName.TrimStart('_'));
-                if (ordinal == -1)
+                if (schema != null)
                 {
-                    ordinal = schema.Columns.GetIndex(fieldName);
+                    ordinal = schema.GetIndex(fieldName.TrimStart('_'));
+                    if (ordinal == -1)
+                    {
+                        ordinal = schema.GetIndex(fieldName);
+                    }
                 }
-                if (ordinal > -1)
+                if (schema == null || ordinal > -1)
                 {
                     Label retFalse = gen.DefineLabel();//定义标签；goto;
                     gen.Emit(OpCodes.Ldarg_0);//设置参数0 ：row
-                    gen.Emit(OpCodes.Ldc_I4, ordinal);//设置参数值：1
+                    if (schema == null)
+                    {
+                        gen.Emit(OpCodes.Ldstr, fieldName);//设置参数值：string
+                    }
+                    else
+                    {
+                        gen.Emit(OpCodes.Ldc_I4, ordinal);//设置参数值：1 int
+                    }
+
                     gen.Emit(OpCodes.Call, getValue);//Call GetItemValue(ordinal);=> invoke(row,1)
                     gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
 
@@ -111,8 +161,8 @@ namespace CYQ.Data.Tool
 
             gen.Emit(OpCodes.Ldloc_0);
             gen.Emit(OpCodes.Ret);
-
-            return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
+            return method;
+            //return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
         }
 
         private static void EmitCastObj(ILGenerator il, Type targetType)

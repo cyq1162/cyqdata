@@ -50,7 +50,7 @@ namespace CYQ.Data.SQL
                 }
             }
             #endregion
-            
+
             MDataColumn mdcs = null;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {
@@ -710,8 +710,7 @@ namespace CYQ.Data.SQL
         private static void SetStruct(MDataColumn mdc, PropertyInfo pi, FieldInfo fi, int i, int count)
         {
             Type type = pi != null ? pi.PropertyType : fi.FieldType;
-            JsonIgnoreAttribute jia = ReflectTool.GetAttr<JsonIgnoreAttribute>(pi, fi);//获取Json忽略标识
-            if (jia != null)
+            if (ReflectTool.ExistsAttr(AppConst.JsonIgnoreType, pi, fi))//获取Json忽略标识
             {
                 return;//被Json忽略的列，不在返回列结构中。
             }
@@ -720,7 +719,7 @@ namespace CYQ.Data.SQL
 
             if (type.IsEnum)
             {
-                if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(pi, fi) != null || ReflectTool.GetAttr<JsonEnumToDescriptionAttribute>(pi, fi) != null)//获取Json忽略标识
+                if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi) || ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, pi, fi))//获取Json忽略标识
                 {
                     sqlType = SqlDbType.NVarChar;
                 }

@@ -871,7 +871,7 @@
 647：修正：MDataTable.AcceptChange 跨库批量事务的问题。(2021-05-31)
 648：优化：MDataRow ToTable(true)方法新增State值状态列。(2021-06-01)
 649：修正：CrossDB.Exists 修正判断问题。(2021-06-08)
-650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16)
+650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16、2021-06-23)
 651：优化：CrossDB.Remove、CrossDB.Add判断问题。(2021-06-16)
 652：优化：Orm相关（DBFast、SimpleOrmBase的Select<T>提升性能（原DataReader=>MDataTable=>List<T> 调整为：DataReader=>List<T>，节省中间过程）(2021-06-16)
 653：优化：DBSchema 首次初始结构缓存时，对未配置架构缓存外围时，将【视图、存储过程、版本号】部分调整为延迟加载。(2021-06-17)
@@ -880,3 +880,4 @@
 656：优化：DataType.GetGroup 返回类型由int调整为DataGroupType枚举类型。(2021-06-18)
 657：优化：JsonSplit 优化GetValueLength方法，提升：IsJson、Split 两个方法性能。(2021-06-18)
 658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)
+659：优化：JsonHelper.ToJson方法：对实体List<T>时，提升性能，去掉中间转换环节。(2021-06-23、2021-06-24)

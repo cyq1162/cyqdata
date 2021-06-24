@@ -113,12 +113,19 @@ namespace CYQ.Data
             if (!string.IsNullOrEmpty(key))
             {
                 int hash = key.GetHashCode();
+                
                 ConnBean cb = connBeanDicCache[hash];
                 if (cb != null)
                 {
                     connBeanDicCache.Remove(hash);
                     connBeanDicCache.Remove(cb.ConnName.GetHashCode());
                     connBeanDicCache.Remove(cb.ConnString.GetHashCode());
+                }
+                else
+                {
+                    connBeanDicCache.Remove(hash);
+                    string connString = string.Format(AppConfig.GetConn(key), AppConfig.WebRootPath);
+                    connBeanDicCache.Remove(connString.GetHashCode());
                 }
             }
         }

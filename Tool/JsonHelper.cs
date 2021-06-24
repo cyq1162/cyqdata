@@ -205,7 +205,7 @@ namespace CYQ.Data.Tool
             bodyItems.Add(brFlag);
             rowCount++;
         }
-        
+
         /// <summary>
         /// attach json data (AddHead must be true)
         /// <para>添加底部数据（只有AddHead为true情况才能添加数据）</para>
@@ -1112,7 +1112,8 @@ namespace CYQ.Data.Tool
                             }
                             else
                             {
-                                Fill(MDataRow.CreateFrom(o));
+                                 FillEntity(o);
+                                //  Fill(MDataRow.CreateFrom(o));//直接优化成实体。
                             }
                         }
                     }
@@ -1139,9 +1140,10 @@ namespace CYQ.Data.Tool
                 }
                 else
                 {
-                    MDataRow row = new MDataRow();
-                    row.LoadFrom(obj);
-                    Fill(row);
+                    FillEntity(obj);
+                    //MDataRow row = new MDataRow();
+                    //row.LoadFrom(obj);
+                    //Fill(row);
                 }
             }
         }
@@ -1168,6 +1170,181 @@ namespace CYQ.Data.Tool
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 加载实体
+        /// </summary>
+        /// <param name="entity"></param>
+        private void FillEntity(object entity)
+        {
+            Type t = entity.GetType();
+            List<PropertyInfo> pList = ReflectTool.GetPropertyList(t);
+            foreach (PropertyInfo item in pList)
+            {
+                if (ReflectTool.ExistsAttr(AppConst.JsonIgnoreType, item,null))//获取Json忽略标识
+                {
+                    continue;//被Json忽略的列，不在返回列结构中。
+                }
+                
+                object objValue = item.GetValue(entity, null);
+                Type type = item.PropertyType;
+                if (type.IsEnum)
+                {
+                    if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, item, null))
+                    {
+                        objValue = objValue.ToString();
+                    }
+                    else if (ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, item, null))
+                    {
+                        FieldInfo field = type.GetField(objValue.ToString());
+                        if (field != null)
+                        {
+                            DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                            if (da != null)
+                            {
+                                objValue = da.Description;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        objValue = (int)objValue;
+                    }
+
+                }
+
+                SetNameValue(item.Name, objValue);
+
+            }
+            AddBr();
+        }
+
+        private void SetNameValue(string name, object objValue)
+        {
+            if (IsConvertNameToLower)
+            {
+                name = name.ToLower();
+            }
+            string value = null;
+            bool noQuot = false;
+            if (objValue == null || objValue == DBNull.Value)
+            {
+                if (_RowOp == Table.RowOp.IgnoreNull)
+                {
+                    return;
+                }
+                value = "null";
+                noQuot = true;
+            }
+            else
+            {
+                Type t = objValue.GetType();
+                value = Convert.ToString(objValue);
+                DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
+                noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
+                #region 处理非Null的情况
+
+                if (group == DataGroupType.Bool) // oracle 下的number 1会处理成bool类型
+                {
+                    value = value.ToLower();
+                }
+                else if (group == DataGroupType.Date)
+                {
+                    DateTime dt;
+                    if (DateTime.TryParse(value, out dt))
+                    {
+                        value = dt.ToString(DateTimeFormatter);
+                    }
+                }
+                else if (group == DataGroupType.Object)
+                {
+                    #region 处理对象及循环引用。
+
+                    int hash = objValue.GetHashCode();
+                    //检测是否循环引用
+                    if (LoopCheckList.ContainsKey(hash))
+                    {
+                        //continue;
+                        int level = LoopCheckList[hash];
+                        if (level < Level)
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            LoopCheckList[hash] = Level;//更新级别
+                        }
+                    }
+                    else
+                    {
+                        LoopCheckList.Add(hash, Level);
+                    }
+                    if (t.Name == "Byte[]")
+                    {
+                        value = Convert.ToBase64String(objValue as byte[]);
+                    }
+                    else
+                    {
+                        if (objValue is IEnumerable)
+                        {
+                            int len = ReflectTool.GetArgumentLength(ref t);
+                            if (len <= 1)//List<T>
+                            {
+                                JsonHelper js = new JsonHelper(false, false);
+                                js.Level = Level + 1;
+                                js.LoopCheckList = LoopCheckList;
+                                js.Escape = Escape;
+                                js._RowOp = _RowOp;
+                                js.DateTimeFormatter = DateTimeFormatter;
+                                js.IsConvertNameToLower = IsConvertNameToLower;
+                                if (objValue is MDataRowCollection)
+                                {
+                                    MDataTable dtx = (MDataRowCollection)objValue;
+                                    js.Fill(dtx);
+                                }
+                                else
+                                {
+                                    js.Fill(objValue);
+                                }
+                                value = js.ToString(true);
+                                noQuot = true;
+                            }
+                            else if (len == 2)//Dictionary<T,K>
+                            {
+                                MDataRow dicRow = MDataRow.CreateFrom(objValue);
+                                dicRow.DynamicData = LoopCheckList;
+                                value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
+                                noQuot = true;
+                            }
+                        }
+                        else
+                        {
+                            if (!t.FullName.StartsWith("System."))//普通对象。
+                            {
+                                MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(t));
+                                oRow.DynamicData = LoopCheckList;
+                                oRow.LoadFrom(objValue);
+                                value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
+                                noQuot = true;
+                            }
+                            else if (t.FullName == "System.Data.DataTable")
+                            {
+                                MDataTable dt = objValue as DataTable;
+                                dt.DynamicData = LoopCheckList;
+                                value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
+                                noQuot = true;
+                            }
+                        }
+
+                    }
+                    #endregion
+                }
+                #endregion
+            }
+            Add(name, value, noQuot);
+
+
         }
 
         private static Dictionary<string, object> lockList = new Dictionary<string, object>();

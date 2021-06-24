@@ -177,6 +177,18 @@ namespace CYQ.Data.SQL
                         }
                     }
                 }
+                else
+                {
+                    DBInfo dbInfo = DBSchema.GetSchema(AppConfig.DB.DefaultConn);//优先取默认链接
+                    if (dbInfo != null)
+                    {
+                        TableInfo info = dbInfo.GetTableInfo(tableHash);
+                        if (info != null)
+                        {
+                            return info;
+                        }
+                    }
+                }
                 foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
                 {
                     TableInfo info = item.Value.GetTableInfo(tableHash);
