@@ -881,3 +881,4 @@
 657：优化：JsonSplit 优化GetValueLength方法，提升：IsJson、Split 两个方法性能。(2021-06-18)
 658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)
 659：优化：JsonHelper.ToJson方法：对实体List<T>时，提升性能，去掉中间转换环节。(2021-06-23、2021-06-24)
+660：优化：JsonHelper.ToList<T>方法：去掉中间转换环节。(2021-06-28)

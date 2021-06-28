@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace CYQ.Data.Tool
 {
@@ -37,7 +38,7 @@ namespace CYQ.Data.Tool
                 {
                     int err;
                     // int length = GetValueLength(isStrictMode, json.Substring(i), true, out err);
-                    int length = GetValueLength(isStrictMode,json, i, true, out err);
+                    int length = GetValueLength(isStrictMode, json, i, true, out err);
                     cs.childrenStart = false;
                     if (err > 0)
                     {
@@ -104,7 +105,7 @@ namespace CYQ.Data.Tool
                             //string item = json.Substring(i);
                             int temp;
                             // int length = GetValueLength(false, json.Substring(i), false, out temp);//这里应该有优化的空间，传json和i，不重新生成string
-                            int length = GetValueLength(false,json, i, false, out temp);//优化后，速度快了10倍
+                            int length = GetValueLength(false, json, i, false, out temp);//优化后，速度快了10倍
 
                             value.Length = 0;
                             value.Append(json.Substring(i, length));
@@ -210,7 +211,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取值的长度（当Json值嵌套以"{"或"["开头时），【优化后】
         /// </summary>
-        private static int GetValueLength(bool isStrictMode,string json, int startIndex, bool breakOnErr, out int errIndex)
+        private static int GetValueLength(bool isStrictMode, string json, int startIndex, bool breakOnErr, out int errIndex)
         {
             errIndex = 0;
             int len = json.Length - 1 - startIndex;
@@ -230,7 +231,7 @@ namespace CYQ.Data.Tool
                     }
                     else if (cs.childrenStart)//正常字符，值状态下。
                     {
-                        int length = GetValueLength(isStrictMode,json, i, breakOnErr, out errIndex);//递归子值，返回一个长度。。。
+                        int length = GetValueLength(isStrictMode, json, i, breakOnErr, out errIndex);//递归子值，返回一个长度。。。
                         cs.childrenStart = false;
                         cs.valueStart = 0;
                         i = i + length - 1;
@@ -252,6 +253,127 @@ namespace CYQ.Data.Tool
         }
 
 
+        #region 扩展转实体T
+        internal static T Split<T>(string json, EscapeOp op)
+        {
+            List<T> t = SplitList<T>(json, 0, op);
+            if (t.Count > 0)
+            {
+                return t[0];
+            }
+            return default(T);
+        }
+        internal static List<T> SplitList<T>(string json, int topN, EscapeOp op)
+        {
+            List<T> result = new List<T>();
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                T entity = Activator.CreateInstance<T>();
+                bool hasSetValue = false;
+                List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(typeof(T));
+                //string key = string.Empty;
+                StringBuilder key = new StringBuilder(32);
+                StringBuilder value = new StringBuilder();
+                CharState cs = new CharState(false);
+                try
+                {
+                    #region 核心逻辑
+                    char c;
+                    for (int i = 0; i < json.Length; i++)
+                    {
+                        c = json[i];
+                        if (!cs.IsKeyword(c))//设置关键符号状态。
+                        {
+                            if (cs.jsonStart)//Json进行中。。。
+                            {
+                                if (cs.keyStart > 0)
+                                {
+                                    key.Append(c);
+                                }
+                                else if (cs.valueStart > 0)
+                                {
+                                    value.Append(c);
+                                }
+                            }
+                            else if (!cs.arrayStart)//json结束，又不是数组，则退出。
+                            {
+                                break;
+                            }
+                        }
+                        else if (cs.childrenStart)//正常字符，值状态下。
+                        {
+                            int temp;
+                            int length = GetValueLength(false, json, i, false, out temp);//优化后，速度快了10倍
+                            value.Length = 0;
+                            value.Append(json.Substring(i, length));
+                            cs.childrenStart = false;
+                            cs.valueStart = 0;
+                            cs.setDicValue = true;
+                            i = i + length - 1;
+                        }
+                        if (cs.setDicValue)//设置键值对。
+                        {
+                            if (key.Length > 0)
+                            {
+                                string k = key.ToString();
+                                foreach (PropertyInfo p in pInfoList)
+                                {
+                                    if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        string val = value.ToString();
+                                        bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
+                                        if (isNull)
+                                        {
+                                            val = "";
+                                        }
+                                        else
+                                        {
+                                            val = JsonHelper.UnEscape(val, op);
+                                        }
+                                        p.SetValue(entity, ConvertTool.ChangeType(val, p.PropertyType), null);
+                                        hasSetValue = true;
+                                        break;
+                                    }
+                                }
+
+
+
+                            }
+                            cs.setDicValue = false;
+                            key.Length = 0;
+                            value.Length = 0;
+                        }
+
+                        if (!cs.jsonStart && hasSetValue)
+                        {
+                            result.Add(entity);
+                            if (topN > 0 && result.Count >= topN)
+                            {
+                                return result;
+                            }
+                            if (cs.arrayStart)//处理数组。
+                            {
+                                entity = Activator.CreateInstance<T>();
+                                hasSetValue = false;
+                            }
+                        }
+                    }
+                    #endregion
+                }
+                catch (Exception err)
+                {
+                    Log.Write(err, LogType.Error);
+                }
+                finally
+                {
+                    key = null;
+                    value = null;
+                }
+            }
+            return result;
+        }
+        #endregion
     }
     internal partial class JsonSplit
     {

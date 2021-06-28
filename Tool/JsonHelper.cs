@@ -1623,9 +1623,10 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
-                row.LoadFrom(json, op);
-                return row.ToEntity<T>();
+                return JsonSplit.Split<T>(json,op);
+                //MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
+                //row.LoadFrom(json, op);
+                //return row.ToEntity<T>();
             }
         }
         public static List<T> ToList<T>(string json) where T : class
@@ -1639,7 +1640,8 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
+            return JsonSplit.SplitList<T>(json, 0, op);//减少中间转换环节。
+            // return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
         }
         /// <summary>
         /// Convert object to json
