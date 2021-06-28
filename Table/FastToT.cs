@@ -119,35 +119,35 @@ namespace CYQ.Data.Tool
                 if (schema == null || ordinal > -1)
                 {
                     Label retFalse = gen.DefineLabel();//定义标签；goto;
-                    gen.Emit(OpCodes.Ldarg_0);//设置参数0 ：row
+                    gen.Emit(OpCodes.Ldarg_0);//设置参数0 ：row 将索引为 0 的自变量加载到计算堆栈上。
                     if (schema == null)
                     {
-                        gen.Emit(OpCodes.Ldstr, fieldName);//设置参数值：string
+                        gen.Emit(OpCodes.Ldstr, fieldName);//设置参数值：string 推送对元数据中存储的字符串的新对象引用。
                     }
                     else
                     {
-                        gen.Emit(OpCodes.Ldc_I4, ordinal);//设置参数值：1 int
+                        gen.Emit(OpCodes.Ldc_I4, ordinal);//设置参数值：1 int 将所提供的 int32 类型的值作为 int32 推送到计算堆栈上。
                     }
 
                     gen.Emit(OpCodes.Call, getValue);//Call GetItemValue(ordinal);=> invoke(row,1)
-                    gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
+                    gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal); 从计算堆栈的顶部弹出当前值并将其存储到索引 1 处的局部变量列表中。
 
-                    gen.Emit(OpCodes.Ldloc_1);
-                    gen.Emit(OpCodes.Ldnull);
-                    gen.Emit(OpCodes.Ceq);// if (o==null)
-                    gen.Emit(OpCodes.Stloc_2); //b=(o==null);
-                    gen.Emit(OpCodes.Ldloc_2);
+                    gen.Emit(OpCodes.Ldloc_1);//将索引 1 处的局部变量加载到计算堆栈上。
+                    gen.Emit(OpCodes.Ldnull);//将空引用（O 类型）推送到计算堆栈上。
+                    gen.Emit(OpCodes.Ceq);// if (o==null) 比较两个值。 如果这两个值相等，则将整数值 1 (int32) 推送到计算堆栈上；否则，将 0 (int32) 推送到计算堆栈上。
+                    gen.Emit(OpCodes.Stloc_2); //b=(o==null); 从计算堆栈的顶部弹出当前值并将其存储到索引 2 处的局部变量列表中。
+                    gen.Emit(OpCodes.Ldloc_2);//将索引 2 处的局部变量加载到计算堆栈上。
 
-                    gen.Emit(OpCodes.Brtrue_S, retFalse);//为null值，跳过
+                    gen.Emit(OpCodes.Brtrue_S, retFalse);//为null值，跳过  如果 value 为 true、非空或非零，则将控制转移到目标指令（短格式）。
 
                     //-------------新增：o=ConvertTool.ChangeType(o, t);
-                    gen.Emit(OpCodes.Nop);
-                    gen.Emit(OpCodes.Ldtoken, field.FieldType);//这个卡我卡的有点久。
+                    gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
+                    gen.Emit(OpCodes.Ldtoken, field.FieldType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
                     gen.Emit(OpCodes.Stloc_3);
 
                     gen.Emit(OpCodes.Ldloc_1);//o
                     gen.Emit(OpCodes.Ldloc_3);
-                    gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type)
+                    gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
                     gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
                     //-------------------------------------------
                     gen.Emit(OpCodes.Ldloc_0);//实体对象obj

@@ -17,7 +17,7 @@ namespace CYQ.Data.Table
     {
         internal bool IsNull = true;
         /// <summary>
-        /// 状态改变:0;未改,1;进行赋值操作[但值相同],2:赋值,值不同改变了
+        /// 状态改变:0;未改（无法插入和更新）,1;进行赋值操作[但值相同](允许插入),2:赋值,值不同改变了（允许插入和更新）
         /// </summary>
         internal int State = 0;
         /// <summary>
