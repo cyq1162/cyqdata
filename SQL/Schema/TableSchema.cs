@@ -684,15 +684,12 @@ namespace CYQ.Data.SQL
                     SetStruct(mdc, pis[i], null, i, pis.Count);
                 }
             }
-            else
+            List<FieldInfo> fis = ReflectTool.GetFieldList(typeInfo);
+            if (fis.Count > 0)
             {
-                List<FieldInfo> fis = ReflectTool.GetFieldList(typeInfo);
-                if (fis.Count > 0)
+                for (int i = 0; i < fis.Count; i++)
                 {
-                    for (int i = 0; i < fis.Count; i++)
-                    {
-                        SetStruct(mdc, null, fis[i], i, fis.Count);
-                    }
+                    SetStruct(mdc, null, fis[i], i, fis.Count);
                 }
             }
             object[] tableAttr = typeInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);//看是否设置了表特性，获取表名和表描述

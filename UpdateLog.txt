@@ -882,3 +882,6 @@
 658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)
 659：优化：JsonHelper.ToJson方法：对实体List<T>时，提升性能，去掉中间转换环节。(2021-06-23、2021-06-24)
 660：优化：JsonHelper.ToList<T>方法：去掉中间转换环节。(2021-06-28)
+------------------------------------------------------------------------------
+661：优化：JsonHelper.ToList<T>(string json)方法：增加处理对成员变量（FiledInfo）赋值。(2021-06-30)【V5.8.4.0】
+662：优化：实体转MDataRow、MDataTable、Json时：成员变量也加入列头、或Json值的输出。(2021-06-30)

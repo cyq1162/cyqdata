@@ -370,6 +370,7 @@ namespace CYQ.Data.Tool
                 T entity = Activator.CreateInstance<T>();
                 bool hasSetValue = false;
                 List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
+                List<FieldInfo> fInfoList = ReflectTool.GetFieldList(t);
                 //string key = string.Empty;
                 StringBuilder key = new StringBuilder(32);
                 StringBuilder value = new StringBuilder();
@@ -415,21 +416,21 @@ namespace CYQ.Data.Tool
                             if (key.Length > 0)
                             {
                                 string k = key.ToString();
+                                string val = value.ToString();
+                                bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
+                                if (isNull)
+                                {
+                                    val = "";
+                                }
+                                else
+                                {
+                                    val = JsonHelper.UnEscape(val, op);
+                                }
+                                object o = val;
                                 foreach (PropertyInfo p in pInfoList)
                                 {
                                     if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
                                     {
-                                        string val = value.ToString();
-                                        bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
-                                        if (isNull)
-                                        {
-                                            val = "";
-                                        }
-                                        else
-                                        {
-                                            val = JsonHelper.UnEscape(val, op);
-                                        }
-                                        object o = val;
                                         if (p.PropertyType.Name != "String")
                                         {
                                             o = ConvertTool.ChangeType(val, p.PropertyType);
@@ -439,7 +440,22 @@ namespace CYQ.Data.Tool
                                         break;
                                     }
                                 }
-
+                                if (!hasSetValue && fInfoList.Count > 0)
+                                {
+                                    foreach (FieldInfo f in fInfoList)
+                                    {
+                                        if (String.Compare(f.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
+                                        {
+                                            if (f.FieldType.Name != "String")
+                                            {
+                                                o = ConvertTool.ChangeType(val, f.FieldType);
+                                            }
+                                            f.SetValue(entity, o);
+                                            hasSetValue = true;
+                                            break;
+                                        }
+                                    }
+                                }
 
 
                             }

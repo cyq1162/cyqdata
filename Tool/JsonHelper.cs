@@ -1112,7 +1112,7 @@ namespace CYQ.Data.Tool
                             }
                             else
                             {
-                                 FillEntity(o);
+                                FillEntity(o);
                                 //  Fill(MDataRow.CreateFrom(o));//直接优化成实体。
                             }
                         }
@@ -1180,47 +1180,62 @@ namespace CYQ.Data.Tool
         {
             Type t = entity.GetType();
             List<PropertyInfo> pList = ReflectTool.GetPropertyList(t);
-            foreach (PropertyInfo item in pList)
+            if (pList.Count > 0)
             {
-                if (ReflectTool.ExistsAttr(AppConst.JsonIgnoreType, item,null))//获取Json忽略标识
+                foreach (PropertyInfo item in pList)
                 {
-                    continue;//被Json忽略的列，不在返回列结构中。
+                    SetJson(entity, item, null);
                 }
-                
-                object objValue = item.GetValue(entity, null);
-                Type type = item.PropertyType;
-                if (type.IsEnum)
+            }
+            List<FieldInfo> fList = ReflectTool.GetFieldList(t);
+            if (fList.Count > 0)
+            {
+                foreach (FieldInfo item in fList)
                 {
-                    if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, item, null))
-                    {
-                        objValue = objValue.ToString();
-                    }
-                    else if (ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, item, null))
-                    {
-                        FieldInfo field = type.GetField(objValue.ToString());
-                        if (field != null)
-                        {
-                            DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
-                            if (da != null)
-                            {
-                                objValue = da.Description;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        objValue = (int)objValue;
-                    }
-
+                    SetJson(entity, null, item);
                 }
-
-                SetNameValue(item.Name, objValue);
-
             }
             AddBr();
         }
+        private void SetJson(object entity, PropertyInfo pi, FieldInfo fi)
+        {
+            if (ReflectTool.ExistsAttr(AppConst.JsonIgnoreType, pi, fi))//获取Json忽略标识
+            {
+                return;//被Json忽略的列，不在返回列结构中。
+            }
+            string name = pi != null ? pi.Name : fi.Name;
+            object objValue = pi != null ? pi.GetValue(entity, null) : fi.GetValue(entity);
+            Type type = pi != null ? pi.PropertyType : fi.FieldType;
+            if (type.IsEnum)
+            {
+                if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi))
+                {
+                    objValue = objValue.ToString();
+                    type = typeof(String);
+                }
+                else if (ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, pi, fi))
+                {
+                    FieldInfo field = type.GetField(objValue.ToString());
+                    if (field != null)
+                    {
+                        DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                        if (da != null)
+                        {
+                            objValue = da.Description;
+                            type = typeof(String);
+                        }
+                    }
+                }
+                else
+                {
+                    objValue = (int)objValue;
+                }
 
-        private void SetNameValue(string name, object objValue)
+            }
+
+            SetNameValue(name, objValue, type);
+        }
+        private void SetNameValue(string name, object objValue, Type valueType)
         {
             if (IsConvertNameToLower)
             {
@@ -1239,9 +1254,8 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                Type t = objValue.GetType();
                 value = Convert.ToString(objValue);
-                DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
+                DataGroupType group = DataType.GetGroup(DataType.GetSqlType(valueType));
                 noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
                 #region 处理非Null的情况
 
@@ -1280,7 +1294,7 @@ namespace CYQ.Data.Tool
                     {
                         LoopCheckList.Add(hash, Level);
                     }
-                    if (t.Name == "Byte[]")
+                    if (valueType.Name == "Byte[]")
                     {
                         value = Convert.ToBase64String(objValue as byte[]);
                     }
@@ -1288,7 +1302,7 @@ namespace CYQ.Data.Tool
                     {
                         if (objValue is IEnumerable)
                         {
-                            int len = ReflectTool.GetArgumentLength(ref t);
+                            int len = ReflectTool.GetArgumentLength(ref valueType);
                             if (len <= 1)//List<T>
                             {
                                 JsonHelper js = new JsonHelper(false, false);
@@ -1320,15 +1334,15 @@ namespace CYQ.Data.Tool
                         }
                         else
                         {
-                            if (!t.FullName.StartsWith("System."))//普通对象。
+                            if (!valueType.FullName.StartsWith("System."))//普通对象。
                             {
-                                MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(t));
+                                MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(valueType));
                                 oRow.DynamicData = LoopCheckList;
                                 oRow.LoadFrom(objValue);
                                 value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
                                 noQuot = true;
                             }
-                            else if (t.FullName == "System.Data.DataTable")
+                            else if (valueType.FullName == "System.Data.DataTable")
                             {
                                 MDataTable dt = objValue as DataTable;
                                 dt.DynamicData = LoopCheckList;
@@ -1556,7 +1570,7 @@ namespace CYQ.Data.Tool
                 MethodInfo mi = null;
                 try
                 {
-                    mi =oT.GetMethod("Add");
+                    mi = oT.GetMethod("Add");
                 }
                 catch
                 {
@@ -1623,7 +1637,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                return JsonSplit.Split<T>(json,op);
+                return JsonSplit.Split<T>(json, op);
                 //MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
                 //row.LoadFrom(json, op);
                 //return row.ToEntity<T>();

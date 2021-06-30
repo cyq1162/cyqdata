@@ -1372,17 +1372,16 @@ namespace CYQ.Data.Table
                         SetValueToCell(entity, op, p, null);
                     }
                 }
-                else
+
+                List<FieldInfo> fis = ReflectTool.GetFieldList(t);
+                if (fis.Count > 0)
                 {
-                    List<FieldInfo> fis = ReflectTool.GetFieldList(t);
-                    if (fis.Count > 0)
+                    foreach (FieldInfo f in fis)
                     {
-                        foreach (FieldInfo f in fis)
-                        {
-                            SetValueToCell(entity, op, null, f);
-                        }
+                        SetValueToCell(entity, op, null, f);
                     }
                 }
+
             }
             catch (Exception err)
             {
