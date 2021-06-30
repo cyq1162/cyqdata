@@ -1556,7 +1556,7 @@ namespace CYQ.Data.Tool
                 MethodInfo mi = null;
                 try
                 {
-                    mi = oT.GetMethod("Add");
+                    mi =oT.GetMethod("Add");
                 }
                 catch
                 {

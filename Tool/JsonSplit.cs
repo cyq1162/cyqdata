@@ -30,14 +30,12 @@ namespace CYQ.Data.Tool
                 return false;
             }
             CharState cs = new CharState(isStrictMode);
-            char c;
             for (int i = 0; i < json.Length; i++)
             {
-                c = json[i];
-                if (cs.IsKeyword(c) && cs.childrenStart)//设置关键符号状态。
+                //char c = ;
+                if (cs.IsKeyword(json[i]) && cs.childrenStart)//设置关键符号状态。
                 {
                     int err;
-                    // int length = GetValueLength(isStrictMode, json.Substring(i), true, out err);
                     int length = GetValueLength(isStrictMode, json, i, true, out err);
                     cs.childrenStart = false;
                     if (err > 0)
@@ -60,6 +58,105 @@ namespace CYQ.Data.Tool
         {
             return Split(json, 0);
         }
+        ///// <summary>
+        ///// 解析Json
+        ///// </summary>
+        ///// <returns></returns>
+        //internal static List<Dictionary<string, string>> Split(string json, int topN)
+        //{
+        //    List<Dictionary<string, string>> result = new List<Dictionary<string, string>>();
+
+        //    if (!string.IsNullOrEmpty(json))
+        //    {
+        //        Dictionary<string, string> dic = new Dictionary<string, string>(16, StringComparer.OrdinalIgnoreCase);
+        //        int keyIndex = -1, valueIndex = -1;
+        //        int keyLength = 0, valueLength = 0;
+        //        CharState cs = new CharState(false);
+        //        try
+        //        {
+        //            #region 核心逻辑
+        //            for (int i = 0; i < json.Length; i++)
+        //            {
+        //                char c = json[i];
+        //                if (!cs.IsKeyword(c))//设置关键符号状态。
+        //                {
+        //                    if (cs.jsonStart)//Json进行中。。。
+        //                    {
+        //                        if (cs.keyStart > 0)
+        //                        {
+        //                            if (keyIndex == -1)
+        //                            {
+        //                                keyIndex = i;
+        //                            }
+        //                            keyLength++;
+        //                        }
+        //                        else if (cs.valueStart > 0)
+        //                        {
+        //                            if (valueIndex == -1)
+        //                            {
+        //                                valueIndex = i;
+        //                            }
+        //                            valueLength++;
+        //                        }
+        //                    }
+        //                    else if (!cs.arrayStart)//json结束，又不是数组，则退出。
+        //                    {
+        //                        break;
+        //                    }
+        //                }
+        //                else if (cs.childrenStart)//正常字符，值状态下。
+        //                {
+        //                    int temp;
+        //                    valueLength = GetValueLength(false, json, i, false, out temp);//优化后，速度快了10倍
+        //                    valueIndex = i;
+        //                    cs.childrenStart = false;
+        //                    cs.valueStart = 0;
+        //                    cs.setDicValue = true;
+        //                    i = i + valueLength - 1;
+        //                }
+        //                if (cs.setDicValue)//设置键值对。
+        //                {
+        //                    if (keyLength > 0)
+        //                    {
+        //                        string k = json.Substring(keyIndex, keyLength);// key.ToString();
+        //                        if (!dic.ContainsKey(k))
+        //                        {
+        //                            string val = valueLength > 0 ? json.Substring(valueIndex, valueLength) : ""; //value.ToString();
+        //                            bool isNull = json[i - 5] == ':' && json[i] != '"' && valueLength == 4 && val == "null";
+        //                            if (isNull)
+        //                            {
+        //                                val = "";
+        //                            }
+        //                            dic.Add(k, val);
+        //                        }
+        //                    }
+        //                    cs.setDicValue = false;
+        //                    keyIndex = valueIndex = -1;
+        //                    keyLength = valueLength = 0;
+        //                }
+
+        //                if (!cs.jsonStart && dic.Count > 0)
+        //                {
+        //                    result.Add(dic);
+        //                    if (topN > 0 && result.Count >= topN)
+        //                    {
+        //                        return result;
+        //                    }
+        //                    if (cs.arrayStart)//处理数组。
+        //                    {
+        //                        dic = new Dictionary<string, string>(16, StringComparer.OrdinalIgnoreCase);
+        //                    }
+        //                }
+        //            }
+        //            #endregion
+        //        }
+        //        catch (Exception err)
+        //        {
+        //            Log.Write(err, LogType.Error);
+        //        }
+        //    }
+        //    return result;
+        //}
         /// <summary>
         /// 解析Json
         /// </summary>
@@ -78,10 +175,9 @@ namespace CYQ.Data.Tool
                 try
                 {
                     #region 核心逻辑
-                    char c;
                     for (int i = 0; i < json.Length; i++)
                     {
-                        c = json[i];
+                        char c = json[i];
                         if (!cs.IsKeyword(c))//设置关键符号状态。
                         {
                             if (cs.jsonStart)//Json进行中。。。
@@ -269,9 +365,11 @@ namespace CYQ.Data.Tool
 
             if (!string.IsNullOrEmpty(json))
             {
+                Type t = typeof(T);
+                // object entity = Activator.CreateInstance(t);
                 T entity = Activator.CreateInstance<T>();
                 bool hasSetValue = false;
-                List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(typeof(T));
+                List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
                 //string key = string.Empty;
                 StringBuilder key = new StringBuilder(32);
                 StringBuilder value = new StringBuilder();
@@ -331,7 +429,12 @@ namespace CYQ.Data.Tool
                                         {
                                             val = JsonHelper.UnEscape(val, op);
                                         }
-                                        p.SetValue(entity, ConvertTool.ChangeType(val, p.PropertyType), null);
+                                        object o = val;
+                                        if (p.PropertyType.Name != "String")
+                                        {
+                                            o = ConvertTool.ChangeType(val, p.PropertyType);
+                                        }
+                                        p.SetValue(entity, o, null);
                                         hasSetValue = true;
                                         break;
                                     }

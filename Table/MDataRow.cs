@@ -1667,10 +1667,12 @@ namespace CYQ.Data.Table
                         {
                             MDataRow mRow = MDataRow.CreateFrom(value, argTypes[1]);
                             returnObj = Activator.CreateInstance(propType, mRow.Columns.Count);//´´½¨ÊµÀý
+                            Type objListType = returnObj.GetType();
                             foreach (MDataCell mCell in mRow)
                             {
                                 object mObj = GetValue(mCell.ToRow(), argTypes[1]);
-                                returnObj.GetType().GetMethod("Add").Invoke(returnObj, new object[] { mCell.ColumnName, mObj });
+                                MethodInfo mi = objListType.GetMethod("Add");
+                                mi.Invoke(returnObj, new object[] { mCell.ColumnName, mObj });
                             }
                             mRow = null;
                         }

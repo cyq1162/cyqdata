@@ -269,18 +269,18 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 判断是否存在指定的属性
         /// </summary>
-        /// <param name="attrType"></param>
+        /// <param name="searchType"></param>
         /// <param name="pi"></param>
         /// <returns></returns>
-        internal static bool ExistsAttr(Type attrType, PropertyInfo pi, FieldInfo fi)
+        internal static bool ExistsAttr(Type searchType, PropertyInfo pi, FieldInfo fi)
         {
-            string key = pi.DeclaringType.FullName + pi != null ? pi.Name : fi.Name + attrType.Name;
+            string key = (pi != null ? pi.DeclaringType.FullName + pi.Name : fi.DeclaringType.FullName + fi.Name) + searchType.Name;
             int code = key.GetHashCode();
             if (attrExistsCache.ContainsKey(code))
             {
                 return attrExistsCache[code];
             }
-            object[] items = pi != null ? pi.GetCustomAttributes(attrType, true) : fi.GetCustomAttributes(attrType, true);
+            object[] items = pi != null ? pi.GetCustomAttributes(searchType, true) : fi.GetCustomAttributes(searchType, true);
             if (items != null && items.Length > 0)
             {
                 attrExistsCache.Add(code, true);
@@ -289,6 +289,7 @@ namespace CYQ.Data.Tool
             attrExistsCache.Add(code, false);
             return false;
         }
+
         /// <summary>
         /// 获取系统类型，若是Nullable类型，则转为基础类型。
         ///  </summary>
