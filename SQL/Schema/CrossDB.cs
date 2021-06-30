@@ -203,13 +203,14 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 是否存在指定的表名、视图名、存储过程名
         /// </summary>
-        /// <param name="name"></param>
+        /// <param name="newName"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
         {
-            string newConn = GetConn(name, out name, conn);
-            if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+            string newName = name;
+            string newConn = GetConn(newName, out newName, conn);
+            if (string.IsNullOrEmpty(conn) || (name.Contains("..") && newConn.StartsWith(name.Split('.')[0])))//已指定链接，则不切换链接
             {
                 conn = newConn;
             }
@@ -217,9 +218,9 @@ namespace CYQ.Data.SQL
             {
                 DBSchema.GetSchema(conn);
             }
-            if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
+            if (!string.IsNullOrEmpty(newName) && DBSchema.DBScheams.Count > 0)
             {
-                string tableHash = TableInfo.GetHashKey(name);
+                string tableHash = TableInfo.GetHashKey(newName);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     string dbHash = ConnBean.GetHashKey(conn);
@@ -262,18 +263,18 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
             {
-                string newConn = GetConn(name, out name, conn);//可能移到别的库去？
-                if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+                string newName = name;
+                string newConn = GetConn(newName, out newName, conn);//可能移到别的库去？
+                if (string.IsNullOrEmpty(conn) || (name.Contains("..") && newConn.StartsWith(name.Split('.')[0])))//已指定链接，则不切换链接
                 {
                     conn = newConn;
                 }
-                string tableHash = TableInfo.GetHashKey(name);
+                string tableHash = TableInfo.GetHashKey(newName);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     string dbHash = ConnBean.GetHashKey(conn);
                     if (DBSchema.DBScheams.ContainsKey(dbHash))
                     {
-
                         return DBSchema.DBScheams[dbHash].Remove(tableHash, type);
                     }
                 }
@@ -294,16 +295,17 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
             {
-                string newConn = GetConn(name, out name, conn);
-                if (string.IsNullOrEmpty(conn))//已指定链接，则不切换链接
+                string newName = name;
+                string newConn = GetConn(newName, out newName, conn);
+                if (string.IsNullOrEmpty(conn) || (name.Contains("..") && newConn.StartsWith(name.Split('.')[0])))//已指定链接，则不切换链接
                 {
                     conn = newConn;
                 }
-                string tableHash = TableInfo.GetHashKey(name);
+                string tableHash = TableInfo.GetHashKey(newName);
                 string dbHash = ConnBean.GetHashKey(conn);
                 if (DBSchema.DBScheams.ContainsKey(dbHash))
                 {
-                    return DBSchema.DBScheams[dbHash].Add(tableHash, type, name);
+                    return DBSchema.DBScheams[dbHash].Add(tableHash, type, newName);
                 }
 
             }
