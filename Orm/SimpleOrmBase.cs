@@ -557,19 +557,21 @@ namespace CYQ.Data.Orm
             List<PropertyInfo> piList = ReflectTool.GetPropertyList(typeInfo);
             foreach (PropertyInfo item in piList)
             {
-                MDataCell cell = newValueRow[item.Name];
-                if (cell != null && !cell.IsNull && item.CanWrite)
+                if (item.CanWrite)
                 {
-                    try
+                    MDataCell cell = newValueRow[item.Name];
+                    if (cell != null && !cell.IsNull)
                     {
-                        item.SetValue(entity, ConvertTool.ChangeType(cell.Value, item.PropertyType), null);
-                    }
-                    catch (Exception err)
-                    {
-                        Log.Write(err, LogType.Error);
+                        try
+                        {
+                            item.SetValue(entity, ConvertTool.ChangeType(cell.Value, item.PropertyType), null);
+                        }
+                        catch (Exception err)
+                        {
+                            Log.Write(err, LogType.Error);
+                        }
                     }
                 }
-
             }
         }
         #endregion
@@ -586,7 +588,7 @@ namespace CYQ.Data.Orm
             if (!string.IsNullOrEmpty(propName))
             {
                 PropertyInfo pi = typeInfo.GetProperty(propName);
-                if (pi != null)
+                if (pi != null && pi.CanWrite)
                 {
                     MDataCell cell = Action.Data[propName];
                     if (cell != null && !cell.IsNull)

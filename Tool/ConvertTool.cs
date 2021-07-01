@@ -257,14 +257,15 @@ namespace CYQ.Data.Tool
                     }
 
                     Type t = typeof(T);
-                    List<PropertyInfo> pis = ReflectTool.GetPropertyList(t);
+                    List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
+                    List<FieldInfo> fInfoList = ReflectTool.GetFieldList(t);
                     while (reader.Read())
                     {
-                        object obj = Activator.CreateInstance(t);
+                        T obj = Activator.CreateInstance<T>();
 
-                        if (pis.Count > 0)
+                        if (pInfoList.Count > 0)
                         {
-                            foreach (PropertyInfo p in pis)//遍历实体
+                            foreach (PropertyInfo p in pInfoList)//遍历实体
                             {
                                 if (p.CanWrite)
                                 {
@@ -281,7 +282,22 @@ namespace CYQ.Data.Tool
                                 }
                             }
                         }
-                        list.Add((T)obj);
+                        if (fInfoList.Count > 0)
+                        {
+                            foreach (FieldInfo f in fInfoList)//遍历实体
+                            {
+                                object objValue = reader[f.Name];
+                                if (objValue != null && objValue != DBNull.Value)
+                                {
+                                    if (f.FieldType != kv[f.Name])
+                                    {
+                                        objValue = ChangeType(objValue, f.FieldType);//尽量避免类型转换
+                                    }
+                                    f.SetValue(obj, objValue);
+                                }
+                            }
+                        }
+                        list.Add(obj);
                     }
                     kv.Clear();
                     kv = null;

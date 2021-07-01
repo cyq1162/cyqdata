@@ -431,12 +431,15 @@ namespace CYQ.Data.Tool
                                 {
                                     if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
                                     {
-                                        if (p.PropertyType.Name != "String")
+                                        if (p.CanWrite)
                                         {
-                                            o = ConvertTool.ChangeType(val, p.PropertyType);
+                                            if (p.PropertyType.Name != "String")
+                                            {
+                                                o = ConvertTool.ChangeType(val, p.PropertyType);
+                                            }
+                                            p.SetValue(entity, o, null);
+                                            hasSetValue = true;
                                         }
-                                        p.SetValue(entity, o, null);
-                                        hasSetValue = true;
                                         break;
                                     }
                                 }
