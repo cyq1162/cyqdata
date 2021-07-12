@@ -593,7 +593,7 @@ namespace CYQ.Data.Table
         /// <param name="useEmit">是否使用Emit方式转换[数据越多[大于500条]性能越高],不写默认自适应判断</param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public List<T> ToList<T>(params bool[] useEmit)
+        public List<T> ToList<T>(params bool[] useEmit) where T : class
         {
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
