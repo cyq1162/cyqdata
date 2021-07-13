@@ -801,13 +801,20 @@ namespace CYQ.Data.Tool
             }
             if (result.IndexOf("\\") > -1)
             {
-                result = result.Replace("\\\\", "#&#=#");
+                bool has = result.IndexOf("\\\\") > -1;
+                if (has)
+                {
+                    result = result.Replace("\\\\", "#&#=#");
+                }
                 if (op == EscapeOp.Yes)
                 {
                     result = result.Replace("\\t", "\t").Replace("\\r", "\r");
                 }
                 result = result.Replace("\\\"", "\"").Replace("\\n", "\n");//.Replace("\\\\","\\");
-                result = result.Replace("#&#=#", "\\");
+                if (has)
+                {
+                    result = result.Replace("#&#=#", "\\");
+                }
             }
             return result;
         }
@@ -1079,7 +1086,8 @@ namespace CYQ.Data.Tool
                 {
                     #region IEnumerable
                     Type t = obj.GetType();
-                    int len = ReflectTool.GetArgumentLength(ref t);
+                    Type[] argTypes;
+                    int len = ReflectTool.GetArgumentLength(ref t, out argTypes);
                     if (len == 1)
                     {
                         foreach (object o in obj as IEnumerable)
@@ -1112,8 +1120,15 @@ namespace CYQ.Data.Tool
                             }
                             else
                             {
-                                FillEntity(o);
-                                //  Fill(MDataRow.CreateFrom(o));//直接优化成实体。
+                                Type listType = argTypes[0];
+                                if (ReflectTool.GetSystemType(ref listType) == SysType.Custom)
+                                {
+                                    FillEntity(o);
+                                }
+                                else
+                                {
+                                    Fill(MDataRow.CreateFrom(o));//直接优化成实体。
+                                }
                             }
                         }
                     }
