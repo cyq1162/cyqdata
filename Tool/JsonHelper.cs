@@ -1269,6 +1269,11 @@ namespace CYQ.Data.Tool
             }
             else
             {
+                if (valueType.FullName == "System.Object")
+                {
+                    valueType = objValue.GetType();//定位到指定类型。
+                }
+
                 value = Convert.ToString(objValue);
                 DataGroupType group = DataType.GetGroup(DataType.GetSqlType(valueType));
                 noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
