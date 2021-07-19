@@ -165,8 +165,8 @@ namespace CYQ.Data.SQL
                 case "blob":
                 case "mediumblob":
                 case "longblob":
-                case "binary_double":
-                case "binary_float":
+
+
                 case "byte[]":
                 case "oleobject":
                 case "bytea"://postgre
@@ -213,6 +213,7 @@ namespace CYQ.Data.SQL
                     return SqlDbType.Decimal;
                 case "real":
                 case "double":
+                case "binary_double"://oracle
                     return SqlDbType.Real;
                 case "uniqueidentifier":
                 case "guid":
@@ -240,6 +241,7 @@ namespace CYQ.Data.SQL
                 case "object":
                     return SqlDbType.Variant;
                 case "float":
+                case "binary_float"://oracle
                 case "single":
                 case "double precision"://postgresql
                     return SqlDbType.Float;
@@ -349,6 +351,7 @@ namespace CYQ.Data.SQL
                 case "real":
                 case "money":
                 case "double":
+                case "binary_double":
                     return DbType.Double;
                 case "uniqueidentifier":
                 case "guid":
@@ -372,6 +375,7 @@ namespace CYQ.Data.SQL
                     return DbType.SByte;
                 case "float":
                 case "single":
+                case "binary_float":
                     return DbType.Single;
                 case "varnumeric":
                     return DbType.VarNumeric;
