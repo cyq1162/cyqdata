@@ -166,7 +166,7 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        DBInfo dbInfo = DBSchema.GetSchema(conn);
+                        DBInfo dbInfo = DBSchema.GetSchema(conn, false);
                         if (dbInfo != null)
                         {
                             TableInfo info = dbInfo.GetTableInfo(tableHash);
@@ -179,7 +179,7 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    DBInfo dbInfo = DBSchema.GetSchema(AppConfig.DB.DefaultConn);//优先取默认链接
+                    DBInfo dbInfo = DBSchema.GetSchema(AppConfig.DB.DefaultConn, false);//优先取默认链接
                     if (dbInfo != null)
                     {
                         TableInfo info = dbInfo.GetTableInfo(tableHash);
@@ -214,11 +214,11 @@ namespace CYQ.Data.SQL
             {
                 conn = newConn;
             }
-            if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
-            {
-                DBSchema.GetSchema(conn);
-            }
-            if (!string.IsNullOrEmpty(newName) && DBSchema.DBScheams.Count > 0)
+            //if (DBSchema.DBScheams.Count == 0 && !string.IsNullOrEmpty(conn))
+            //{
+            //    DBSchema.GetSchema(conn);
+            //}
+            if (!string.IsNullOrEmpty(newName))// && DBSchema.DBScheams.Count > 0
             {
                 string tableHash = TableInfo.GetHashKey(newName);
                 if (!string.IsNullOrEmpty(conn))
@@ -234,7 +234,7 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        DBInfo dbInfo = DBSchema.GetSchema(conn);
+                        DBInfo dbInfo = DBSchema.GetSchema(conn, false);
                         if (dbInfo != null)
                         {
                             TableInfo info = dbInfo.GetTableInfo(tableHash, type);

@@ -354,8 +354,8 @@ namespace CYQ.Data.Table
                             {
                                 MDataTable insertTable = dt2[1];
                                 insertTable.DynamicData = action;
-                                bool keepid = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
-                                result = insertTable.AcceptChanges((keepid ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
+                                bool keepID = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
+                                result = insertTable.AcceptChanges((keepID ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
                                 if (!result)
                                 {
                                     sourceTable.DynamicData = insertTable.DynamicData;
@@ -1053,7 +1053,7 @@ namespace CYQ.Data.Table
         */
         #endregion
 
-        internal bool NomalInsert(bool keepid)
+        internal bool NomalInsert(bool keepID)
         {
             bool result = true;
             using (MAction action = new MAction(mdt.TableName, _Conn))
@@ -1078,7 +1078,7 @@ namespace CYQ.Data.Table
                     }
                 }
                 action.dalHelper.IsRecordDebugInfo = false || AppDebug.IsContainSysSql;//屏蔽SQL日志记录
-                if (keepid)
+                if (keepID)
                 {
                     action.SetidentityInsertOn();
                 }
@@ -1115,7 +1115,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                if (keepid)
+                if (keepID)
                 {
                     action.SetidentityInsertOff();
                 }

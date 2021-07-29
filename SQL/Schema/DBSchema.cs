@@ -9,7 +9,14 @@ namespace CYQ.Data.SQL
 {
     internal partial class DBSchema
     {
+        /// <summary>
+        /// 首次初始化的数据库
+        /// </summary>
         private static Dictionary<string, DBInfo> _DBScheams = new Dictionary<string, DBInfo>();
+        /// <summary>
+        /// 后续代码初始化的数据库
+        /// </summary>
+        private static Dictionary<string, DBInfo> _DBScheamsTemp = new Dictionary<string, DBInfo>();
         public static Dictionary<string, DBInfo> DBScheams
         {
             get
@@ -30,7 +37,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 获取(并缓存)数据库的“表、视图、存储过程”名称列表。
         /// </summary>
-        public static DBInfo GetSchema(string conn)
+        public static DBInfo GetSchema(string conn, bool isOuterLocking)
         {
             ConnBean cb = ConnBean.Create(conn);
             if (cb != null)
@@ -38,7 +45,11 @@ namespace CYQ.Data.SQL
                 string hash = cb.GetHashKey();
                 if (!_DBScheams.ContainsKey(hash))
                 {
-                    //去掉lock(o)
+                    if (!isOuterLocking && _DBScheamsTemp.ContainsKey(hash))
+                    {
+                        return _DBScheamsTemp[hash];
+                    }
+
                     lock (o)
                     {
                         if (!_DBScheams.ContainsKey(hash))
@@ -46,9 +57,19 @@ namespace CYQ.Data.SQL
                             DBInfo dbSchema = GetSchemaDic(cb.ConnName);
                             if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
                             {
-                                if (!_DBScheams.ContainsKey(hash))
+                                if (isOuterLocking)//外部有lock，外部不会产生foreach代码时。
                                 {
-                                    _DBScheams.Add(hash, dbSchema);
+                                    if (!_DBScheams.ContainsKey(hash))
+                                    {
+                                        _DBScheams.Add(hash, dbSchema);
+                                    }
+                                }
+                                else
+                                {
+                                    if (!_DBScheamsTemp.ContainsKey(hash))
+                                    {
+                                        _DBScheamsTemp.Add(hash, dbSchema);
+                                    }
                                 }
                             }
                             return dbSchema;
@@ -164,7 +185,7 @@ namespace CYQ.Data.SQL
                         {
                             foreach (string item in connNames)
                             {
-                                GetSchema(item);
+                                GetSchema(item, true);
                             }
                         }
                     }

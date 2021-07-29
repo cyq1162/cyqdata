@@ -650,7 +650,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static DBInfo GetDBInfo(string conn)
         {
-            return DBSchema.GetSchema(conn);
+            return DBSchema.GetSchema(conn, false);
         }
         public static TableInfo GetTableInfo(string tableName)
         {
