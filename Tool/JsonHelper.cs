@@ -1118,6 +1118,10 @@ namespace CYQ.Data.Tool
                             {
                                 bodyItems.Add(o.ToString());
                             }
+                            else if (o is MDataRow)
+                            {
+                                Fill(o as MDataRow);
+                            }
                             else
                             {
                                 Type listType = argTypes[0];
