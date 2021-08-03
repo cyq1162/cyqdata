@@ -653,11 +653,19 @@ namespace CYQ.Data.SQL
                     }
                     return "decimal(" + maxSize + "," + scale + ")";
                 case SqlDbType.Float:
+                    if (dalTo == DataBaseType.Oracle && ms.SqlTypeName == "BINARY_FLOAT")
+                    {
+                        return ms.SqlTypeName;
+                    }
                     return "float";
                 case SqlDbType.Real:
                     switch (dalTo)
                     {
                         case DataBaseType.Oracle:
+                            if (ms.SqlTypeName == "BINARY_DOUBLE")
+                            {
+                                return ms.SqlTypeName;
+                            }
                             return maxSize == -1 ? "NUMBER" : "NUMBER(" + maxSize + "," + scale + ")";
                         case DataBaseType.Access:
                             return "double";
@@ -756,7 +764,7 @@ namespace CYQ.Data.SQL
                                 }
                                 return t + "(" + maxSize + ")";
                             }
-                        #endregion
+                            #endregion
                         case DataBaseType.SQLite:
                             return (maxSize < 1 || maxSize > 65535) ? "TEXT" : "TEXT(" + maxSize + ")";
                         case DataBaseType.MySql://mysql没有nchar之类的。
@@ -793,7 +801,7 @@ namespace CYQ.Data.SQL
                             {
                                 return t + "(" + maxSize + ")";
                             }
-                        #endregion
+                            #endregion
                         //return (maxSize < 1 || maxSize > 8000) ? "longtext" : ();
                         case DataBaseType.Oracle:
                             if (maxSize < 1 || maxSize > 4000 || (maxSize > 2000 && (sqlType == SqlDbType.NVarChar || sqlType == SqlDbType.Char))
