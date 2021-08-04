@@ -17,7 +17,7 @@ namespace CYQ.Data.Tool
         static MDictionary<string, List<FieldInfo>> fieldCache = new MDictionary<string, List<FieldInfo>>();
         static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
         static MDictionary<string, Type[]> argumentCache = new MDictionary<string, Type[]>();
-        static Dictionary<int, bool> attrExistsCache = new Dictionary<int, bool>();
+        static MDictionary<int, bool> attrExistsCache = new MDictionary<int, bool>();
         /// <summary>
         /// 获取属性列表
         /// </summary>
