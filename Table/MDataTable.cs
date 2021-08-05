@@ -598,7 +598,9 @@ namespace CYQ.Data.Table
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
             {
-                if (((Rows.Count > 10 && useEmit.Length == 0) || (useEmit.Length > 0 && useEmit[0])) && typeof(T).BaseType.Name != "OrmBase")//远程代理实体的属性会变，无法用Emit
+                Type t = typeof(T);
+                bool isOrmBase = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
+                if (((Rows.Count > 10 && useEmit.Length == 0) || (useEmit.Length > 0 && useEmit[0])) && !isOrmBase)//远程代理实体的属性会变，无法用Emit
                 {
                     FastToT<T>.EmitHandle emit = FastToT<T>.Create(this.Columns);
                     foreach (MDataRow row in Rows)
@@ -610,7 +612,7 @@ namespace CYQ.Data.Table
                 {
                     foreach (MDataRow row in Rows)
                     {
-                        list.Add(row.ToEntity<T>());
+                        list.Add(row.ToEntity<T>(isOrmBase));
                     }
 
                 }

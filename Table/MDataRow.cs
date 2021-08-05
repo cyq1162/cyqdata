@@ -963,16 +963,27 @@ namespace CYQ.Data.Table
             return IOHelper.Write(fileName, ToJson(op));
         }
         */
+        public T ToEntity<T>()
+        {
+            Type t = typeof(T);
+            bool isOrmBase = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
+            return ToEntity<T>(isOrmBase);
+        }
         /// <summary>
         /// 转成实体
         /// </summary>
         /// <typeparam name="T">实体名称</typeparam>
-        public T ToEntity<T>()
+        internal T ToEntity<T>(bool tIsOrmBase)
         {
-            FastToT<T>.EmitHandle emit = FastToT<T>.Create();
-            return emit(this);
-
-            //return (T)ToEntity(typeof(T));
+            if (tIsOrmBase)
+            {
+                return (T)ToEntity(typeof(T));
+            }
+            else
+            {
+                FastToT<T>.EmitHandle emit = FastToT<T>.Create();
+                return emit(this);
+            }
         }
         internal object ToEntity(Type t)
         {
