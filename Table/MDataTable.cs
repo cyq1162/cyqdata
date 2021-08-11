@@ -542,10 +542,10 @@ namespace CYQ.Data.Table
         /// 将数据表绑定到列表控件
         /// </summary>
         /// <param name="control">列表控件[包括Repeater/DataList/GridView/DataGrid等]</param>
-        /// <param name="nodeid">当Control为XHtmlAction对象时，需要指定绑定的节点id</param>
-        public void Bind(object control, string nodeid)
+        /// <param name="nodeID">当Control为XHtmlAction对象时，需要指定绑定的节点id</param>
+        public void Bind(object control, string nodeID)
         {
-            MBindUI.Bind(control, this, nodeid);
+            MBindUI.Bind(control, this, nodeID);
         }
         /// <summary>
         /// 将新表的行放到原表的下面。
