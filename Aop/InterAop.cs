@@ -142,7 +142,7 @@ namespace CYQ.Data.Aop
                                     {
                                         return GetFromConfig();//重新去缓存里拿。
                                     }
-                                    _IsLoadCompleted = true;
+                                    
                                     System.Reflection.Assembly ass = System.Reflection.Assembly.Load(aopItem[1]);
                                     if (ass != null)
                                     {
@@ -155,6 +155,7 @@ namespace CYQ.Data.Aop
                                                 Error.Throw(aopItem[0] + " should inherit from IAop.");
                                             }
                                             _Cache.Set(key, instance, 1440, AppConst.AssemblyPath + aopItem[1].Replace(".dll", "") + ".dll");
+                                            _IsLoadCompleted = true;
                                             aop.OnLoad();
                                         }
                                     }
@@ -163,7 +164,7 @@ namespace CYQ.Data.Aop
                             }
                             catch (Exception err)
                             {
-                                string errMsg = err.Message + "--Web.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format : ClassFullName,AssemblyName) ";
+                                string errMsg = err.Message + "--Web|App.config need add a config item,for example:<add key=\"Aop\" value=\"Web.Aop.AopAction,Aop\" />(value format : ClassFullName,AssemblyName) ";
                                 Error.Throw(errMsg);
                             }
                         }
