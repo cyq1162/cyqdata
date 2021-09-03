@@ -138,7 +138,7 @@ namespace CYQ.Data.SQL
                         if (isOk)
                         {
 
-                            return string.Format(tempTablePagerWithidentity, DateTime.Now.Millisecond, topN, primaryKey, tableName, where, pageSize, columns, rowStart, rowEnd, orderBy);
+                            return string.Format(tempTablePagerWithIdentity, DateTime.Now.Millisecond, topN, primaryKey, tableName, where, pageSize, columns, rowStart, rowEnd, orderBy);
                         }
                     }
                     return string.Format(tempTablePager, DateTime.Now.Millisecond, pageIndex * pageSize + " " + columns, tableName, where, pageSize, rowStart, rowEnd, orderBy);
@@ -189,7 +189,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 临时表分页（带自增加序列）
         /// </summary>
-        private const string tempTablePagerWithidentity = @"select top {1} cast({2} as int) cyqrowid,cyqrownum=identity(int) into #tmp{0} from {3} where {4} select top {5} {6} from #tmp{0} left join {3} on {2}=cyqrowid where cyqrownum between {7} and {8} {9} drop table #tmp{0}";
+        private const string tempTablePagerWithIdentity = @"select top {1} cast({2} as int) cyqrowid,cyqrownum=identity(int) into #tmp{0} from {3} where {4} select top {5} {6} from #tmp{0} left join {3} on {2}=cyqrowid where cyqrownum between {7} and {8} {9} drop table #tmp{0}";
 
         ///// <summary>
         ///// 格式化where，需要有order by
