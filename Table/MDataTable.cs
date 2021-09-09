@@ -701,7 +701,11 @@ namespace CYQ.Data.Table
                     result = action.Delete();
                     break;
                 case AcceptOp.Auto:
-                    result = action.Auto();
+                    result = action.Auto(false);
+                    break;
+                case AcceptOp.Auto | AcceptOp.Insert:
+                case AcceptOp.Auto | AcceptOp.InsertWithID:
+                    result = action.Auto(true);
                     break;
             }
             if (result && AppConfig.Cache.IsAutoCache)

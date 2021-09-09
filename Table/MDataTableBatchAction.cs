@@ -289,7 +289,7 @@ namespace CYQ.Data.Table
                 return BulkCopyUpdate();//只有一个主键，没有外键关联，同时只有基础类型。
             }
         }
-        internal bool Auto()
+        internal bool Auto(bool isOnlyInsert)
         {
             bool result = true;
 
@@ -339,7 +339,7 @@ namespace CYQ.Data.Table
 
                             MDataTable[] dt2 = dt.Split(SqlCreate.GetWhereIn(keyColumn, keyTable.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DataBaseType.None));//这里不需要格式化查询条件。
                             result = dt2[0].Rows.Count == 0;
-                            if (!result)
+                            if (!result && !isOnlyInsert)
                             {
                                 MDataTable updateTable = dt2[0];
                                 updateTable.SetState(2, BreakOp.Null);
@@ -355,7 +355,7 @@ namespace CYQ.Data.Table
                                 MDataTable insertTable = dt2[1];
                                 insertTable.DynamicData = action;
                                 bool keepID = !insertTable.Rows[0].PrimaryCell.IsNullOrEmpty;
-                                result = insertTable.AcceptChanges((keepID ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn, columnName);
+                                result = insertTable.AcceptChanges((keepID ? AcceptOp.InsertWithID : AcceptOp.Insert), _Conn);
                                 if (!result)
                                 {
                                     sourceTable.DynamicData = insertTable.DynamicData;
@@ -423,7 +423,7 @@ namespace CYQ.Data.Table
                                 action.Data.SetState(1, BreakOp.Null);
                                 result = action.Insert(InsertOp.None);
                             }
-                            else
+                            else if (!isOnlyInsert)
                             {
                                 action.Data.SetState(2, BreakOp.Null);
                                 result = action.Update(where);
@@ -545,7 +545,7 @@ namespace CYQ.Data.Table
                             sqlTran.Commit();
                         }
                     }
-                    
+
                 }
                 return true;
             }
@@ -671,7 +671,7 @@ namespace CYQ.Data.Table
             {
                 _dalHelper = DalCreate.CreateDal(_Conn);
                 _dalHelper.IsWriteLogOnError = false;
-                if (TranLevel!= IsolationLevel.Unspecified)//设置事务等级。
+                if (TranLevel != IsolationLevel.Unspecified)//设置事务等级。
                 {
                     _dalHelper.TranLevel = TranLevel;
                 }
@@ -864,9 +864,9 @@ namespace CYQ.Data.Table
                 DalBase sourceHelper = action.dalHelper;
                 if (_dalHelper != null)
                 {
-                    bool connIsChange=_dalHelper.DataBaseName!=action.DataBaseName;
+                    bool connIsChange = _dalHelper.DataBaseName != action.DataBaseName;
                     action.dalHelper = _dalHelper;//1、如链接从xxSplitConn 切换回xxConn（主事务链接）
-                    if(connIsChange && action.TableName!=mdt.TableName)
+                    if (connIsChange && action.TableName != mdt.TableName)
                     {
                         action.TableName = mdt.TableName;//2、则表名需要用原始的。【xxSplitConn..xxTableName】
                     }

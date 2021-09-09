@@ -895,3 +895,5 @@
 668：修正：JsonHelper Fill(object) 为List<MDataRow>类型的异常问题。(2021-08-03)【V5.8.4.4】
 669：修正：ReflectTool.ExistsAttr 线程安全问题引发的：索引超出了数组界限。(2021-08-04)
 670：修正：MDataTable.ToList<T> T为继承自OrmBase的问题。(2021-08-05)【V5.8.4.5】
+------------------------------------------------------------------------------
+671：优化：MDataTable.AcceptChanges(AcceptOp.Auto | AcceptOp.Insert,..)新增组合（忽略更新，仅插入）(2021-09-09)【V5.8.4.6】
