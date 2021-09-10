@@ -897,3 +897,4 @@
 670：修正：MDataTable.ToList<T> T为继承自OrmBase的问题。(2021-08-05)【V5.8.4.5】
 ------------------------------------------------------------------------------
 671：优化：MDataTable.AcceptChanges(AcceptOp.Auto | AcceptOp.Insert,..)新增组合（忽略更新，仅插入）(2021-09-09)【V5.8.4.6】
+672：修正：AppConfig.EntitySuffix 生成的实体类的后缀不生效的问题。(2021-09-10)

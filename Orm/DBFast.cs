@@ -327,7 +327,7 @@ namespace CYQ.Data.Orm
                 }
 
             }
-            if (string.IsNullOrEmpty(tName))
+            if (!string.IsNullOrEmpty(tName))
             {
                 t = null;
                 if (tName.EndsWith(AppConfig.EntitySuffix))
