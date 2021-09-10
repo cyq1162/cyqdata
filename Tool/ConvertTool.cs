@@ -267,7 +267,7 @@ namespace CYQ.Data.Tool
                         {
                             foreach (PropertyInfo p in pInfoList)//遍历实体
                             {
-                                if (p.CanWrite)
+                                if (p.CanWrite && kv.ContainsKey(p.Name))
                                 {
 
                                     object objValue = reader[p.Name];
@@ -286,14 +286,17 @@ namespace CYQ.Data.Tool
                         {
                             foreach (FieldInfo f in fInfoList)//遍历实体
                             {
-                                object objValue = reader[f.Name];
-                                if (objValue != null && objValue != DBNull.Value)
+                                if (kv.ContainsKey(f.Name))
                                 {
-                                    if (f.FieldType != kv[f.Name])
+                                    object objValue = reader[f.Name];
+                                    if (objValue != null && objValue != DBNull.Value)
                                     {
-                                        objValue = ChangeType(objValue, f.FieldType);//尽量避免类型转换
+                                        if (f.FieldType != kv[f.Name])
+                                        {
+                                            objValue = ChangeType(objValue, f.FieldType);//尽量避免类型转换
+                                        }
+                                        f.SetValue(obj, objValue);
                                     }
-                                    f.SetValue(obj, objValue);
                                 }
                             }
                         }

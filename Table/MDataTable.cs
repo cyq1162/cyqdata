@@ -59,16 +59,48 @@ namespace CYQ.Data.Table
                     mcs.valueType = item.DataType;
                     mdt.Columns.Add(mcs);
                 }
-                foreach (DataRow row in dt.Rows)
+                #region 属性还原
+                string[] cellStates = null;
+                if (dt.ExtendedProperties.ContainsKey("CellState"))// 还原记录总数
                 {
+                    int total = 0, rowCount = 0, columnCount = 0;
+                    string ra = Convert.ToString(dt.ExtendedProperties["RecordsAffected"]);
+                    string rc = Convert.ToString(dt.ExtendedProperties["RowsCount"]);
+                    string cc = Convert.ToString(dt.ExtendedProperties["ColumnsCount"]);
+                    string cs = Convert.ToString(dt.ExtendedProperties["CellState"]);
+                    if (int.TryParse(ra, out total) && int.TryParse(rc, out rowCount) && total >= rowCount)
+                    {
+                        mdt.RecordsAffected = total;
+                    }
+                    if (!string.IsNullOrEmpty(cs) && int.TryParse(cc, out columnCount) && columnCount == dt.Columns.Count)
+                    {
+                        cellStates = cs.Split(';');
+                    }
+                }
+                #endregion
+
+
+                for (int k = 0; k < dt.Rows.Count; k++)
+                {
+                    string[] states = null;
+                    if (cellStates != null && cellStates.Length > k)
+                    {
+                        states = cellStates[k].Split(',');
+                    }
+                    DataRow row = dt.Rows[k];
                     MDataRow mdr = mdt.NewRow();
                     for (int i = 0; i < dt.Columns.Count; i++)
                     {
                         mdr[i].Value = row[i];
+                        if (states != null && states.Length > i)
+                        {
+                            mdr[i].State = int.Parse(states[i]);
+                        }
                     }
-                    mdt.Rows.Add(mdr, row.RowState != DataRowState.Modified);
+                    mdt.Rows.Add(mdr, states == null && row.RowState != DataRowState.Modified);
                 }
             }
+
             return mdt;
         }
         /// <summary>
@@ -367,30 +399,46 @@ namespace CYQ.Data.Table
         /// </summary>
         public DataTable ToDataTable()
         {
+            return ToDataTable(false);
+        }
+        /// <summary>
+        /// 转换成DataTable
+        /// </summary>
+        /// <param name="isAddExtend">是否追加【值状态、记录总数】到扩展属性</param>
+        /// <returns></returns>
+        public DataTable ToDataTable(bool isAddExtend)
+        {
             DataTable dt = new DataTable(_TableName);
+
             if (Columns != null && Columns.Count > 0)
             {
-                bool checkDuplicate = Columns.CheckDuplicate;
-                List<string> duplicateName = new List<string>();
-                for (int j = 0; j < Columns.Count; j++)
+                int count = Columns.Count;
+                for (int j = 0; j < count; j++)
                 {
                     MCellStruct item = Columns[j];
-                    if (string.IsNullOrEmpty(item.ColumnName))
+                    string columnName = item.ColumnName;
+                    if (string.IsNullOrEmpty(columnName))
                     {
-                        item.ColumnName = "Empty_" + item;
+                        item.ColumnName = "Empty_" + j;
                     }
-                    if (!checkDuplicate && dt.Columns.Contains(item.ColumnName))//去重。
+                    if (dt.Columns.Contains(columnName))//去重。
                     {
-                        string rndName = Guid.NewGuid().ToString();
-                        dt.Columns.Add(rndName, item.ValueType);
-                        duplicateName.Add(rndName);
-                        continue;
+                        columnName = columnName + "_" + j;
                     }
                     dt.Columns.Add(item.ColumnName, item.ValueType);
                 }
-                int count = dt.Columns.Count;
-                foreach (MDataRow row in Rows)
+                StringBuilder stateSB = new StringBuilder();
+                for (int k = 0; k < Rows.Count; k++)
                 {
+                    if (isAddExtend)
+                    {
+                        if (k > 0)
+                        {
+                            stateSB.Append(";");
+                        }
+                    }
+                    MDataRow row = Rows[k];
+                    int[] states = isAddExtend ? new int[count] : null;
                     DataRow dr = dt.NewRow();
                     for (int i = 0; i < count; i++)
                     {
@@ -402,13 +450,23 @@ namespace CYQ.Data.Table
                         {
                             dr[i] = row[i].Value;
                         }
+                        if (isAddExtend)
+                        {
+                            if (i > 0)
+                            {
+                                stateSB.Append(",");
+                            }
+                            stateSB.Append(row[i].State);
+                        }
                     }
-
                     dt.Rows.Add(dr);
                 }
-                for (int i = 0; i < duplicateName.Count; i++)
+                if (isAddExtend)
                 {
-                    dt.Columns.Remove(duplicateName[i]);
+                    dt.ExtendedProperties.Add("RowsCount", this.Rows.Count);
+                    dt.ExtendedProperties.Add("ColumnsCount", this.Columns.Count);
+                    dt.ExtendedProperties.Add("RecordsAffected", this.RecordsAffected);
+                    dt.ExtendedProperties.Add("CellState", stateSB.ToString());
                 }
             }
             dt.AcceptChanges();

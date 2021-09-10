@@ -84,7 +84,7 @@ namespace CYQ.Data.UI
                             if (source is MDataTable)
                             {
                                 dt = source as MDataTable;
-                                source = dt.ToDataTable().DefaultView;
+                                source = dt.ToDataTable(true).DefaultView;
                             }
                             p.SetValue(ct, source, null);//winform
                             p = t.GetProperty("SelectedValuePath");//判断是不是下拉列表
