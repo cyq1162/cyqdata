@@ -1300,7 +1300,7 @@ namespace CYQ.Data
                 {
                     WriteError(UsingConnBean.ConnDataBaseType + ".OpenCon():" + UsingConnBean.ErrorMsg);
                 }
-                if (IsRecordDebugInfo)
+                if (IsRecordDebugInfo && _watch != null)
                 {
                     _watch.Start();
                 }

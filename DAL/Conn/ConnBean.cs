@@ -249,7 +249,7 @@ namespace CYQ.Data
                 // xml path={0}
                 return DataBaseType.Xml;
             }
-            if (connString.Contains(".mdb") || connString.Contains(".accdb"))
+            if (connString.Contains(".mdb") || connString.Contains(".accdb") || connString.Contains(".xls") || connString.Contains(".xlsx"))
             {
                 //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
                 //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
