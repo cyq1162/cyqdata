@@ -97,7 +97,9 @@ namespace System.Web
                     session = new HttpSessionState();
                 }
             }
-            catch { }
+            catch{
+               // CYQ.Data.Log.WriteLogToTxt(err);
+            }
             server = new HttpServerUtility();
             page = new Page();
         }

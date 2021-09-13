@@ -24,7 +24,7 @@ namespace System.Web
         {
             get
             {
-                if (context == null || context.Session == null)
+                if (SessionIsNull())
                 {
                     return null;
                 }
@@ -36,7 +36,7 @@ namespace System.Web
         {
             get
             {
-                if (context == null || context.Session == null)
+                if (SessionIsNull())
                 {
                     return false;
                 }
@@ -50,7 +50,7 @@ namespace System.Web
         {
             get
             {
-                if (context == null || context.Session == null)
+                if (SessionIsNull())
                 {
                     return null;
                 }
@@ -61,7 +61,7 @@ namespace System.Web
 
         public void Clear()
         {
-            if (context == null || context.Session == null)
+            if (SessionIsNull())
             {
                 return;
             }
@@ -80,7 +80,7 @@ namespace System.Web
 
         public void Remove(string key)
         {
-            if (context == null || context.Session == null)
+            if (SessionIsNull())
             {
                 return;
             }
@@ -89,7 +89,7 @@ namespace System.Web
 
         public void Set(string key, byte[] value)
         {
-            if (context == null || context.Session == null)
+            if (SessionIsNull())
             {
                 return;
             }
@@ -98,12 +98,27 @@ namespace System.Web
 
         public bool TryGetValue(string key, out byte[] value)
         {
-            if (context == null || context.Session == null)
+            if (SessionIsNull())
             {
                 value = null;
                 return false;
             }
             return context.Session.TryGetValue(key, out value);
+        }
+        private bool SessionIsNull()
+        {
+            if (context == null)
+            {
+                return true;
+            }
+            try
+            {
+                return context.Session == null;//可能抛异常
+            }
+            catch
+            {
+                return true;
+            }
         }
     }
 }
