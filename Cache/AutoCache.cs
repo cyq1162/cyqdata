@@ -48,7 +48,7 @@ namespace CYQ.Data.Cache
                             List<MDataTable> listObj = obj as List<MDataTable>;
                             foreach (MDataTable table in listObj)
                             {
-                                listObj.Add(table.Clone());
+                                list.Add(table.Clone());
                             }
                         }
                         else
