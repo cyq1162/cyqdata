@@ -339,15 +339,22 @@ namespace CYQ.Data.Table
 
                             MDataTable[] dt2 = dt.Split(SqlCreate.GetWhereIn(keyColumn, keyTable.GetColumnItems<string>(columnName, BreakOp.NullOrEmpty, true), DataBaseType.None));//这里不需要格式化查询条件。
                             result = dt2[0].Rows.Count == 0;
-                            if (!result && !isOnlyInsert)
+                            if (!result)
                             {
-                                MDataTable updateTable = dt2[0];
-                                updateTable.SetState(2, BreakOp.Null);
-                                updateTable.DynamicData = action;
-                                result = updateTable.AcceptChanges(AcceptOp.Update, _Conn, columnName);
-                                if (!result)
+                                if (isOnlyInsert)
                                 {
-                                    sourceTable.DynamicData = updateTable.DynamicData;
+                                    result = true;
+                                }
+                                else
+                                {
+                                    MDataTable updateTable = dt2[0];
+                                    updateTable.SetState(2, BreakOp.Null);
+                                    updateTable.DynamicData = action;
+                                    result = updateTable.AcceptChanges(AcceptOp.Update, _Conn, columnName);
+                                    if (!result)
+                                    {
+                                        sourceTable.DynamicData = updateTable.DynamicData;
+                                    }
                                 }
                             }
                             if (result && dt2[1].Rows.Count > 0)
