@@ -9,11 +9,10 @@ namespace CYQ.Data
 {
     internal partial class OleDbDal : DalBase
     {
-        bool isExcel = false;
         public OleDbDal(ConnObject co)
             : base(co)
         {
-            isExcel = co.Master.ConnString.ToLower().Contains(".xls");
+
         }
         public override bool AddParameters(string parameterName, object value, DbType dbType, int size, ParameterDirection direction)
         {
@@ -77,8 +76,10 @@ namespace CYQ.Data
         }
         public override Dictionary<string, string> GetViews()
         {
-            if (isExcel)
+            switch (ConnObj.Master.ConnDataBaseType)
             {
+                case Data.DataBaseType.Excel:
+                case Data.DataBaseType.FoxPro:
                 return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
             return GetSchemaDic("V");

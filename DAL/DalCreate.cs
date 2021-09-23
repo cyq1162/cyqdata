@@ -92,6 +92,8 @@ namespace CYQ.Data
                 case DataBaseType.MsSql:
                     return new MsSqlDal(co);
                 case DataBaseType.Access:
+                case DataBaseType.Excel:
+                case DataBaseType.FoxPro:
                     return new OleDbDal(co);
                 case DataBaseType.Oracle:
                     return new OracleDal(co);

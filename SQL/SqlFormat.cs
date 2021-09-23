@@ -34,6 +34,7 @@ namespace CYQ.Data.SQL
                     switch (dalType)
                     {
                         case DataBaseType.Access:
+                        case DataBaseType.Excel:
                             return "[" + name + "]";
                         case DataBaseType.MsSql:
                         case DataBaseType.Sybase:
@@ -47,6 +48,7 @@ namespace CYQ.Data.SQL
                             return "\"" + name + "\"";
                         case DataBaseType.Txt:
                         case DataBaseType.Xml:
+                        case DataBaseType.FoxPro:
                             return NotKeyword(name);
                     }
                 }

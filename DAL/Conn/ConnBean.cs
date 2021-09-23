@@ -113,7 +113,7 @@ namespace CYQ.Data
             if (!string.IsNullOrEmpty(key))
             {
                 int hash = key.GetHashCode();
-                
+
                 ConnBean cb = connBeanDicCache[hash];
                 if (cb != null)
                 {
@@ -183,23 +183,29 @@ namespace CYQ.Data
         /// </summary>
         public static string RemoveConnProvider(DataBaseType dal, string connString)
         {
-            if (dal != DataBaseType.Access)
+            switch (dal)
             {
-                string conn = connString.ToLower();
-                int index = conn.IndexOf("provider");
-                if (index > -1 && index < connString.Length - 5 && (connString[index + 8] == '=' || connString[index + 9] == '='))
+                case DataBaseType.Access:
+                case DataBaseType.Excel:
+                case DataBaseType.FoxPro:
+                    return connString;
+            }
+
+            string conn = connString.ToLower();
+            int index = conn.IndexOf("provider");
+            if (index > -1 && index < connString.Length - 5 && (connString[index + 8] == '=' || connString[index + 9] == '='))
+            {
+                int end = conn.IndexOf(';', index);
+                if (end == -1)
                 {
-                    int end = conn.IndexOf(';', index);
-                    if (end == -1)
-                    {
-                        connString = connString.Remove(index);
-                    }
-                    else
-                    {
-                        connString = connString.Remove(index, end - index + 1);
-                    }
+                    connString = connString.Remove(index);
+                }
+                else
+                {
+                    connString = connString.Remove(index, end - index + 1);
                 }
             }
+
             return connString;
         }
         public static DataBaseType GetDataBaseType(string connString)
@@ -249,11 +255,21 @@ namespace CYQ.Data
                 // xml path={0}
                 return DataBaseType.Xml;
             }
-            if (connString.Contains(".mdb") || connString.Contains(".accdb") || connString.Contains(".xls") || connString.Contains(".xlsx"))
+            if (connString.Contains(".mdb") || connString.Contains(".accdb"))
             {
                 //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
                 //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
                 return DataBaseType.Access;
+            }
+            if (connString.Contains(".xls") || connString.Contains(".xlsx"))
+            {
+                //"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=D:\\xxx.xls;Extended Properties='Excel 12.0;HDR=Yes;'";
+                return DataBaseType.Excel;
+            }
+            if (connString.Contains(".dbf"))
+            {
+                //"Provider=VFPOLEDB.1;Data Source=F:\\10443.dbf";
+                return DataBaseType.FoxPro;
             }
             if (connString.Contains(".db;") || connString.Contains(".db3;"))
             {

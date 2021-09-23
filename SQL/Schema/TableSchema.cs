@@ -322,6 +322,8 @@ namespace CYQ.Data.SQL
                                     #endregion
                                     break;
                                 case DataBaseType.Access:
+                                case DataBaseType.Excel:
+                                case DataBaseType.FoxPro:
                                     #region Access
                                     DataTable keyDt, valueDt;
                                     string sqlText = SqlFormat.BuildSqlWithWhereOneEqualsTow(tableName);// string.Format("select * from {0} where 1=2", tableName);

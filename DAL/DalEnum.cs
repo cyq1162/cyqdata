@@ -14,7 +14,8 @@ namespace CYQ.Data
         /// MSSQL[2000/2005/2008/2012/...]
         /// </summary>
         MsSql,
-        // Excel,
+        FoxPro,
+        Excel,
         Access,
         Oracle,
         MySql,

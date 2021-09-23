@@ -135,21 +135,34 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
-                        object value = cell.Value;
-                        DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
-                        if (dbType == DbType.String && cell.StringValue == "")
+                        if (_action.DataBaseType == DataBaseType.FoxPro)
                         {
-                            if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                            string value = "\"" + cell.StringValue + "\",";
+                            if (cell.Struct.SqlType == SqlDbType.DateTime)
                             {
-                                value = " ";//Oracle not null 字段，不允许设置空值。
+                                value = "{^" + cell.StringValue + "},";
                             }
-                            if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
-                            {
-                                value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
-                            }
+                            //不支持参数化
+                            _TempSql2.Append(value);
                         }
-                        _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                        else
+                        {
+                            object value = cell.Value;
+                            DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
+                            if (dbType == DbType.String && cell.StringValue == "")
+                            {
+                                if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                                {
+                                    value = " ";//Oracle not null 字段，不允许设置空值。
+                                }
+                                if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
+                                {
+                                    value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                                }
+                            }
+                            _TempSql2.Append(_action.dalHelper.Pre + cell.ColumnName + ",");
+                            _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                        }
                     }
                     isCanDo = true;
                 }
@@ -270,21 +283,34 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        object value = cell.Value;
-                        DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
-                        if (dbType == DbType.String && cell.StringValue == "")
+                        if (_action.DataBaseType == DataBaseType.FoxPro)
                         {
-                            if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                            string value = "\"" + cell.StringValue + "\",";
+                            if (cell.Struct.SqlType == SqlDbType.DateTime)
                             {
-                                value = " ";//Oracle not null 字段，不允许设置空值。
+                                value = "{^" + cell.StringValue + "},";
                             }
-                            if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
-                            {
-                                value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
-                            }
+                            //不支持参数化
+                            _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=" + value);
                         }
-                        _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
-                        _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=" + _action.dalHelper.Pre + cell.ColumnName + ",");
+                        else
+                        {
+                            object value = cell.Value;
+                            DbType dbType = DataType.GetDbType(cell.Struct.SqlType.ToString(), _action.DataBaseType);
+                            if (dbType == DbType.String && cell.StringValue == "")
+                            {
+                                if (_action.DataBaseType == DataBaseType.Oracle && !cell.Struct.IsCanNull)
+                                {
+                                    value = " ";//Oracle not null 字段，不允许设置空值。
+                                }
+                                if (_action.DataBaseType == DataBaseType.MySql && cell.Struct.MaxSize == 36)
+                                {
+                                    value = DBNull.Value;//MySql 的char36 会当成guid处理，不能为空，只能为null。
+                                }
+                            }
+                            _action.dalHelper.AddParameters(_action.dalHelper.Pre + cell.ColumnName, value, dbType, cell.Struct.MaxSize, ParameterDirection.Input);
+                            _TempSql.Append(SqlFormat.Keyword(cell.ColumnName, _action.DataBaseType) + "=" + _action.dalHelper.Pre + cell.ColumnName + ",");
+                        }
                     }
                     isCanDo = true;
                 }
@@ -339,7 +365,10 @@ namespace CYQ.Data.SQL
                 //return "set rowcount 1 select " + columnNames + " from " + TableName + " where " + FormatWhere(whereObj) + " set rowcount 0";
                 case DataBaseType.MsSql:
                 case DataBaseType.Access:
+                case DataBaseType.Excel:
                     return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + FormatWhere(whereObj);
+                case DataBaseType.FoxPro://需要有order by 
+                    return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + AddOrderByWithCheck(FormatWhere(whereObj), _action.Data.PrimaryCell.ColumnName);
                 case DataBaseType.Oracle:
                     return "select " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where rownum=1 and " + FormatWhere(whereObj);
                 case DataBaseType.SQLite:
