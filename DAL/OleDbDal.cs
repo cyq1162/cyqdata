@@ -80,7 +80,7 @@ namespace CYQ.Data
             {
                 case Data.DataBaseType.Excel:
                 case Data.DataBaseType.FoxPro:
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             }
             return GetSchemaDic("V");
         }
@@ -92,34 +92,32 @@ namespace CYQ.Data
             try
             {
                 Con.Open();
+                if (type == "U")
+                {
+                    dt = Con.GetSchema("Tables", new string[] { null, null, null, "Table" });
+                }
+                else
+                {
+                    dt = Con.GetSchema("Views");
+                }
+                Con.Close();
+                if (dt != null && dt.Rows.Count > 0)
+                {
+                    string tableName = string.Empty;
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        tableName = Convert.ToString(row["TABLE_NAME"]);
+                        if (!tables.ContainsKey(tableName))
+                        {
+                            tables.Add(tableName, string.Empty);
+                        }
+                    }
+                    dt = null;
+                }
             }
             catch (Exception err)
             {
                 Log.Write(err, LogType.DataBase);
-                return tables;
-            }
-           
-            if (type == "U")
-            {
-                dt = Con.GetSchema("Tables", new string[] { null, null, null, "Table" });
-            }
-            else
-            {
-                dt = Con.GetSchema("Views");
-            }
-            Con.Close();
-            if (dt != null && dt.Rows.Count > 0)
-            {
-                string tableName = string.Empty;
-                foreach (DataRow row in dt.Rows)
-                {
-                    tableName = Convert.ToString(row["TABLE_NAME"]);
-                    if (!tables.ContainsKey(tableName))
-                    {
-                        tables.Add(tableName, string.Empty);
-                    }
-                }
-                dt = null;
             }
             return tables;
             #endregion
