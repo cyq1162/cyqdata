@@ -266,7 +266,7 @@ namespace CYQ.Data
                 //"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=D:\\xxx.xls;Extended Properties='Excel 12.0;HDR=Yes;'";
                 return DataBaseType.Excel;
             }
-            if (connString.Contains(".dbf"))
+            if (connString.Contains("vfpoledb.1") || connString.Contains(".dbf"))
             {
                 //"Provider=VFPOLEDB.1;Data Source=F:\\10443.dbf";
                 return DataBaseType.FoxPro;
