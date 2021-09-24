@@ -40,6 +40,8 @@ namespace CYQ.Data.SQL
                 switch (dalType)
                 {
                     case DataBaseType.Access:
+                    case DataBaseType.Excel:
+                    case DataBaseType.FoxPro:
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
                     case DataBaseType.Txt:
@@ -61,6 +63,8 @@ namespace CYQ.Data.SQL
                 switch (dalType)
                 {
                     case DataBaseType.Access:
+                    case DataBaseType.Excel:
+                    case DataBaseType.FoxPro:
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
                         int leftNum = rowCount % pageSize;
@@ -143,6 +147,8 @@ namespace CYQ.Data.SQL
                     }
                     return string.Format(tempTablePager, DateTime.Now.Millisecond, pageIndex * pageSize + " " + columns, tableName, where, pageSize, rowStart, rowEnd, orderBy);
                 case DataBaseType.Access:
+                case DataBaseType.Excel:
+                case DataBaseType.FoxPro:
                 top3:
                     if (!string.IsNullOrEmpty(orderBy)) // 反转查询
                     {
