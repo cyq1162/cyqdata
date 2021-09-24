@@ -89,7 +89,16 @@ namespace CYQ.Data
             #region 用ADO.NET属性拿数据
             DataTable dt = null;
             Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            Con.Open();
+            try
+            {
+                Con.Open();
+            }
+            catch (Exception err)
+            {
+                Log.Write(err, LogType.DataBase);
+                return tables;
+            }
+           
             if (type == "U")
             {
                 dt = Con.GetSchema("Tables", new string[] { null, null, null, "Table" });
