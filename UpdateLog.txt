@@ -904,3 +904,4 @@
 675：优化：SqlCreate.cs：cell.Struct.SqlTypeName未进行null判断问题。(2021-09-10)
 676：修正：AuthCache在ExeMDataTableList操作时未移除缓存通知的问题。(2021-09-14)
 677：新增：支持：foxPro数据库（.dbf后缀）(2021-09-23)
+678：优化：避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）(2021-09-24)
