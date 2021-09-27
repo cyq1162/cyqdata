@@ -90,14 +90,15 @@ namespace CYQ.Data.Tool
             string key = Thread.CurrentThread.ManagedThreadId.ToString();
             if (HttpContext.Current != null)
             {
+
                 string id = string.Empty;
                 if (HttpContext.Current.Session != null)
                 {
                     id = HttpContext.Current.Session.SessionID;
                 }
-                if (string.IsNullOrEmpty(id))
+                if (string.IsNullOrEmpty(id) && HttpContext.Current.CurrentHandler != null)// 增加判断。
                 {
-                    if (HttpContext.Current.Request["Token"] != null)
+                    if (HttpContext.Current.Request["Token"] != null)//避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）
                     {
                         id = HttpContext.Current.Request["Token"];
                     }
@@ -107,6 +108,7 @@ namespace CYQ.Data.Tool
                     }
                 }
                 key = id + key;
+
             }
             string hash = ConnBean.GetHashKey(conn);
             return "Transation_" + key + hash;
