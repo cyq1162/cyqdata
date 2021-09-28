@@ -965,7 +965,7 @@ namespace CYQ.Data.Xml
         private string GetValueByRequest(string columnName, string key)
         {
             string replaceValue = string.Empty;
-            if (HttpContext.Current != null)
+            if (HttpContext.Current != null && HttpContext.Current.Handler != null)
             {
                 replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
             }

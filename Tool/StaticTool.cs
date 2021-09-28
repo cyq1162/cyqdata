@@ -42,7 +42,7 @@ namespace CYQ.Data.Tool
         public static string GetMasterSlaveKey()
         {
             string id = string.Empty;
-            if (HttpContext.Current != null)
+            if (HttpContext.Current != null && HttpContext.Current.Handler != null)
             {
                 if (HttpContext.Current.Session != null)
                 {
@@ -60,6 +60,7 @@ namespace CYQ.Data.Tool
                 {
                     id = HttpContext.Current.Request["MasterSlaveID"];
                 }
+
                 if (string.IsNullOrEmpty(id))
                 {
                     HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveID"];
@@ -96,7 +97,7 @@ namespace CYQ.Data.Tool
                 {
                     id = HttpContext.Current.Session.SessionID;
                 }
-                if (string.IsNullOrEmpty(id) && HttpContext.Current.CurrentHandler != null)// 增加判断。
+                if (string.IsNullOrEmpty(id) && HttpContext.Current.Handler != null)// 增加判断。
                 {
                     if (HttpContext.Current.Request["Token"] != null)//避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）
                     {

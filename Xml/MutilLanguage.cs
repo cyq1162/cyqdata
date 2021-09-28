@@ -151,7 +151,7 @@ namespace CYQ.Data.Xml
         }
         private void SetLanKeyByCookie()
         {
-            if (HttpContext.Current != null)
+            if (HttpContext.Current != null && HttpContext.Current.Handler != null)
             {
                 HttpCookie myCookie = HttpContext.Current.Request.Cookies[AppConfig.XHtml.Domain + "_LanKey"];
                 if (null != myCookie)
@@ -261,7 +261,7 @@ namespace CYQ.Data.Xml
                     Error.Throw(string.Format("Error:LanguageKey not contain {0}", key));
                 }
             }
-            if (HttpContext.Current != null && HttpContext.Current.Request.UserLanguages != null && HttpContext.Current.Request.UserLanguages.Length > 0)
+            if (HttpContext.Current != null && HttpContext.Current.Handler != null && HttpContext.Current.Request.UserLanguages != null && HttpContext.Current.Request.UserLanguages.Length > 0)
             {
                 switch (HttpContext.Current.Request.UserLanguages[0].Substring(0, 2))
                 {

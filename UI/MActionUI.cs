@@ -567,59 +567,62 @@ namespace CYQ.Data.UI
         {
             try
             {
-                string columnName = cell.ColumnName;
-                bool isContainLine = columnName.Contains("_");
-                string key = string.Empty, noLineKey = null;
-                System.Web.HttpRequest rq = System.Web.HttpContext.Current.Request;
-                foreach (string autoPrefix in autoPrefixList)
+                if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Handler != null)
                 {
-                    key = autoPrefix + columnName;
-                    if (isContainLine) { noLineKey = key.Replace("_", ""); }
-                    string requestValue = rq.QueryString[key] ?? rq.Form[key];
-                    if (requestValue == null && isContainLine)
+                    string columnName = cell.ColumnName;
+                    bool isContainLine = columnName.Contains("_");
+                    string key = string.Empty, noLineKey = null;
+                    System.Web.HttpRequest rq = System.Web.HttpContext.Current.Request;
+                    foreach (string autoPrefix in autoPrefixList)
                     {
-                        requestValue = rq.QueryString[noLineKey] ?? rq.Form[noLineKey];
-                    }
-                    if (requestValue != null)
-                    {
-                        if (requestValue.Trim().Length == 0)//空字符串
+                        key = autoPrefix + columnName;
+                        if (isContainLine) { noLineKey = key.Replace("_", ""); }
+                        string requestValue = rq.QueryString[key] ?? rq.Form[key];
+                        if (requestValue == null && isContainLine)
                         {
-                            #region Set Value
-                            DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
-                            if (group > 0)
+                            requestValue = rq.QueryString[noLineKey] ?? rq.Form[noLineKey];
+                        }
+                        if (requestValue != null)
+                        {
+                            if (requestValue.Trim().Length == 0)//空字符串
                             {
-                                if (cell.Struct.DefaultValue == null)
+                                #region Set Value
+                                DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
+                                if (group > 0)
                                 {
-                                    cell.Value = DBNull.Value;
-                                }
-                                else
-                                {
-                                    if (group == DataGroupType.Date)
+                                    if (cell.Struct.DefaultValue == null)
                                     {
-                                        cell.Value = DateTime.Now;
+                                        cell.Value = DBNull.Value;
                                     }
                                     else
                                     {
-                                        cell.Value = cell.Struct.DefaultValue;
+                                        if (group == DataGroupType.Date)
+                                        {
+                                            cell.Value = DateTime.Now;
+                                        }
+                                        else
+                                        {
+                                            cell.Value = cell.Struct.DefaultValue;
+                                        }
                                     }
+                                    break;
                                 }
-                                break;
+                                #endregion
                             }
-                            #endregion
+                            cell.Value = requestValue.Trim(' ');
+                            break;
                         }
-                        cell.Value = requestValue.Trim(' ');
-                        break;
-                    }
-                    else if (autoPrefix == "chb" && cell.Struct.SqlType == SqlDbType.Bit)
-                    {
-                        //检测是否存在相应的控件，如果存在，则设置值。
-                        if (System.Web.HttpContext.Current.CurrentHandler is Page)
+                        else if (autoPrefix == "chb" && cell.Struct.SqlType == SqlDbType.Bit)
                         {
-                            if (((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(key) != null
-                                || (isContainLine && ((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(noLineKey) != null)
-                                )
+                            //检测是否存在相应的控件，如果存在，则设置值。
+                            if (System.Web.HttpContext.Current.CurrentHandler is Page)
                             {
-                                cell.Value = false;
+                                if (((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(key) != null
+                                    || (isContainLine && ((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(noLineKey) != null)
+                                    )
+                                {
+                                    cell.Value = false;
+                                }
                             }
                         }
                     }

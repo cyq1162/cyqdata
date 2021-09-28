@@ -382,7 +382,7 @@ namespace CYQ.Data
         {
             get
             {
-                if (HttpContext.Current != null)
+                if (HttpContext.Current != null && HttpContext.Current.Handler != null)
                 {
                     return HttpContext.Current.Request.Url;
                 }

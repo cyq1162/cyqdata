@@ -135,7 +135,7 @@ namespace CYQ.Data
             log.Message = message;
             log.LogType = logType;
             log.CreateTime = DateTime.Now;
-            if (AppConfig.IsWeb && System.Web.HttpContext.Current != null)
+            if (AppConfig.IsWeb && System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Handler != null)
             {
                 System.Web.HttpRequest request = System.Web.HttpContext.Current.Request;
                 log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + System.Web.HttpUtility.UrlDecode(request.RawUrl);
