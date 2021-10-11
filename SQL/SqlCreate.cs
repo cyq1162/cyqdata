@@ -921,16 +921,16 @@ namespace CYQ.Data.SQL
         /// 获得批量导入的列名。
         /// </summary>
         /// <param name="mdc"></param>
-        /// <param name="keepid"></param>
+        /// <param name="keepID"></param>
         /// <param name="dalType"></param>
         /// <returns></returns>
-        internal static string GetColumnName(MDataColumn mdc, bool keepid, DataBaseType dalType)
+        internal static string GetColumnName(MDataColumn mdc, bool keepID, DataBaseType dalType)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("(");
             foreach (MCellStruct ms in mdc)
             {
-                if (!keepid && ms.IsAutoIncrement)
+                if (!keepID && ms.IsAutoIncrement)
                 {
                     continue;
                 }

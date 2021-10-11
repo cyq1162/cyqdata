@@ -670,7 +670,7 @@ namespace CYQ.Data.Table
             }
             return false;
         }
-        internal bool LoadDataInsert(DataBaseType dalType, bool keepid)
+        internal bool LoadDataInsert(DataBaseType dalType, bool keepID)
         {
             bool fillGUID = CheckGUIDAndDateTime(dalType);
             bool isNeedCreateDal = (_dalHelper == null);
@@ -683,10 +683,10 @@ namespace CYQ.Data.Table
                     _dalHelper.TranLevel = TranLevel;
                 }
             }
-            string path = MDataTableToFile(mdt, fillGUID ? true : keepid, dalType);
+            string path = MDataTableToFile(mdt, fillGUID ? true : keepID, dalType);
             string formatSql = dalType == DataBaseType.MySql ? SqlCreate.MySqlBulkCopySql : SqlCreate.OracleBulkCopySql;
             string sql = string.Format(formatSql, path, SqlFormat.Keyword(mdt.TableName, dalType),
-                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepid, dalType));
+                AppConst.SplitChar, SqlCreate.GetColumnName(mdt.Columns, keepID, dalType));
             if (dalType == DataBaseType.Oracle)
             {
                 string ctlPath = CreateCTL(sql, path);
@@ -741,7 +741,7 @@ namespace CYQ.Data.Table
             IOHelper.Write(path, sql);
             return path;
         }
-        private static string MDataTableToFile(MDataTable dt, bool keepid, DataBaseType dalType)
+        private static string MDataTableToFile(MDataTable dt, bool keepID, DataBaseType dalType)
         {
             string path = Path.GetTempPath() + dt.TableName + ".csv";
             using (StreamWriter sw = new StreamWriter(path, false, new UTF8Encoding(false)))
@@ -754,7 +754,7 @@ namespace CYQ.Data.Table
                     {
                         #region 设置值
                         ms = dt.Columns[i];
-                        if (!keepid && ms.IsAutoIncrement)
+                        if (!keepID && ms.IsAutoIncrement)
                         {
                             continue;
                         }
