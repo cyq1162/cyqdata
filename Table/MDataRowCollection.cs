@@ -182,6 +182,10 @@ namespace CYQ.Data.Table
         {
             get
             {
+                if (index < 0 || index >= RowList.Count)
+                {
+                    return null;
+                }
                 return RowList[index];
             }
             set

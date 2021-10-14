@@ -101,7 +101,23 @@ namespace CYQ.Data
                 _HttpMethod = value;
             }
         }
+        private string _ClientIP;
+        /// <summary>
+        /// 客户端请求IP
+        /// </summary>
+        [Length(50)]
+        public string ClientIP
+        {
+            get
+            {
+                return _ClientIP;
+            }
+            set
+            {
 
+                _ClientIP = value == "::1" ? "127.0.0.1" : value;
+            }
+        }
         private string _PageUrl;
         /// <summary>
         /// 请求的地址
@@ -188,7 +204,11 @@ namespace CYQ.Data
         internal string GetFormatterText()
         {
             string title = string.Format("V{0} Record On : {1} : {2} {3}",
-                AppConfig.Version, DateTime.Now.ToString(), HttpMethod, PageUrl ?? "");// + Log.Url;
+                AppConfig.Version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), HttpMethod, PageUrl ?? "");// + Log.Url;
+            if (!string.IsNullOrEmpty(ClientIP))
+            {
+                title += " - " + ClientIP;
+            }
             if (!string.IsNullOrEmpty(RefererUrl))
             {
                 title += AppConst.NewLine + AppConst.NewLine + "Referer : " + RefererUrl;

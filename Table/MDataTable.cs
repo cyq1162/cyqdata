@@ -683,13 +683,13 @@ namespace CYQ.Data.Table
             {
                 return this;
             }
+            Type[] paraTypeList = null;
+            ReflectTool.GetArgumentLength(ref t, out paraTypeList);
             object listObj = Activator.CreateInstance(t);//创建实例
             if (Rows != null && Rows.Count > 0)
             {
-                Type[] paraTypeList = null;
-                Type listObjType = listObj.GetType();
-                ReflectTool.GetArgumentLength(ref listObjType, out paraTypeList);
-                MethodInfo method = listObjType.GetMethod("Add");
+
+                MethodInfo method = t.GetMethod("Add");
                 foreach (MDataRow row in Rows)
                 {
                     method.Invoke(listObj, new object[] { row.ToEntity(paraTypeList[0]) });
@@ -1295,7 +1295,7 @@ namespace CYQ.Data.Table
         {
             if (sdr != null && sdr is NoSqlDataReader)
             {
-                return ((NoSqlDataReader)sdr).ResultTable;
+                return ((NoSqlDataReader)sdr).table;
             }
             MDataTable mTable = new MDataTable("SysDefault");
             if (sdr != null && sdr.FieldCount > 0)
@@ -1345,6 +1345,11 @@ namespace CYQ.Data.Table
                     List<int> errIndex = new List<int>();//SQLite提供的dll不靠谱，sdr[x]类型转不过时，会直接抛异常
                     while (sdr.Read())
                     {
+                        if (mTable.Rows.Count == 0)
+                        {
+                            object[] obj=new object[3];
+                            sdr.GetValues(obj);
+                        }
                         #region 读数据行
                         mRecord = mTable.NewRow(true);
 

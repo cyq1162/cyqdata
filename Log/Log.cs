@@ -144,6 +144,7 @@ namespace CYQ.Data
                     log.RefererUrl =  System.Web.HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                 }
                 log.HttpMethod = request.HttpMethod;
+                log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
             }
             LogWorker.Add(log);
         }

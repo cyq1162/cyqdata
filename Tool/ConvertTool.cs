@@ -208,7 +208,7 @@ namespace CYQ.Data.Tool
 
                             return MDataRow.CreateFrom(strValue).ToEntity(t);
                         case SysType.Generic:
-                            if (t.Name.StartsWith("List"))
+                            if (t.Name.StartsWith("List") || t.Name.StartsWith("IList"))
                             {
                                 return MDataTable.CreateFrom(strValue).ToList(t);
                             }
