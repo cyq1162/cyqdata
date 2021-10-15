@@ -245,9 +245,21 @@ namespace CYQ.Data.Tool
         /// </summary>
         internal static List<T> ChangeReaderToList<T>(DbDataReader reader)
         {
+            Type t = typeof(T);
             List<T> list = new List<T>();
-            if (reader != null)
+            if (t.Name == "MDataRow")
             {
+                MDataTable dt = reader;
+                foreach (object row in dt.Rows)
+                {
+                    list.Add((T)row);
+                }
+            }
+            else if (reader != null)
+            {
+                #region Reader
+
+              
                 if (reader.HasRows)
                 {
                     Dictionary<string, Type> kv = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
@@ -256,7 +268,7 @@ namespace CYQ.Data.Tool
                         kv.Add(reader.GetName(i), reader.GetFieldType(i));
                     }
 
-                    Type t = typeof(T);
+                    
                     List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
                     List<FieldInfo> fInfoList = ReflectTool.GetFieldList(t);
                     while (reader.Read())
@@ -308,6 +320,7 @@ namespace CYQ.Data.Tool
                 reader.Close();
                 reader.Dispose();
                 reader = null;
+                #endregion
             }
             return list;
             //return List<default(T)>;

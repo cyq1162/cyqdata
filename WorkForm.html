@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>WorkForm</title>
+    <script src="/Style/JS/Aries.Loader.js"></script>
+    <script src="/WF/Style/JS/Gemini.Workflow.js" defer="defer"></script>
+    <script src="/WF/Style/JS/Gemini.Event.js" defer="defer"></script>
+    <script src="/WF/Style/JS/Gemini.Actor.js" defer="defer"></script>
+    <link href="/WF/Style/Css/blue.css" rel="stylesheet" />
+    <link href="/WF/Style/Css/custom.css" rel="stylesheet" />
+    <link href="/WF/Style/Css/actorSelect.css" rel="stylesheet" />
+</head>
+<body class="easyui-layout" style="overflow-y: auto">
+        <div style="padding: 10px 15px;">
+            <!--头部信息-->
+            <div id="wftoolbar" data-options="region:'north'" style="min-height: 35px" border="false">
+                <div class="wf-ribbon one-ribbon">
+                    <div class="fl">
+                        <a id="BtnSubmit" class="button" href="#" style="display: none"><em class="btn-fs"></em>提交</a>
+                        <a id="BtnSave" class="button ml5" href="#" style="display: none"><em class="btn-bc"></em>保存</a>
+                        <a id="BtnCirculate" class="button" style="display: none"><em class="btn-fs"></em>传阅</a>
+                        <a id="BtnCirculated" class="button" style="display: none"><em class="btn-fs"></em>设为已阅</a>
+                        <a id="BtnTransmit" class="button ml5" style="display: none"><em class="btn-fs"></em>转交</a>
+                        <a id="BtnReject" class="button ml5" style="display: none"><em class="btn-th"></em>退回</a>
+                        <a id="BtnWithdraw" class="button ml5" style="display: none"><em class="btn-th"></em>撤回</a>
+                        <a id="BtnInvalid" class="button ml5" style="display: none"><em class="btn-th"></em>作废工单</a>
+                    </div>
+                    <div class="fr">
+                        <a href="#" id="BtnViewFlowMap" class="button ml5" style="display: none"><em class="btn-cktp"></em>查看流程图</a>
+                    </div>
+                </div>
+
+            </div>
+            <!--详细信息-->
+            <div id="WorkflowContentDiv" data-options="region:'center'" style="overflow-y: auto" border="false">
+                <div class="wf-form">
+                    <form>
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <th>
+                                    <label class="wf-label pr5"><em>*</em>工单标题：</label></th>
+                                <td style="padding-right: 3px;">
+                                    <input name="Title" type="text" id="Title" class="wf-form-input m4 easyui-validatebox" required="required" style="width: 450px;" />
+                                </td>
+                                <th>
+                                    <label class="wf-label pr5">重要级别：</label></th>
+                                <td> 
+                                    <select id="Importance" name="Importance" class="textBoxAutoShort">
+                                        <option value="1">一般</option>
+                                        <option value="2">重要</option>
+                                        <option value="3">特别重要</option>
+                                    </select>
+
+
+                                </td>
+                                <th>
+                                    <label class="wf-label pr5">紧急程度：</label></th>
+                                <td> 
+                                    <select id="Urgency" name="Urgency" class="textBoxAutoShort">
+                                        <option value="1">一般</option>
+                                        <option value="2">紧急</option>
+                                        <option value="3">特别紧急</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th width="10%">
+                                    <label class="wf-label pr5">工单号：</label>
+                                </th>
+                                <td width="26%">
+                                    <span id="SheetID"></span></td>
+                                <th width="10%">
+                                    <label class="wf-label pr5">当前步骤：</label></th>
+                                <td width="26%">
+                                    <span id="ActivityName"></span></td>
+                                <th width="10%">
+                                    <label class="wf-label pr5">流程状态：</label></th>
+                                <td width="26%">
+                                    <span id="InstanceStateName"></span></td>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <label class="wf-label pr5">提单人：</label></th>
+                                <td>
+                                    <span id="FullName"></span>/<span id="OrgName"></span></td>
+                                <th>
+                                    <label class="wf-label pr5">发起时间：</label></th>
+                                <td>
+                                    <span id="StartTime"></span></td>
+                                <th>
+                                    <label class="wf-label pr5">结束时间：</label></th>
+                                <td>
+                                    <span id="FinishTime"></span></td>
+                            </tr>
+                        </table>
+                        <div id="ActorSelectedDiv" style="display: none" title="隐藏域用于提交数据">
+                            <input id="hidUserJson" name="hidUserJson" type="hidden" value="" />
+                            <input id="hidActivityJson" name="hidActivityJson" type="hidden" value="" />
+                            <input id="hidOpinion" name="hidOpinion" type="hidden" value="" />
+                            <!--转交或传阅用户选择结果-->
+                            <input id="hidCommonUsers" name="hidCommonUsers" type="hidden" value="" />
+                        </div>
+                    </form>
+                </div>
+                <div id="formBox">
+                    <div class="space"></div>
+                    <div>
+                        <div class="wf-box">
+                            <div class="wf-box-tit">
+                                <h2><i class="wf-box-icon" onclick=" WF.Event.onDivToggle('mainWorkformContainer')"></i>详细信息</h2>
+                                <a href="#" onclick=" WF.Event.onDivToggle('mainWorkformContainer')" class="wf-arrows"></a>
+                            </div>
+                            <div id="mainWorkformContainer" class="wf-box-in">
+                                <iframe id="formFrame" frameborder="0" style="border: 0; width: 100%;"></iframe>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div id="opinionBox">
+                    <div class="space"></div>
+                    <div class="wf-box">
+                        <div class="wf-box-tit">
+                            <h2><i class="wf-box-icon" onclick=" WF.Event.onDivToggle('formApprovalDiv')"></i>处理意见</h2>
+                            <a href="#" onclick=" WF.Event.onDivToggle('formApprovalDiv')" class="wf-arrows"></a>
+                        </div>
+                        <div class="wf-box-in" id="formApprovalDiv">
+
+                            <table class="common-FormTable" cellpadding="0" cellspacing="0" style="margin: 10px;">
+                                <tr>
+                                    <td style="width: 120px;">处理意见：</td>
+                                    <td style="padding: 5px;">
+                                        <textarea id="txtOpinion" name="txtOpinion" rows="2" class="wf-form-textarea" style="width: 98%;"></textarea></td>
+
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!--流程过程-->
+                <div id="flowBox">
+                    <div class="space"></div>
+                    <div class="wf-box">
+                        <div class="wf-box-tit">
+                            <h2><i class="wf-box-icon" onclick=" WF.Event.onDivToggle('ApprovalHistoryPanel')"></i>流转过程 </h2>
+
+                            <a href="#" onclick=" WF.Event.onDivToggle('ApprovalHistoryPanel')" class="wf-arrows"></a>
+                        </div>
+                        <div class="wf-box-in" id="">
+                            <div id="ApprovalHistoryPanel" style="height: 330px;width:100%">
+                                <div id="ApprovalHistoryGrid" style="width:auto"></div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div title="Hidden" style="display: none;">
+            <div title="过渡变量，不提交">
+                <input id="hidActivityNames" type="hidden" value="" />
+            </div>
+            <div id="sendDialog" title="提交选择窗口"
+                data-options="iconCls:'icon-redo',resizable:true"
+                style="padding: 0px; margin-left: 0px; margin-right: 0px;">
+                <div style="width: 100%; margin: 0;" title="处理人选择器">
+                    <div class="wf-box">
+                        <div class="wf-box-in">
+                            <div class="wf-pop-tit">
+                                <h3>请选择下一步骤及处理人：</h3>
+                            </div>
+                            <div class="wf-pop-in">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <div class="fl" style="overflow-y: auto; background-color: #fff; border-right: 1px solid #e7e7e7; padding: 10px 15px; width: 200px; height: 260px; line-height: 24px;">
+                                                <div id="ActivityDiv">
+                                                </div>
+                                            </div>
+
+                                        </td>
+                                        <td>
+                                            <div id="ActorDiv" class="ActorDiv" style="background-color: #fff; padding: 10px 2px 2px 5px; width: 470px; height: 260px; vertical-align: top; text-align: left; overflow-y: auto">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                            </div>
+
+                            <div class="wf-pop-tit" style="margin-top: 2px;">
+                                <h3>总共选择了(<span id="selectCount" class="selectedCount">0</span>)个处理人<a href="#" onclick="WF.Actor.clearSelectedAll()" class="button ml5" title="" style="vertical-align: top;"><em class="btn-qbsc"></em>全部删除</a></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wf-form-btn" id="SendButtons" style="background-color: #ffffff; width: 580px; text-align: center;">
+                    <a href="#" onclick="WF.Dialog.Send_OK()" class="button" title=""><em class="btn-fs"></em>提交</a>
+                    <a href="#" onclick="WF.Dialog.Send_Cancel()" class="button ml5" title=""><em class="btn-qx"></em>取消</a>
+                </div>
+            </div>
+
+            <!--退回选择窗口开始-->
+            <div id="rejectDialog" data-options="iconCls:'icon-undo',resizable:true" title="退回选择窗口" style="padding: 0px; margin-left: 0px; margin-right: 0px;">
+                <div style="width: 100%; margin: 0;">
+                    <div class="wf-box">
+                        <div class="wf-box-in">
+                            <div class="wf-pop-tit">
+                                <h3>请选择退回步骤及处理人：</h3>
+                            </div>
+                            <div class="wf-pop-in">
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <div class="fl" style="overflow-y: auto; background-color: #fff; border-right: 1px solid #e7e7e7; padding: 10px 15px; width: 200px; height: 270px; line-height: 24px;">
+                                                <div id="RejectActivityDiv">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div id="RejectActorDiv" class="ActorDiv" style="overflow-y: auto; background-color: #fff; padding: 10px 2px 2px 5px; width: 470px; height: 270px; vertical-align: top; text-align: left;">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <div class="wf-pop-tit" style="margin-top: 2px;">
+
+                                <h3>总共选择了(<span id="RejectselectCount" class="selectedCount">0</span>)个处理人<a href="#" onclick="WF.Actor.clearSelectedAll('Reject')" class="button ml5" title="" style="vertical-align: top;"><em class="btn-qbsc"></em>全部删除</a></h3>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wf-form-btn" id="RejectButtons" style="background-color: #ffffff; width: 580px; text-align: center;">
+                    <a href="#" onclick="WF.Dialog.Reject_OK()" class="button" title=""><em class="btn-fs"></em>确定退回</a>
+                    <a href="#" onclick="WF.Dialog.Reject_Cancel()" class="button ml5" title=""><em class="btn-qx"></em>取消</a>
+                </div>
+            </div>
+            <!--通用选人窗口开始：传阅，转交-->
+            <div id="commonDialog" data-options="iconCls:'icon-redo',resizable:true" title="提交窗口" style="padding: 0px; margin-left: 0px; margin-right: 0px;">
+                <!--通用处理人选择-->
+                <table class="common-FormTable" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td colspan="2" id="CommonActorSelectTitle" style="text-align: center; font-size: 16px; font-weight: bold; height: 40px;"></td>
+
+                    </tr>
+                    <tr>
+                        <td style="height: 40px;">处理人：</td>
+                        <td>
+                            <input id="txtUserNames" name="txtUserNames" class="textBoxLong" style="width: 320px;" type="text" />
+                            <a href="#" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon_search'" dialog="Sys_User" for="txtUserNames" multiple="true">选择</a>
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="wf-form-btn" id="CirculatedButtons" style="background-color: #ffffff; width: 580px; text-align: center;">
+                    <a href="#" onclick="WF.Dialog.Common_OK()" class="button" title=""><em class="btn-fs"></em>确定</a>
+                    <a href="#" onclick="WF.Dialog.Common_Cancel()" class="button ml5" title=""><em class="btn-qx"></em>取消</a>
+
+                </div>
+            </div>
+            <!--通用选人窗口开始结束-->
+        </div>
+</body>
+</html>

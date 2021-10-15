@@ -46,61 +46,60 @@ namespace CYQ.Data.Table
         /// </summary>
         public static implicit operator MDataTable(DataTable dt)
         {
-            if (dt == null)
+            MDataTable mdt = new MDataTable();
+            if (dt != null)
             {
-                return null;
-            }
-            MDataTable mdt = new MDataTable(dt.TableName);
-            if (dt.Columns != null && dt.Columns.Count > 0)
-            {
-                foreach (DataColumn item in dt.Columns)
+                mdt.TableName = dt.TableName;
+                if (dt.Columns != null && dt.Columns.Count > 0)
                 {
-                    MCellStruct mcs = new MCellStruct(item.ColumnName, DataType.GetSqlType(item.DataType), item.ReadOnly, item.AllowDBNull, item.MaxLength);
-                    mcs.valueType = item.DataType;
-                    mdt.Columns.Add(mcs);
-                }
-                #region 属性还原
-                string[] cellStates = null;
-                if (dt.ExtendedProperties.ContainsKey("CellState"))// 还原记录总数
-                {
-                    int total = 0, rowCount = 0, columnCount = 0;
-                    string ra = Convert.ToString(dt.ExtendedProperties["RecordsAffected"]);
-                    string rc = Convert.ToString(dt.ExtendedProperties["RowsCount"]);
-                    string cc = Convert.ToString(dt.ExtendedProperties["ColumnsCount"]);
-                    string cs = Convert.ToString(dt.ExtendedProperties["CellState"]);
-                    if (int.TryParse(ra, out total) && int.TryParse(rc, out rowCount) && total >= rowCount)
+                    foreach (DataColumn item in dt.Columns)
                     {
-                        mdt.RecordsAffected = total;
+                        MCellStruct mcs = new MCellStruct(item.ColumnName, DataType.GetSqlType(item.DataType), item.ReadOnly, item.AllowDBNull, item.MaxLength);
+                        mcs.valueType = item.DataType;
+                        mdt.Columns.Add(mcs);
                     }
-                    if (!string.IsNullOrEmpty(cs) && int.TryParse(cc, out columnCount) && columnCount == dt.Columns.Count)
+                    #region 属性还原
+                    string[] cellStates = null;
+                    if (dt.ExtendedProperties.ContainsKey("CellState"))// 还原记录总数
                     {
-                        cellStates = cs.Split(';');
-                    }
-                }
-                #endregion
-
-
-                for (int k = 0; k < dt.Rows.Count; k++)
-                {
-                    string[] states = null;
-                    if (cellStates != null && cellStates.Length > k)
-                    {
-                        states = cellStates[k].Split(',');
-                    }
-                    DataRow row = dt.Rows[k];
-                    MDataRow mdr = mdt.NewRow();
-                    for (int i = 0; i < dt.Columns.Count; i++)
-                    {
-                        mdr[i].Value = row[i];
-                        if (states != null && states.Length > i)
+                        int total = 0, rowCount = 0, columnCount = 0;
+                        string ra = Convert.ToString(dt.ExtendedProperties["RecordsAffected"]);
+                        string rc = Convert.ToString(dt.ExtendedProperties["RowsCount"]);
+                        string cc = Convert.ToString(dt.ExtendedProperties["ColumnsCount"]);
+                        string cs = Convert.ToString(dt.ExtendedProperties["CellState"]);
+                        if (int.TryParse(ra, out total) && int.TryParse(rc, out rowCount) && total >= rowCount)
                         {
-                            mdr[i].State = int.Parse(states[i]);
+                            mdt.RecordsAffected = total;
+                        }
+                        if (!string.IsNullOrEmpty(cs) && int.TryParse(cc, out columnCount) && columnCount == dt.Columns.Count)
+                        {
+                            cellStates = cs.Split(';');
                         }
                     }
-                    mdt.Rows.Add(mdr, states == null && row.RowState != DataRowState.Modified);
+                    #endregion
+
+
+                    for (int k = 0; k < dt.Rows.Count; k++)
+                    {
+                        string[] states = null;
+                        if (cellStates != null && cellStates.Length > k)
+                        {
+                            states = cellStates[k].Split(',');
+                        }
+                        DataRow row = dt.Rows[k];
+                        MDataRow mdr = mdt.NewRow();
+                        for (int i = 0; i < dt.Columns.Count; i++)
+                        {
+                            mdr[i].Value = row[i];
+                            if (states != null && states.Length > i)
+                            {
+                                mdr[i].State = int.Parse(states[i]);
+                            }
+                        }
+                        mdt.Rows.Add(mdr, states == null && row.RowState != DataRowState.Modified);
+                    }
                 }
             }
-
             return mdt;
         }
         /// <summary>
@@ -129,14 +128,14 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static implicit operator MDataTable(MDataRowCollection rows)
         {
-            if (rows == null || rows.Count == 0)
+            MDataTable mdt = new MDataTable();
+            if (rows != null && rows.Count > 0)
             {
-                return null;
+                mdt.TableName = rows[0].TableName;
+                mdt.Conn = rows[0].Conn;
+                mdt.Columns = rows[0].Columns;
+                mdt.Rows.AddRange(rows);
             }
-            MDataTable mdt = new MDataTable(rows[0].TableName);
-            mdt.Conn = rows[0].Conn;
-            mdt.Columns = rows[0].Columns;
-            mdt.Rows.AddRange(rows);
             return mdt;
 
         }
@@ -1347,7 +1346,7 @@ namespace CYQ.Data.Table
                     {
                         if (mTable.Rows.Count == 0)
                         {
-                            object[] obj=new object[3];
+                            object[] obj = new object[3];
                             sdr.GetValues(obj);
                         }
                         #region 读数据行
