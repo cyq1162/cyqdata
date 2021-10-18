@@ -62,6 +62,12 @@ namespace CYQ.Data.Cache
         }
         internal LocalCache()
         {
+            Thread thread = new Thread(new ThreadStart(ThreadTask));//线程任务开开启，避免【ThreadBreak.AddGlobalThread里NETCore版本下又调用缓存】死循环。
+            thread.Start();
+        }
+
+        void ThreadTask()
+        {
             try
             {
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));

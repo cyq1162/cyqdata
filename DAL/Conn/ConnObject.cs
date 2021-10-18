@@ -187,8 +187,8 @@ namespace CYQ.Data
         /// <summary>
         /// 定时检测异常的链接是否恢复。
         /// </summary>
-        /// <param name="threadid"></param>
-        public static void CheckConnIsOk(object threadid)
+        /// <param name="threadID"></param>
+        public static void CheckConnIsOk(object threadID)
         {
             while (true)
             {

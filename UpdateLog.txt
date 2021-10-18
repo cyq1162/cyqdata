@@ -909,3 +909,5 @@
 679：修正：MDataTable.ToList 对 IList或IDiction<..>的处理。(2021-10-14)【V5.8.4.8】
 680：修正：补全文本数据库中NoSqlDataReader的实现（修正V5.8.3.9调整后对ORM实体操作的影响）。(2021-10-14)
 681：优化：SysLog 增加ClientIP字段，调整日志输入增加客户端IP显示。(2021-10-14)
+682：优化：MDataTable 的隐式转换。(2021-10-15)
+683：优化：LocalCache 优化NETCore下可能出现的死锁。(2021-10-18)
