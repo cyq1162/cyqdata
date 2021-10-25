@@ -175,13 +175,13 @@ namespace CYQ.Data.Tool
             acKey = AppConfig.GetConn(acKey);
             if (!string.IsNullOrEmpty(acKey))
             {
-                string alKey = EncryptHelper.Decrypt(AppConst.ALKey, AppConst.Host);
+                string alKey = Decrypt(AppConst.ALKey, AppConst.Host);
                 if (!string.IsNullOrEmpty(alKey))
                 {
                     string code = AppConfig.GetApp(alKey);
                     if (!string.IsNullOrEmpty(code))
                     {
-                        string[] items = EncryptHelper.Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
+                        string[] items = Decrypt(code.Substring(4), code.Substring(0, 4)).Split(',');
                         DateTime d;
                         if ((DateTime.TryParse(items[0], out d) && d > DateTime.Now) || (items.Length > 1 && items[1] == AppConst.HNKey))
                         {

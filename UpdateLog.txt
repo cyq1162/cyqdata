@@ -912,3 +912,4 @@
 682：优化：MDataTable 的隐式转换(List<MDataRow>，MDataRowCollection)。(2021-10-15)
 683：优化：LocalCache 优化NETCore下可能出现的死锁。(2021-10-18)
 684：优化：ConvertTool.ChangeType 字符串以"\r\n\t"结尾时转值类型的转换处理。(2021-10-25)
+685：优化：HttpSessionState 兼容NETCore下Session[索引]取值或赋值。(2021-10-25)

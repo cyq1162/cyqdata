@@ -416,8 +416,8 @@ namespace CYQ.Data.Tool
                             if (key.Length > 0)
                             {
                                 string k = key.ToString();
-                                string val = value.ToString();
-                                bool isNull = json[i - 5] == ':' && json[i] != '"' && value.Length == 4 && val == "null";
+                                string val = value.ToString();//.TrimEnd('\r', '\n', '\t');
+                                bool isNull = json[i - 5] == ':' && json[i] != '"' && val.Length == 4 && val == "null";
                                 if (isNull)
                                 {
                                     val = "";
