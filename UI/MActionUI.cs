@@ -588,28 +588,39 @@ namespace CYQ.Data.UI
                             {
                                 #region Set Value
                                 DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
-                                if (group > 0)
+                                switch (group)
                                 {
-                                    if (cell.Struct.DefaultValue == null)
-                                    {
-                                        cell.Value = DBNull.Value;
-                                    }
-                                    else
-                                    {
-                                        if (group == DataGroupType.Date)
+
+                                    case DataGroupType.Guid:
+                                        if (cell.Struct.IsCanNull) { cell.Value = DBNull.Value; }
+                                        else
+                                        {
+                                            cell.Value = Guid.Empty;
+                                        }
+                                        break;
+                                    case DataGroupType.Date:
+                                        if (cell.Struct.IsCanNull) { cell.Value = DBNull.Value; }
+                                        else
                                         {
                                             cell.Value = DateTime.Now;
                                         }
-                                        else
-                                        {
-                                            cell.Value = cell.Struct.DefaultValue;
-                                        }
-                                    }
-                                    break;
+                                        break;
+                                    case DataGroupType.Bool:
+                                        cell.Value = false;
+                                        break;
+                                    case DataGroupType.Number:
+                                        cell.Value = 0;
+                                        break;
+                                    default:
+                                        cell.Value = requestValue.Trim(' ');
+                                        break;
                                 }
                                 #endregion
                             }
-                            cell.Value = requestValue.Trim(' ');
+                            else
+                            {
+                                cell.Value = requestValue.Trim(' ');
+                            }
                             break;
                         }
                         else if (autoPrefix == "chb" && cell.Struct.SqlType == SqlDbType.Bit)

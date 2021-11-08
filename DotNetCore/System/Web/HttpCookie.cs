@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using System.Collections.Specialized;
 
 namespace System.Web
 {
@@ -21,6 +22,31 @@ namespace System.Web
         public bool HttpOnly { get; set; }
         public bool Secure { get; set; }
         public string Value { get; set; }
+        public NameValueCollection Values
+        {
+            get
+            {
+                NameValueCollection nv = new NameValueCollection();
+                if (!string.IsNullOrEmpty(Value))
+                {
+                    string[] values = Value.Split('&');
+                    foreach (string value in values)
+                    {
+                        string[] items = value.Split('=');
+                        if (items.Length == 1)
+                        {
+                            nv.Add("null", items[0]);
+                        }
+                        else if (items.Length > 1)
+                        {
+                            string name = items[0];
+                            nv.Add(name, value.Substring(name.Length + 1));
+                        }
+                    }
+                }
+                return nv;
+            }
+        }
         public string Domain { get; set; }
         /// <summary>
         /// 转换后，还得补上name,value
