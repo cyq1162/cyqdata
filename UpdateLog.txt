@@ -916,3 +916,4 @@
 ------------------------------------------------------------------------------
 686：优化：MActionUI.GetValueOnWeb 对Web自动取值为空值的处理。(2021-11-08)【V5.8.4.9】
 687：优化：NetCore兼容：HttpCookie 增加Values属性。(2021-11-08)【V5.8.4.9】
+688：修复：【678条】调整后对AppDomain.XHtml.Domain无法在context.AcquireRequestState事件中获取的问题。(2021-11-09)

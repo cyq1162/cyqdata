@@ -382,9 +382,16 @@ namespace CYQ.Data
         {
             get
             {
-                if (HttpContext.Current != null && HttpContext.Current.Handler != null)
+                if (HttpContext.Current != null)// && HttpContext.Current.Handler != null //AppConfig.XHtml.Domain 可能需要在Begin事件中获取，因此只能冒险一取。
                 {
-                    return HttpContext.Current.Request.Url;
+                    try
+                    {
+                        return HttpContext.Current.Request.Url;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
                 }
                 return null;
             }
