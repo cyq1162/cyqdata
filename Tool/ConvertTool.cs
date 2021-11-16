@@ -149,6 +149,7 @@ namespace CYQ.Data.Tool
                     {
                         case "yes":
                         case "true":
+                        case "success":
                         case "1":
                         case "on":
                         case "是":
@@ -158,6 +159,7 @@ namespace CYQ.Data.Tool
                             break;
                         case "no":
                         case "false":
+                        case "fail":
                         case "0":
                         case "":
                         case "否":

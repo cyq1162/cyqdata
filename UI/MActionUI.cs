@@ -592,14 +592,24 @@ namespace CYQ.Data.UI
                                 {
 
                                     case DataGroupType.Guid:
-                                        if (cell.Struct.IsCanNull) { cell.Value = DBNull.Value; }
+                                        if (cell.Struct.IsPrimaryKey)
+                                        {
+                                            cell.Value = Guid.NewGuid();
+                                        }
+                                        else if (cell.Struct.DefaultValue != null || cell.Struct.IsCanNull)
+                                        {
+                                            cell.Value = DBNull.Value;
+                                        }
                                         else
                                         {
                                             cell.Value = Guid.Empty;
                                         }
                                         break;
                                     case DataGroupType.Date:
-                                        if (cell.Struct.IsCanNull) { cell.Value = DBNull.Value; }
+                                        if (cell.Struct.DefaultValue != null || cell.Struct.IsCanNull)
+                                        {
+                                            cell.Value = DBNull.Value;
+                                        }
                                         else
                                         {
                                             cell.Value = DateTime.Now;
