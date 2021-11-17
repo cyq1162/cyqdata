@@ -255,16 +255,16 @@ namespace CYQ.Data
                 // xml path={0}
                 return DataBaseType.Xml;
             }
-            if (connString.Contains(".mdb") || connString.Contains(".accdb"))
-            {
-                //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
-                //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
-                return DataBaseType.Access;
-            }
             if (connString.Contains(".xls") || connString.Contains(".xlsx"))
             {
                 //"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=D:\\xxx.xls;Extended Properties='Excel 12.0;HDR=Yes;'";
                 return DataBaseType.Excel;
+            }
+            if (connString.Contains(".mdb") || connString.Contains(".accdb") || connString.Contains(".oledb."))
+            {
+                //Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}App_Data/demo.mdb
+                //Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0}App_Data/demo.accdb
+                return DataBaseType.Access;
             }
             if (connString.Contains("vfpoledb.1") || connString.Contains(".dbf"))
             {
