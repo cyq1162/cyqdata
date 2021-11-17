@@ -271,7 +271,7 @@ namespace CYQ.Data
                 //"Provider=VFPOLEDB.1;Data Source=F:\\10443.dbf";
                 return DataBaseType.FoxPro;
             }
-            if (connString.Contains(".db;") || connString.Contains(".db3;"))
+            if (connString.Contains(".db;") || connString.Contains(".db3;") || connString.Contains("failifmissing"))
             {
                 //Data Source={0}App_Data/demo.db;failifmissing=false
                 return DataBaseType.SQLite;
@@ -283,7 +283,7 @@ namespace CYQ.Data
             }
             if (connString.Contains("hostname=") || connString.Contains("ibmdadb2"))
             {
-                //Data Source={0}App_Data/demo.db;failifmissing=false
+                //Provider=IBMDADB2.IBMDBCL1;Data Source=数据库名;Persist Security Info=True;User ID=用户名;pwd=密码;Location=服务器IP地址
                 return DataBaseType.DB2;
             }
             if (connString.Contains("server=") && !connString.Contains("port="))
