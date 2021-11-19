@@ -516,21 +516,28 @@ namespace CYQ.Data.Tool
                     string objStr = string.Empty;
                     foreach (string item in items)
                     {
-                        if (objStr == string.Empty) { objStr = item; }
-                        else { objStr += "," + item; }
+                        if (objStr == string.Empty)
+                        {
+                            objStr = item;
+                        }
+                        else
+                        {
+                            objStr += "," + item;
+                        }
                         char firstChar = objStr[0];
                         if (firstChar == '"' || firstChar == '\'')
                         {
                             //检测双引号的数量
                             if (GetCharCount(objStr, firstChar) % 2 == 0)//引号成双
                             {
-                                list.Add(objStr.Trim(firstChar).Replace("\\" + firstChar, firstChar.ToString()));
+                                string value = objStr.Trim(firstChar).Replace("\\" + firstChar, firstChar.ToString());
+                                list.Add(value.Trim('\r', '\n', '\t', ' '));
                                 objStr = string.Empty;
                             }
                         }
                         else
                         {
-                            list.Add(item);
+                            list.Add(item.Trim('\r', '\n', '\t', ' '));
                             objStr = string.Empty;
                         }
                     }

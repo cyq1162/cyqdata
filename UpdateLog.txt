@@ -911,10 +911,11 @@
 681：优化：SysLog 增加ClientIP字段，调整日志输入增加客户端IP显示。(2021-10-14)
 682：优化：MDataTable 的隐式转换(List<MDataRow>，MDataRowCollection)。(2021-10-15)
 683：优化：LocalCache 优化NETCore下可能出现的死锁。(2021-10-18)
-684：优化：ConvertTool.ChangeType 字符串以"\r\n\t"结尾时转值类型的转换处理。(2021-10-25)
+684：优化：ConvertTool.ChangeType 字符串以"\r\n\t"结尾时转值类型的转换处理。(2021-10-25、2021-11-19)
 685：优化：HttpSessionState 兼容NETCore下Session[索引]取值或赋值。(2021-10-25)
 ------------------------------------------------------------------------------
 686：优化：MActionUI.GetValueOnWeb 对Web自动取值为空值的处理。(2021-11-08、2021-11-16)【V5.8.4.9】
 687：优化：NetCore兼容：HttpCookie 增加Values属性。(2021-11-08)
 688：修复：【678条】调整后对AppDomain.XHtml.Domain无法在context.AcquireRequestState事件中获取的问题。(2021-11-09)
-689：优化：Access改后缀的链接语句支持。(2021-11-07)
+689：优化：Access改后缀的链接语句支持。(2021-11-17)
+690：优化：【684条】空格(2021-11-19)

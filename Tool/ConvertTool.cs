@@ -115,7 +115,7 @@ namespace CYQ.Data.Tool
             }
             else if (t.IsValueType)
             {
-                strValue = strValue.Replace("\r", "").Replace("\n", "").Replace("\t", "").Replace(" ", "");
+                strValue = strValue.Trim('\r', '\n', '\t', ' ');
                 if (t.Name == "DateTime")
                 {
                     switch (strValue.ToLower().TrimEnd(')', '('))
