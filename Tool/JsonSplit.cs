@@ -514,8 +514,9 @@ namespace CYQ.Data.Tool
                 {
                     string[] items = jsonArray.Split(',');
                     string objStr = string.Empty;
-                    foreach (string item in items)
+                    foreach (string value in items)
                     {
+                        string item = value.Trim('\r', '\n', '\t', ' ');
                         if (objStr == string.Empty)
                         {
                             objStr = item;
@@ -530,14 +531,13 @@ namespace CYQ.Data.Tool
                             //检测双引号的数量
                             if (GetCharCount(objStr, firstChar) % 2 == 0)//引号成双
                             {
-                                string value = objStr.Trim(firstChar).Replace("\\" + firstChar, firstChar.ToString());
-                                list.Add(value.Trim('\r', '\n', '\t', ' '));
+                                list.Add(objStr.Trim(firstChar).Replace("\\" + firstChar, firstChar.ToString()));
                                 objStr = string.Empty;
                             }
                         }
                         else
                         {
-                            list.Add(item.Trim('\r', '\n', '\t', ' '));
+                            list.Add(item);
                             objStr = string.Empty;
                         }
                     }
@@ -897,7 +897,7 @@ namespace CYQ.Data.Tool
                 case '\r':
                 case '\n':
                 case '\t':
-                    if (jsonStart && keyStart <= 0 && valueStart <= 0)
+                    if (jsonStart && keyStart <= 1 && valueStart <= 1)
                     {
                         isKeyword = true;
                         // return true;//跳过空格。
