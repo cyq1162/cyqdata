@@ -918,4 +918,4 @@
 687：优化：NetCore兼容：HttpCookie 增加Values属性。(2021-11-08)
 688：修复：【678条】调整后对AppDomain.XHtml.Domain无法在context.AcquireRequestState事件中获取的问题。(2021-11-09)
 689：优化：Access改后缀的链接语句支持。(2021-11-17)
-690：优化：【684条】空格(2021-11-19)
+690：优化：【684条】Json字符串以"\r\n\t"+空格结尾的处理(2021-11-19)
