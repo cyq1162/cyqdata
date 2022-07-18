@@ -483,7 +483,7 @@
 270：取消AppConfig.DB.ReplaceSqlInjection配置项，新增加AppConfig.DB.EditTimeFields项，指定字段时，MAction的Update方法会自动更新该时间字段为当前时间（2016-06-29）
 271：数据结构MCellStruct增加IsUniqueKey,IsForeignKey,FKTableName三个属性，对于where条件的单值，增加内部推导功能：action.Exists("路过秋天") 值为字符串，主键为int或guid，会切为唯一键字段去处理（2016-07-01）
 272：MDataRow的LoadFrom(MDataRow row)：改为默认不影响表结构，即不追加字段（2016-07-02）
-273：增加MDataRow和MDataColumn的调试可视化查看：源码SVN下载地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Visualizer/  （2016-07-02）
+273：增加MDataRow和MDataColumn的调试可视化查看（2016-07-02）
 274：处理mysql批量导数据的分隔符问题（2016-07-03）
 275：为MDataTable的相关查询方法增加智能推导【原本只有MAction有】（2016-07-03）
 276：处理处理mysql批量导数据的符号转义问题（2016-07-03）
@@ -517,7 +517,7 @@
 303：修正MDataTable的SetOrdinal方法（2016-07-15)
 304：修正AcceptChanges的批量更新（2016-07-15)
 //------------到此，所有的Demmo都已写完，写Demo过程中发现的小Bug也处理完了。
-//项目Demo示例SVN地址：http://code.taobao.org/svn/cyqopen/trunk/CYQ.Data.GettingStarted/
+//项目Demo示例SVN地址：https://github.com/cyq1162/CYQ.Data.Demo
 305：处理视图名重复时的问题，同时简化MDataTable的代码，取消MDataTable的ReadFromDbDataReader（统一用CreateFrom(sdr)方法读取。（2016-07-16)
 306：优化通过Reader获取列结构（该方法不靠谱，需要重新修正元数据的DataType、Size、Scale、DalType等参数）（2016-07-16)
 307：为MDataTable和MAction的Set方法增加重载Set(key,value,state)，在循环赋值时，产生批量更新时，可以对state赋值2（2016-07-21)
@@ -808,6 +808,114 @@
 593：AppDebug：Start方法增加重载方法（允许输出框架内部的Sql语句）(2020-04-23)
 594：AppConfig.DB：SchemaMapPath的配置值的情况下，增加表、视图、存储过程也缓存结果到本地(2020-04-23)
 595：修正MSSQL分页问题（>1000页时的情况）(2020-04-23)
+
 596：MySql：修正tiny的几种类型处理(2020-04-30)
 597：XHtmlAction：增加对模板语法 <%# %> 内部执行js eval语法(2020-04-30)
-598：NetCore：由于597的原因，NETCore改成3.1。(2020-04-30)
+598：NetCore：由于597的原因，NETCore改成3.1(已优化回2.1）。(2020-04-30)
+599：因升级可视化调试工具【优化一些表格和Json数据转换相关】(2020-05-28)【V5.8.3.2】
+600：ConvertTool 增强数据类型转换(2020-06-03)
+601：Table 系列：内部优化(2020-06-03)
+602：Postgre 处理大小写兼容问题，增加IsPostgreLower配置项（默认false）(2020-07-01)【V5.8.3.3】
+603：MSSQL:兼容处理hierarchyid数据类型。(2020-07-13)【V5.8.3.4】
+------------------------------------------------------------------------
+604：新增：DB2：开始支持(2020-07-22)【V5.8.3.5】
+605：新增：DB2：完善多数据库兼容、表结构及语句生成等。(2020-07-23)
+606：新增：MDataRow，MAction 开放Sets方法（连续设置值）(2020-07-24)
+607：新增：DB2：补上分页语句。(2020-07-29)
+608：优化：NetCore：Z.Expressions变更为：DynamicExpresso。(2020-07-30)
+------------------------------------------------------------------------
+609：优化：NetCore：调整HttpPostedFile以支持Taurus.MVC自动化API测试(2020-07-31)【V5.8.3.6】
+610：新增：JsonHelper：增加重载方法(2020-08-04)
+611：新增：Log：winform 下的日志路径允许设置绝路路径。(2020-08-24)
+612：修正：Postgre：修正插入主键的问题(2020-08-26)
+612：修正：NetCore：处理Cookie的SimeSite为None、修正Aries 因 调用 Response.End 引发的问题。(2020-08-29)
+613：优化：MDataTable：ToEntity<T>优化FastToT<T>：Emit的实体转换方法（原来仅支持简单类型，现在支持复杂类型）。(2020-09-09)
+614：新增：IOHelper：开放：DetectEncode(...) 检测编码功能。(2020-10-12)
+615：修正：NetCore：修正Aries 读取appsetting.json 编码问题(2020-10-12)
+616：新增：DBTool：GetColumn 获取视图时增加字段描述(2020-10-13)
+617：优化：自动缓存：细节优化【缓存key不区分大小写】(2020-10-13)
+618：优化：MDataTable：兼容处理查询条件为1=2的情况(2020-10-15)
+619：优化：SqlInjection：加强sql未参数化使用时的注入处理。(2020-10-16)
+620：优化：ConvertTool：加强枚举类型的转换。(2020-10-27)
+621：修正：MDataTable.AcceptChange 值状态丢失导致无法更新问题。(2020-11-04)
+622：优化：NetCore下HttpFileCollection方法兼容。(2020-11-06)
+623：修正：JsonHelper.IsJson方法判断。(2020-11-09)
+624：修正：NoSqlCommand.FormatParas参数Bug。(2020-11-16)
+625：修正：AppConfig.IsWeb在子线程下的判断问题。(2020-11-16)
+626：修正：AppConfig.DB.SchemaMapPath 配置表结构外置缓存【MDataColumn（WriteSchema、CreateFrom）方法增加SqlTypeName输出和加载还原】(2020-11-16)
+627：修正：NetCore监控appsettings.json的链接缓存重置。(2020-11-17)
+628：优化：DBTool.Exists等相关方法【CrossDB内部】优化跨库检测。(2020-11-19)
+629：优化：MAction：优化跨库事务链接的设置。(2020-11-19)
+------------------------------------------------------------------------------
+630：修正：JsonHelper.IsJson 对\r\n\t和-符号的判断问题(2020-12-10)【V5.8.3.7】
+631：修正：分布式缓存【Hash不同进程产生不一致】的问题(2020-12-11)
+632：新增：SysLogs： 增加 HttpMethod 属性。(2020-12-14)
+633：修正：MSSQL2012：获取表结构问题【可能：发布订阅后sysobjects表的category值从0变更为32】(2020-12-15)
+634：修正：LocalCache.Remove 未同步移除表结构的问题(2020-12-30)
+635：新增：MDataTable.CreateFrom 增加对Dicationary.Keys、Dicationary.Values的支持。(2020-12-30)
+------------------------------------------------------------------------------
+636：优化：LocalCache.Remove 如果是表结构，则检测并同步移除文件配置SchemaMapPath后的*.tx和*.json文件(2021-01-06)【V5.8.3.8】
+637：优化：Mysql 表描述的获取与生成。(2021-01-21)
+638：修正：IOHelper内部_cache初始化调整，避免项目没有配置文件的时候，可能引发内部死循环的问题。(2021-03-01)
+639：优化：AppConfig.GetConn 增加解密（支持配置文件配置加密的链接字符串【调用EncryptHelper.Encrypt("...")所生成的】）(2021-03-05)
+640：修正：MDataTable.Distinct() 方法调用后无法修改表结构问题。(2021-03-05)
+641：新增：JsonHelper 增加：IsConvertEnumToString、IsConvertEnumToDescription 两个属性，允许构造Json时定义枚举的值是取字符串或描述文字。(2021-03-05)
+642：新增：CYQ.Data.Orm 下增加：JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute 两个特性，允许实体类通过特性定义枚举的值是取字符串或描述文字。(2021-03-05)
+643：优化：系统获取数据库表名时增加名称排序。(2021-04-02)
+643：修复：特殊表名格式XXXX..[TTTT]生成的hashkey检测（会影响表是否存在的判断）。(2021-04-02)
+644：优化：各种细节：（提示Conn找不到 和 SqlInjection error:Index was outside）(2021-04-15)
+645：优化：MDataTable.AcceptChange 增加重载参数（允许指定事务级别）(2021-04-23)
+646：修正：分布式缓存【Hash不同CPU产生不一致】的问题(2021-05-18)
+------------------------------------------------------------------------------
+646：修正：AppConfig.GetConn 方法【解决NetCore下提示找不到Conn项的问题】。(2021-04-20)【V5.8.3.9】【性能提升版本】
+647：修正：MDataTable.AcceptChange 跨库批量事务的问题。(2021-05-31)
+648：优化：MDataRow ToTable(true)方法新增State值状态列。(2021-06-01)
+649：修正：CrossDB.Exists 修正判断问题。(2021-06-08)
+650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16、2021-06-23)
+651：优化：CrossDB.Remove、CrossDB.Add判断问题。(2021-06-16、2021-06-30)
+652：优化：Orm相关（DBFast、SimpleOrmBase的Select<T>提升性能（原DataReader=>MDataTable=>List<T> 调整为：DataReader=>List<T>，节省中间过程）(2021-06-16)
+653：优化：DBSchema 首次初始结构缓存时，对未配置架构缓存外围时，将【视图、存储过程、版本号】部分调整为延迟加载。(2021-06-17)
+654：优化：AutoCache 自动缓存机制，提升单机（LocalCache状态）时的性能。(2021-06-17)
+655：优化：JsonHelper Split、GetValue 两个方法，提升性能。(2021-06-17)
+656：优化：DataType.GetGroup 返回类型由int调整为DataGroupType枚举类型。(2021-06-18)
+657：优化：JsonSplit 优化GetValueLength方法，提升：IsJson、Split 两个方法性能。(2021-06-18)
+658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)
+659：优化：JsonHelper.ToJson方法：对实体List<T>时，提升性能，去掉中间转换环节。(2021-06-23、2021-06-24)
+660：优化：JsonHelper.ToList<T>方法：去掉中间转换环节。(2021-06-28)
+------------------------------------------------------------------------------
+661：优化：JsonHelper.ToList<T>(string json)方法：增加处理对成员变量（FiledInfo）赋值。(2021-06-30)【V5.8.4.0】
+662：优化：实体转MDataRow、MDataTable、Json时：成员变量也加入列头、或Json值的输出。(2021-06-30、2021-07-01)
+------------------------------------------------------------------------------
+663：优化：MDataTable.ToList<T> 增加 T：class 约束。(2021-07-12)【V5.8.4.1】
+664：修正：JsonHelper.ToJson 上版本优化中遗留的List<T>中的T类型为非自定义实体（如Hasttable）的转换问题。(2021-07-13)
+665：修正：JsonHelper.ToJson 上版本优化中遗留的实体中Object定义的未进行具体类型检测问题。(2021-07-14)【V5.8.4.2】
+------------------------------------------------------------------------------
+666：修正：Oracle 中对BINARY_FLOAT、BINARY_DOUBLE 两种数据类型的处理问题(处理数据库转换(2021-08-03)）。(2021-07-19)【V5.8.4.3】
+667：修正：CrossDB.GetSchema 偶尔引发的【集合已修改，可能无法执行枚举操作】中的问题。(2021-07-29)
+668：修正：JsonHelper Fill(object) 为List<MDataRow>类型的异常问题。(2021-08-03)【V5.8.4.4】
+669：修正：ReflectTool.ExistsAttr 线程安全问题引发的：索引超出了数组界限。(2021-08-04)
+670：修正：MDataTable.ToList<T> T为继承自OrmBase的问题。(2021-08-05)【V5.8.4.5】
+------------------------------------------------------------------------------
+671：优化：MDataTable.AcceptChanges(AcceptOp.Auto | AcceptOp.Insert,..)新增组合（忽略更新，仅插入）(2021-09-09)【V5.8.4.6】
+672：修正：AppConfig.EntitySuffix 生成的实体类的后缀不生效的问题。(2021-09-10)
+673：修正：MAction 无法读取Excel表的问题。(2021-09-10)
+------------------------------------------------------------------------------
+674：优化：MDataTable.ToDataTable(bool isAddExtend) 增加重载参数，【为可视化工具：还原记录总数和值状态】(2021-09-10)【V5.8.4.7】
+675：优化：SqlCreate.cs：cell.Struct.SqlTypeName未进行null判断问题。(2021-09-10)
+676：修正：AuthCache在ExeMDataTableList操作时未移除缓存通知的问题。(2021-09-14)
+677：新增：支持：foxPro数据库（.dbf后缀）(2021-09-23)
+678：优化：避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）(2021-09-24、2021-09-28)
+------------------------------------------------------------------------------
+679：修正：MDataTable.ToList 对 IList或IDiction<..>的处理。(2021-10-14)【V5.8.4.8】
+680：修正：补全文本数据库中NoSqlDataReader的实现（修正V5.8.3.9调整后对ORM实体操作的影响）。(2021-10-14)
+681：优化：SysLog 增加ClientIP字段，调整日志输入增加客户端IP显示。(2021-10-14)
+682：优化：MDataTable 的隐式转换(List<MDataRow>，MDataRowCollection)。(2021-10-15)
+683：优化：LocalCache 优化NETCore下可能出现的死锁。(2021-10-18)
+684：优化：ConvertTool.ChangeType 字符串以"\r\n\t"结尾时转值类型的转换处理。(2021-10-25、2021-11-19)
+685：优化：HttpSessionState 兼容NETCore下Session[索引]取值或赋值。(2021-10-25)
+------------------------------------------------------------------------------
+686：优化：MActionUI.GetValueOnWeb 对Web自动取值为空值的处理。(2021-11-08、2021-11-16)【V5.8.4.9】
+687：优化：NetCore兼容：HttpCookie 增加Values属性。(2021-11-08)
+688：修复：【678条】调整后对AppDomain.XHtml.Domain无法在context.AcquireRequestState事件中获取的问题。(2021-11-09)
+689：优化：Access改后缀的链接语句支持。(2021-11-17)
+690：优化：【684条】Json字符串以"\r\n\t"+空格结尾的处理(2021-11-19)
