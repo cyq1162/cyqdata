@@ -192,7 +192,7 @@ namespace System.Web
             }
         }
 
-        public long? ContentLength { get => request.ContentLength; set => request.ContentLength = value; }
+        public long? ContentLength { get => request.ContentLength??0; set => request.ContentLength = value; }
         public string ContentType { get => request.ContentType; set => request.ContentType = value; }
         public Stream InputStream => Body;
         public Stream Body { get => request.Body; set => request.Body = value; }
