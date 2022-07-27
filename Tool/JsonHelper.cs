@@ -501,7 +501,15 @@ namespace CYQ.Data.Tool
             string value = GetSourceValue(json, key);
             return UnEscape(value, op);
         }
-
+        /// <summary>
+        /// Json 返回值是否为true（包含"success":true）
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static bool IsSuccess(string json)
+        {
+            return GetValue<bool>(json, "success");
+        }
         private static string GetSourceValue(string json, string key)
         {
             string result = string.Empty;

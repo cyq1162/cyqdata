@@ -188,7 +188,7 @@ namespace CYQ.Data.Tool
             {
                 //System.Text.Encoding.UTF8
                 string folder = Path.GetDirectoryName(fileName);
-                if (!Directory.Exists(folder))
+                if (!string.IsNullOrEmpty(folder) && !Directory.Exists(folder))
                 {
                     Directory.CreateDirectory(folder);
                 }
