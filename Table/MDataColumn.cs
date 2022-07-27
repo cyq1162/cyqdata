@@ -248,7 +248,18 @@ namespace CYQ.Data.Table
             }
             columnIndex.Clear();
         }
-
+        /// <summary>
+        /// 给列批量赋相同的值。
+        /// </summary>
+        /// <param name="columnName">列名</param>
+        /// <param name="value">值</param>
+        public void SetValue(string columnName, object value)
+        {
+            if (Contains(columnName))
+            {
+                this[columnName].Set(value);
+            }
+        }
         /// <summary>
         /// 输出Json格式的表构架
         /// </summary>
