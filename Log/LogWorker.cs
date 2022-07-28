@@ -81,11 +81,12 @@ namespace CYQ.Data
                     }
                     if (!sys.IsWriteToTxt)
                     {
-                        if (sys.Insert(InsertOp.None)) //直接写数据库。
-                        {
-                            sys.Dispose();
-                            continue;
-                        }
+                        sys.Insert(InsertOp.None);////直接写数据库，日志文件依旧要写。
+                        //if () 
+                        //{
+                        //    sys.Dispose();
+                        //    continue;
+                        //}
                     }
 
                     string todayKey = DateTime.Today.ToString("yyyyMMdd") + ".txt";

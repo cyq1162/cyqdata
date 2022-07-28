@@ -14,7 +14,14 @@ namespace CYQ.Data
 
         public SysLogs()
         {
-            base.SetInit(this, AppConfig.Log.LogTableName, AppConfig.Log.LogConn);
+            if (!string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            {
+                base.SetInit(this, AppConfig.Log.LogTableName, AppConfig.Log.LogConn);
+            }
+            else
+            {
+                IsWriteToTxt = true;
+            }
         }
 
         private int _ID;
@@ -193,6 +200,17 @@ namespace CYQ.Data
 
     public partial class SysLogs
     {
+        /// <summary>
+        /// 将日志写入到队列中待线程执行。
+        /// </summary>
+        public void Write()
+        {
+            if (!AppConfig.Log.IsWriteLog)
+            {
+                Error.Throw("Error : " + LogType + " : " + Message);
+            }
+            LogWorker.Add(this);
+        }
         /// <summary>
         /// 是否写到文本中
         /// </summary>
