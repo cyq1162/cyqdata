@@ -130,7 +130,10 @@ namespace CYQ.Data
                 Error.Throw("Error : " + logType + " : " + message);
             }
             SysLogs log = new SysLogs();
-            log.IsWriteLogOnError = false;
+            if (!isWriteTxt)
+            {
+                log.IsWriteLogOnError = false;
+            }
             log.IsWriteToTxt = isWriteTxt;
             log.Message = message;
             log.LogType = logType;

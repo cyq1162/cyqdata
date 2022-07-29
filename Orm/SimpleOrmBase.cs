@@ -636,14 +636,20 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void ClearPara()
         {
-            Action.ClearPara();
+            if (_Action != null)
+            {
+                _Action.ClearPara();
+            }
         }
         /// <summary>
         /// 清空所有值
         /// </summary>
         public void Clear()
         {
-            Action.Data.Clear();
+            if (_Action != null)
+            {
+                _Action.Data.Clear();
+            }
         }
         #region IDisposable 成员
         /// <summary>
@@ -651,9 +657,9 @@ namespace CYQ.Data.Orm
         /// </summary>
         public void Dispose()
         {
-            if (Action != null && !Action.IsTransation)//ORM的事务，由全局控制，不在这里释放链接。
+            if (_Action != null && !_Action.IsTransation)//ORM的事务，由全局控制，不在这里释放链接。
             {
-                Action.Dispose();
+                _Action.Dispose();
             }
         }
 
