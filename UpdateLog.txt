@@ -927,3 +927,5 @@
 695：新增：SysLogs：新增Write方法，允许将自己追加到线程待插入执行。（2022-07-28）
 696：优化：LogWorker.DoWork：对于启用写数据库日志的，同时保留写日志文件（原来是不保留）。（2022-07-28）
 697：优化：SimpleOrmBase：优化掉非必要异常的抛出。（2022-07-29）
+698：新增：JsonHelper：增加对MDictionary（内部线程安全字典）的转换支持。（2022-07-30）
+699：优化：JsonHelper和ConvertTool.ChangeType优化对Json的数据转换。（2022-07-31）

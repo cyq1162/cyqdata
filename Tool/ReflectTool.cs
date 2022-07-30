@@ -303,7 +303,7 @@ namespace CYQ.Data.Tool
             {
                 return SysType.Array;
             }
-            if (t.FullName.StartsWith("System.")) // 系统类型
+            if (t.FullName.StartsWith("System.") || t.Name.StartsWith("MDictionary") || t.Name.StartsWith("MList")) // 系统类型
             {
                 if (t.IsGenericType)
                 {

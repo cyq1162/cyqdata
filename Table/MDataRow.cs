@@ -1602,37 +1602,6 @@ namespace CYQ.Data.Table
                                 #region Json 嵌套处理，复杂数组处理。
                                 MDataTable dt = MDataTable.CreateFrom(value);//, SchemaCreate.GetColumns(argTypes[0])
                                 returnObj = dt.ToList(propType);
-                                //returnObj = Activator.CreateInstance(propType, dt.Rows.Count);//创建实例
-                                //Type objListType = returnObj.GetType();
-                                //bool isArray = sysType == SysType.Array;
-                                //for (int i = 0; i < dt.Rows.Count; i++)
-                                //{
-                                //    MDataRow rowItem = dt.Rows[i];
-                                //    object o = GetValue(rowItem, argTypes[0]);
-                                //    MethodInfo method;
-                                //    if (isArray)
-                                //    {
-                                //        Type objType = propType.Assembly.GetType(propType.FullName.Replace("[]", ""));
-                                //        Object item = rowItem.ToEntity(objType);
-                                //        method = objListType.GetMethod("Set");
-                                //        if (method != null)
-                                //        {
-                                //            method.Invoke(returnObj, new object[] { i, item });
-                                //        }
-                                //    }
-                                //    else
-                                //    {
-                                //        method = objListType.GetMethod("Add");
-                                //        if (method == null)
-                                //        {
-                                //            method = objListType.GetMethod("Push");
-                                //        }
-                                //        if (method != null)
-                                //        {
-                                //            method.Invoke(returnObj, new object[] { o });
-                                //        }
-                                //    }
-                                //}
                                 dt = null;
                                 #endregion
                             }

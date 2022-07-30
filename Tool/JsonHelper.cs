@@ -1582,78 +1582,88 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">集合类型</typeparam>
         /// <param name="json">json数据</param>
         /// <returns></returns>
+        /// 
         private static T ToIEnumerator<T>(string json, EscapeOp op)
             where T : class
         {
-            Type t = typeof(T);
-            if (t.FullName.StartsWith("System.Collections."))
+            return ToIEnumerator(typeof(T), json, op) as T;
+        }
+        private static object ToIEnumerator(Type t, string json, EscapeOp op)
+        {
+            if (t.FullName.StartsWith("System.Collections.") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
             {
                 Type[] ts;
                 int argLength = ReflectTool.GetArgumentLength(ref t, out ts);
-                #region Dictionary
-                if (t.FullName.Contains("Dictionary") && argLength == 2 && ts[0].Name == "String" && ts[1].Name == "String")
+                if (argLength == 1)
                 {
-                    Dictionary<string, string> dic = Split(json);
-                    return dic as T;
+                    return JsonSplit.ToEntityOrList(t, json, op);
                 }
-
-                T objT = Activator.CreateInstance<T>();
-                Type oT = objT.GetType();
-                MethodInfo mi = null;
-                try
+                else
                 {
-                    mi = oT.GetMethod("Add");
-                }
-                catch
-                {
-
-                }
-                if (mi == null)
-                {
-                    mi = oT.GetMethod("Add", new Type[] { typeof(string), typeof(string) });
-                }
-                if (mi != null)
-                {
-                    if (argLength == 1)
+                    #region Dictionary
+                    if (t.FullName.Contains("Dictionary") && ts[0].Name == "String" && ts[1].Name == "String")
                     {
-                        List<Dictionary<string, string>> items = JsonSplit.Split(json);
-                        if (items != null && items.Count > 0)
+                        return Split(json);
+                    }
+
+                    object objT = Activator.CreateInstance(t);
+                    Type oT = objT.GetType();
+                    MethodInfo mi = null;
+                    try
+                    {
+                        if (t.Name == "NameValueCollection")
                         {
-                            foreach (Dictionary<string, string> item in items)
-                            {
-                                mi.Invoke(objT, new object[] { MDataRow.CreateFrom(item).ToEntity(ts[0]) });
-                            }
+                            mi = oT.GetMethod("Add", new Type[] { typeof(string), typeof(string) });
+                        }
+                        else
+                        {
+                            mi = oT.GetMethod("Add");
                         }
                     }
-                    else if (argLength == 2)
+                    catch
+                    {
+
+                    }
+                    if (mi == null)
+                    {
+                        mi = oT.GetMethod("Add", new Type[] { typeof(string), typeof(string) });
+                    }
+                    if (mi != null)
                     {
                         Dictionary<string, string> dic = Split(json);
                         if (dic != null && dic.Count > 0)
                         {
                             foreach (KeyValuePair<string, string> kv in dic)
                             {
-                                mi.Invoke(objT, new object[] { Convert.ChangeType(kv.Key, ts[0]), Convert.ChangeType(UnEscape(kv.Value, op), ts[1]) });
+                                mi.Invoke(objT, new object[] { ConvertTool.ChangeType(kv.Key, ts[0]), ConvertTool.ChangeType(UnEscape(kv.Value, op), ts[1]) });
                             }
                         }
+                        return objT;
                     }
-                    return objT;
                 }
                 #endregion
 
             }
             else if (t.FullName.EndsWith("[]"))
             {
-                Object o = new MDataRow().GetObj(t, json);
-                if (o != null)
-                {
-                    return (T)o;
-                }
+                return new MDataRow().GetObj(t, json);
             }
-            return default(T);
+            return null;
         }
         public static T ToEntity<T>(string json) where T : class
         {
             return ToEntity<T>(json, DefaultEscape);
+        }
+        internal static object ToEntity(Type t, string json, EscapeOp op)
+        {
+            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
+            {
+                return ToIEnumerator(t, json, op);
+            }
+            else
+            {
+                return JsonSplit.ToEntityOrList(t, json, op);
+            }
         }
         /// <summary>
         /// Convert json to Entity
@@ -1663,16 +1673,13 @@ namespace CYQ.Data.Tool
         public static T ToEntity<T>(string json, EscapeOp op) where T : class
         {
             Type t = typeof(T);
-            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]"))
+            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
             {
                 return ToIEnumerator<T>(json, op);
             }
             else
             {
-                return JsonSplit.Split<T>(json, op);
-                //MDataRow row = new MDataRow(TableSchema.GetColumnByType(t));
-                //row.LoadFrom(json, op);
-                //return row.ToEntity<T>();
+                return JsonSplit.ToEntity<T>(json, op);
             }
         }
         public static List<T> ToList<T>(string json) where T : class
@@ -1686,8 +1693,7 @@ namespace CYQ.Data.Tool
         /// <typeparam name="T">Type<para>类型</para></typeparam>
         public static List<T> ToList<T>(string json, EscapeOp op) where T : class
         {
-            return JsonSplit.SplitList<T>(json, 0, op);//减少中间转换环节。
-            // return ToMDataTable(json, TableSchema.GetColumnByType(typeof(T)), op).ToList<T>();
+            return JsonSplit.ToList<T>(json, 0, op);//减少中间转换环节。
         }
         /// <summary>
         /// Convert object to json

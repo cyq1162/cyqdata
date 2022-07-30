@@ -350,16 +350,17 @@ namespace CYQ.Data.Tool
 
 
         #region 扩展转实体T
-        internal static T Split<T>(string json, EscapeOp op)
+
+        internal static T ToEntity<T>(string json, EscapeOp op)
         {
-            List<T> t = SplitList<T>(json, 0, op);
+            List<T> t = ToList<T>(json, 0, op);
             if (t.Count > 0)
             {
                 return t[0];
             }
             return default(T);
         }
-        internal static List<T> SplitList<T>(string json, int topN, EscapeOp op)
+        internal static List<T> ToList<T>(string json, int topN, EscapeOp op)
         {
             List<T> result = new List<T>();
 
@@ -494,6 +495,157 @@ namespace CYQ.Data.Tool
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// 支持转换：实体或实体列表二合一
+        /// </summary>
+        internal static object ToEntityOrList(Type t, string json, EscapeOp op)
+        {
+            Type toType = t;
+            object listObj = null;
+            MethodInfo method = null;
+            if (t.IsGenericType && (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList")))
+            {
+                Type[] paraTypeList = null;
+                ReflectTool.GetArgumentLength(ref t, out paraTypeList);
+                listObj = Activator.CreateInstance(t);//创建实例
+                toType = paraTypeList[0];
+                method = t.GetMethod("Add");
+            }
+
+            if (!string.IsNullOrEmpty(json))
+            {
+                object entity = Activator.CreateInstance(toType);
+                bool hasSetValue = false;
+                List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(toType);
+                List<FieldInfo> fInfoList = ReflectTool.GetFieldList(toType);
+                //string key = string.Empty;
+                StringBuilder key = new StringBuilder(32);
+                StringBuilder value = new StringBuilder();
+                CharState cs = new CharState(false);
+                try
+                {
+                    #region 核心逻辑
+                    char c;
+                    for (int i = 0; i < json.Length; i++)
+                    {
+                        c = json[i];
+                        if (!cs.IsKeyword(c))//设置关键符号状态。
+                        {
+                            if (cs.jsonStart)//Json进行中。。。
+                            {
+                                if (cs.keyStart > 0)
+                                {
+                                    key.Append(c);
+                                }
+                                else if (cs.valueStart > 0)
+                                {
+                                    value.Append(c);
+                                }
+                            }
+                            else if (!cs.arrayStart)//json结束，又不是数组，则退出。
+                            {
+                                break;
+                            }
+                        }
+                        else if (cs.childrenStart)//正常字符，值状态下。
+                        {
+                            int temp;
+                            int length = GetValueLength(false, json, i, false, out temp);//优化后，速度快了10倍
+                            value.Length = 0;
+                            value.Append(json.Substring(i, length));
+                            cs.childrenStart = false;
+                            cs.valueStart = 0;
+                            cs.setDicValue = true;
+                            i = i + length - 1;
+                        }
+                        if (cs.setDicValue)//设置键值对。
+                        {
+                            if (key.Length > 0)
+                            {
+                                string k = key.ToString();
+                                string val = value.ToString();//.TrimEnd('\r', '\n', '\t');
+                                bool isNull = json[i - 5] == ':' && json[i] != '"' && val.Length == 4 && val == "null";
+                                if (isNull)
+                                {
+                                    val = "";
+                                }
+                                else
+                                {
+                                    val = JsonHelper.UnEscape(val, op);
+                                }
+                                object o = val;
+                                foreach (PropertyInfo p in pInfoList)
+                                {
+                                    if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
+                                    {
+                                        if (p.CanWrite)
+                                        {
+                                            if (p.PropertyType.Name != "String")
+                                            {
+                                                o = ConvertTool.ChangeType(val, p.PropertyType);
+                                            }
+                                            p.SetValue(entity, o, null);
+                                            hasSetValue = true;
+                                        }
+                                        break;
+                                    }
+                                }
+                                if (!hasSetValue && fInfoList.Count > 0)
+                                {
+                                    foreach (FieldInfo f in fInfoList)
+                                    {
+                                        if (String.Compare(f.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
+                                        {
+                                            if (f.FieldType.Name != "String")
+                                            {
+                                                o = ConvertTool.ChangeType(val, f.FieldType);
+                                            }
+                                            f.SetValue(entity, o);
+                                            hasSetValue = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+
+                            }
+                            cs.setDicValue = false;
+                            key.Length = 0;
+                            value.Length = 0;
+                        }
+
+                        if (!cs.jsonStart && hasSetValue)
+                        {
+                            if (method != null)
+                            {
+                                method.Invoke(listObj, new object[] { entity });
+                            }
+                            else
+                            {
+                                return entity;
+                            }
+                            if (cs.arrayStart)//处理数组。
+                            {
+                                entity = Activator.CreateInstance(toType);
+                                hasSetValue = false;
+                            }
+                        }
+                    }
+                    #endregion
+                }
+                catch (Exception err)
+                {
+                    Log.Write(err, LogType.Error);
+                }
+                finally
+                {
+                    key = null;
+                    value = null;
+                }
+            }
+            return listObj;
         }
         #endregion
     }

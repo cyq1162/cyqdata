@@ -205,17 +205,24 @@ namespace CYQ.Data.Tool
 
                 if (valueType.FullName != t.FullName)
                 {
+                    if ((strValue.StartsWith("{") || strValue.StartsWith("[")) && (strValue.EndsWith("}") || strValue.EndsWith("]")))
+                    {
+                        return JsonHelper.ToEntity(t, strValue, EscapeOp.Default);
+                    }
                     switch (ReflectTool.GetSystemType(ref t))
                     {
                         case SysType.Custom:
-
-                            return MDataRow.CreateFrom(strValue).ToEntity(t);
+                            return MDataRow.CreateFrom(value).ToEntity(t);
                         case SysType.Generic:
-                            if (t.Name.StartsWith("List") || t.Name.StartsWith("IList"))
-                            {
-                                return MDataTable.CreateFrom(strValue).ToList(t);
-                            }
-                            break;
+                        case SysType.Collection:
+                            return MDataTable.CreateFrom(value).ToList(t);
+                            //case SysType.Generic:
+                            //    if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
+                            //    {
+                            //        return JsonSplit.ToEntity(t, strValue, EscapeOp.Default);
+                            //        //return MDataTable.CreateFrom(strValue).ToList(t);
+                            //    }
+                           // break;
                         case SysType.Array:
                             if (t.Name == "Byte[]")
                             {
@@ -262,7 +269,7 @@ namespace CYQ.Data.Tool
             {
                 #region Reader
 
-              
+
                 if (reader.HasRows)
                 {
                     Dictionary<string, Type> kv = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
@@ -271,7 +278,7 @@ namespace CYQ.Data.Tool
                         kv.Add(reader.GetName(i), reader.GetFieldType(i));
                     }
 
-                    
+
                     List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
                     List<FieldInfo> fInfoList = ReflectTool.GetFieldList(t);
                     while (reader.Read())
