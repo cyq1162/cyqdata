@@ -1606,7 +1606,7 @@ namespace CYQ.Data.Tool
                         return Split(json);
                     }
 
-                    object objT = Activator.CreateInstance(t);
+                    object objT = t.Name.Contains("Dictionary") ? Activator.CreateInstance(t, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(t);
                     Type oT = objT.GetType();
                     MethodInfo mi = null;
                     try

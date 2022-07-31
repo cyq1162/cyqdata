@@ -143,7 +143,7 @@ namespace System.Web
             //response.SendFileAsync()
         }
         public void Clear() { response.Clear(); }
-        public void Flush() { response.Body.FlushAsync(); }
+        public void Flush() { response.Body.Flush(); }
         #endregion
 
 
