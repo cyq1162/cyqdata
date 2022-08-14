@@ -19,7 +19,7 @@ namespace System.Web
         Microsoft.AspNetCore.Http.HttpRequest request => context.Request;
         internal HttpRequest()
         {
-            
+
         }
 
         public string this[string name]
@@ -59,7 +59,7 @@ namespace System.Web
                     HttpFileCollection files = new HttpFileCollection();
                     foreach (IFormFile file in request.Form.Files)
                     {
-                        files.Add(new HttpPostedFile(file),file.Name);
+                        files.Add(new HttpPostedFile(file), file.Name);
                     }
                     return files;
                 }
@@ -154,7 +154,12 @@ namespace System.Web
         {
             get
             {
-                return request.Headers["X-Original-For"];
+                string ip = request.Headers["X-Original-For"];
+                if (string.IsNullOrEmpty(ip))
+                {
+                    ip = context.Connection.RemoteIpAddress.ToString() + ":" + context.Connection.RemotePort;
+                }
+                return ip;
             }
         }
         public string UserAgent
@@ -192,7 +197,7 @@ namespace System.Web
             }
         }
 
-        public long? ContentLength { get => request.ContentLength??0; set => request.ContentLength = value; }
+        public long? ContentLength { get => request.ContentLength ?? 0; set => request.ContentLength = value; }
         public string ContentType { get => request.ContentType; set => request.ContentType = value; }
         public Stream InputStream => Body;
         public Stream Body { get => request.Body; set => request.Body = value; }
