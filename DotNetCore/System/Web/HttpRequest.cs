@@ -157,7 +157,8 @@ namespace System.Web
                 string ip = request.Headers["X-Original-For"];
                 if (string.IsNullOrEmpty(ip))
                 {
-                    ip = context.Connection.RemoteIpAddress.ToString() + ":" + context.Connection.RemotePort;
+                    string[] items = context.Connection.RemoteIpAddress.ToString().Split(':');
+                    ip = (items[items.Length - 1] == "1" ? "127.0.0.1" : items[items.Length - 1]) + ":" + context.Connection.RemotePort;
                 }
                 return ip;
             }
