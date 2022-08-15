@@ -89,6 +89,7 @@ namespace CYQ.Data.Orm
 
 
         internal MDataColumn Columns = null;
+        private bool _IsWriteLogOnError = true;
         /// <summary>
         /// 标识是否允许写日志(默认true)
         /// </summary>
@@ -96,9 +97,10 @@ namespace CYQ.Data.Orm
         {
             set
             {
-                if (Action != null && Action.dalHelper != null)
+                _IsWriteLogOnError = value;
+                if (_Action != null && _Action.dalHelper != null)
                 {
-                    Action.dalHelper.IsWriteLogOnError = value;
+                    _Action.dalHelper.IsWriteLogOnError = value;
                 }
             }
         }
@@ -132,6 +134,10 @@ namespace CYQ.Data.Orm
                 if (_Action == null)
                 {
                     SetDelayInit(_entityInstance, _tableName, _conn);//延迟加载
+                    if (_Action != null && _Action.dalHelper != null)
+                    {
+                        _Action.dalHelper.IsWriteLogOnError = _IsWriteLogOnError;
+                    }
                 }
                 return _Action;
             }
@@ -506,7 +512,7 @@ namespace CYQ.Data.Orm
         /// <param name="selectColumns">指定返回的列</param>
         public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count) where T : class
         {
-           // return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
+            // return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
             return Action.Select<T>(pageIndex, pageSize, where, out count);
         }
 

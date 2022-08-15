@@ -35,7 +35,7 @@ namespace System.Web
         }
 
         private static HttpContext _Current;
-       // public static readonly object o = new object();
+        // public static readonly object o = new object();
         public static HttpContext Current
         {
             get
@@ -97,8 +97,9 @@ namespace System.Web
                     session = new HttpSessionState();
                 }
             }
-            catch{
-               // CYQ.Data.Log.WriteLogToTxt(err);
+            catch
+            {
+                // CYQ.Data.Log.WriteLogToTxt(err);
             }
             server = new HttpServerUtility();
             page = new Page();
@@ -111,8 +112,40 @@ namespace System.Web
         public HttpServerUtility Server => server;
         public IFeatureCollection Features => NetCoreContext.Features;
         public ConnectionInfo Connection => NetCoreContext.Connection;
-        public Exception Error { get; set; }
-        public IHttpHandler Handler { get; set; }
+        public Exception Error
+        {
+            get
+            {
+                object err;
+                NetCoreContext.Items.TryGetValue("Error", out err);
+                return err as Exception;
+            }
+            set
+            {
+                if (NetCoreContext.Items.ContainsKey("Error"))
+                {
+                    NetCoreContext.Items.Remove("Error");
+                }
+                NetCoreContext.Items.Add("Error", value);
+            }
+        }
+        public IHttpHandler Handler
+        {
+            get
+            {
+                object err;
+                NetCoreContext.Items.TryGetValue("Handler", out err);
+                return err as IHttpHandler;
+            }
+            set
+            {
+                if (NetCoreContext.Items.ContainsKey("Handler"))
+                {
+                    NetCoreContext.Items.Remove("Handler");
+                }
+                NetCoreContext.Items.Add("Handler", value);
+            }
+        }
         public WebSocketManager WebSockets => NetCoreContext.WebSockets;
 
         // public AuthenticationManager Authentication => context.Authentication;

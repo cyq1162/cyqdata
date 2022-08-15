@@ -71,26 +71,17 @@ namespace CYQ.Data
             while (true)
             {
                 empty++;
+                bool dbErr = false;
                 while (_LogQueue.Count > 0)
                 {
                     empty = 0;
+
                     SysLogs sys = _LogQueue.Dequeue();
-                    if(sys==null)
+                    if (sys == null)
                     {
                         continue;
                     }
-                    if (!sys.IsWriteToTxt)
-                    {
-                        sys.Insert(InsertOp.None);////直接写数据库，日志文件依旧要写。
-                        //if () 
-                        //{
-                        //    sys.Dispose();
-                        //    continue;
-                        //}
-                    }
-
                     string todayKey = DateTime.Today.ToString("yyyyMMdd") + ".txt";
-
                     if (!string.IsNullOrEmpty(sys.LogType))
                     {
                         todayKey = sys.LogType.TrimEnd('_') + '_' + todayKey;
@@ -100,7 +91,22 @@ namespace CYQ.Data
                     //检测文件路径：
                     string body = sys.GetFormatterText();
                     IOHelper.Save(filePath, body, true, false);
-                    sys.Dispose();
+                    try
+                    {
+                        if (!dbErr)
+                        {
+                            if (!sys.IsWriteToTxt)
+                            {
+                                sys.Insert(InsertOp.None);//直接写数据库，日志文件依旧要写。
+                            }
+                            sys.Dispose();
+                        }
+                    }
+                    catch
+                    {
+                        //数据库异常，不处理。
+                        dbErr = true;
+                    }
                 }
                 Thread.Sleep(5000);
                 if (empty > 100)
