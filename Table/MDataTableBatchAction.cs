@@ -539,7 +539,7 @@ namespace CYQ.Data.Table
                         {
                             sbc.ColumnMappings.Add(column.ColumnName, column.ColumnName);
                         }
-                        if (AppConfig.IsAspNetCore)
+                        if (AppConfig.IsNetCore)
                         {
                             sbc.WriteToServer(mdt.ToDataTable());
                         }
@@ -640,7 +640,7 @@ namespace CYQ.Data.Table
         }
         bool IsAllowBulkCopy(DataBaseType dalType)
         {
-            if (!AppConfig.IsAspNetCore)
+            if (!AppConfig.IsNetCore)
             {
                 foreach (MCellStruct st in mdt.Columns)
                 {

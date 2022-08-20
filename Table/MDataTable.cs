@@ -1494,13 +1494,13 @@ namespace CYQ.Data.Table
                         MDataRow row = dt.NewRow();
                         if (isObj)
                         {
-                            row.LoadFrom(o, op);//初始值状态为1
+                            row.LoadFrom(o, op, 1);//初始值状态为1
                         }
                         else
                         {
                             row.Set(0, o, 1);
                         }
-                        dt.Rows.Add(row);
+                        dt.Rows.Add(row, false);
                     }
                 }
                 catch (Exception err)

@@ -618,7 +618,7 @@ namespace CYQ.Data.Orm
         }
         private void GetValueFromEntity()
         {
-            if (!IsUseAop || AppConfig.IsAspNetCore)//ASPNETCore下，动态代理的Aop是无效的
+            if (!IsUseAop || AppConfig.IsNetCore)//ASPNETCore下，动态代理的Aop是无效的
             {
                 MDataRow d = Action.Data;//先触发延时加载的。
                 MDataRow row = MDataRow.CreateFrom(entity);//以实体原有值为基础。

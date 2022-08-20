@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 
 using System.Threading;
 using CYQ.Data.Tool;
+using System.Web;
 
 
 namespace CYQ.Data
@@ -138,16 +139,23 @@ namespace CYQ.Data
             log.Message = message;
             log.LogType = logType;
             log.CreateTime = DateTime.Now;
-            if (AppConfig.IsWeb && System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Handler != null)
+            try
             {
-                System.Web.HttpRequest request = System.Web.HttpContext.Current.Request;
-                log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + System.Web.HttpUtility.UrlDecode(request.RawUrl);
-                if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
+                if (AppConfig.IsWeb && HttpContext.Current != null && HttpContext.Current.Handler != null)
                 {
-                    log.RefererUrl =  System.Web.HttpUtility.UrlDecode(request.UrlReferrer.ToString());
+                    HttpRequest request = HttpContext.Current.Request;
+                    log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + HttpUtility.UrlDecode(request.RawUrl);
+                    if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
+                    {
+                        log.RefererUrl = HttpUtility.UrlDecode(request.UrlReferrer.ToString());
+                    }
+                    log.HttpMethod = request.HttpMethod;
+                    log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
                 }
-                log.HttpMethod = request.HttpMethod;
-                log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
+            }
+            catch
+            {
+
             }
             LogWorker.Add(log);
         }

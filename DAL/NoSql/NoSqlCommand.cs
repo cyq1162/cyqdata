@@ -192,6 +192,7 @@ namespace CYQ.Data
                 string name, asName;
                 foreach (string field in ss.FieldItems)
                 {
+                    if (field == null) { continue; }
                     string[] items = field.Trim().Split(' ');
                     name = items[0];
                     asName = items[items.Length - 1];
@@ -241,6 +242,7 @@ namespace CYQ.Data
                 int index = 0;
                 foreach (string item in ss.FieldItems)
                 {
+                    if (item == null) { continue; }
                     index = item.IndexOf('=');//´¦Àí£¬ºÅ¡£
                     if (index > -1)
                     {

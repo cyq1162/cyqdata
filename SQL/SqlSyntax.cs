@@ -238,8 +238,11 @@ namespace CYQ.Data.SQL
                                     if (end == -1) { break; }
                                 }
                                 string keys = sqlText.Substring(start, end - start).Trim();
-                                string[] keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
-
+                                string[] keyItems = null;//insert into aaa values('','');
+                                if (keys.Length > 2)//可能为空。
+                                {
+                                    keyItems = keys.Substring(1, keys.Length - 2).Split(',');//去除两边括号再按逗号分隔。
+                                }
                                 string values = sqlText.Substring(end + 6).Trim();
                                 if (IsSelect && IsFrom)
                                 {
@@ -254,6 +257,10 @@ namespace CYQ.Data.SQL
                                 {
                                     // insert into ... values 模式。
                                     values = values.Substring(1, values.Length - 2);//去除两边括号
+                                }
+                                if (keyItems == null)
+                                {
+                                    keyItems = new string[values.Split(',').Length];
                                 }
                                 int quoteCount = 0, commaIndex = 0, valueIndex = 0;
 

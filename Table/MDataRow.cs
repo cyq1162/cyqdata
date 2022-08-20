@@ -1352,6 +1352,16 @@ namespace CYQ.Data.Table
         /// <param name="entity">实体对象</param>
         public void LoadFrom(object entity, BreakOp op)
         {
+            LoadFrom(entity, op, 2);
+        }
+        /// <summary>
+        /// 将实体转成数据行。
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="op">跳过设置的选项</param>
+        /// <param name="initState">初始值：0无法插入和更新；1可插入；2可插入可更新(默认值)</param>
+        public void LoadFrom(object entity, BreakOp op, int initState)
+        {
             if (entity == null)
             {
                 return;
@@ -1380,7 +1390,7 @@ namespace CYQ.Data.Table
                 {
                     foreach (PropertyInfo p in pis)
                     {
-                        SetValueToCell(entity, op, p, null);
+                        SetValueToCell(entity, op, p, null, initState);
                     }
                 }
 
@@ -1389,7 +1399,7 @@ namespace CYQ.Data.Table
                 {
                     foreach (FieldInfo f in fis)
                     {
-                        SetValueToCell(entity, op, null, f);
+                        SetValueToCell(entity, op, null, f, initState);
                     }
                 }
 
@@ -1399,7 +1409,7 @@ namespace CYQ.Data.Table
                 Log.Write(err, LogType.Error);
             }
         }
-        private void SetValueToCell(object entity, BreakOp op, PropertyInfo p, FieldInfo f)
+        private void SetValueToCell(object entity, BreakOp op, PropertyInfo p, FieldInfo f, int initState)
         {
             string name = p != null ? p.Name : f.Name;
             int index = Columns.GetIndex(name);
@@ -1450,7 +1460,7 @@ namespace CYQ.Data.Table
                         }
                         break;
                 }
-                Set(index, objValue, 2);//它的状态应该值设置，改为1是不对的。
+                Set(index, objValue, initState);//外部状态1，内部默认是2。
             }
         }
         /// <summary>

@@ -6,6 +6,7 @@ using System.Web;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
+using System.Reflection;
 
 namespace CYQ.Data
 {
@@ -337,7 +338,7 @@ namespace CYQ.Data
                 if (string.IsNullOrEmpty(_WebRootPath))
                 {
 
-                    if (IsAspNetCore)
+                    if (IsNetCore)
                     {
                         string path = Environment.CurrentDirectory + "/wwwroot";
                         if (Directory.Exists(path))
@@ -359,23 +360,37 @@ namespace CYQ.Data
             set
             {
                 _WebRootPath = value;
+                if (value.Contains("wwwroot"))
+                {
+                    webState = 1;
+                }
             }
         }
-        private static bool _IsWeb = false;
-        internal static bool IsWeb
+        private static int webState = -1;
+        /// <summary>
+        /// 当前运行环境是否Web应用。
+        /// </summary>
+        public static bool IsWeb
         {
             get
             {
-                if (!_IsWeb)
+                if (webState == -1)
                 {
-                    _IsWeb = HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config");
-                    if (!_IsWeb)
+                    if (HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config")
+                       || (WebRootPath.Contains("wwwroot") && Directory.Exists(WebRootPath))
+                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll"))
                     {
-                        string[] files = Directory.GetFiles(AppConst.AssemblyPath, "*.exe", SearchOption.TopDirectoryOnly);
-                        _IsWeb = files == null || files.Length == 0;
+                        webState = 1;
                     }
                 }
-                return _IsWeb;
+                return webState == 1;
+            }
+            set
+            {
+                if (webState != 1)
+                {
+                    webState = value ? 1 : 0;
+                }
             }
         }
         internal static Uri WebUri
@@ -397,23 +412,32 @@ namespace CYQ.Data
             }
         }
         //读配置文件时会修改此值。
-        private static bool _IsAspNetCore = false;
+        private static int _NetCoreState = -1;
         /// <summary>
-        /// 当前是否ASP.NET Core环境。
+        /// 当前是否.NET Core环境。
         /// </summary>
-        public static bool IsAspNetCore
+        public static bool IsNetCore
         {
             get
             {
-                if (!_IsAspNetCore)
+                if (_NetCoreState == -1)
                 {
-                    _IsAspNetCore = File.Exists(AppConst.AssemblyPath + "appsettings.json");
+                    Assembly ass = Assembly.GetExecutingAssembly();
+                    foreach (var item in ass.GetCustomAttributes(typeof(AssemblyTitleAttribute), false))
+                    {
+                        if (((AssemblyTitleAttribute)item).Title.Contains("Core"))
+                        {
+                            _NetCoreState = 1;
+                            break;
+                        }
+                    }
+                    if (_NetCoreState != 1)
+                    {
+                        _NetCoreState = 0;
+                    }
+
                 }
-                return _IsAspNetCore;
-            }
-            set
-            {
-                _IsAspNetCore = value;
+                return _NetCoreState == 1;
             }
         }
         #endregion
@@ -634,7 +658,7 @@ namespace CYQ.Data
                     ConnBean.Remove("Conn");
                     _DefaultConn = value;
                     SetConn("Conn", value);
-                   
+
                 }
             }
             /*
