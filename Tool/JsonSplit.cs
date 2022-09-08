@@ -427,11 +427,13 @@ namespace CYQ.Data.Tool
                                 {
                                     val = JsonHelper.UnEscape(val, op);
                                 }
+                                bool hasProperty = false;
                                 object o = val;
                                 foreach (PropertyInfo p in pInfoList)
                                 {
                                     if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
                                     {
+                                        hasProperty = true;
                                         if (p.CanWrite)
                                         {
                                             if (p.PropertyType.Name != "String")
@@ -444,7 +446,7 @@ namespace CYQ.Data.Tool
                                         break;
                                     }
                                 }
-                                if (!hasSetValue && fInfoList.Count > 0)
+                                if (!hasProperty && fInfoList.Count > 0)
                                 {
                                     foreach (FieldInfo f in fInfoList)
                                     {
@@ -575,11 +577,13 @@ namespace CYQ.Data.Tool
                                 {
                                     val = JsonHelper.UnEscape(val, op);
                                 }
+                                bool hasProperty = false;
                                 object o = val;
                                 foreach (PropertyInfo p in pInfoList)
                                 {
                                     if (String.Compare(p.Name, k, StringComparison.OrdinalIgnoreCase) == 0)
                                     {
+                                        hasProperty = true;
                                         if (p.CanWrite)
                                         {
                                             if (p.PropertyType.Name != "String")
@@ -592,7 +596,7 @@ namespace CYQ.Data.Tool
                                         break;
                                     }
                                 }
-                                if (!hasSetValue && fInfoList.Count > 0)
+                                if (!hasProperty && fInfoList.Count > 0)
                                 {
                                     foreach (FieldInfo f in fInfoList)
                                     {

@@ -5,8 +5,6 @@ using System.IO;
 using System.Threading;
 using System.Collections.Generic;
 using System.Text;
-using CYQ.Data.Table;
-using System.Text.RegularExpressions;
 using CYQ.Data.Tool;
 
 namespace CYQ.Data.Xml

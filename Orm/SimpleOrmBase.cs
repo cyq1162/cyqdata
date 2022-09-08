@@ -629,7 +629,7 @@ namespace CYQ.Data.Orm
                     {
                         continue;
                     }
-                    if (cell.State == 2 && cell.Struct.valueType.IsValueType && (valueCell.StringValue == "0" || valueCell.StringValue == DateTime.MinValue.ToString()))
+                    if (cell.State == 2 && cell.Struct.ValueType.IsValueType && (valueCell.StringValue == "0" || valueCell.StringValue == DateTime.MinValue.ToString()))
                     {
                         continue;
                     }
