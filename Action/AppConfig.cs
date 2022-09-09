@@ -378,7 +378,8 @@ namespace CYQ.Data
                 {
                     if (HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config")
                        || (WebRootPath.Contains("wwwroot") && Directory.Exists(WebRootPath))
-                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll"))
+                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll")
+                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Mvc.dll"))
                     {
                         webState = 1;
                     }
