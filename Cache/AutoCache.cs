@@ -820,13 +820,14 @@ namespace CYQ.Data.Cache
             }
             _AutoCache.Set(delKey, 0, 0.1);//设置6秒时间
         }
-        public static void ClearCache(object threadid)
+        public static void ClearCache(object threadID)
         {
             try
             {
-
+                System.Diagnostics.Debug.WriteLine("AutoCache.ClearCache on Thread :" + threadID);
                 while (true)
                 {
+                   
                     Thread.Sleep(5);
                     if (!KeyTable.HasAutoCacheTable && KeyTable.CheckSysAutoCacheTable())//检测并创建表，放在循环中，是因为可能在代码中延后会AppConifg.Cache.AutoCacheConn赋值;
                     {
@@ -851,9 +852,9 @@ namespace CYQ.Data.Cache
             {
             }
         }
-        public static void AutoCacheKeyTask(object threadid)
+        public static void AutoCacheKeyTask(object threadID)
         {
-
+            System.Diagnostics.Debug.WriteLine("AutoCache.AutoCacheKeyTask on Thread :" + threadID);
             while (true)//定时扫描数据库
             {
                 int time = AppConfig.Cache.AutoCacheTaskTime;

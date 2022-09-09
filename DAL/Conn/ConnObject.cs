@@ -190,6 +190,7 @@ namespace CYQ.Data
         /// <param name="threadID"></param>
         public static void CheckConnIsOk(object threadID)
         {
+            System.Diagnostics.Debug.WriteLine("ConnObject.CheckConnIsOk on Thread :" + threadID);
             while (true)
             {
                 Thread.Sleep(3000);

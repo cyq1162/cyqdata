@@ -85,8 +85,9 @@ namespace CYQ.Data.Cache
         }
         int taskCount = 0, taskInterval = 5;//5分钟清一次缓存。
         private static DateTime errTime = DateTime.MinValue;
-        private void ClearState(object threadid)
+        private void ClearState(object threadID)
         {
+            System.Diagnostics.Debug.WriteLine("LocalCache.ClearState on Thread :" + threadID);
             startTime = DateTime.Now;
             while (true)
             {

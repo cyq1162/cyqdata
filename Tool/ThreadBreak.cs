@@ -10,6 +10,19 @@ namespace CYQ.Data.Tool
     /// </summary>
     public class ThreadBreak
     {
+        /// <summary>
+        /// 应用程序退出时，可调用此方法，用于退出全局线程【while循环】。
+        /// </summary>
+        public static void ClearGlobalThread()
+        {
+            if (globalThread.Count > 0)
+            {
+                foreach (Thread thread in globalThread)
+                {
+                    thread.Abort();
+                }
+            }
+        }
         bool hadThreadBreak = false;
         string threadPath = string.Empty;
         /// <summary>
@@ -131,7 +144,8 @@ namespace CYQ.Data.Tool
             }
         }
         */
-        private static List<string> globalThread = new List<string>();
+        private static List<Thread> globalThread= new List<Thread>();
+        private static List<string> globalThreadKey = new List<string>();
         private static readonly object lockThreadObj = new object();
         /// <summary>
         /// 添加全局线程[通常该线程是个死循环，定时处理事情]
@@ -142,25 +156,26 @@ namespace CYQ.Data.Tool
         }
         public static void AddGlobalThread(ParameterizedThreadStart start, object para)
         {
-            if (globalThread.Count == 0)//第一次加载，清除所有可能存在的线程Break。
+            if (globalThreadKey.Count == 0)//第一次加载，清除所有可能存在的线程Break。
             {
                 //ClearSchema();// 表结构外置（解决第一次加载的问题，后续表结构都缓存在内存中）！因此不能清空~
                 ClearThreadBreak(string.Empty);
             }
             string key = Convert.ToString(start.Target) + start.Method.ToString();
-            if (!globalThread.Contains(key))
+            if (!globalThreadKey.Contains(key))
             {
                 lock (lockThreadObj)
                 {
                     try
                     {
-                        if (!globalThread.Contains(key))
+                        if (!globalThreadKey.Contains(key))
                         {
-                            globalThread.Add(key);
+                            globalThreadKey.Add(key);
                             Thread thread = new Thread(start);
                             thread.Name = "GlobalThread";
                             thread.IsBackground = true;
                             thread.Start(para ?? thread.ManagedThreadId);
+                            globalThread.Add(thread);
                         }
                     }
                     catch (Exception err)
