@@ -144,7 +144,7 @@ namespace CYQ.Data.Tool
             }
         }
         */
-        private static List<Thread> globalThread= new List<Thread>();
+        private static List<Thread> globalThread = new List<Thread>();
         private static List<string> globalThreadKey = new List<string>();
         private static readonly object lockThreadObj = new object();
         /// <summary>
@@ -161,7 +161,7 @@ namespace CYQ.Data.Tool
                 //ClearSchema();// 表结构外置（解决第一次加载的问题，后续表结构都缓存在内存中）！因此不能清空~
                 ClearThreadBreak(string.Empty);
             }
-            string key = Convert.ToString(start.Target) + start.Method.ToString();
+            string key = Convert.ToString(start.Target) + start.Method.ToString() + Convert.ToString(para);
             if (!globalThreadKey.Contains(key))
             {
                 lock (lockThreadObj)

@@ -28,6 +28,7 @@ namespace System.Web
         public event EventHandler PostMapRequestHandler;
         public event EventHandler AcquireRequestState;
         public event EventHandler Error;
+        public event EventHandler Disposed;
         public void ExecuteEventHandler()
         {
             try

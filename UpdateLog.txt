@@ -942,4 +942,5 @@
 707：优化：AppConfig：对属性IsAspNetCore（更名为IsNetCore）、IsWeb进行判断方式优化。（2022-08-20）
 --------------------------------------------------------------------------------
 708：修复：JsonHelper：对Field字段的转换。（2022-09-08）【V5.8.5.3】
-709：新增：ThreadBreak：增加ClearGlobalThread方法【用于Taurus.MVC 调试应用程序退出时，线程未退出的情况】（2022-09-10）
+709：优化：ThreadBreak：增加ClearGlobalThread方法【用于Taurus.MVC 调试DotNet应用程序退出时，线程未退出的情况】（2022-09-10）
+710：优化：HttpApplication：增加Disposed事件【用于Taurus.MVC 调试DotNet应用程序退出时，线程未退出的情况】（2022-09-11）
