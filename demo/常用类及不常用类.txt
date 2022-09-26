@@ -1,0 +1,32 @@
+请根据以下常用类，在各类示例里查看对应的Demo。
+
+CYQ.Data 核心使用类介绍
+
+常用：
+
+1：操作数据库：MAction、MProc （名称空间：CYQ.Data）
+
+2：日志操作：Log、SysLogs（名称空间：CYQ.Data）
+
+3：配置和性能调试：AppConfig、AppDebug（名称空间：CYQ.Data）
+
+4：内存表体系：MDataTable（MDataRow、MDataCell） （名称空间：CYQ.Data.Table）
+
+5：Json系：JsonHelper （名称空间：CYQ.Data.Tool）
+
+6：本地缓存和分布式缓存：CacheManage （名称空间：CYQ.Data.Cache）
+
+掌握上面几个类，基本就掌握了框架的核心了。
+
+
+不常用：
+
+1：实体型操作数据库：OrmBase、SimpleOrmBase、DBFast  （名称空间：CYQ.Data.Orm）
+
+2：Html/XHtml模板引擎：XHtmlAction、RSS （名称空间：CYQ.Data.Xml）
+
+3：AOP编程：IAop接口 （名称空间：CYQ.Data.Aop）
+
+4：数据库结构工具：DBTool （名称空间：CYQ.Data.Tool）
+
+5：语法糖及UI扩展：IField接口、IUIValue接口、RegisterUI （名称空间：CYQ.Data.Extension）

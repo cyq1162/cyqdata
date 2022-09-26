@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+	<div id="title" eng="英文标题" cus="自定义标题">中文标题</div>
+	<div id="autumn" eng="Autumn" cus="路过秋天">秋色园</div>
+	<div id="url" eng="http://www.cyqdata.com/english" cus="http://cyq1162.cnblogs.com">http://www.cyqdata.com</div>
+</root>

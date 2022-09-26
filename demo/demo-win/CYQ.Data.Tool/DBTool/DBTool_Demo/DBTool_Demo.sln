@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBTool_Demo", "DBTool_Demo\DBTool_Demo.csproj", "{6B8DADC6-12D2-4D72-BDA3-C7DF6B31ED42}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6B8DADC6-12D2-4D72-BDA3-C7DF6B31ED42}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B8DADC6-12D2-4D72-BDA3-C7DF6B31ED42}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B8DADC6-12D2-4D72-BDA3-C7DF6B31ED42}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B8DADC6-12D2-4D72-BDA3-C7DF6B31ED42}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

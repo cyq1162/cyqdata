@@ -1,0 +1,60 @@
+﻿{
+    "SysConfig": [
+        {
+            "text": "OperatorTitle",
+            "value": "操作"
+        }
+    ],
+    "对齐方式": [
+        {
+            "text": "左",
+            "value": "left"
+        },
+        {
+            "text": "中",
+            "value": "center"
+        },
+        {
+            "text": "右",
+            "value": "right"
+        }
+    ],
+    "性别": [
+        {
+            "text": "女",
+            "value": "0"
+        },
+        {
+            "text": "男",
+            "value": "1"
+        }
+    ],
+    "是否": [
+        {
+            "text": "是",
+            "value": "1"
+        },
+        {
+            "text": "否",
+            "value": "0"
+        }
+    ],
+    "账号状态": [
+        {
+            "text": "启用",
+            "value": "1"
+        },
+        {
+            "text": "锁定",
+            "value": "3"
+        },
+        {
+            "text": "停用",
+            "value": "2"
+        },
+        {
+            "text": "已删",
+            "value": "4"
+        }
+    ]
+}

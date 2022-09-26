@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MAction_Demo", "CYQ.Data\MAction\MAction_Demo\MAction_Demo.csproj", "{3D3A7378-01C5-4B91-8CEF-D8FEB6FD6E13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CYQ.Data", "..\..\src\CYQ.Data.csproj", "{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MProc_Demo", "CYQ.Data\MProc\MProc_Demo\MProc_Demo\MProc_Demo.csproj", "{A758C675-295C-4AFB-9D5F-E65382BC4895}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppConfig_Demo", "CYQ.Data\AppConfig\AppConfig_Demo\AppConfig_Demo\AppConfig_Demo.csproj", "{1F55D79E-E390-45B0-AFAE-6C34BFE9A179}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppDebug_Demo", "CYQ.Data\AppDebug\AppDebug_Demo\AppDebug_Demo\AppDebug_Demo.csproj", "{FE5D7E38-9B16-4A0B-904B-1D954738BE12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Log-SysLog_Demo", "CYQ.Data\Log&SysLogs\Log-SysLog_Demo\Log-SysLog_Demo\Log-SysLog_Demo.csproj", "{FE8AFE31-1B4C-4D56-8A31-8788B373F337}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D3A7378-01C5-4B91-8CEF-D8FEB6FD6E13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D3A7378-01C5-4B91-8CEF-D8FEB6FD6E13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D3A7378-01C5-4B91-8CEF-D8FEB6FD6E13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D3A7378-01C5-4B91-8CEF-D8FEB6FD6E13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD5CCC87-278F-4FEB-AD23-157FCBA9FFA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A758C675-295C-4AFB-9D5F-E65382BC4895}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A758C675-295C-4AFB-9D5F-E65382BC4895}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A758C675-295C-4AFB-9D5F-E65382BC4895}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A758C675-295C-4AFB-9D5F-E65382BC4895}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F55D79E-E390-45B0-AFAE-6C34BFE9A179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F55D79E-E390-45B0-AFAE-6C34BFE9A179}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F55D79E-E390-45B0-AFAE-6C34BFE9A179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F55D79E-E390-45B0-AFAE-6C34BFE9A179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE5D7E38-9B16-4A0B-904B-1D954738BE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE5D7E38-9B16-4A0B-904B-1D954738BE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE5D7E38-9B16-4A0B-904B-1D954738BE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE5D7E38-9B16-4A0B-904B-1D954738BE12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE8AFE31-1B4C-4D56-8A31-8788B373F337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE8AFE31-1B4C-4D56-8A31-8788B373F337}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE8AFE31-1B4C-4D56-8A31-8788B373F337}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE8AFE31-1B4C-4D56-8A31-8788B373F337}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

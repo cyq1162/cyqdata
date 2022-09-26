@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aop_Demo", "Aop_Demo\Aop_Demo.csproj", "{D7B03FED-23EB-4BD5-9CD5-AC827A197361}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAopForDemo", "MyAopForDemo\MyAopForDemo.csproj", "{84456641-2730-4B46-830A-D257C1E2F6EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D7B03FED-23EB-4BD5-9CD5-AC827A197361}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7B03FED-23EB-4BD5-9CD5-AC827A197361}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7B03FED-23EB-4BD5-9CD5-AC827A197361}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7B03FED-23EB-4BD5-9CD5-AC827A197361}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84456641-2730-4B46-830A-D257C1E2F6EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84456641-2730-4B46-830A-D257C1E2F6EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84456641-2730-4B46-830A-D257C1E2F6EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84456641-2730-4B46-830A-D257C1E2F6EC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
