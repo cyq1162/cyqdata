@@ -1,0 +1,197 @@
+﻿using CYQ.Data.Tool;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data.Common;
+using System.Text;
+
+namespace CYQ.Data.SQL
+{
+    internal partial class DBSchema
+    {
+        /// <summary>
+        /// 首次初始化的数据库
+        /// </summary>
+        private static Dictionary<string, DBInfo> _DBScheams = new Dictionary<string, DBInfo>();
+        /// <summary>
+        /// 后续代码初始化的数据库
+        /// </summary>
+        private static Dictionary<string, DBInfo> _DBScheamsTemp = new Dictionary<string, DBInfo>();
+        public static Dictionary<string, DBInfo> DBScheams
+        {
+            get
+            {
+                if (isInitDbCompleted)
+                {
+                    return _DBScheams;
+                }
+                else
+                {
+                    InitDBSchemasForCache(null);
+                    return _DBScheams;
+                }
+            }
+        }
+        private static bool isInitDbCompleted = false;
+        private static readonly object o = new object();
+        /// <summary>
+        /// 获取(并缓存)数据库的“表、视图、存储过程”名称列表。
+        /// </summary>
+        public static DBInfo GetSchema(string conn, bool isOuterLocking)
+        {
+            ConnBean cb = ConnBean.Create(conn);
+            if (cb != null)
+            {
+                string hash = cb.GetHashKey();
+                if (!_DBScheams.ContainsKey(hash))
+                {
+                    if (!isOuterLocking && _DBScheamsTemp.ContainsKey(hash))
+                    {
+                        return _DBScheamsTemp[hash];
+                    }
+
+                    lock (o)
+                    {
+                        if (!_DBScheams.ContainsKey(hash))
+                        {
+                            DBInfo dbSchema = GetSchemaDic(cb.ConnName);
+                            if (dbSchema != null && (dbSchema.Tables.Count > 0 || dbSchema.Views.Count > 0 || dbSchema.Procs.Count > 0))
+                            {
+                                if (isOuterLocking)//外部有lock，外部不会产生foreach代码时。
+                                {
+                                    if (!_DBScheams.ContainsKey(hash))
+                                    {
+                                        _DBScheams.Add(hash, dbSchema);
+                                    }
+                                }
+                                else
+                                {
+                                    if (!_DBScheamsTemp.ContainsKey(hash))
+                                    {
+                                        _DBScheamsTemp.Add(hash, dbSchema);
+                                    }
+                                }
+                            }
+                            return dbSchema;
+                        }
+                    }
+
+                }
+                if (_DBScheams.ContainsKey(hash))
+                {
+                    return _DBScheams[hash];
+                }
+            }
+            return null;
+        }
+        private static DBInfo GetSchemaDic(string conn)
+        {
+            DBInfo info = new DBInfo();
+            using (DalBase dal = DalCreate.CreateDal(conn))
+            {
+                info.ConnName = dal.ConnObj.Master.ConnName;
+                info.ConnString = dal.ConnObj.Master.ConnString;
+                info.DataBaseName = dal.DataBaseName;
+                info.DataBaseType = dal.DataBaseType;
+
+                Dictionary<string, string> tables = dal.GetTables();
+                if (tables != null && tables.Count > 0)
+                {
+                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                    foreach (KeyValuePair<string, string> item in tables)
+                    {
+                        string hash = TableInfo.GetHashKey(item.Key);
+                        if (!dic.ContainsKey(hash))
+                        {
+                            dic.Add(hash, new TableInfo(item.Key, "U", item.Value, info));
+                        }
+                    }
+                    info.Tables = dic;
+                }
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))//未配置架构外围的，延迟加载。
+                {
+                    info.isGetVersion = true;
+                    info.DataBaseVersion = dal.Version;
+                    Dictionary<string, string> views = dal.GetViews();
+                    if (views != null && views.Count > 0)
+                    {
+                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        foreach (KeyValuePair<string, string> item in views)
+                        {
+                            string hash = TableInfo.GetHashKey(item.Key);
+                            if (!dic.ContainsKey(hash))
+                            {
+                                dic.Add(hash, new TableInfo(item.Key, "V", item.Value, info));
+                            }
+                        }
+                        info.isGetViews = true;
+                        info.Views = dic;
+                    }
+                    Dictionary<string, string> procs = dal.GetProcs();
+                    if (procs != null && procs.Count > 0)
+                    {
+                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        foreach (KeyValuePair<string, string> item in procs)
+                        {
+                            string hash = TableInfo.GetHashKey(item.Key);
+                            if (!dic.ContainsKey(hash))
+                            {
+                                dic.Add(hash, new TableInfo(item.Key, "P", item.Value, info));
+                            }
+                        }
+                        info.isGetProcs = true;
+                        info.Procs = dic;
+                    }
+                }
+            }
+            return info;
+
+        }
+
+        public static void Remove(string key)
+        {
+            _DBScheams.Remove(key);
+        }
+        public static void Clear()
+        {
+            _DBScheams.Clear();
+        }
+        private static readonly object oo = new object();
+        /// <summary>
+        /// 预先把结构缓存起来。
+        /// </summary>
+        /// <param name="para"></param>
+        public static void InitDBSchemasForCache(object para)
+        {
+            if (_DBScheams.Count == 0 || !isInitDbCompleted)
+            {
+                lock (oo)
+                {
+                    if (_DBScheams.Count == 0)
+                    {
+                        List<string> connNames = new List<string>();
+                        foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
+                        {
+                            if (!string.IsNullOrEmpty(item.Name) && item.Name.ToLower().EndsWith("conn"))
+                            {
+                                connNames.Add(item.Name);
+                            }
+                        }
+                        //if (connNames.Count == 0 && AppConfig.DB.DefaultConn!="Conn") // 加上之后调试会卡, 先不加。
+                        //{
+                        //    connNames.Add(AppConfig.DB.DefaultConn);
+                        //}
+                        if (connNames.Count > 0)
+                        {
+                            foreach (string item in connNames)
+                            {
+                                GetSchema(item, true);
+                            }
+                        }
+                    }
+                    isInitDbCompleted = true;
+                }
+            }
+        }
+    }
+}
