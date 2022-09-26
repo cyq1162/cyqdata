@@ -57,7 +57,7 @@ namespace JsonHelper_Demo
             OutMsg("    IsJson:" + result);
 
             OutMsg("GetJosnValue：--------------------------------------------");
-            string value = JsonHelper.GetJosnValue(json2, "SysConfig");
+            string value = JsonHelper.GetValue(json2, "SysConfig");
             OutMsg("    GetJosnValue:" + value);
 
             OutMsg("OutResult：--------------------------------------------");

@@ -25,15 +25,17 @@ namespace DBTool_Demo
             bool result = DBTool.TestConn(AppConfig.DB.DefaultConn);//检测数据库链接是否正常
             OutMsg("数据库链接：" + result);
             OutMsg("-----------------------------------------");
-            string databaseName;
-            Dictionary<string, string> tables = DBTool.GetTables(AppConfig.DB.DefaultConn, out databaseName);//读取所有表
-            if (tables != null)
+          
+            DBInfo dbInfo = DBTool.GetDBInfo(AppConfig.DB.DefaultConn);
+            string databaseName = dbInfo.DataBaseName;
+            if (dbInfo != null)
             {
-                OutMsg("数据库:" + databaseName);
-                foreach (KeyValuePair<string, string> item in tables)
+                OutMsg("数据库名称:" + dbInfo.DataBaseName);
+                OutMsg("数据库类型:" + dbInfo.DataBaseType);
+                foreach (KeyValuePair<string, TableInfo> item in dbInfo.Tables)//读取所有表
                 {
-                    OutMsg("表:" + item.Key + " 说明：" + item.Value);
-                    MDataColumn mdc = DBTool.GetColumns(item.Key);//读取所有列
+                    OutMsg("表:" + item.Key + " 说明：" + item.Value.Description);
+                    MDataColumn mdc = item.Value.Columns;//读取所有列
                     foreach (MCellStruct ms in mdc)
                     {
                         OutMsg("  列:" + ms.ColumnName + " SqlType：" + ms.SqlType);
@@ -44,9 +46,8 @@ namespace DBTool_Demo
 
             string newTableName = "A18";// +DateTime.Now.Second;
 
-            DalType dalType;
-            result = DBTool.ExistsTable(newTableName, AppConfig.DB.DefaultConn, out dalType);//检测表是否存在
-            OutMsg("表 " + newTableName + (result ? "存在" : "不存在") + " 数据库类型：" + dalType);
+            result = DBTool.Exists(newTableName,"U", AppConfig.DB.DefaultConn);//检测表是否存在
+            OutMsg("表 " + newTableName + (result ? "存在" : "不存在"));
 
             OutMsg("-----------------------------------------");
             if (result)
@@ -74,20 +75,20 @@ namespace DBTool_Demo
             OutMsg("-----------------------------------------");
 
             OutMsg("------------------其它操作-------------------");
-            dalType = DBTool.GetDalType("txt path={0}");
+            DataBaseType dalType = DBTool.GetDataBaseType("txt path={0}");
             OutMsg("数据库类型为： " + dalType);
             OutMsg("-----------------------------------------");
-           
-            OutMsg(DBTool.Keyword("表关键字", DalType.MsSql));//DBTool.NotKeyword 则取消
-            OutMsg(DBTool.Keyword("表关键字", DalType.Oracle));
-            OutMsg(DBTool.Keyword("表关键字", DalType.MySql));
-            OutMsg(DBTool.Keyword("表关键字", DalType.SQLite));
 
-            string changeDataType = DBTool.GetDataType(newMdc[0], DalType.Access, string.Empty);
+            OutMsg(DBTool.Keyword("表关键字", DataBaseType.MsSql));//DBTool.NotKeyword 则取消
+            OutMsg(DBTool.Keyword("表关键字", DataBaseType.Oracle));
+            OutMsg(DBTool.Keyword("表关键字", DataBaseType.MySql));
+            OutMsg(DBTool.Keyword("表关键字", DataBaseType.SQLite));
+
+            string changeDataType = DBTool.GetDataType(newMdc[0], DataBaseType.Access, string.Empty);
             OutMsg("数据类型为： " + changeDataType);
             OutMsg("-----------------------------------------");
 
-            string formatValue = DBTool.FormatDefaultValue(DalType.Access,"[#GETDATE]",1, System.Data.SqlDbType.DateTime);
+            string formatValue = DBTool.FormatDefaultValue(DataBaseType.Access, "[#GETDATE]", 1, System.Data.SqlDbType.DateTime);
             OutMsg("Access的日期数据类型为： " + formatValue);
             OutMsg("-----------------------------------------");
 
