@@ -5,7 +5,7 @@
 开篇介绍：http://www.cnblogs.com/cyq1162/p/5634414.html <br />
 教程文章：https://github.com/cyq1162/cyqdata/tree/master/demo<br />
 
-<br /><br />QQ群：6033006<br />
+<br /><br />QQ群：6033006、129551677，QQ：272657997<br />
 VIP培训课程，精通系列视频，300元/套，(共18集，每集1小时左右)，可群里联系作者购买！
 <br /><br />
 
