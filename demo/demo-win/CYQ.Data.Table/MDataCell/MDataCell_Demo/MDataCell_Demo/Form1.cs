@@ -38,22 +38,7 @@ namespace MDataCell_Demo
             sb.AppendLine("Value:" + cell.Value);
             cell.Struct.SqlType = SqlDbType.Int;//修改数据类型
             sb.AppendLine("修改结构：Struct.SqlType:" + cell.Struct.SqlType);
-            sb.Append("FixValue():");
-           
-          
-            try
-            { // AppConfig.Log.IsWriteLog = true;
-                Exception err;
-                if (!cell.FixValue(out err))//修改该值
-                {
-                    sb.AppendLine(err.Message);
-                }
-            }
-            catch(Exception er)
-            {
-                sb.AppendLine(er.Message);
-            }
-            sb.AppendLine("修正后Value:" + cell.Value);
+
             rtxtText.Text = sb.ToString();
         }
     }
