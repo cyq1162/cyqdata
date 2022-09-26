@@ -40,7 +40,7 @@ namespace XHtmlAction_Demo
         void CreateTable()
         {
             Response.Write("文章见：http://www.cnblogs.com/cyq1162/p/3443244.html <hr />");
-            if (DBTool.ExistsTable(tableName))
+            if (DBTool.Exists(tableName))
             {
                 using (MAction action = new MAction(tableName))
                 {

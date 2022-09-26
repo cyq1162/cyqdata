@@ -65,10 +65,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Setting\DTD\xhtml-lat1.ent" />
-    <Content Include="Setting\DTD\xhtml-special.ent" />
-    <Content Include="Setting\DTD\xhtml-symbol.ent" />
-    <Content Include="Setting\DTD\xhtml1-transitional.dtd" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -77,7 +73,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\..\Project\MyProject\MySpace\CYQ.Data\CYQ.Data.csproj">
+    <ProjectReference Include="..\..\..\..\..\..\src\CYQ.Data.csproj">
       <Project>{bd5ccc87-278f-4feb-ad23-157fcba9ffa1}</Project>
       <Name>CYQ.Data</Name>
     </ProjectReference>
