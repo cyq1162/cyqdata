@@ -1341,6 +1341,7 @@ namespace CYQ.Data.Table
                 if (sdr.HasRows)
                 {
                     MDataRow mRecord = null;
+                    //SQLite 报错：该字符串未被识别为有效的 DateTime，不能用sr[类型读]，要用sdr.GetString读
                     List<int> errIndex = new List<int>();//SQLite提供的dll不靠谱，sdr[x]类型转不过时，会直接抛异常
                     while (sdr.Read())
                     {

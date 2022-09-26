@@ -216,13 +216,13 @@ namespace CYQ.Data.Tool
                         case SysType.Generic:
                         case SysType.Collection:
                             return MDataTable.CreateFrom(value).ToList(t);
-                            //case SysType.Generic:
-                            //    if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
-                            //    {
-                            //        return JsonSplit.ToEntity(t, strValue, EscapeOp.Default);
-                            //        //return MDataTable.CreateFrom(strValue).ToList(t);
-                            //    }
-                           // break;
+                        //case SysType.Generic:
+                        //    if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
+                        //    {
+                        //        return JsonSplit.ToEntity(t, strValue, EscapeOp.Default);
+                        //        //return MDataTable.CreateFrom(strValue).ToList(t);
+                        //    }
+                        // break;
                         case SysType.Array:
                             if (t.Name == "Byte[]")
                             {
@@ -281,6 +281,10 @@ namespace CYQ.Data.Tool
 
                     List<PropertyInfo> pInfoList = ReflectTool.GetPropertyList(t);
                     List<FieldInfo> fInfoList = ReflectTool.GetFieldList(t);
+
+                    //SQLite 报错：该字符串未被识别为有效的 DateTime，不能用sr[类型读]，要用sdr.GetString读
+                    // List<string> errIndex = new List<string>();//SQLite提供的dll不靠谱，sdr[x]类型转不过时，会直接抛异常
+                    Dictionary<string, int> errIndex = new Dictionary<string, int>();
                     while (reader.Read())
                     {
                         T obj = Activator.CreateInstance<T>();
@@ -291,8 +295,25 @@ namespace CYQ.Data.Tool
                             {
                                 if (p.CanWrite && kv.ContainsKey(p.Name))
                                 {
+                                    object objValue = null;
+                                    try
+                                    {
+                                        if (errIndex.ContainsKey(p.Name))
+                                        {
+                                            objValue = reader.GetString(errIndex[p.Name]);
+                                        }
+                                        else
+                                        {
+                                            objValue = reader[p.Name];
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        int index = reader.GetOrdinal(p.Name);
+                                        errIndex.Add(p.Name, index);
+                                        objValue = reader.GetString(index);
+                                    }
 
-                                    object objValue = reader[p.Name];
                                     if (objValue != null && objValue != DBNull.Value)
                                     {
                                         if (p.PropertyType != kv[p.Name])
@@ -310,7 +331,24 @@ namespace CYQ.Data.Tool
                             {
                                 if (kv.ContainsKey(f.Name))
                                 {
-                                    object objValue = reader[f.Name];
+                                    object objValue = null;
+                                    try
+                                    {
+                                        if (errIndex.ContainsKey(f.Name))
+                                        {
+                                            objValue = reader.GetString(errIndex[f.Name]);
+                                        }
+                                        else
+                                        {
+                                            objValue = reader[f.Name];
+                                        }
+                                    }
+                                    catch
+                                    {
+                                        int index = reader.GetOrdinal(f.Name);
+                                        errIndex.Add(f.Name, index);
+                                        objValue = reader.GetString(index);
+                                    }
                                     if (objValue != null && objValue != DBNull.Value)
                                     {
                                         if (f.FieldType != kv[f.Name])
@@ -326,6 +364,8 @@ namespace CYQ.Data.Tool
                     }
                     kv.Clear();
                     kv = null;
+                    errIndex.Clear();
+                    errIndex = null;
                 }
                 reader.Close();
                 reader.Dispose();
