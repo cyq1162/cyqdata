@@ -7,6 +7,9 @@ using CYQ.Data.Table;
 using CYQ.Data.Tool;
 namespace MProc_Demo
 {
+    /// <summary>
+    /// 仅提供代码示例，仅供参考。
+    /// </summary>
     class Program
     {
 
