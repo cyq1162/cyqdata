@@ -461,7 +461,7 @@ namespace CYQ.Data.Table
         }
         public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize, bool isPrimaryKey, object defaultValue)
         {
-            Add(columnName, sqlType, isAutoIncrement, isCanNull, maxSize, false, null, -1);
+            Add(columnName, sqlType, isAutoIncrement, isCanNull, maxSize, false, defaultValue, -1);
         }
         /// <param name="defaultValue">默认值[日期类型请传入SqlValue.GetDate]</param>
         public void Add(string columnName, SqlDbType sqlType, bool isAutoIncrement, bool isCanNull, int maxSize, bool isPrimaryKey, object defaultValue, short scale)

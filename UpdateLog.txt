@@ -946,3 +946,4 @@
 710：优化：HttpApplication：增加Disposed事件【用于Taurus.MVC 调试DotNet应用程序退出时，线程未退出的情况】（2022-09-11）
 --------------------------------------------------------------------------------
 711：优化：ConvertTool.ChangeReaderToList方法对Sqlite的DateTime类型报错的兼容读取。【V5.8.5.4】
+712：修复：MDataTable.Columns.Add("CreateTime", SqlDbType.DateTime, false, true, 0, false,"默认值无效的问题");（2022-09-29）

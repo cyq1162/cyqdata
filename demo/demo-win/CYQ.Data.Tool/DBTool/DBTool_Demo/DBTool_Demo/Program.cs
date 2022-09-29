@@ -34,7 +34,7 @@ namespace DBTool_Demo
                 OutMsg("数据库类型:" + dbInfo.DataBaseType);
                 foreach (KeyValuePair<string, TableInfo> item in dbInfo.Tables)//读取所有表
                 {
-                    OutMsg("表:" + item.Key + " 说明：" + item.Value.Description);
+                    OutMsg("表:" + item.Value.Name + " 说明：" + item.Value.Description);
                     MDataColumn mdc = item.Value.Columns;//读取所有列
                     foreach (MCellStruct ms in mdc)
                     {
@@ -92,6 +92,30 @@ namespace DBTool_Demo
             OutMsg("Access的日期数据类型为： " + formatValue);
             OutMsg("-----------------------------------------");
 
+            string sql = DBTool.GetCreateTableSql("MsTable", MsTable.Columns, DataBaseType.MsSql, "2008");
+            OutMsg("MsSql生成的表语句： " + sql);
+            OutMsg("-----------------------------------------");
+
+        }
+
+
+        private static MDataTable _MsTable;
+        private static MDataTable MsTable
+        {
+            get
+            {
+                if (_MsTable == null)
+                {
+                    _MsTable = new MDataTable();
+                    _MsTable.Columns.Add("MsID", System.Data.SqlDbType.Int, true);
+                    _MsTable.Columns.Add("Name", System.Data.SqlDbType.NVarChar, false, false, 50);
+                    _MsTable.Columns.Add("Host", System.Data.SqlDbType.NVarChar, false, false, 250);
+                    _MsTable.Columns.Add("Version", System.Data.SqlDbType.Int);
+                    _MsTable.Columns.Add("RegTime", System.Data.SqlDbType.DateTime);
+                    _MsTable.Columns.Add("CreateTime", System.Data.SqlDbType.DateTime, false, true, 0, false, CYQ.Data.SQL.SqlValue.GetDate);
+                }
+                return _MsTable;
+            }
         }
     }
 }
