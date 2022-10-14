@@ -193,7 +193,7 @@ namespace CYQ.Data
             System.Diagnostics.Debug.WriteLine("ConnObject.CheckConnIsOk on Thread :" + threadID);
             while (true)
             {
-                Thread.Sleep(3000);
+                Thread.Sleep(1000);
                 if (connDicCache.Count > 0)
                 {
                     try
