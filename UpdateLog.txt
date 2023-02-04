@@ -949,3 +949,5 @@
 712：修复：MDataTable.Columns.Add("CreateTime", SqlDbType.DateTime, false, true, 0, false,"默认值无效的问题");（2022-09-29）
 --------------------------------------------------------------------------------
 713：优化：定时检测异常的链接是否恢复（由默认3秒，调整为1秒）【V5.8.5.5】
+714：新增：MProc	开放两个方法：ExeList(执行返回List<T>）和ExeJson（执行返回Json）（2023-02-04）
+715：新增：MAction  开放两个方法：SelectList(执行返回List<T>）和SelectJson（执行返回Json）（2023-02-05）

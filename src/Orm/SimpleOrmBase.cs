@@ -513,7 +513,7 @@ namespace CYQ.Data.Orm
         public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count) where T : class
         {
             // return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
-            return Action.Select<T>(pageIndex, pageSize, where, out count);
+            return Action.SelectList<T>(pageIndex, pageSize, where, out count);
         }
 
         internal MDataTable Select(int pageIndex, int pageSize, string where, out int count)

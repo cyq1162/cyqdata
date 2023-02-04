@@ -167,7 +167,7 @@ namespace CYQ.Data.Orm
                 {
                     action.SetSelectColumns(columns);
                 }
-                return action.Select<T>(pageIndex, pageSize, where, out count);
+                return action.SelectList<T>(pageIndex, pageSize, where, out count);
                 //dt = action.Select(pageIndex, pageSize, where, out count);
             }
            // return dt.ToList<T>();

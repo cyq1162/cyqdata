@@ -14,6 +14,7 @@ namespace CYQ.Data.Aop
         /// Orm (DBFast、SimpleOrmBase等查询返回实体列表）
         /// </summary>
         SelectList,
+        SelectJson,
         Insert,
         Update,
         Delete,
@@ -24,10 +25,8 @@ namespace CYQ.Data.Aop
         ExeMDataTable,
         ExeNonQuery,
         ExeScalar,
-        /// <summary>
-        /// 未公开选项。
-        /// </summary>
-        ExeList
+        ExeList,
+        ExeJson
     }
     /// <summary>
     /// Aop函数的处理结果

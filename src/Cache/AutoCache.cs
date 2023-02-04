@@ -43,7 +43,7 @@ namespace CYQ.Data.Cache
                     if (obj != null)
                     {
                         List<MDataTable> list = new List<MDataTable>();
-                        if (_AutoCache.CacheType == CacheType.LocalCache)
+                        if (obj is List<MDataTable>)
                         {
                             List<MDataTable> listObj = obj as List<MDataTable>;
                             foreach (MDataTable table in listObj)
@@ -69,7 +69,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.ExeMDataTable:
                     if (obj != null)
                     {
-                        if (_AutoCache.CacheType == CacheType.LocalCache)
+                        if (obj is MDataTable)
                         {
                             aopInfo.Table = (obj as MDataTable).Clone();
                         }
@@ -81,12 +81,10 @@ namespace CYQ.Data.Cache
                     break;
                 case AopEnum.ExeList:
                 case AopEnum.SelectList:
-                    if (obj != null)
-                    {
-                        aopInfo.ExeResult = obj;
-                    }
-                    break;
+                case AopEnum.ExeJson:
+                case AopEnum.SelectJson:
                 case AopEnum.ExeScalar:
+                case AopEnum.Exists:
                     if (obj != null)
                     {
                         aopInfo.ExeResult = obj;
@@ -96,7 +94,7 @@ namespace CYQ.Data.Cache
                     if (obj != null)
                     {
                         MDataRow row;
-                        if (_AutoCache.CacheType == CacheType.LocalCache)
+                        if (obj is MDataRow)
                         {
                             row = (obj as MDataRow).Clone();
                         }
@@ -109,12 +107,6 @@ namespace CYQ.Data.Cache
                     }
                     break;
                 case AopEnum.GetCount:
-                    if (obj != null)
-                    {
-                        aopInfo.RowCount = int.Parse(obj.ToString());
-                    }
-                    break;
-                case AopEnum.Exists:
                     if (obj != null)
                     {
                         aopInfo.ExeResult = obj;
@@ -138,7 +130,7 @@ namespace CYQ.Data.Cache
                 case AopEnum.Insert:
                 case AopEnum.Update:
                 case AopEnum.Delete:
-                    if (aopInfo.IsSuccess || aopInfo.RowCount > 0)
+                    if (aopInfo.IsSuccess || (aopInfo.ExeResult is int) && ((int)aopInfo.ExeResult > 0))
                     {
                         if (action == AopEnum.Update || action == AopEnum.ExeNonQuery)
                         {
@@ -210,19 +202,40 @@ namespace CYQ.Data.Cache
                         }
                     }
                     break;
+                case AopEnum.ExeJson:
+                    if (IsCanSetCache(aopInfo.ExeResult))
+                    {
+                        _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
+                    }
+                    break;
                 case AopEnum.ExeList:
+                    if (IsCanSetCache(aopInfo.ExeResult))
+                    {
+                        _AutoCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult), cacheTime);
+                    }
+                    break;
                 case AopEnum.SelectList:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
-                        //if (_AutoCache.CacheType == CacheType.LocalCache)
-                        //{
-                        //    _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);//无法克隆
-                        //}
-                        //else
-                        //{
-                            
-                        //}
-                        _AutoCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult, false, RowOp.IgnoreNull, EscapeOp.Encode), cacheTime);
+                        JsonHelper js = new JsonHelper(true, true);
+                        if (aopInfo.TotalCount > 0)
+                        {
+                            js.Total = aopInfo.TotalCount;
+                        }
+                        js.LoopCheckList.Add(aopInfo.ExeResult.GetHashCode(), 0);
+                        js.Fill(aopInfo.ExeResult);
+                        string result = js.ToString(true);
+                        _AutoCache.Set(key, result, cacheTime);
+                    }
+                    break;
+
+                case AopEnum.SelectJson:
+                    if (IsCanSetCache(aopInfo.ExeResult))
+                    {
+                        JsonHelper js = new JsonHelper(false, false);
+                        js.Add("total", aopInfo.TotalCount.ToString(), true);
+                        js.Add("rows", aopInfo.ExeResult.ToString());
+                        _AutoCache.Set(key, js.ToString(), cacheTime);
                     }
                     break;
                 case AopEnum.ExeScalar:
@@ -239,7 +252,7 @@ namespace CYQ.Data.Cache
                     }
                     break;
                 case AopEnum.GetCount:
-                    _AutoCache.Set(key, aopInfo.RowCount, cacheTime);
+                    _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
                     break;
                 case AopEnum.Exists:
                     _AutoCache.Set(key, aopInfo.ExeResult, cacheTime);
@@ -285,27 +298,29 @@ namespace CYQ.Data.Cache
             {
                 return false;
             }
-            int i = 0;
-            foreach (object o in listResult as IEnumerable)
+            if (!(listResult is String) && listResult is IEnumerable)
             {
-                if (i == 0)// && _AutoCache.CacheType != CacheType.LocalCache
+                int i = 0;
+                foreach (object o in listResult as IEnumerable)
                 {
-                    List<PropertyInfo> pis = ReflectTool.GetPropertyList(o.GetType());
-                    foreach (PropertyInfo item in pis)
+                    if (i == 0)// && _AutoCache.CacheType != CacheType.LocalCache
                     {
-                        if (DataType.GetGroup(DataType.GetSqlType(item.PropertyType)) == DataGroupType.Object)//只存档基础类型
+                        List<PropertyInfo> pis = ReflectTool.GetPropertyList(o.GetType());
+                        foreach (PropertyInfo item in pis)
                         {
-                            return false;
+                            if (DataType.GetGroup(DataType.GetSqlType(item.PropertyType)) == DataGroupType.Object)//只存档基础类型
+                            {
+                                return false;
+                            }
                         }
                     }
-                }
-                i++;
-                if (i > 100)// 大于N条的不缓存。List<T> 的缓存，在存和取间都要转2次（ JsonString=>MDataTable=>List<T>），所以限制条数少一些，性能调节上相对合适。
-                {
-                    return false;
+                    i++;
+                    if (i > 100)// 大于N条的不缓存。List<T> 的缓存，在存和取间都要转2次（ JsonString=>MDataTable=>List<T>），所以限制条数少一些，性能调节上相对合适。
+                    {
+                        return false;
+                    }
                 }
             }
-
             return true;
         }
 
@@ -555,6 +570,7 @@ namespace CYQ.Data.Cache
                     case AopEnum.GetCount:
                     case AopEnum.Select:
                     case AopEnum.SelectList:
+                    case AopEnum.SelectJson:
                         if (para.MAction.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
                         {
                             return false;
@@ -564,6 +580,7 @@ namespace CYQ.Data.Cache
                     case AopEnum.ExeMDataTableList:
                     case AopEnum.ExeScalar:
                     case AopEnum.ExeList:
+                    case AopEnum.ExeJson:
                         if (para.MProc.dalHelper.TranLevel != System.Data.IsolationLevel.ReadUncommitted)
                         {
                             return false;
@@ -720,8 +737,6 @@ namespace CYQ.Data.Cache
             }
 
             #region Key1：DBType
-            sb.Append(".");
-            sb.Append(action);
             if (aopInfo.DBParameters != null && aopInfo.DBParameters.Count > 0)
             {
                 foreach (DbParameter item in aopInfo.DBParameters)
@@ -751,22 +766,36 @@ namespace CYQ.Data.Cache
             switch (action)
             {
                 case AopEnum.ExeMDataTableList:
-                case AopEnum.ExeMDataTable:
                 case AopEnum.ExeScalar:
                     sb.Append(aopInfo.IsProc);
                     sb.Append(aopInfo.ProcName);
+                    sb.Append(".");
+                    sb.Append(action);
+                    break;
+                case AopEnum.ExeMDataTable:
+                case AopEnum.ExeList:
+                case AopEnum.ExeJson:
+                    sb.Append(aopInfo.IsProc);
+                    sb.Append(aopInfo.ProcName);
+                    sb.Append(".ExeTable");
                     break;
                 case AopEnum.Exists:
                 case AopEnum.Fill:
                 case AopEnum.GetCount:
+                    sb.Append(action);
                     sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.Where);
+                    sb.Append(".");
+                    sb.Append(action);
                     break;
                 case AopEnum.Select:
+                case AopEnum.SelectList:
+                case AopEnum.SelectJson:
                     sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.PageIndex);
                     sb.Append(aopInfo.PageSize);
                     sb.Append(aopInfo.Where);
+                    sb.Append(".Select");
                     break;
             }
 
@@ -827,7 +856,7 @@ namespace CYQ.Data.Cache
                 System.Diagnostics.Debug.WriteLine("AutoCache.ClearCache on Thread :" + threadID);
                 while (true)
                 {
-                   
+
                     Thread.Sleep(5);
                     if (!KeyTable.HasAutoCacheTable && KeyTable.CheckSysAutoCacheTable())//检测并创建表，放在循环中，是因为可能在代码中延后会AppConifg.Cache.AutoCacheConn赋值;
                     {

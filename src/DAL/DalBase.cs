@@ -994,22 +994,9 @@ namespace CYQ.Data
         public int ExeNonQuery(string cmdText, bool isProc)
         {
             SetCommandText(cmdText, isProc);
-            int rowCount = 0;
-            //if (_dbOperator.ContainsKey(DataBase))
-            //{
-            //    if (!CheckIsConcurrent())
-            //    {
-            //        _dbOperator[DataBase] = true;
-            //        rowCount = ExeNonQuerySQL(cmdText, isProc);
-            //        _dbOperator[DataBase] = false;
-            //    }
-            //}
-            //else
-            //{
-            rowCount = ExeNonQuerySQL(cmdText, isProc);
-            //}
+            int result = ExeNonQuerySQL(cmdText, isProc);
             WriteTime();
-            return rowCount;
+            return result;
         }
         private object ExeScalarSQL(string cmdText, bool isProc)
         {

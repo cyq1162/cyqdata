@@ -256,15 +256,40 @@ namespace CYQ.Data.Aop
             get { return _IsSuccess; }
             set { _IsSuccess = value; }
         }
+        private int _TotalCount;
+        /// <summary>
+        /// 查询时返回的记录总数（分页总数）
+        /// </summary>
+        public int TotalCount
+        {
+            get
+            {
+                if (_TotalCount == 0 && _Table != null)
+                {
+                    return _Table.RecordsAffected;
+                }
+                return _TotalCount;
+            }
+            set { _TotalCount = value; }
+        }
+
         private int _RowCount;
         /// <summary>
-        /// 查询时返回的记录总数或ExeNonQuery的返回值
+        /// 查询时返回的显示数量
         /// </summary>
         public int RowCount
         {
-            get { return _RowCount; }
+            get
+            {
+                if (_RowCount == 0 && _Table != null)
+                {
+                    return _Table.Rows.Count;
+                }
+                return _RowCount;
+            }
             set { _RowCount = value; }
         }
+
         private List<AopCustomDbPara> _CustomDbPara;
         /// <summary>
         /// 用户调用SetPara新增加的自定义参数

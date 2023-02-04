@@ -351,12 +351,12 @@ namespace CYQ.Data
 
             }
 
-            MDataRow newRow = CreateRow(tableObj, conn);//尝试从MDataRow提取新的Conn链接
+            MDataRow newRow = InitRow(tableObj, conn);//尝试从MDataRow提取新的Conn链接
             InitDalHelper(newRow, newDbName);
             InitRowSchema(newRow, resetState);
             InitGlobalObject(isFirstInit);
         }
-        private MDataRow CreateRow(object tableObj, string conn)
+        private MDataRow InitRow(object tableObj, string conn)
         {
             MDataRow newRow = null;
             if (tableObj is MDataRow)
@@ -751,6 +751,8 @@ namespace CYQ.Data
         }
         #endregion
 
+        #region 删除
+
         /// <summary>
         /// Delete from database [Will automatically try to fetch from the UI when conditions are not passed]
         /// <para>删除数据[不传where条件时将自动尝试从UI获取]</para>
@@ -804,6 +806,10 @@ namespace CYQ.Data
             return _aop.Para.IsSuccess;
         }
 
+        #endregion
+
+        #region 查询 返回 MDataTable
+
         /// <summary>
         /// select all data
         ///<para>选择所有数据</para>
@@ -839,12 +845,12 @@ namespace CYQ.Data
             return Select(pageIndex, pageSize, where, out count);
         }
 
-        /// <param name="rowCount">The total number of records returned
+        /// <param name="count">The total number of records returned
         /// <para>返回的记录总数</para></param>
-        public MDataTable Select(int pageIndex, int pageSize, object where, out int rowCount)
+        public MDataTable Select(int pageIndex, int pageSize, object where, out int count)
         {
-            if (CheckDisposed()) { rowCount = -1; return new MDataTable(_TableName); }
-            rowCount = 0;
+            if (CheckDisposed()) { count = -1; return new MDataTable(_TableName); }
+            count = 0;
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
             {
@@ -880,14 +886,14 @@ namespace CYQ.Data
                 #region SQL语句分页执行
                 if (byPager)
                 {
-                    rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                    count = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
                     _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
                     _aop.isHasCache = false;//不能影响Select的后续操作。
                     //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
                 }
-                if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
+                if (!byPager || (count > 0 && (pageIndex - 1) * pageSize < count))
                 {
-                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), count, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
                     sdReader = dalHelper.ExeDataReader(sql, false);
                 }
                 else if (_sqlCreate.selectColumns != null)
@@ -902,10 +908,10 @@ namespace CYQ.Data
                     _aop.Para.Table = sdReader;
                     if (!byPager)
                     {
-                        rowCount = _aop.Para.Table.Rows.Count;
+                        count = _aop.Para.Table.Rows.Count;
                     }
 
-                    _aop.Para.Table.RecordsAffected = rowCount;
+                    _aop.Para.Table.RecordsAffected = count;
                 }
                 else
                 {
@@ -918,7 +924,7 @@ namespace CYQ.Data
             }
             else if (_aop.Para.Table.RecordsAffected > 0)
             {
-                rowCount = _aop.Para.Table.RecordsAffected;//返回记录总数
+                count = _aop.Para.Table.RecordsAffected;//返回记录总数
             }
             if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
             {
@@ -943,14 +949,53 @@ namespace CYQ.Data
             return _aop.Para.Table;
         }
 
+        #endregion
+
+        #region 查询 返回 List<T>
+
+
         /// <summary>
-        /// ORM 实体查询（DBFast、OrmBase、SimpleOrmBase 节省一次转实体的时间），未公开选项。
+        /// select all data
+        ///<para>选择所有数据</para>
         /// </summary>
-        internal List<T> Select<T>(int pageIndex, int pageSize, object where, out int rowCount) where T : class
+        public List<T> SelectList<T>() where T : class
+        {
+            int count;
+            return SelectList<T>(0, 0, null, out count);
+        }
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
+        public List<T> SelectList<T>(object where) where T : class
+        {
+            int count;
+            return SelectList<T>(0, 0, where, out count);
+        }
+        public List<T> SelectList<T>(int topN, object where) where T : class
+        {
+            int count;
+            return SelectList<T>(0, topN, where, out count);
+        }
+        /// <param name="pageIndex">pageIndex<para>第几页</para></param>
+        /// <param name="pageSize">pageSize<para>每页数量[为0时默认选择所有]</para></param>
+        public List<T> SelectList<T>(int pageIndex, int pageSize) where T : class
+        {
+            int count;
+            return SelectList<T>(pageIndex, pageSize, null, out count);
+        }
+        public List<T> SelectList<T>(int pageIndex, int pageSize, object where) where T : class
+        {
+            int count;
+            return SelectList<T>(pageIndex, pageSize, where, out count);
+        }
+        /// <summary>
+        /// 查询后直接返回泛型列表（节省一次转换时间）。
+        /// </summary>
+        public List<T> SelectList<T>(int pageIndex, int pageSize, object where, out int count) where T : class
         {
             List<T> list = new List<T>();
-            if (CheckDisposed()) { rowCount = -1; return list; }
-            rowCount = 0;
+            if (CheckDisposed()) { count = -1; return list; }
+            count = 0;
             AopResult aopResult = AopResult.Default;
             if (_aop.IsLoadAop)
             {
@@ -983,14 +1028,14 @@ namespace CYQ.Data
                 #region SQL语句分页执行
                 if (byPager)
                 {
-                    rowCount = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                    count = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
                     _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
                     _aop.isHasCache = false;//不能影响Select的后续操作。
                     //rowCount = Convert.ToInt32(dalHelper.ExeScalar(_sqlCreate.GetCountSql(whereSql), false));//分页查询先记算总数
                 }
-                if (!byPager || (rowCount > 0 && (pageIndex - 1) * pageSize < rowCount))
+                if (!byPager || (count > 0 && (pageIndex - 1) * pageSize < count))
                 {
-                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), rowCount, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), count, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
                     sdReader = dalHelper.ExeDataReader(sql, false);
                 }
                 //else if (_sqlCreate.selectColumns != null)
@@ -1006,24 +1051,30 @@ namespace CYQ.Data
                     _aop.Para.ExeResult = list;
                     if (!byPager)
                     {
-                        rowCount = list.Count;
+                        count = list.Count;
                     }
                 }
-                _aop.Para.RowCount = rowCount;
+                _aop.Para.TotalCount = count;
                 _aop.Para.IsSuccess = list.Count > 0;
                 ClearParameters();//------------------------参数清除
             }
             else if (_aop.Para.ExeResult != null)
             {
-                rowCount = _aop.Para.RowCount;//返回记录总数
-                if (_aop.Para.ExeResult is String)
+                object cacheObj = _aop.Para.ExeResult;
+                if (cacheObj is MDataTable)
                 {
-                    string result = _aop.Para.ExeResult as String;
-                    list = JsonHelper.ToList<T>(result);
+                    MDataTable dt = _aop.Para.ExeResult as MDataTable;
+                    if (dt != null)
+                    {
+                        list = dt.ToList<T>();
+                        count = dt.RecordsAffected;
+                    }
                 }
-                else
+                else if (cacheObj is string)
                 {
-                    list = _aop.Para.ExeResult as List<T>;
+                    string json = cacheObj.ToString();
+                    count = JsonHelper.GetValue<int>(json, "total");
+                    list = JsonHelper.ToList<T>(JsonHelper.GetValue<string>(json, "rows"));
                 }
             }
             if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
@@ -1037,6 +1088,152 @@ namespace CYQ.Data
             }
             return list;
         }
+
+        #endregion
+
+        #region 查询 返回 Json
+        /// <summary>
+        /// select all data
+        ///<para>选择所有数据</para>
+        /// </summary>
+        public string SelectJson()
+        {
+            int count;
+            return SelectJson(0, 0, null, out count);
+        }
+
+        /// <param name="where">Sql statement where the conditions: 88, "id = 88"
+        /// <para>sql语句的where条件：88、"id=88"</para></param>
+        public string SelectJson(object where)
+        {
+            int count;
+            return SelectJson(0, 0, where, out count);
+        }
+        public string SelectJson(int topN, object where)
+        {
+            int count;
+            return SelectJson(0, topN, where, out count);
+        }
+        /// <param name="pageIndex">pageIndex<para>第几页</para></param>
+        /// <param name="pageSize">pageSize<para>每页数量[为0时默认选择所有]</para></param>
+        public string SelectJson(int pageIndex, int pageSize)
+        {
+            int count;
+            return SelectJson(pageIndex, pageSize, null, out count);
+        }
+        public string SelectJson(int pageIndex, int pageSize, object where)
+        {
+            int count;
+            return SelectJson(pageIndex, pageSize, where, out count);
+        }
+        public string SelectJson(int pageIndex, int pageSize, object where, out int count)
+        {
+            return SelectJson(pageIndex, pageSize, where, out count, false, null);
+        }
+
+        /// <summary>
+        /// 查询后直接返回Json字符串（节省一次转换时间）。
+        /// </summary>
+        private string SelectJson(int pageIndex, int pageSize, object where, out int count, bool isConvertNameToLower, string dateTimeFormatter)
+        {
+            if (CheckDisposed()) { count = -1; return "[{}]"; }
+            string json = "";
+            AopResult aopResult = AopResult.Default;
+            count = 0;
+            if (_aop.IsLoadAop)
+            {
+                _aop.Para.MAction = this;
+                _aop.Para.PageIndex = pageIndex;
+                _aop.Para.PageSize = pageSize;
+                _aop.Para.TableName = _sourceTableName;
+                _aop.Para.Row = _Data;
+                _aop.Para.Where = where;
+                _aop.Para.SelectColumns = _sqlCreate.selectColumns;
+                _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
+                aopResult = _aop.Begin(Aop.AopEnum.SelectJson);
+            }
+            if (aopResult == AopResult.Default || aopResult == AopResult.Continue) // 无缓存时执行
+            {
+                string primaryKey = SqlFormat.Keyword(_Data.Columns.FirstPrimary.ColumnName, dalHelper.DataBaseType);//主键列名。
+                ClearParameters();//------------------------参数清除
+                DbDataReader sdReader = null;
+                string whereSql = string.Empty;//已格式化过的原生whereSql语句
+                if (_sqlCreate != null)
+                {
+                    whereSql = _sqlCreate.FormatWhere(where);
+                }
+                else
+                {
+                    whereSql = SqlFormat.Compatible(where, dalHelper.DataBaseType, dalHelper.Com.Parameters.Count == 0);
+                }
+                bool byPager = pageIndex > 0 && pageSize > 0;//分页查询(第一页也要分页查询，因为要计算总数）
+
+                #region SQL语句分页执行
+                if (byPager)
+                {
+                    count = GetCount(whereSql);//利用自动缓存，避免每次分页都要计算总数。
+                    _aop.Para.Where = where;//恢复影响的条件，避免影响缓存key
+                    _aop.isHasCache = false;//不能影响Select的后续操作。
+                }
+                if (!byPager || (count > 0 && (pageIndex - 1) * pageSize < count))
+                {
+                    string sql = SqlCreateForPager.GetSql(dalHelper.DataBaseType, dalHelper.Version, pageIndex, pageSize, whereSql, SqlFormat.Keyword(_TableName, dalHelper.DataBaseType), count, _sqlCreate.GetColumnsSql(), primaryKey, _Data.PrimaryCell.Struct.IsAutoIncrement);
+                    sdReader = dalHelper.ExeDataReader(sql, false);
+                }
+
+                #endregion
+
+                if (sdReader != null)
+                {
+                    JsonHelper js = new JsonHelper(false, false);
+                    js.IsConvertNameToLower = isConvertNameToLower;
+                    if (!string.IsNullOrEmpty(dateTimeFormatter))
+                    {
+                        js.DateTimeFormatter = dateTimeFormatter;
+                    }
+                    json = ConvertTool.ChangeReaderToJson(sdReader, js, true);
+                    _aop.Para.ExeResult = json;
+                    if (!byPager)
+                    {
+                        count = js.RowCount;
+                    }
+                }
+                _aop.Para.TotalCount = count;
+                _aop.Para.IsSuccess = json.Length > 4;
+                ClearParameters();//------------------------参数清除
+            }
+            else if (_aop.Para.ExeResult != null) //存在缓存时执行
+            {
+                object cacheObj = _aop.Para.ExeResult;
+                if (cacheObj is MDataTable)
+                {
+                    MDataTable dt = _aop.Para.ExeResult as MDataTable;
+                    if (dt != null)
+                    {
+                        count = dt.RecordsAffected;
+                        json = dt.ToJson(false, false);
+                    }
+                }
+                else if (cacheObj is string)
+                {
+                    string objString = cacheObj.ToString();
+                    count = JsonHelper.GetValue<int>(objString, "total");
+                    json = JsonHelper.GetValue<string>(objString, "rows");
+                }
+            }
+            if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
+            {
+                _aop.End(Aop.AopEnum.SelectJson);//设置缓存
+            }
+
+            if (_sqlCreate != null)
+            {
+                _sqlCreate.selectColumns = null;
+            }
+            return json;
+        }
+
+        #endregion
 
         /// <summary>
         /// Select top one row to fill this.Data
@@ -1164,11 +1361,11 @@ namespace CYQ.Data
                 _aop.Para.IsSuccess = result != null;
                 if (_aop.Para.IsSuccess)
                 {
-                    _aop.Para.RowCount = Convert.ToInt32(result);
+                    _aop.Para.ExeResult = Convert.ToInt32(result);
                 }
                 else
                 {
-                    _aop.Para.RowCount = -1;
+                    _aop.Para.ExeResult = -1;
                 }
             }
             if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
@@ -1179,7 +1376,7 @@ namespace CYQ.Data
             {
                 OnError();
             }
-            return _aop.Para.RowCount;
+            return (int)_aop.Para.ExeResult;
         }
         /// <summary>
         /// Whether or not the specified condition exists

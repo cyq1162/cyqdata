@@ -205,6 +205,23 @@ namespace CYQ.Data.Tool
             bodyItems.Add(brFlag);
             rowCount++;
         }
+        /// <summary>
+        ///// 调用后将替换默认的Head (AddHead must be true)
+        ///// <para>添加底部数据（只有AddHead为true情况才能添加数据）</para>
+        ///// </summary>
+        //public void AddHead(string name, string value)
+        //{
+        //    AddHead(name, value, false);
+        //}
+
+        //public void AddHead(string name, string value, bool noQuotes)
+        //{
+        //    if (_AddHead)
+        //    {
+        //        headText.Append(",");
+        //        headText.Append(Format(name, value, noQuotes));
+        //    }
+        //}
 
         /// <summary>
         /// attach json data (AddHead must be true)
@@ -339,8 +356,8 @@ namespace CYQ.Data.Tool
 
             if (_AddHead)
             {
-                if (headText.Length == 0)
-                {
+                //if (headText.Length == 0)
+                //{
                     sb.Append("{");
                     sb.Append("\"rowcount\":");
                     sb.Append(rowCount);
@@ -350,7 +367,7 @@ namespace CYQ.Data.Tool
                     sb.Append(Total);
                     sb.Append(",");
 
-                    sb.Append("\"errorMsg\":\"");
+                    sb.Append("\"errormsg\":\"");
                     sb.Append(errorMsg);
                     sb.Append("\",");
 
@@ -358,11 +375,11 @@ namespace CYQ.Data.Tool
                     sb.Append(Success.ToString().ToLower());
                     sb.Append(",");
                     sb.Append("\"rows\":");
-                }
-                else
-                {
-                    sb.Append(headText.ToString());
-                }
+                //}
+                //else
+                //{
+                //    sb.Append(headText.ToString());
+                //}
             }
             if (bodyItems.Count == 0)
             {

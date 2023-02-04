@@ -325,19 +325,19 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// Get List T 预先实现，后续再考虑是否开放。
+        /// 执行并返回泛型列表类型。
         /// </summary>
-        internal List<T> ExeList<T>() where T : class
+        public List<T> ExeList<T>() where T : class
         {
             CheckDisposed();
             List<T> list;
             AopResult aopResult = SetAopResult(AopEnum.ExeList);
             if (aopResult == AopResult.Return)
             {
-                if (_aop.Para.ExeResult is String)
+                object cacheObj = _aop.Para.ExeResult;
+                if (cacheObj is String)
                 {
-                    string result = _aop.Para.ExeResult as String;
-                    return JsonHelper.ToList<T>(result);
+                    return JsonHelper.ToList<T>(cacheObj.ToString());
                 }
                 return _aop.Para.ExeResult as List<T>;
             }
@@ -354,6 +354,44 @@ namespace CYQ.Data
                     _aop.End(AopEnum.ExeList);
                 }
                 return _aop.Para.ExeResult as List<T>;
+            }
+        }
+        /// <summary>
+        /// 执行列表数据并返回Json格式字符串。
+        /// </summary>
+        public string ExeJson()
+        {
+            return ExeJson(false, null);
+        }
+        /// <summary>
+        /// 执行列表数据并返回Json格式字符串。
+        /// </summary>
+        /// <param name="isConvertNameToLower">字段是否返回小写</param>
+        /// <param name="dateTimeFormatter">是否需要格式化时间，默认：yyyy-MM-dd HH:mm:ss</param>
+        /// <returns></returns>
+        public string ExeJson(bool isConvertNameToLower, string dateTimeFormatter)
+        {
+            CheckDisposed();
+            string json;
+            AopResult aopResult = SetAopResult(AopEnum.ExeJson);
+            if (aopResult == AopResult.Return)
+            {
+                object cacheObj = _aop.Para.ExeResult;
+                return cacheObj as string;
+            }
+            else
+            {
+                if (aopResult != AopResult.Break)
+                {
+                    json = ConvertTool.ChangeReaderToJson(dalHelper.ExeDataReader(_procName, _isProc), null, false);
+                    _aop.Para.ExeResult = json;
+                    _aop.Para.IsSuccess = json.Length > 4;
+                }
+                if (aopResult != AopResult.Default)
+                {
+                    _aop.End(AopEnum.ExeJson);
+                }
+                return JsonHelper.ToJson(_aop.Para.ExeResult);
             }
         }
         /// <summary>
@@ -425,22 +463,23 @@ namespace CYQ.Data
         {
             CheckDisposed();
             AopResult aopResult = SetAopResult(AopEnum.ExeNonQuery);
-            if (aopResult == AopResult.Return)
+            if (aopResult == AopResult.Return && _aop.Para.ExeResult is int)
             {
-                return _aop.Para.RowCount;
+                return (int)_aop.Para.ExeResult;
             }
             else
             {
                 if (aopResult != AopResult.Break)
                 {
-                    _aop.Para.RowCount = dalHelper.ExeNonQuery(_procName, _isProc);
-                    _aop.Para.IsSuccess = _aop.Para.RowCount > 0;
+                    int result = dalHelper.ExeNonQuery(_procName, _isProc);
+                    _aop.Para.ExeResult = result;
+                    _aop.Para.IsSuccess = result > 0;
                 }
                 if (aopResult != AopResult.Default)
                 {
                     _aop.End(AopEnum.ExeNonQuery);
                 }
-                return _aop.Para.RowCount;
+                return (int)_aop.Para.ExeResult;
             }
         }
         /// <summary>
@@ -464,31 +503,32 @@ namespace CYQ.Data
             {
                 return default(T);
             }
-            Type t = typeof(T);
-            object value = _aop.Para.ExeResult;
-            switch (t.Name)
-            {
-                case "Int32":
-                    int intValue = 0;
-                    if (!int.TryParse(Convert.ToString(value), out intValue))
-                    {
-                        return default(T);
-                    }
-                    value = intValue;
-                    break;
-                default:
-                    try
-                    {
-                        value = ConvertTool.ChangeType(value, t);
-                    }
-                    catch
-                    {
-                    }
+            return (T)ConvertTool.ChangeType(_aop.Para.ExeResult, typeof(T));
+            //Type t = typeof(T);
+            //object value = _aop.Para.ExeResult;
+            //switch (t.Name)
+            //{
+            //    case "Int32":
+            //        int intValue = 0;
+            //        if (!int.TryParse(Convert.ToString(value), out intValue))
+            //        {
+            //            return default(T);
+            //        }
+            //        value = intValue;
+            //        break;
+            //    default:
+            //        try
+            //        {
+            // value = ConvertTool.ChangeType(value, t);
+            //}
+            //catch
+            //{
+            //}
 
-                    break;
+            //break;
 
-            }
-            return (T)value;
+            //}
+            //return (T)value;
         }
 
 

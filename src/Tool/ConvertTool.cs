@@ -316,7 +316,7 @@ namespace CYQ.Data.Tool
 
                                     if (objValue != null && objValue != DBNull.Value)
                                     {
-                                        if (p.PropertyType != kv[p.Name])
+                                        if (p.PropertyType != kv[p.Name] || errIndex.ContainsKey(p.Name))
                                         {
                                             objValue = ChangeType(objValue, p.PropertyType);//尽量避免类型转换
                                         }
@@ -351,7 +351,7 @@ namespace CYQ.Data.Tool
                                     }
                                     if (objValue != null && objValue != DBNull.Value)
                                     {
-                                        if (f.FieldType != kv[f.Name])
+                                        if (f.FieldType != kv[f.Name] || errIndex.ContainsKey(f.Name))
                                         {
                                             objValue = ChangeType(objValue, f.FieldType);//尽量避免类型转换
                                         }
@@ -374,6 +374,99 @@ namespace CYQ.Data.Tool
             }
             return list;
             //return List<default(T)>;
+        }
+
+        /// <summary>
+        /// DbDataReader To Json
+        /// </summary>
+        internal static string ChangeReaderToJson(DbDataReader reader, JsonHelper js, bool needCheckHiddenField)
+        {
+            if (js == null)
+            {
+                js = new JsonHelper(false, false);
+            }
+            if (reader != null)
+            {
+                bool[] isBool = new bool[reader.FieldCount];
+                bool[] isDateTime = new bool[reader.FieldCount];
+                bool[] isNoQuotes = new bool[reader.FieldCount];
+                bool[] isHiddenField = new bool[reader.FieldCount];
+                string hiddenFields = "," + AppConfig.DB.HiddenFields.ToLower() + ",";
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    if (needCheckHiddenField)
+                    {
+                        isHiddenField[i] = hiddenFields.IndexOf("," + reader.GetName(i) + ",", StringComparison.OrdinalIgnoreCase) > -1;
+                    }
+                    switch (DataType.GetGroup(DataType.GetSqlType(reader.GetFieldType(i))))
+                    {
+                        case DataGroupType.Bool:
+                            isBool[i] = true;
+                            isNoQuotes[i] = true;
+                            break;
+                        case DataGroupType.Number:
+                            isNoQuotes[i] = true;
+                            break;
+                        case DataGroupType.Date:
+                            isDateTime[i] = true;
+                            break;
+                    }
+                }
+                #region Reader
+                //SQLite 报错：该字符串未被识别为有效的 DateTime，不能用sr[类型读]，要用sdr.GetString读
+                // List<string> errIndex = new List<string>();//SQLite提供的dll不靠谱，sdr[x]类型转不过时，会直接抛异常
+                bool[] errIndex = new bool[reader.FieldCount];
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        js.RowCount++;
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            if (isHiddenField[i]) { continue; }
+                            object objValue = null;
+                            try
+                            {
+                                if (errIndex[i])
+                                {
+                                    objValue = reader.GetString(i);
+                                }
+                                else
+                                {
+                                    objValue = reader.GetValue(i);
+                                }
+                            }
+                            catch
+                            {
+                                errIndex[i] = true;
+                                objValue = reader.GetString(i);
+                            }
+
+
+                            if (isDateTime[i])
+                            {
+                                DateTime dt;
+                                if (DateTime.TryParse(Convert.ToString(objValue), out dt))
+                                {
+                                    objValue = dt.ToString(js.DateTimeFormatter);
+                                }
+                            }
+                            else if (isBool[i])
+                            {
+                                objValue = objValue.ToString().ToLower();
+                            }
+
+                            js.Add(reader.GetName(i), Convert.ToString(objValue), isNoQuotes[i]);
+                        }
+                        js.AddBr();
+                    }
+                }
+                reader.Close();
+                reader.Dispose();
+                reader = null;
+                #endregion
+            }
+            return js.ToString();
         }
     }
 }
