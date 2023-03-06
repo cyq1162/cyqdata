@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json.Linq;
+
 namespace System.Web
 {
     /// <summary>
@@ -137,6 +139,7 @@ namespace System.Web
             // response.Body = new MemoryStream(data);
             if (!IsEnd)
             {
+                SetWriteFlag();
                 response.Body.WriteAsync(data, 0, data.Length);
             }
             //response.Body.Flush();
@@ -187,7 +190,13 @@ namespace System.Web
         public long? ContentLength { get => response.ContentLength; set => response.ContentLength = value; }
 
 
-        public bool HasStarted => response.HasStarted;
+        public bool HasStarted
+        {
+            get
+            {
+                return response.HasStarted || context.Items.TryGetValue("CallWrite",out _);
+            }
+        }
 
 
 
@@ -222,6 +231,7 @@ namespace System.Web
         {
             if (!IsEnd)
             {
+                SetWriteFlag();
                response.WriteAsync(text);
             }
         }
@@ -231,6 +241,14 @@ namespace System.Web
             {
                 BinaryWrite(File.ReadAllBytes(fileName));
             }
+        }
+        private void SetWriteFlag()
+        {
+            if (!context.Items.ContainsKey("CallWrite"))
+            {
+                context.Items.Add("CallWrite", true);
+            }
+           
         }
     }
 }
