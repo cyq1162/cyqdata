@@ -4,11 +4,15 @@ using System.Text;
 using System.Data.SqlClient;
 using System.Data;
 using System.Data.Common;
+using CYQ.Data.Cache;
+using System.Reflection;
+using System.IO;
 
 namespace CYQ.Data
 {
     internal partial class MsSqlDal : DalBase
     {
+        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
         public MsSqlDal(ConnObject co)
             : base(co)
         { }
@@ -51,11 +55,9 @@ namespace CYQ.Data
                     break;
             }
         }
-
         protected override DbProviderFactory GetFactory()
         {
-            return SqlClientFactory.Instance;
-            //return DbProviderFactories.GetFactory("System.Data.SqlClient");
+            return SqlClientFactory.Instance;//发布到Linux 发现为null，查了半天，发现是发布模式问题【可移值，该选项不支持】=》Linux x64
         }
         protected override bool IsExistsDbName(string dbName)
         {
@@ -88,7 +90,7 @@ namespace CYQ.Data
         {
             bool for2000 = Version.StartsWith("08");
             return @"Select o.name as TableName, p.value as Description from sysobjects o " + (for2000 ? "left join sysproperties p on p.id = o.id and smallid = 0" : "left join sys.extended_properties p on p.major_id = o.id and minor_id = 0")
-               + " and p.name = 'MS_Description' where o.type = '" + type + "' AND o.name<>'dtproperties' AND o.name<>'sysdiagrams'" + (for2000 ? "" : " and category in(0,32)")+" order by o.name";
+               + " and p.name = 'MS_Description' where o.type = '" + type + "' AND o.name<>'dtproperties' AND o.name<>'sysdiagrams'" + (for2000 ? "" : " and category in(0,32)") + " order by o.name";
         }
     }
 }

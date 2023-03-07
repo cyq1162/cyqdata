@@ -952,3 +952,4 @@
 714：新增：MProc	开放两个方法：ExeList(执行返回List<T>）和ExeJson（执行返回Json）（2023-02-04）
 715：新增：MAction  开放两个方法：SelectList(执行返回List<T>）和SelectJson（执行返回Json）（2023-02-05）
 716：优化：HttpResponse.HasStarted （NETCore6 Taurus 优化）（2023-03-06）
+717：优化：CentOS8-Stream 下的MySql.Data.dll 加载等（2023-03-07）

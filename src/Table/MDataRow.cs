@@ -528,18 +528,21 @@ namespace CYQ.Data.Table
                 case BreakOp.Null:
                     if (cell.IsNull)
                     {
+                        cell.State = 0;
                         return;
                     }
                     break;
                 case BreakOp.Empty:
                     if (cell.StringValue == "")
                     {
+                        cell.State = 0;
                         return;
                     }
                     break;
                 case BreakOp.NullOrEmpty:
                     if (cell.IsNullOrEmpty)
                     {
+                        cell.State = 0;
                         return;
                     }
                     break;

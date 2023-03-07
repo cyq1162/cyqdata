@@ -20,20 +20,30 @@ namespace CYQ.Data
             object ass = CacheManage.LocalInstance.Get("MySqlClient_Assembly");
             if (ass == null)
             {
+                if (!File.Exists(AppConst.AssemblyPath + "MySql.Data.dll"))
+                {
+                    Error.Throw("Can't find the MySql.Data.dll");
+                }
                 try
                 {
+                    if (AppConfig.AssemblyPath.StartsWith("/"))
+                    {
+                        ass = Assembly.LoadFrom("MySql.Data.dll");//netcore6 linux 环境限定只能用这种模式加载，其它抛了异常。
+                    }
+                }
+                catch
+                {
+
+                }
+                if (ass == null)
+                {
                     ass = Assembly.Load("MySql.Data");
+                }
+                if (ass != null)
+                {
                     CacheManage.LocalInstance.Set("MySqlClient_Assembly", ass, 10080);
                 }
-                catch (Exception err)
-                {
-                    string errMsg = err.Message;
-                    if (!File.Exists(AppConst.AssemblyPath + "MySql.Data.dll"))
-                    {
-                        errMsg = "Can't find the MySql.Data.dll more info : " + errMsg;
-                    }
-                    Error.Throw(errMsg);
-                }
+                
             }
             return ass as Assembly;
         }

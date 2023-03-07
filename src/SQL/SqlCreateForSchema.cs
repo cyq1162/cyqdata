@@ -142,9 +142,10 @@ namespace CYQ.Data.SQL
                 SqlDbType sdt = column.SqlType;
                 if (sdt == SqlDbType.DateTime && dalType == DataBaseType.MySql && Convert.ToString(column.DefaultValue) == SqlValue.GetDate)
                 {
-                    sdt = SqlDbType.Timestamp;
+                    column.SqlType= SqlDbType.Timestamp;
                 }
                 key += " " + DataType.GetDataType(column, dalType, version);
+                column.SqlType = sdt;
             }
             if (isAutoOrPKey)
             {
@@ -242,7 +243,7 @@ namespace CYQ.Data.SQL
                 {
                     if (dalType == DataBaseType.MySql)
                     {
-                        if ((group == 0 && (column.MaxSize < 1 || column.MaxSize > 8000)) || (group == DataGroupType.Date && key.Contains("datetime"))) //只能对TIMESTAMP类型的赋默认值。
+                        if ((group ==  DataGroupType.Text && (column.MaxSize < 1 || column.MaxSize > 8000)) || (group == DataGroupType.Date && key.Contains("datetime"))) //只能对TIMESTAMP类型的赋默认值。
                         {
                             goto er;
                         }
