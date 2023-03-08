@@ -603,6 +603,36 @@ namespace CYQ.Data
         }
 
         #region Aop 相关操作
+
+        /// <summary>
+        /// 获取或设置当前操作是否使用自动缓存
+        /// </summary>
+        public bool IsUseAutoCache
+        {
+            get
+            {
+                return AppConfig.Cache.IsAutoCache && (_aop.aopOp == AopOp.OpenAll || _aop.aopOp == AopOp.OnlyInner);
+            }
+            set
+            {
+                switch (_aop.aopOp)
+                {
+                    case AopOp.CloseAll:
+                        _aop.aopOp = value ? AopOp.OnlyInner : AopOp.CloseAll;
+                        break;
+                    case AopOp.OnlyInner:
+                        _aop.aopOp = value ? AopOp.OnlyInner : AopOp.CloseAll;
+                        break;
+                    case AopOp.OnlyOuter:
+                        _aop.aopOp = value ? AopOp.OpenAll : AopOp.OnlyOuter;
+                        break;
+                    case AopOp.OpenAll:
+                        _aop.aopOp = value ? AopOp.OpenAll : AopOp.OnlyOuter;
+                        break;
+                }
+            }
+        }
+
         /// <summary>
         /// Set Aop State
         /// <para>设置Aop状态</para>

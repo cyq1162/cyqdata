@@ -1786,13 +1786,41 @@ namespace CYQ.Data
     //AOP 部分
     public partial class MAction
     {
+        /// <summary>
+        /// 获取或设置当前操作是否使用自动缓存
+        /// </summary>
+        public bool IsUseAutoCache
+        {
+            get
+            {
+                return AppConfig.Cache.IsAutoCache && (_aop.aopOp == AopOp.OpenAll || _aop.aopOp == AopOp.OnlyInner);
+            }
+            set
+            {
+                switch(_aop.aopOp)
+                {
+                    case AopOp.CloseAll:
+                        _aop.aopOp = value ? AopOp.OnlyInner : AopOp.CloseAll;
+                        break;
+                    case AopOp.OnlyInner:
+                        _aop.aopOp = value ? AopOp.OnlyInner : AopOp.CloseAll;
+                        break;
+                    case AopOp.OnlyOuter:
+                        _aop.aopOp = value ? AopOp.OpenAll : AopOp.OnlyOuter;
+                        break;
+                    case AopOp.OpenAll:
+                          _aop.aopOp = value ? AopOp.OpenAll : AopOp.OnlyOuter;
+                        break;
+                }
+            }
+        }
         #region Aop操作
         private InterAop _aop = new InterAop();
         /// <summary>
         /// Set Aop State
         /// <para>设置Aop状态</para>
         /// </summary>
-        public MProc SetAopState(AopOp op)
+        public MAction SetAopState(AopOp op)
         {
             _aop.aopOp = op;
             return this;
