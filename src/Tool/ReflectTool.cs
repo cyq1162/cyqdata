@@ -94,6 +94,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static int GetArgumentLength(ref Type t, out Type[] argTypes)
         {
+            argTypes = null;
             string key = t.FullName;
             if (argumentCache.ContainsKey(key))
             {
@@ -121,8 +122,12 @@ namespace CYQ.Data.Tool
                 {
                     #region 非泛型
 
-
-                    if (t.Name.EndsWith("[]") || t.Name == "MDataRowCollection" || t.Name == "MDataColumn")
+                    if (t.Name.EndsWith("[]"))
+                    {
+                        len = 1;
+                        argTypes = new Type[1] { t.GetElementType() };
+                    }
+                    else if (t.Name == "MDataRowCollection" || t.Name == "MDataColumn")
                     {
                         len = 1;
                     }
@@ -154,10 +159,13 @@ namespace CYQ.Data.Tool
                         //    len = mi.GetParameters().Length;
                         //}
                     }
-                    argTypes = new Type[len];
-                    for (int i = 0; i < argTypes.Length; i++)
+                    if (argTypes == null)
                     {
-                        argTypes[i] = typeof(object);
+                        argTypes = new Type[len];
+                        for (int i = 0; i < argTypes.Length; i++)
+                        {
+                            argTypes[i] = typeof(object);
+                        }
                     }
                     #endregion
                 }

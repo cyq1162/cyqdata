@@ -62,5 +62,9 @@ namespace CYQ.Data
         /// Gemini Workflow Dev Framework
         /// </summary>
         public const string Gemini = "Gemini";
+        /// <summary>
+        /// Taurus.MicroService
+        /// </summary>
+        public const string MicroService = "MicroService";
     }
 }

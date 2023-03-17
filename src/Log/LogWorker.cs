@@ -14,7 +14,7 @@ namespace CYQ.Data
         /// <summary>
         /// 待处理的工作队列
         /// </summary>
-        static Queue<SysLogs> _LogQueue = new Queue<SysLogs>();
+        static Queue<SysLogs> _LogQueue = new Queue<SysLogs>(1024);
         /// <summary>
         /// 存档Hash，5分钟内存在相同的错误，则直接忽略
         /// </summary>
@@ -108,7 +108,7 @@ namespace CYQ.Data
                         dbErr = true;
                     }
                 }
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 if (empty > 100)
                 {
                     //超过10分钟没日志产生

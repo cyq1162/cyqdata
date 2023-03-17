@@ -1631,7 +1631,7 @@ namespace CYQ.Data.Table
                                     MethodInfo method;
                                     if (isArray)
                                     {
-                                        Object item = ConvertTool.ChangeType(items[i], Type.GetType(propType.FullName.Replace("[]", "")));
+                                        Object item = ConvertTool.ChangeType(items[i],propType.GetElementType());//Type.GetType(propType.FullName.Replace("[]", "")
                                         method = objListType.GetMethod("Set");
                                         if (method != null)
                                         {

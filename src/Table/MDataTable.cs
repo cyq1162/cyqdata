@@ -682,19 +682,38 @@ namespace CYQ.Data.Table
             {
                 return this;
             }
+            if (Rows == null) { return null; }
             Type[] paraTypeList = null;
             ReflectTool.GetArgumentLength(ref t, out paraTypeList);
-            object listObj = Activator.CreateInstance(t);//创建实例
-            if (Rows != null && Rows.Count > 0)
+            if (t.Name.EndsWith("[]"))
             {
-
-                MethodInfo method = t.GetMethod("Add");
-                foreach (MDataRow row in Rows)
+                if (Rows.Count > 0)
                 {
-                    method.Invoke(listObj, new object[] { row.ToEntity(paraTypeList[0]) });
+                    object listObj = Activator.CreateInstance(t, Rows.Count);//创建实例
+                    MethodInfo method = t.GetMethod("Set");
+                    for (int i = 0; i < Rows.Count; i++)
+                    {
+                        method.Invoke(listObj, new object[] { i, Rows[i].ToEntity(paraTypeList[0]) });
+                    }
+                    return listObj;
                 }
             }
-            return listObj;
+            else
+            {
+                object listObj = Activator.CreateInstance(t);//创建实例
+
+                if (Rows.Count > 0)
+                {
+                    MethodInfo method = t.GetMethod("Add");
+                    foreach (MDataRow row in Rows)
+                    {
+                        method.Invoke(listObj, new object[] { row.ToEntity(paraTypeList[0]) });
+                    }
+                }
+
+                return listObj;
+            }
+            return null;
         }
         /// <summary>
         /// 批量插入或更新 [提示：操作和当前表名有关，如当前表名不是要提交入库的表名,请给TableName属性重新赋值]

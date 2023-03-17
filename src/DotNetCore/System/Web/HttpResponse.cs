@@ -137,7 +137,7 @@ namespace System.Web
         public void BinaryWrite(byte[] data)
         {
             // response.Body = new MemoryStream(data);
-            if (!IsEnd)
+            if (!IsEnd && data != null)
             {
                 SetWriteFlag();
                 response.Body.WriteAsync(data, 0, data.Length);
@@ -194,7 +194,7 @@ namespace System.Web
         {
             get
             {
-                return response.HasStarted || context.Items.TryGetValue("CallWrite",out _);
+                return response.HasStarted || context.Items.TryGetValue("CallWrite", out _);
             }
         }
 
@@ -232,7 +232,7 @@ namespace System.Web
             if (!IsEnd)
             {
                 SetWriteFlag();
-               response.WriteAsync(text);
+                response.WriteAsync(text);
             }
         }
         public void WriteFile(string fileName)
@@ -248,7 +248,7 @@ namespace System.Web
             {
                 context.Items.Add("CallWrite", true);
             }
-           
+
         }
     }
 }

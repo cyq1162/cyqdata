@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using CYQ.Data.Table;
 
 namespace CYQ.Data.Tool
 {
@@ -511,8 +512,13 @@ namespace CYQ.Data.Tool
             {
                 Type[] paraTypeList = null;
                 ReflectTool.GetArgumentLength(ref t, out paraTypeList);
-                listObj = Activator.CreateInstance(t);//创建实例
                 toType = paraTypeList[0];
+                if (toType.IsValueType || toType.Name == "String")
+                {
+                    return new MDataRow().GetObj(t, json);
+                }
+                listObj = Activator.CreateInstance(t);//创建实例
+                
                 method = t.GetMethod("Add");
             }
 
