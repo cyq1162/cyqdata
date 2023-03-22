@@ -1975,7 +1975,7 @@ namespace CYQ.Data.Tool
                     int index = json.LastIndexOf("/*");
                     if (index > -1)//去掉注释
                     {
-                        json = Regex.Replace(json, @"/\*[.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
+                        json = Regex.Replace(json, @"/\*[^:][.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
                     }
                     char splitChar = '\n';
                     if (json.IndexOf(splitChar) > -1)

@@ -921,7 +921,10 @@ namespace CYQ.Data.Xml
                         {
                             evalValue = Convert.ToString(Microsoft.JScript.Eval.JScriptEvaluate(value1, Microsoft.JScript.Vsa.VsaEngine.CreateEngine()));
                         }
-                        catch { }
+                        catch(Exception err) 
+                        {
+                            Log.WriteLogToTxt(err);
+                        }
                         html = html.Replace(value, evalValue);
                     }
                 }
