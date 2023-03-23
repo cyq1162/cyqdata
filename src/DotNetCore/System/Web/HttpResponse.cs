@@ -194,7 +194,7 @@ namespace System.Web
         {
             get
             {
-                return response.HasStarted || context.Items.TryGetValue("CallWrite", out _);
+                return response.HasStarted || IsEnd || context.Items.TryGetValue("CallWrite", out _);
             }
         }
 

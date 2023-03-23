@@ -33,7 +33,9 @@ namespace CYQ.Data.Tool
         {
 
         }
-
+        /// <summary>
+        /// 添加值【不存则，则添加；存在，则忽略】
+        /// </summary>
         public new void Add(K key, V value)
         {
             Add(key, value, 1);
@@ -204,7 +206,7 @@ namespace CYQ.Data.Tool
             return default(V);
         }
         /// <summary>
-        /// 当Key为int时，通过此方法取值
+        /// 检查值存在【则更新】，不存在则添加
         /// </summary>
         public void Set(K key, V value)
         {
