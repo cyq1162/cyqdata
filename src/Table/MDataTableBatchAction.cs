@@ -710,7 +710,10 @@ namespace CYQ.Data.Table
                     {
                         return true;
                     }
-
+                    if (_dalHelper.RecordsAffected == -2 && _dalHelper.DebugInfo.Length > 0)
+                    {
+                        sourceTable.DynamicData = _dalHelper.DebugInfo.ToString();
+                    }
                 }
 
             }
