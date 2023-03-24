@@ -33,8 +33,10 @@ namespace JsonHelper_Demo
 
         static void Main(string[] args)
         {
-            JsonHelperStatic();
-            JsonHelperInstance();
+            TestListIntString();
+            //TestEntityArray();
+            // JsonHelperStatic();
+            // JsonHelperInstance();
             Console.Read();
         }
         //JsonHeper的静态方法
@@ -105,6 +107,42 @@ namespace JsonHelper_Demo
             js.Add("v1", "v1...");
             js.Add("v2", "222", true);
             return js.ToString();
+        }
+
+        static void TestEntityArray()
+        {
+            EntityArray ta = new EntityArray();
+            ta.Name = "dfdf";
+            AA a1 = new AA();
+            a1.AName = "a1";
+            AA a2 = new AA();
+            a2.AName = "a2";
+            List<int> numList = new List<int>() { 1, 3, 5 };
+            ta.NumList = numList;
+            ta.AADTO = new AA[] { a1, a2 };
+            string json = JsonHelper.ToJson(ta);
+
+            EntityArray ta2 = JsonHelper.ToEntity<EntityArray>(json);
+            string bbb = "dd";
+        }
+        static void TestListIntString()
+        {
+            List<string> aa = new List<string>();
+            aa.Add("a1");
+            aa.Add("a2");
+
+            string json = JsonHelper.ToJson(aa);
+
+            List<string> aResult = JsonHelper.ToList<string>(json);
+
+            List<int> bb = new List<int>();
+            bb.Add(111);
+            bb.Add(222);
+
+            string jsonBB = JsonHelper.ToJson(bb);
+
+            List<int> bbccc = JsonHelper.ToList<int>(jsonBB);
+            object dd = bbccc;
         }
     }
 }
