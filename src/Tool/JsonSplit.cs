@@ -363,11 +363,16 @@ namespace CYQ.Data.Tool
         }
         internal static List<T> ToList<T>(string json, int topN, EscapeOp op)
         {
+            Type t = typeof(T);
+            if (t.IsValueType || t.Name == "String")
+            {
+                return new MDataRow().GetObj(typeof(List<T>), json) as List<T>;
+            }
+
             List<T> result = new List<T>();
 
-            if (!string.IsNullOrEmpty(json))
+            if (!string.IsNullOrEmpty(json) && json.Length > 4)
             {
-                Type t = typeof(T);
                 // object entity = Activator.CreateInstance(t);
                 T entity = Activator.CreateInstance<T>();
                 bool hasSetValue = false;
@@ -518,7 +523,7 @@ namespace CYQ.Data.Tool
                     return new MDataRow().GetObj(t, json);
                 }
                 listObj = Activator.CreateInstance(t);//´´½¨ÊµÀý
-                
+
                 method = t.GetMethod("Add");
             }
 

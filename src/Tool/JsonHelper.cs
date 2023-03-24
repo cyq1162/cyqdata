@@ -1699,7 +1699,7 @@ namespace CYQ.Data.Tool
                 return JsonSplit.ToEntity<T>(json, op);
             }
         }
-        public static List<T> ToList<T>(string json) where T : class
+        public static List<T> ToList<T>(string json)// where T : class
         {
             return ToList<T>(json, DefaultEscape);
         }
@@ -1708,7 +1708,7 @@ namespace CYQ.Data.Tool
         ///  <para>将Json转换为实体列表</para>
         /// </summary>
         /// <typeparam name="T">Type<para>类型</para></typeparam>
-        public static List<T> ToList<T>(string json, EscapeOp op) where T : class
+        public static List<T> ToList<T>(string json, EscapeOp op)// where T : class
         {
             return JsonSplit.ToList<T>(json, 0, op);//减少中间转换环节。
         }

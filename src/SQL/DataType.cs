@@ -556,6 +556,10 @@ namespace CYQ.Data.SQL
                     }
                     return "datetime";
                 case SqlDbType.Timestamp:
+                    if (dalTo == DataBaseType.MySql && (ms.SqlTypeName == "datetime" || ms.MaxSize == 23))
+                    {
+                        return "timestamp";
+                    }
                     if (isSameDalType || (dalFrom == DataBaseType.None && dalTo == DataBaseType.MySql)) { return "timestamp"; }//mysql
                     if (dalFrom == DataBaseType.MySql || dalFrom == DataBaseType.Oracle || dalFrom == DataBaseType.PostgreSQL || dalFrom == DataBaseType.DB2)
                     {
@@ -764,7 +768,7 @@ namespace CYQ.Data.SQL
                                 }
                                 return t + "(" + maxSize + ")";
                             }
-                        #endregion
+                            #endregion
                         case DataBaseType.SQLite:
                             return (maxSize < 1 || maxSize > 65535) ? "TEXT" : "TEXT(" + maxSize + ")";
                         case DataBaseType.MySql://mysql没有nchar之类的。
@@ -801,7 +805,7 @@ namespace CYQ.Data.SQL
                             {
                                 return t + "(" + maxSize + ")";
                             }
-                        #endregion
+                            #endregion
                         //return (maxSize < 1 || maxSize > 8000) ? "longtext" : ();
                         case DataBaseType.Oracle:
                             if (maxSize < 1 || maxSize > 4000 || (maxSize > 2000 && (sqlType == SqlDbType.NVarChar || sqlType == SqlDbType.Char))
