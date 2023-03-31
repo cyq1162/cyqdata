@@ -54,6 +54,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string GetHashKey(string name)
         {
+            name = SqlFormat.NotKeyword(name);
             return StaticTool.GetHashKey(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower());
         }
         /// <summary>

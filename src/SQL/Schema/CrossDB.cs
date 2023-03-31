@@ -115,7 +115,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 获得数据库名称。
         /// </summary>
-        /// <param name="formatName"></param>
+        /// <param name="name"></param>
         /// <returns></returns>
         public static string GetDBName(string name)
         {

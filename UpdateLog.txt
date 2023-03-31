@@ -963,3 +963,4 @@
 723：优化：MDataTable.AcceptChanges 对 Mysql（批量处理命令）。（2023-03-24）
 724：优化：MDataTable.AcceptChanges 错误时对DynamicData属性的信息赋值。（2023-03-24）
 725：优化：AppConfig ：优化配置文件修改时，不清空原有通过代码设置的配置项。（2023-03-31）
+726：优化：TableInfo ：GetHashKey(name) 细节优化。（2023-03-31）
