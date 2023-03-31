@@ -42,7 +42,7 @@ namespace System.Configuration
             appSettingJson = JsonHelper.ReadJson(filePath);
             _AppSettings.Clear();
             _ConnectionStrings.Clear();
-            AppConfig.Clear();
+          //  AppConfig.Clear();通过代码设置的数据，不随配置文件修改而改变。
             ConnBean.Clear();
             ConnObject.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。

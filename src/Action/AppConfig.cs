@@ -24,11 +24,11 @@ namespace CYQ.Data
         #region 基方法
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        internal static void Clear()
-        {
-            appConfigs.Clear();
-            connConfigs.Clear();
-        }
+        //internal static void Clear()
+        //{
+        //    appConfigs.Clear();
+        //    connConfigs.Clear();
+        //}
         /// <summary>
         /// 设置Web.config或App.config的值 value为null时移除缓存。
         /// </summary>
@@ -74,17 +74,18 @@ namespace CYQ.Data
                     value = ConfigurationManager.AppSettings[key.Substring(key.IndexOf('.') + 1)];
                 }
                 value = string.IsNullOrEmpty(value) ? defaultValue : value;
-                try
-                {
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        appConfigs.Add(key, value);
-                    }
-                }
-                catch
-                {
+                // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
+                //try
+                //{
+                //    if (!string.IsNullOrEmpty(value)) 
+                //    {
+                //        appConfigs.Add(key, value);
+                //    }
+                //}
+                //catch
+                //{
 
-                }
+                //}
 
                 return value;
             }
@@ -153,10 +154,11 @@ namespace CYQ.Data
                 {
                     return GetConn(connString);
                 }
-                if (!connConfigs.ContainsKey(name))
-                {
-                    connConfigs.Add(name, connString);
-                }
+                // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
+                //if (!connConfigs.ContainsKey(name))
+                //{
+                //    connConfigs.Add(name, connString);
+                //}
                 return connString;
             }
             if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况 txt path={0}
