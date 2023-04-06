@@ -107,7 +107,7 @@ namespace System.Web
                 string lang = request.Headers["Accept-Language"];
                 if (!string.IsNullOrEmpty(lang))
                 {
-                    return lang.Split(';');
+                    return lang.Split(',');
                 }
                 return null;
             }
@@ -154,13 +154,8 @@ namespace System.Web
         {
             get
             {
-                string ip = request.Headers["X-Original-For"];
-                if (string.IsNullOrEmpty(ip))
-                {
-                    string[] items = context.Connection.RemoteIpAddress.ToString().Split(':');
-                    ip = (items[items.Length - 1] == "1" ? "127.0.0.1" : items[items.Length - 1]) + ":" + context.Connection.RemotePort;
-                }
-                return ip;
+                string[] items = context.Connection.RemoteIpAddress.ToString().Split(':');//::1 ip6 localhost,127.0.0.1 ip4 localhost
+                return items[items.Length - 1] == "1" ? "127.0.0.1" : items[items.Length - 1];
             }
         }
         public string UserAgent
@@ -194,6 +189,17 @@ namespace System.Web
                         nvc.Add(key, request.Headers[key].ToString());
                     }
                 }
+                return nvc;
+            }
+        }
+
+        public NameValueCollection ServerVariables
+        {
+            get
+            {
+                NameValueCollection nvc = new NameValueCollection();
+                nvc.Add("REMOTE_ADDR", UserHostAddress);
+                nvc.Add("REMOTE_PORT",context.Connection.RemotePort.ToString());
                 return nvc;
             }
         }
