@@ -144,8 +144,9 @@ namespace CYQ.Data
                 if (AppConfig.IsWeb && HttpContext.Current != null && HttpContext.Current.Handler != null)
                 {
                     HttpRequest request = HttpContext.Current.Request;
-                    log.PageUrl = request.Url.Scheme + "://" + request.Url.Authority + HttpUtility.UrlDecode(request.RawUrl);
-                    if (request.UrlReferrer != null && request.Url != request.UrlReferrer)
+                    Uri uri = request.Url;
+                    log.PageUrl = uri.Scheme + "://" + uri.Authority + HttpUtility.UrlDecode(request.RawUrl);
+                    if (request.UrlReferrer != null && uri != request.UrlReferrer)
                     {
                         log.RefererUrl = HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                     }

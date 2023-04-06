@@ -7,9 +7,9 @@
 
 从2010-08-19记录了：
 1：MAction：关闭的DataSQLHelper的返回
-2：MAction：增加SetAutoPrefix,可传多个控件前缀
-3：MAction：Insert/Update方法开放Auto获取值功能。
+2：MAction：增加SetAutoPrefix,可传多个控件前缀。
 4：MProce：新出产类,用于执行存储过程
+3：MAction：Insert/Update方法开放Auto获取值功能
 5：OutPutData：新增加对存储过程枚举的导出
 
 -----------------------------V1.4版本开始-----------------------------
@@ -953,14 +953,16 @@
 715：新增：MAction  开放两个方法：SelectList(执行返回List<T>）和SelectJson（执行返回Json）（2023-02-05）
 716：优化：HttpResponse.HasStarted （NETCore6 Taurus 优化）（2023-03-06）
 717：优化：CentOS8-Stream 下的MySql.Data.dll 加载等（2023-03-07）
-718：新增：MAction、MProc 属性：IsUserAutoCache，用于便捷操作自动缓存的启用或关闭。（2023-03-08）
+718：新增：MAction、MProc 属性：IsUseAutoCache，用于便捷操作自动缓存的启用或关闭。（2023-03-08）
 -------------------------------------------------------------------------------------
 719：优化：类型转换对List<值类型>和数组类型的处理。（2023-03-17）【V5.8.5.7】
 720：优化：JsonHelper读取appsetting.json。（2023-03-22）
 721：优化：HttpResponse.HasStarted（NETCore6 Taurus 优化）（2023-03-23）
 -------------------------------------------------------------------------------------
-722：优化：JsonHelper ：开放ToList<值类型或String炻>。（2023-03-24）【V5.8.5.8】
+722：优化：JsonHelper ：开放ToList<值类型或String>。（2023-03-24）【V5.8.5.8】
 723：优化：MDataTable.AcceptChanges 对 Mysql（批量处理命令）。（2023-03-24）
 724：优化：MDataTable.AcceptChanges 错误时对DynamicData属性的信息赋值。（2023-03-24）
 725：优化：AppConfig ：优化配置文件修改时，不清空原有通过代码设置的配置项。（2023-03-31）
 726：优化：TableInfo ：GetHashKey(name) 细节优化。（2023-03-31）
+-------------------------------------------------------------------------------------
+727：优化：JsonHelper ：兼容：{a:1,b:2}。（2023-04-06）【V5.8.5.9】
