@@ -363,6 +363,10 @@ namespace CYQ.Data
         {
             return ExeJson(false, null);
         }
+        public string ExeJson(bool isConvertNameToLower)
+        {
+            return ExeJson(isConvertNameToLower, null);
+        }
         /// <summary>
         /// 执行列表数据并返回Json格式字符串。
         /// </summary>
@@ -383,7 +387,13 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    json = ConvertTool.ChangeReaderToJson(dalHelper.ExeDataReader(_procName, _isProc), null, false);
+                    JsonHelper js = new JsonHelper(false, false);
+                    js.IsConvertNameToLower = isConvertNameToLower;
+                    if (!string.IsNullOrEmpty(dateTimeFormatter))
+                    {
+                        js.DateTimeFormatter = dateTimeFormatter;
+                    }
+                    json = ConvertTool.ChangeReaderToJson(dalHelper.ExeDataReader(_procName, _isProc), js, false);
                     _aop.Para.ExeResult = json;
                     _aop.Para.IsSuccess = json.Length > 4;
                 }
