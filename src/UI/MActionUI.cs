@@ -636,7 +636,7 @@ namespace CYQ.Data.UI
                         else if (autoPrefix == "chb" && cell.Struct.SqlType == SqlDbType.Bit)
                         {
                             //检测是否存在相应的控件，如果存在，则设置值。
-                            if (System.Web.HttpContext.Current.CurrentHandler is Page)
+                            if (System.Web.HttpContext.Current.Handler != null && System.Web.HttpContext.Current.CurrentHandler is Page)
                             {
                                 if (((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(key) != null
                                     || (isContainLine && ((Page)System.Web.HttpContext.Current.CurrentHandler).FindControl(noLineKey) != null)

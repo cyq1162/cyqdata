@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http.Features;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
-using CYQ.Data.Cache;
+
 namespace System.Web
 {
     public class HttpContext//: Microsoft.AspNetCore.Http.HttpContext
@@ -135,6 +135,10 @@ namespace System.Web
             {
                 object err;
                 NetCoreContext.Items.TryGetValue("Handler", out err);
+                if (err == null)
+                {
+                    return DefaultHttpHandler.Instance;
+                }
                 return err as IHttpHandler;
             }
             set
