@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json.Linq;
+using System.Text;
+using CYQ.Data;
 
 namespace System.Web
 {
@@ -22,10 +20,10 @@ namespace System.Web
             }
         }
         Microsoft.AspNetCore.Http.HttpResponse response => context.Response;
-        HttpCookieCollection cookieCollection;
+
         internal HttpResponse()
         {
-            cookieCollection = new HttpCookieCollection();
+
         }
 
         #region 兼容Web
@@ -104,11 +102,24 @@ namespace System.Web
                 }
                 catch (Exception err)
                 {
-
+                    Log.Write(err, LogType.Error);
                 }
 
             }
         }
+
+        public Encoding ContentEncoding
+        {
+            get
+            {
+                return Encoding.GetEncoding(Charset);
+            }
+            set
+            {
+                Charset = value.WebName;
+            }
+        }
+
         public Stream Filter
         {
             get => Body;
@@ -140,7 +151,7 @@ namespace System.Web
             if (!IsEnd && data != null)
             {
                 SetWriteFlag();
-                response.Body.WriteAsync(data, 0, data.Length);
+                response.Body.WriteAsync(data, 0, data.Length).Wait();
             }
             //response.Body.Flush();
             //response.SendFileAsync()
@@ -150,7 +161,22 @@ namespace System.Web
         #endregion
 
 
-        public HttpCookieCollection Cookies => cookieCollection;
+        public HttpCookieCollection Cookies
+        {
+            get
+            {
+                if (context.Items.ContainsKey("ResponseCookies"))
+                {
+                    return context.Items["ResponseCookies"] as HttpCookieCollection;
+                }
+                else
+                {
+                    var cookies = new HttpCookieCollection(true);
+                    context.Items.Add("ResponseCookies", cookies);
+                    return cookies;
+                }
+            }
+        }
 
         public int StatusCode
         {
@@ -225,22 +251,19 @@ namespace System.Web
         public void Redirect(string location, bool permanent)
         {
             response.Redirect(location, permanent);
-            response.WriteAsync("");
+            End();
         }
         public void Write(string text)
         {
             if (!IsEnd)
             {
                 SetWriteFlag();
-                response.WriteAsync(text);
+                response.WriteAsync(text, ContentEncoding).Wait();
             }
         }
         public void WriteFile(string fileName)
         {
-            if (!IsEnd)
-            {
-                BinaryWrite(File.ReadAllBytes(fileName));
-            }
+            BinaryWrite(File.ReadAllBytes(fileName));
         }
         private void SetWriteFlag()
         {

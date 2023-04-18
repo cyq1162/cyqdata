@@ -38,32 +38,49 @@ namespace System.Web
         {
             get
             {
-                NameValueCollection nvc = new NameValueCollection();
-                if (request.Method == "POST" && request.HasFormContentType && request.Form != null && request.Form.Keys.Count > 0)
+                if (context.Items.ContainsKey("RequestForm"))
                 {
-                    foreach (string key in request.Form.Keys)
-                    {
-                        nvc.Add(key, request.Form[key]);
-                    }
+                    return context.Items["RequestForm"] as NameValueCollection;
                 }
-                return nvc;
+                else
+                {
+                    NameValueCollection nvc = new NameValueCollection();
+                    if (request.Method == "POST" && request.HasFormContentType && request.Form != null && request.Form.Keys.Count > 0)
+                    {
+                        foreach (string key in request.Form.Keys)
+                        {
+                            nvc.Add(key, request.Form[key]);
+                        }
+                    }
+                    context.Items.Add("RequestForm", nvc);
+                    return nvc;
+                }
+
+
             }
         }
         public HttpFileCollection Files
         {
             get
             {
-                if (request.Method == "POST" && request.HasFormContentType && request.Form != null
-                    && request.Form.Files != null && request.Form.Files.Count > 0)
+                if (context.Items.ContainsKey("RequestFiles"))
+                {
+                    return context.Items["RequestFiles"] as HttpFileCollection;
+                }
+                else
                 {
                     HttpFileCollection files = new HttpFileCollection();
-                    foreach (IFormFile file in request.Form.Files)
+                    if (request.Method == "POST" && request.HasFormContentType && request.Form != null
+                     && request.Form.Files != null && request.Form.Files.Count > 0)
                     {
-                        files.Add(new HttpPostedFile(file), file.Name);
+                        foreach (IFormFile file in request.Form.Files)
+                        {
+                            files.Add(new HttpPostedFile(file), file.Name);
+                        }
                     }
+                    context.Items.Add("RequestFiles", files);
                     return files;
                 }
-                return null;
             }
         }
 
@@ -71,15 +88,24 @@ namespace System.Web
         {
             get
             {
-                NameValueCollection nvc = new NameValueCollection();
-                if (request.Query != null && request.Query.Keys.Count > 0)
+                if (context.Items.ContainsKey("RequestQueryString"))
                 {
-                    foreach (string key in request.Query.Keys)
-                    {
-                        nvc.Add(key, request.Query[key]);
-                    }
+                    return context.Items["RequestQueryString"] as NameValueCollection;
                 }
-                return nvc;
+                else
+                {
+                    NameValueCollection nvc = new NameValueCollection();
+                    if (request.Query != null && request.Query.Keys.Count > 0)
+                    {
+                        foreach (string key in request.Query.Keys)
+                        {
+                            nvc.Add(key, request.Query[key]);
+                        }
+                    }
+                    context.Items.Add("RequestQueryString", nvc);
+                    return nvc;
+                }
+
             }
         }
 
@@ -87,16 +113,24 @@ namespace System.Web
         {
             get
             {
-                HttpCookieCollection nvc = new HttpCookieCollection();
-                if (request.Cookies != null && request.Cookies.Keys.Count > 0)
+                if (context.Items.ContainsKey("RequestCookies"))
                 {
-                    foreach (string key in request.Cookies.Keys)
-                    {
-                        HttpCookie cookie = new HttpCookie(key, request.Cookies[key]);
-                        nvc.Add(cookie, false);
-                    }
+                    return context.Items["RequestCookies"] as HttpCookieCollection;
                 }
-                return nvc;
+                else
+                {
+                    HttpCookieCollection nvc = new HttpCookieCollection(false);
+                    if (request.Cookies != null && request.Cookies.Keys.Count > 0)
+                    {
+                        foreach (string key in request.Cookies.Keys)
+                        {
+                            HttpCookie cookie = new HttpCookie(key, request.Cookies[key]);
+                            nvc.Add(cookie);
+                        }
+                    }
+                    context.Items.Add("RequestCookies", nvc);
+                    return nvc;
+                }
             }
         }
 
@@ -127,13 +161,18 @@ namespace System.Web
         {
             get
             {
-                return new Uri(new StringBuilder()
-                .Append(request.Scheme)
-                .Append("://")
-                .Append(request.Host)
-                .Append(request.PathBase)
-                .Append(request.Path.Value.Split('?')[0])
-                .Append(request.QueryString).ToString());
+                //涉及Url重写时，不能缓存。
+                Uri uri = new Uri(new StringBuilder()
+            .Append(request.Scheme)
+            .Append("://")
+            .Append(request.Host)
+            .Append(request.PathBase)
+            .Append(request.Path.Value.Split('?')[0])
+            .Append(request.QueryString).ToString());
+                return uri;
+
+
+
 
             }
         }
@@ -181,15 +220,25 @@ namespace System.Web
         {
             get
             {
-                NameValueCollection nvc = new NameValueCollection();
-                if (request.Headers != null && request.Headers.Keys.Count > 0)
+                if (context.Items.ContainsKey("RequestHeaders"))
                 {
-                    foreach (string key in request.Headers.Keys)
-                    {
-                        nvc.Add(key, request.Headers[key].ToString());
-                    }
+                    return context.Items["RequestHeaders"] as NameValueCollection;
                 }
-                return nvc;
+                else
+                {
+                    NameValueCollection nvc = new NameValueCollection();
+                    if (request.Headers != null && request.Headers.Keys.Count > 0)
+                    {
+                        foreach (string key in request.Headers.Keys)
+                        {
+                            nvc.Add(key, request.Headers[key].ToString());
+                        }
+                    }
+                    context.Items.Add("RequestHeaders", nvc);
+                    return nvc;
+                }
+
+
             }
         }
 
@@ -199,7 +248,7 @@ namespace System.Web
             {
                 NameValueCollection nvc = new NameValueCollection();
                 nvc.Add("REMOTE_ADDR", UserHostAddress);
-                nvc.Add("REMOTE_PORT",context.Connection.RemotePort.ToString());
+                nvc.Add("REMOTE_PORT", context.Connection.RemotePort.ToString());
                 return nvc;
             }
         }

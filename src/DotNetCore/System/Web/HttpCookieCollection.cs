@@ -1,11 +1,10 @@
 ﻿using System.Collections.Specialized;
 using CYQ.Data.Tool;
-using Microsoft.AspNetCore.Http;
 using CYQ.Data;
 
 namespace System.Web
 {
-    public class HttpCookieCollection : NameObjectCollectionBase, IResponseCookies
+    public class HttpCookieCollection : NameObjectCollectionBase
     {
         MDictionary<string, HttpCookie> dic = new MDictionary<string, HttpCookie>();
 
@@ -16,60 +15,78 @@ namespace System.Web
                 return HttpContext.contextAccessor.HttpContext;
             }
         }
+        /// <summary>
+        /// 是否来源Response.Cookie，反之Request.Cookie
+        /// </summary>
+        bool IsForResponse;
+        internal HttpCookieCollection(bool isForResponse)
+        {
+            IsForResponse = isForResponse;
+        }
+        public HttpCookie this[int index]
+        {
+            get
+            {
+                return dic[index];
+            }
+        }
 
-        public HttpCookie this[int index] { get { return dic[index]; } }
-
-        public HttpCookie this[string name] { get { return dic[name]; } }
+        public HttpCookie this[string name]
+        {
+            get
+            {
+                return dic[name];
+            }
+        }
 
         public void Add(HttpCookie cookie)
         {
-            Add(cookie, true);
-        }
-        public void Add(HttpCookie cookie, bool appendToReponse)
-        {
-            if (!appendToReponse)
+            if (cookie != null)
             {
                 dic.Add(cookie.Name, cookie);
-                return;
+                if (IsForResponse && context != null)
+                {
+                    if (!context.Response.Headers.IsReadOnly)
+                    {
+                        context.Response.Cookies.Append(cookie.Name, cookie.Value, cookie.ToCookieOptions());
+                    }
+                    else
+                    {
+                        Log.Write("Response.Headers.IsReadOnly,Can't Set Cookie : " + cookie.Name + "," + cookie.Value, LogType.Error);
+                    }
+                }
             }
-            if (context != null && cookie != null)
+        }
+        public void Set(HttpCookie cookie)
+        {
+            Remove(cookie.Name);
+            Add(cookie);
+        }
+        public void Remove(string name)
+        {
+            dic.Remove(name);
+            if (IsForResponse)
             {
-                Append(cookie.Name, cookie.Value, cookie.ToCookieOptions());
+                context.Response.Cookies.Delete(name);
             }
         }
-
-        public void Append(string key, string value)
+        public void Clear()
         {
-            Append(key, value, new CookieOptions());
-        }
-
-        public void Append(string key, string value, CookieOptions options)
-        {
-            // context.Response.Headers["Set-Cookie"]
-            //context.Response.Cookies.Delete(key);
-            if (!context.Response.Headers.IsReadOnly)
+            if (IsForResponse)
             {
-                context.Response.Cookies.Append(key, value, options);
-                HttpCookie cookie = options;
-                cookie.Name = key;
-                cookie.Value = value;
-                dic.Add(cookie.Name, cookie);
+                foreach (string name in dic.Keys)
+                {
+                    context.Response.Cookies.Delete(name);
+                }
             }
-            else
+            dic.Clear();
+        }
+        public override int Count
+        {
+            get
             {
-                Log.Write("Response.Headers.IsReadOnly,Can't Set Cookie : " + key + "," + value,LogType.Error);
+                return dic.Count;
             }
-        }
-
-        public void Delete(string key)
-        {
-            Delete(key, null);
-        }
-
-        public void Delete(string key, CookieOptions options)
-        {
-            context.Response.Cookies.Delete(key, options);
-            dic.Remove(key);
         }
     }
 }
