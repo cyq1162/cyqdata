@@ -276,13 +276,12 @@ namespace System.Web
             if (!IsEnd && data != null)
             {
                 SetWriteFlag();
-                Task task = response.Body.WriteAsync(data, 0, data.Length);
+                response.Body.WriteAsync(data, 0, data.Length).Wait();
                 End();
-                task.Wait();
             }
         }
         /// <summary>
-        /// 内部：异步执行的（未等待）
+        /// 内部：异步执行的（并等待结束）
         /// </summary>
         /// <param name="data"></param>
         public void BinaryWrite(byte[] data)
@@ -290,7 +289,7 @@ namespace System.Web
             if (!IsEnd && data != null)
             {
                 SetWriteFlag();
-                response.Body.WriteAsync(data, 0, data.Length);
+                response.Body.WriteAsync(data, 0, data.Length).Wait();
             }
         }
         private void SetWriteFlag()
