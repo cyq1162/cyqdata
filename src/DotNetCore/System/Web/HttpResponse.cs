@@ -242,6 +242,14 @@ namespace System.Web
         /// <param name="permanent">true 301跳转，默认false 是302跳转</param>
         public void Redirect(string location, bool permanent)
         {
+            if (string.IsNullOrEmpty(location)) { return; }
+            if (!location.StartsWith("/") && !location.StartsWith("http://") && !location.StartsWith("https://"))
+            {
+                string path = context.Request.Path;// microservice/login
+                string[] items = path.Trim('/').Split('/');
+                items[items.Length - 1] = location;
+                location = "/" + string.Join("/", items);
+            }
             response.Redirect(location, permanent);
             End();
         }
