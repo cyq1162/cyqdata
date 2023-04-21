@@ -145,17 +145,7 @@ namespace System.Web
             get => Headers["Cache-Control"];
             set => AppendHeader("Cache-Control", value);
         }
-        public void BinaryWrite(byte[] data)
-        {
-            // response.Body = new MemoryStream(data);
-            if (!IsEnd && data != null)
-            {
-                SetWriteFlag();
-                response.Body.WriteAsync(data, 0, data.Length).Wait();
-            }
-            //response.Body.Flush();
-            //response.SendFileAsync()
-        }
+
         public void Clear() { response.Clear(); }
         public void Flush() { response.Body.Flush(); }
         #endregion
@@ -215,7 +205,9 @@ namespace System.Web
         }
         public long? ContentLength { get => response.ContentLength; set => response.ContentLength = value; }
 
-
+        /// <summary>
+        /// 是否已启用输出：（已输出到客户端 || 已调用Response.End() || 已调用Response.Write()）
+        /// </summary>
         public bool HasStarted
         {
             get
@@ -253,17 +245,45 @@ namespace System.Web
             response.Redirect(location, permanent);
             End();
         }
+        /// <summary>
+        /// 内部：异步执行的（未等待）
+        /// </summary>
+        /// <param name="text"></param>
         public void Write(string text)
         {
             if (!IsEnd)
             {
                 SetWriteFlag();
-                response.WriteAsync(text, ContentEncoding).Wait();
+                byte[] data = ContentEncoding.GetBytes(text);
+                response.Body.WriteAsync(data, 0, data.Length);
             }
         }
+        /// <summary>
+        /// 内部：异步执行的（并等待结束）
+        /// </summary>
+        /// <param name="fileName"></param>
         public void WriteFile(string fileName)
         {
-            BinaryWrite(File.ReadAllBytes(fileName));
+            byte[] data = File.ReadAllBytes(fileName);
+            if (!IsEnd && data != null)
+            {
+                SetWriteFlag();
+                Task task = response.Body.WriteAsync(data, 0, data.Length);
+                End();
+                task.Wait();
+            }
+        }
+        /// <summary>
+        /// 内部：异步执行的（未等待）
+        /// </summary>
+        /// <param name="data"></param>
+        public void BinaryWrite(byte[] data)
+        {
+            if (!IsEnd && data != null)
+            {
+                SetWriteFlag();
+                response.Body.WriteAsync(data, 0, data.Length);
+            }
         }
         private void SetWriteFlag()
         {

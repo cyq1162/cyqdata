@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using CYQ.Data.Table;
 using System.Reflection;
 
 using CYQ.Data.Tool;
-using CYQ.Data.Cache;
 using CYQ.Data.SQL;
 using System.Data;
 using CYQ.Data.Aop;
@@ -348,24 +346,24 @@ namespace CYQ.Data.Orm
 
         #region 更新
         /// <summary>
-        ///  更新数据
+        ///  更新数据(受影响行数>0才为true)
         /// </summary>
         public bool Update()
         {
             return Update(null, false, null);
         }
         /// <summary>
-        ///  更新数据
+        ///  更新数据(受影响行数>0才为true)
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
-        /// <param name="onlyUpdateColumns">指定仅更新的列名，多个用逗号分隔</param>
+        /// <param name="updateColumns">指定仅更新的列名，多个用逗号分隔</param>
         /// <returns></returns>
         public bool Update(object where, params string[] updateColumns)
         {
             return Update(where, false, updateColumns);
         }
         /// <summary>
-        ///  更新数据
+        ///  更新数据(受影响行数>0才为true)
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
@@ -393,7 +391,7 @@ namespace CYQ.Data.Orm
                     }
                 }
             }
-            bool result = Action.Update(where);
+            bool result = Action.Update(where) && Action.RecordsAffected > 0;
             if (autoSetValue)
             {
                 SetValueToEntity();
@@ -404,14 +402,14 @@ namespace CYQ.Data.Orm
 
         #region 删除
         /// <summary>
-        ///  删除数据
+        ///  删除数据(受影响行数>0才为true)
         /// </summary>
         public bool Delete()
         {
             return Delete(null);
         }
         /// <summary>
-        ///  删除数据
+        ///  删除数据(受影响行数>0才为true)
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
         public bool Delete(object where)
@@ -419,12 +417,15 @@ namespace CYQ.Data.Orm
             return Delete(where, false);
         }
 
+        /// <summary>
+        ///  删除数据(受影响行数>0才为true)
+        /// </summary>
         /// <param name="isIgnoreDeleteField">当表存在删除字段，如：IsDeleted标识时，默认会转成更新，此标识可以强制设置为删除</param>
         /// <returns></returns>
         public bool Delete(object where, bool isIgnoreDeleteField)
         {
             GetValueFromEntity();
-            return Action.Delete(where, isIgnoreDeleteField);
+            return Action.Delete(where, isIgnoreDeleteField) && Action.RecordsAffected > 0;
         }
         #endregion
 

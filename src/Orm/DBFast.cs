@@ -170,11 +170,11 @@ namespace CYQ.Data.Orm
                 return action.SelectList<T>(pageIndex, pageSize, where, out count);
                 //dt = action.Select(pageIndex, pageSize, where, out count);
             }
-           // return dt.ToList<T>();
+            // return dt.ToList<T>();
         }
 
         /// <summary>
-        /// 删除记录
+        /// 删除记录(受影响行数>0才为true)
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="where">条件</param>
@@ -183,6 +183,13 @@ namespace CYQ.Data.Orm
         {
             return Delete<T>(where, false);
         }
+        /// <summary>
+        /// 删除记录(受影响行数>0才为true)
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="where">条件</param>
+        /// <param name="isIgnoreDeleteField">是否忽略软删除标识</param>
+        /// <returns></returns>
         public static bool Delete<T>(object where, bool isIgnoreDeleteField) where T : class
         {
             if (where == null) { return false; }
@@ -192,11 +199,11 @@ namespace CYQ.Data.Orm
                 if (typeof(T).FullName == where.GetType().FullName)//传进实体类
                 {
                     action.Data.LoadFrom(where);
-                    return action.Delete(null, isIgnoreDeleteField);
+                    return action.Delete(null, isIgnoreDeleteField) && action.RecordsAffected > 0;
                 }
                 else
                 {
-                    return action.Delete(where, isIgnoreDeleteField);
+                    return action.Delete(where, isIgnoreDeleteField) && action.RecordsAffected > 0;
                 }
 
             }
@@ -240,7 +247,7 @@ namespace CYQ.Data.Orm
             return Update<T>(t, null);
         }
         /// <summary>
-        /// 更新记录
+        /// 更新记录(受影响行数>0才为true)
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="t">实体对象</param>
@@ -268,7 +275,7 @@ namespace CYQ.Data.Orm
                         }
                     }
                 }
-                return action.Update(where);
+                return action.Update(where) && action.RecordsAffected > 0;
             }
         }
         /// <summary>
