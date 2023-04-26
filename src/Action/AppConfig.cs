@@ -381,7 +381,7 @@ namespace CYQ.Data
                     if (HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config")
                        || (WebRootPath.Contains("wwwroot") && Directory.Exists(WebRootPath))
                        || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll")
-                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Mvc.dll"))
+                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Aries.Core.dll"))
                     {
                         webState = 1;
                     }
@@ -1196,7 +1196,7 @@ namespace CYQ.Data
             }
             private static string _LogPath;
             /// <summary>
-            /// 文本日志的配置相对路径（默认为：Logs/"）
+            /// 文本日志的配置相对路径（默认为：Logs"）
             /// </summary>
             public static string LogPath
             {
@@ -1205,14 +1205,12 @@ namespace CYQ.Data
                     if (string.IsNullOrEmpty(_LogPath))
                     {
                         _LogPath = AppConfig.GetApp("LogPath", "Logs");
-                        _LogPath = _LogPath.TrimEnd('/', '\\') + "/";
                     }
                     return _LogPath;
                 }
                 set
                 {
                     _LogPath = value;
-                    _LogPath = _LogPath.TrimEnd('/', '\\') + "/";
                 }
             }
 

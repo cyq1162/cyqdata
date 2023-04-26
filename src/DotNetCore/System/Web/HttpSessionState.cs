@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading;
-using System.Threading.Tasks;
 using CYQ.Data.Cache;
-using Microsoft.AspNetCore.Http;
-using CYQ.Data;
+
 namespace System.Web
 {
-    public class HttpSessionState : ISession
+    /// <summary>
+    /// 分布式Session
+    /// </summary>
+    public class HttpSessionState
     {
-        Microsoft.AspNetCore.Http.HttpContext context
+        public static readonly HttpSessionState Instance = new HttpSessionState();
+
+        protected Microsoft.AspNetCore.Http.HttpContext context
         {
             get
             {
@@ -21,224 +20,94 @@ namespace System.Web
 
         internal HttpSessionState()
         {
-
+            Timeout = 20;
         }
-      
-        private object ToObject(byte[] value)
+        /// <summary>
+        /// 超时时间，默认20分钟
+        /// </summary>
+        public int Timeout { get; set; }
+        List<string> keys = new List<string>();
+        CacheManage cache = CacheManage.Instance;
+        public string SessionID
         {
-            try
+            get
             {
-                if (value != null && value.Length > 0)
+                var sessionID = context.Request.Cookies["CYQ.SessionID"];
+                if (string.IsNullOrEmpty(sessionID))
                 {
-                    SerializedType type = (SerializedType)value[0];
-                    byte[] bytes = new byte[value.Length - 1];
-                    Buffer.BlockCopy(value, 1, bytes, 0, bytes.Length);
-                    return Serializer.DeSerialize(bytes, type);
+                    sessionID = DateTime.Now.ToString("HHmmss") + Guid.NewGuid().GetHashCode();
+                    context.Response.Cookies.Append("CYQ.SessionID", sessionID);
                 }
+                return sessionID;
             }
-            catch (Exception e)
-            {
-                Log.Write(e, LogType.Error);
-            }
-            return null;
-
         }
-        private byte[] ToBytes(object value)
+
+        private string GetName(string name)
         {
-            SerializedType type;
-            byte[] bytes = null;
-
-            try
-            {
-                bytes = Serializer.Serialize(value, out type, 1024 * 1000);//1M
-                if (bytes != null)
-                {
-                    byte[] bytesWithType = new byte[bytes.Length + 1];
-                    bytesWithType[0] = (byte)type;
-                    Buffer.BlockCopy(bytes, 0, bytesWithType, 1, bytes.Length);
-                    return bytesWithType;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Write(e, LogType.Error);
-            }
-            return bytes;
+            return name + "_" + SessionID;
         }
+
         public object this[int index]
         {
             get
             {
-                if (SessionIsNull() || index < 0)
+                if (index < keys.Count)
                 {
-                    return null;
-                }
-                int i = 0;
-                foreach (var name in Keys)
-                {
-                    if (i == index)
-                    {
-                        return ToObject(context.Session.Get(name));
-                    }
-                    i++;
+                    return this[keys[index]];
                 }
                 return null;
             }
             set
             {
-                if (!SessionIsNull())
+                if (index < keys.Count)
                 {
-                    int i = 0;
-                    foreach (var name in Keys)
-                    {
-                        if (i == index)
-                        {
-                            if (value == null)
-                            {
-                                Remove(name);
-                            }
-                            else
-                            {
-                                context.Session.Set(name, ToBytes(value));
-                                break;
-                            }
-                        }
-                        i++;
-                    }
+                    this[keys[index]] = value;
                 }
             }
         }
+
         public object this[string name]
         {
             get
             {
-                if (SessionIsNull())
-                {
-                    return null;
-                }
-                return ToObject(context.Session.Get(name));
+                return cache.Get(GetName(name));
             }
             set
             {
-                if (!SessionIsNull())
-                {
-                    if (value == null)
-                    {
-                        Remove(name);
-                    }
-                    else
-                    {
-                        context.Session.Set(name, ToBytes(value));
-                    }
-                }
+                Add(name, value);
             }
         }
-        public string SessionID
+        public void Add(string name, object value)
         {
-            get
+            cache.Set(GetName(name), value, Timeout);
+            if (keys.Contains(name))
             {
-                if (SessionIsNull())
-                {
-                    return null;
-                }
-                return context.Session.Id;
+                keys.Add(name);
             }
         }
-
-        public bool IsAvailable
+        public void Remove(string key)
         {
-            get
-            {
-                if (SessionIsNull())
-                {
-                    return false;
-                }
-                return context.Session.IsAvailable;
-            }
+            cache.Remove(GetName(key));
         }
-
-        public string Id => SessionID;
+        public bool IsAvailable => true;
 
         public IEnumerable<string> Keys
         {
             get
             {
-                if (SessionIsNull())
-                {
-                    return null;
-                }
-                return context.Session.Keys;
+                return keys;
             }
         }
 
-
+        /// <summary>
+        /// 清空当前会话的所有数据。
+        /// </summary>
         public void Clear()
         {
-            if (SessionIsNull())
+            foreach (string key in keys)
             {
-                return;
+                Remove(key);
             }
-            context.Session.Clear();
-        }
-
-        public Task CommitAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return context.Session.CommitAsync(cancellationToken = default(CancellationToken));
-        }
-
-        public Task LoadAsync(CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return context.Session.LoadAsync(cancellationToken = default(CancellationToken));
-        }
-
-        public void Remove(string key)
-        {
-            if (SessionIsNull())
-            {
-                return;
-            }
-            context.Session.Remove(key);
-        }
-
-        public void Set(string key, byte[] value)
-        {
-            if (SessionIsNull())
-            {
-                return;
-            }
-            context.Session.Set(key, value);
-        }
-
-        public bool TryGetValue(string key, out byte[] value)
-        {
-            if (SessionIsNull())
-            {
-                value = null;
-                return false;
-            }
-            return context.Session.TryGetValue(key, out value);
-        }
-        private bool SessionIsNull()
-        {
-            if (context == null)
-            {
-                return true;
-            }
-            try
-            {
-                return context.Session == null;//可能抛异常
-            }
-            catch
-            {
-                return true;
-            }
-        }
-        /// <summary>
-        /// 向会话状态集合添加一个新项。
-        /// </summary>
-        public void Add(string name,object value)
-        {
-            Set(name, ToBytes(value));
         }
     }
 }

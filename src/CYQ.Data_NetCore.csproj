@@ -72,6 +72,7 @@
     <None Remove="ClearSVN.exe" />
     <None Remove="CYQ.Data.suo" />
     <None Remove="CYQ.Data.v11.suo" />
+    <None Remove="DotNetCore\System\Web\HttpSessionState.cs.bak" />
     <None Remove="DotNetCore\使用说明.txt" />
     <None Remove="LICENSE" />
     <None Remove="README.md" />

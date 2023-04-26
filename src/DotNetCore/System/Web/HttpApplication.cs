@@ -34,8 +34,15 @@ namespace System.Web
             try
             {
                 BeginRequest?.Invoke(this, null);
-                PostMapRequestHandler?.Invoke(this, null);
-                AcquireRequestState?.Invoke(this, null);
+                if (!Context.TraceIdentifier.StartsWith("IsEnd:"))
+                {
+                    PostMapRequestHandler?.Invoke(this, null);
+                    if (!Context.TraceIdentifier.StartsWith("IsEnd:"))
+                    {
+                        AcquireRequestState?.Invoke(this, null);
+                    }
+                }
+
             }
             catch (Exception err)
             {

@@ -90,17 +90,7 @@ namespace System.Web
             //useContext = NetCoreContext;
             response = new HttpResponse();
             request = new HttpRequest();
-            try
-            {
-                if (NetCoreContext.Session != null)
-                {
-                    session = new HttpSessionState();
-                }
-            }
-            catch
-            {
-                // CYQ.Data.Log.WriteLogToTxt(err);
-            }
+            session = HttpSessionState.Instance;//自定义实现Session
             server = new HttpServerUtility();
             page = new Page();
         }
