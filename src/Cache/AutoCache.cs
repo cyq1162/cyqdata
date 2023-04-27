@@ -211,13 +211,14 @@ namespace CYQ.Data.Cache
                 case AopEnum.ExeList:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
-                        _AutoCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult), cacheTime);
+                        _AutoCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult, false, RowOp.IgnoreNull, EscapeOp.Encode), cacheTime);
                     }
                     break;
                 case AopEnum.SelectList:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
                         JsonHelper js = new JsonHelper(true, true);
+                        js.Escape = EscapeOp.Encode;
                         if (aopInfo.TotalCount > 0)
                         {
                             js.Total = aopInfo.TotalCount;
@@ -233,6 +234,7 @@ namespace CYQ.Data.Cache
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
                         JsonHelper js = new JsonHelper(false, false);
+                        js.Escape = EscapeOp.Encode;
                         js.Add("total", aopInfo.TotalCount.ToString(), true);
                         js.Add("rows", aopInfo.ExeResult.ToString());
                         _AutoCache.Set(key, js.ToString(), cacheTime);
