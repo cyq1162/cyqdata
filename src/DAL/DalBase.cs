@@ -8,7 +8,7 @@ using CYQ.Data.Tool;
 using System.Data.SqlTypes;
 using System.Threading;
 using CYQ.Data.Orm;
-
+using System.IO;
 
 namespace CYQ.Data
 {
@@ -256,17 +256,29 @@ namespace CYQ.Data
         #region 拿表、视图、存储过程等元数据。
         public virtual Dictionary<string, string> GetTables()
         {
-            return GetSchemaDic(GetSchemaSql("U"), "U");
+            return GetSchemaDic(GetSchemaSql("U"), "U", false);
+        }
+        public virtual Dictionary<string, string> GetTables(bool isIgnoreCache)
+        {
+            return GetSchemaDic(GetSchemaSql("U"), "U", isIgnoreCache);
         }
         public virtual Dictionary<string, string> GetViews()
         {
-            return GetSchemaDic(GetSchemaSql("V"), "V");
+            return GetSchemaDic(GetSchemaSql("V"), "V", false);
+        }
+        public virtual Dictionary<string, string> GetViews(bool isIgnoreCache)
+        {
+            return GetSchemaDic(GetSchemaSql("V"), "V", isIgnoreCache);
         }
         public virtual Dictionary<string, string> GetProcs()
         {
-            return GetSchemaDic(GetSchemaSql("P"), "P");
+            return GetSchemaDic(GetSchemaSql("P"), "P", false);
         }
-        protected Dictionary<string, string> GetSchemaDic(string sql, string type)
+        public virtual Dictionary<string, string> GetProcs(bool isIgnoreCache)
+        {
+            return GetSchemaDic(GetSchemaSql("P"), "P", isIgnoreCache);
+        }
+        protected Dictionary<string, string> GetSchemaDic(string sql, string type, bool isIgnoreCache)
         {
             if (string.IsNullOrEmpty(sql))
             {
@@ -275,9 +287,9 @@ namespace CYQ.Data
             Dictionary<string, string> dic = null;
             string key = ConnBean.GetHashKey(ConnName) + "_" + DataBaseName + "_" + type + "_" + StaticTool.GetHashKey(sql);
             #region 缓存检测
-            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            if (!isIgnoreCache && !string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                string fullPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath + key + ".json";
+                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
                 if (System.IO.File.Exists(fullPath))
                 {
                     string json = IOHelper.ReadAllText(fullPath);
@@ -295,10 +307,9 @@ namespace CYQ.Data
             IsRecordDebugInfo = true;
             if (sdr != null)
             {
-                string tableName = string.Empty;
                 while (sdr.Read())
                 {
-                    tableName = Convert.ToString(sdr["TableName"]);
+                    string tableName = Convert.ToString(sdr["TableName"]);
                     if (!dic.ContainsKey(tableName))
                     {
                         dic.Add(tableName, Convert.ToString(sdr["Description"]));
@@ -310,13 +321,14 @@ namespace CYQ.Data
             #region 缓存设置
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath) && dic != null && dic.Count > 0)
             {
-                string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
-                if (!System.IO.Directory.Exists(folderPath))
+                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
+                string folder = Path.GetDirectoryName(fullPath);
+                if (!System.IO.Directory.Exists(folder))
                 {
-                    System.IO.Directory.CreateDirectory(folderPath);
+                    System.IO.Directory.CreateDirectory(folder);
                 }
                 string json = JsonHelper.ToJson(dic);
-                IOHelper.Write(folderPath + key + ".json", json);
+                IOHelper.Write(fullPath, json);
             }
             #endregion
             return dic;

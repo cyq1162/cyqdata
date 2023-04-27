@@ -27,6 +27,10 @@ namespace CYQ.Data
     }
     internal partial class NoSqlDal
     {
+        public override Dictionary<string, string> GetTables(bool isIgnoreCache)
+        {
+            return GetTables();
+        }
         public override Dictionary<string, string> GetTables()
         {
             Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

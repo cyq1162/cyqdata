@@ -1,6 +1,6 @@
-﻿using System;
+﻿
+using CYQ.Data.SQL;
 using System.Collections.Generic;
-using System.Text;
 
 namespace CYQ.Data.Tool
 {
@@ -77,6 +77,10 @@ namespace CYQ.Data.Tool
                 _DataBaseType = value;
             }
         }
+        /// <summary>
+        /// 用于遍历使用（多线程下）
+        /// </summary>
+        public List<string> TableKeys = new List<string>();
         private Dictionary<string, TableInfo> _Tables = new Dictionary<string, TableInfo>();
         public Dictionary<string, TableInfo> Tables
         {
@@ -87,8 +91,20 @@ namespace CYQ.Data.Tool
             internal set
             {
                 _Tables = value;
+                TableKeys.Clear();
+                if (value != null)
+                {
+                    foreach (var key in value.Keys)
+                    {
+                        TableKeys.Add(key);
+                    }
+                }
             }
         }
+        /// <summary>
+        /// 用于遍历使用（多线程下）
+        /// </summary>
+        public List<string> ViewKeys = new List<string>();
         private Dictionary<string, TableInfo> _Views = new Dictionary<string, TableInfo>();
         public Dictionary<string, TableInfo> Views
         {
@@ -97,15 +113,27 @@ namespace CYQ.Data.Tool
                 if (!isGetViews && _Views.Count == 0)
                 {
                     isGetViews = true;
-                    GetViews();////延迟加载
+                    InitInfos("V", false);//延迟加载
                 }
                 return _Views;
             }
             internal set
             {
                 _Views = value;
+                ViewKeys.Clear();
+                if (value != null)
+                {
+                    foreach (var key in value.Keys)
+                    {
+                        ViewKeys.Add(key);
+                    }
+                }
             }
         }
+        /// <summary>
+        /// 用于遍历使用（多线程下）
+        /// </summary>
+        public List<string> ProcKeys = new List<string>();
         private Dictionary<string, TableInfo> _Procs = new Dictionary<string, TableInfo>();
         public Dictionary<string, TableInfo> Procs
         {
@@ -114,22 +142,49 @@ namespace CYQ.Data.Tool
                 if (!isGetProcs && _Procs.Count == 0)
                 {
                     isGetProcs = true;
-                    GetProcs();//延迟加载
+                    InitInfos("P", false);//延迟加载
                 }
                 return _Procs;
             }
             internal set
             {
                 _Procs = value;
+                ProcKeys.Clear();
+                if (value != null)
+                {
+                    foreach (var key in value.Keys)
+                    {
+                        ProcKeys.Add(key);
+                    }
+                }
             }
         }
-
-
-        internal TableInfo GetTableInfo(string tableHash)
+        /// <summary>
+        /// 根据名称（按顺序）获取表、视图、存储过程信息。
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <returns></returns>
+        public TableInfo GetTableInfo(string name)
         {
-            return GetTableInfo(tableHash, null);
+            string key = TableInfo.GetHashKey(name);
+            return GetTableInfoByHash(key, null);
         }
-        internal TableInfo GetTableInfo(string tableHash, string type)
+        /// <summary>
+        /// 根据名称获取指定类型（表、视图、存储过程）的信息。
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="type">指定类型：U、V或P</param>
+        /// <returns></returns>
+        public TableInfo GetTableInfo(string name, string type)
+        {
+            string key = TableInfo.GetHashKey(name);
+            return GetTableInfoByHash(key, type);
+        }
+        internal TableInfo GetTableInfoByHash(string tableHash)
+        {
+            return GetTableInfoByHash(tableHash, null);
+        }
+        internal TableInfo GetTableInfoByHash(string tableHash, string type)
         {
             if ((type == null || type == "U") && Tables != null && Tables.ContainsKey(tableHash))
             {
@@ -145,37 +200,60 @@ namespace CYQ.Data.Tool
             }
             return null;
         }
+        /// <summary>
+        /// DBTool Drop Table 时调用
+        /// </summary>
+        /// <param name="tableHash"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
         internal bool Remove(string tableHash, string type)
         {
             if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
             {
+                RefleshKeys(ref TableKeys, tableHash, false);
+                Tables[tableHash].RemoveCache();
                 return Tables.Remove(tableHash);
             }
             if (Views != null && (type == null || type == "V") && Views.ContainsKey(tableHash))
             {
+                RefleshKeys(ref ViewKeys, tableHash, false);
+                Views[tableHash].RemoveCache();
                 return Views.Remove(tableHash);
             }
             if (Procs != null && (type == null || type == "P") && Procs.ContainsKey(tableHash))
             {
+                RefleshKeys(ref ProcKeys, tableHash, false);
+                Procs[tableHash].RemoveCache();
                 return Procs.Remove(tableHash);
             }
             return false;
         }
+
+        /// <summary>
+        /// DBTool Add Table 时调用
+        /// </summary>
+        /// <param name="tableHash"></param>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
         internal bool Add(string tableHash, string type, string name)
         {
             try
             {
                 if (Tables != null && (type == null || type == "U") && !Tables.ContainsKey(tableHash))
                 {
+                    RefleshKeys(ref TableKeys, tableHash, true);
                     Tables.Add(tableHash, new TableInfo(name, type, null, this));
                 }
                 if (Views != null && (type == null || type == "V") && !Views.ContainsKey(tableHash))
                 {
                     Views.Add(tableHash, new TableInfo(name, type, null, this));
+                    RefleshKeys(ref ViewKeys, tableHash, true);
                 }
                 if (Procs != null && (type == null || type == "P") && !Procs.ContainsKey(tableHash))
                 {
                     Procs.Add(tableHash, new TableInfo(name, type, null, this));
+                    RefleshKeys(ref ProcKeys, tableHash, true);
                 }
                 return true;
             }
@@ -184,6 +262,28 @@ namespace CYQ.Data.Tool
                 return false;
             }
         }
+
+        /// <summary>
+        /// 多线程下，不能直接操作Keys的添加或移除
+        /// </summary>
+        private void RefleshKeys(ref List<string> keys, string hash, bool isAdd)
+        {
+            List<string> newKeys = new List<string>();
+
+            foreach (string key in keys)
+            {
+                if (isAdd || key != hash)
+                {
+                    newKeys.Add(key);
+                }
+            }
+            if (isAdd)
+            {
+                newKeys.Add(hash);
+            }
+            keys = newKeys;
+        }
+
         /// <summary>
         /// 获取指定数据库链接的HashKey
         /// </summary>
@@ -201,67 +301,79 @@ namespace CYQ.Data.Tool
             return connBean.GetHashKey();
         }
 
-        #region 延迟加载
-        internal bool isGetViews = false, isGetProcs = false, isGetVersion = false;
-        private readonly object lockViewObj = new object();
-        private void GetViews()
+        /// <summary>
+        /// 刷新：表、视图、存储过程 缓存。
+        /// </summary>
+        public void Reflesh()
         {
-            if (_Views.Count == 0)
+            Reflesh("All");
+        }
+        /// <summary>
+        /// 刷新：表、视图或存储过程列表 缓存。
+        /// <para name="type">指定类型：U、V或P</para>
+        /// </summary>
+        public void Reflesh(string type)
+        {
+            if ((type == "All" || type == "U") && _Tables != null && _Tables.Count > 0)
             {
-                lock (lockViewObj)
-                {
-                    if (_Views.Count == 0)
-                    {
-                        using (DalBase dal = DalCreate.CreateDal(ConnString))
-                        {
-                            Dictionary<string, string> views = dal.GetViews();
-                            if (views != null && views.Count > 0)
-                            {
-                                Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
-                                foreach (KeyValuePair<string, string> item in views)
-                                {
-                                    string hash = TableInfo.GetHashKey(item.Key);
-                                    if (!dic.ContainsKey(hash))
-                                    {
-                                        dic.Add(hash, new TableInfo(item.Key, "V", item.Value, this));
-                                    }
-                                }
-                                _Views = dic;
-                            }
-                        }
-                    }
-                }
+                InitInfos("U", true);
+            }
+            if ((type == "All" || type == "V") && _Views != null && _Views.Count > 0)
+            {
+                InitInfos("V", true);
+            }
+            if ((type == "All" || type == "P") && _Procs != null && _Procs.Count > 0)
+            {
+                InitInfos("P", true);
             }
         }
-        private readonly object lockProcObj = new object();
-        private void GetProcs()
+
+        #region 延迟加载
+        internal bool isGetViews = false, isGetProcs = false, isGetVersion = false;
+
+        private void InitInfos(string type, bool isIgnoreCache)
         {
-            if (_Procs.Count == 0)
+            using (DalBase dal = DalCreate.CreateDal(ConnString))
             {
-                lock (lockProcObj)
+                Dictionary<string, string> infoDic = null;
+                switch (type)
                 {
-                    if (_Procs.Count == 0)
+                    case "U":
+                        infoDic = dal.GetTables(isIgnoreCache);
+                        break;
+                    case "V":
+                        infoDic = dal.GetViews(isIgnoreCache);
+                        break;
+                    case "P":
+                        infoDic = dal.GetProcs(isIgnoreCache);
+                        break;
+                }
+                if (infoDic != null && infoDic.Count > 0)
+                {
+                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                    foreach (KeyValuePair<string, string> item in infoDic)
                     {
-                        using (DalBase dal = DalCreate.CreateDal(ConnString))
+                        string hash = TableInfo.GetHashKey(item.Key);
+                        if (!dic.ContainsKey(hash))
                         {
-                            Dictionary<string, string> procs = dal.GetProcs();
-                            if (procs != null && procs.Count > 0)
-                            {
-                                Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
-                                foreach (KeyValuePair<string, string> item in procs)
-                                {
-                                    string hash = TableInfo.GetHashKey(item.Key);
-                                    if (!dic.ContainsKey(hash))
-                                    {
-                                        dic.Add(hash, new TableInfo(item.Key, "P", item.Value, this));
-                                    }
-                                }
-                                _Procs = dic;
-                            }
+                            dic.Add(hash, new TableInfo(item.Key, type, item.Value, this));
                         }
+                    }
+                    switch (type)
+                    {
+                        case "U":
+                            _Tables = dic;
+                            break;
+                        case "V":
+                            _Views = dic;
+                            break;
+                        case "P":
+                            _Procs = dic;
+                            break;
                     }
                 }
             }
+
         }
         private void GetVersion()
         {

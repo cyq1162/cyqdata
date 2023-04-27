@@ -356,8 +356,8 @@ namespace CYQ.Data.Tool
 
             if (_AddHead)
             {
-                //if (headText.Length == 0)
-                //{
+                if (headText.Length == 0)
+                {
                     sb.Append("{");
                     sb.Append("\"rowcount\":");
                     sb.Append(rowCount);
@@ -375,11 +375,11 @@ namespace CYQ.Data.Tool
                     sb.Append(Success.ToString().ToLower());
                     sb.Append(",");
                     sb.Append("\"rows\":");
-                //}
-                //else
-                //{
-                //    sb.Append(headText.ToString());
-                //}
+                }
+                else
+                {
+                    sb.Append(headText.ToString());
+                }
             }
             if (bodyItems.Count == 0)
             {

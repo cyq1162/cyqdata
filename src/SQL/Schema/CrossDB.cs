@@ -151,14 +151,15 @@ namespace CYQ.Data.SQL
         {
             if (!string.IsNullOrEmpty(name))
             {
+                var dbScheams = DBSchema.DBScheams;
                 name = SqlFormat.NotKeyword(name);
                 string tableHash = TableInfo.GetHashKey(name);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     string dbHash = ConnBean.GetHashKey(conn);
-                    if (DBSchema.DBScheams.Count > 0 && DBSchema.DBScheams.ContainsKey(dbHash))
+                    if (dbScheams.Count > 0 && dbScheams.ContainsKey(dbHash))
                     {
-                        TableInfo info = DBSchema.DBScheams[dbHash].GetTableInfo(tableHash);
+                        TableInfo info = dbScheams[dbHash].GetTableInfoByHash(tableHash);
                         if (info != null)
                         {
                             return info;
@@ -166,10 +167,10 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        DBInfo dbInfo = DBSchema.GetSchema(conn, false);
+                        DBInfo dbInfo = DBSchema.GetSchema(conn);
                         if (dbInfo != null)
                         {
-                            TableInfo info = dbInfo.GetTableInfo(tableHash);
+                            TableInfo info = dbInfo.GetTableInfoByHash(tableHash);
                             if (info != null)
                             {
                                 return info;
@@ -179,22 +180,25 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    DBInfo dbInfo = DBSchema.GetSchema(AppConfig.DB.DefaultConn, false);//优先取默认链接
+                    DBInfo dbInfo = DBSchema.GetSchema(AppConfig.DB.DefaultConn);//优先取默认链接
                     if (dbInfo != null)
                     {
-                        TableInfo info = dbInfo.GetTableInfo(tableHash);
+                        TableInfo info = dbInfo.GetTableInfoByHash(tableHash);
                         if (info != null)
                         {
                             return info;
                         }
                     }
                 }
-                foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
+                foreach (string key in DBSchema.DBScheamKeys)
                 {
-                    TableInfo info = item.Value.GetTableInfo(tableHash);
-                    if (info != null)
+                    if (dbScheams.ContainsKey(key))
                     {
-                        return info;
+                        TableInfo info = dbScheams[key].GetTableInfoByHash(tableHash);
+                        if (info != null)
+                        {
+                            return info;
+                        }
                     }
                 }
             }
@@ -203,7 +207,6 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 是否存在指定的表名、视图名、存储过程名
         /// </summary>
-        /// <param name="newName"></param>
         /// <param name="conn"></param>
         /// <returns></returns>
         public static bool Exists(string name, string type, string conn)
@@ -220,13 +223,14 @@ namespace CYQ.Data.SQL
             //}
             if (!string.IsNullOrEmpty(newName))// && DBSchema.DBScheams.Count > 0
             {
+                var dbScheams = DBSchema.DBScheams;
                 string tableHash = TableInfo.GetHashKey(newName);
                 if (!string.IsNullOrEmpty(conn))
                 {
                     string dbHash = ConnBean.GetHashKey(conn);
-                    if (DBSchema.DBScheams.ContainsKey(dbHash))
+                    if (dbScheams.ContainsKey(dbHash))
                     {
-                        TableInfo info = DBSchema.DBScheams[dbHash].GetTableInfo(tableHash, type);
+                        TableInfo info = dbScheams[dbHash].GetTableInfoByHash(tableHash, type);
                         if (info != null)
                         {
                             return true;
@@ -234,10 +238,10 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        DBInfo dbInfo = DBSchema.GetSchema(conn, false);
+                        DBInfo dbInfo = DBSchema.GetSchema(conn);
                         if (dbInfo != null)
                         {
-                            TableInfo info = dbInfo.GetTableInfo(tableHash, type);
+                            TableInfo info = dbInfo.GetTableInfoByHash(tableHash, type);
                             if (info != null)
                             {
                                 return true;
@@ -247,12 +251,15 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
+                    foreach (string key in DBSchema.DBScheamKeys)
                     {
-                        TableInfo info = item.Value.GetTableInfo(tableHash, type);
-                        if (info != null)
+                        if (dbScheams.ContainsKey(key))
                         {
-                            return true;
+                            TableInfo info = dbScheams[key].GetTableInfoByHash(tableHash, type);
+                            if (info != null)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -261,7 +268,8 @@ namespace CYQ.Data.SQL
         }
         public static bool Remove(string name, string type, string conn)
         {
-            if (!string.IsNullOrEmpty(name) && DBSchema.DBScheams.Count > 0)
+            var dbScheams = DBSchema.DBScheams;
+            if (!string.IsNullOrEmpty(name) && dbScheams.Count > 0)
             {
                 string newName = name;
                 string newConn = GetConn(newName, out newName, conn);//可能移到别的库去？
@@ -273,16 +281,16 @@ namespace CYQ.Data.SQL
                 if (!string.IsNullOrEmpty(conn))
                 {
                     string dbHash = ConnBean.GetHashKey(conn);
-                    if (DBSchema.DBScheams.ContainsKey(dbHash))
+                    if (dbScheams.ContainsKey(dbHash))
                     {
-                        return DBSchema.DBScheams[dbHash].Remove(tableHash, type);
+                        return dbScheams[dbHash].Remove(tableHash, type);
                     }
                 }
                 else
                 {
-                    foreach (KeyValuePair<string, DBInfo> item in DBSchema.DBScheams)
+                    foreach (string key in DBSchema.DBScheamKeys)
                     {
-                        if (item.Value.Remove(tableHash, type))
+                        if (dbScheams[key].Remove(tableHash, type))
                         {
                             return true;
                         }
@@ -293,7 +301,8 @@ namespace CYQ.Data.SQL
         }
         public static bool Add(string name, string type, string conn)
         {
-            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && DBSchema.DBScheams.Count > 0)
+            var dbScheams = DBSchema.DBScheams;
+            if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(type) && dbScheams.Count > 0)
             {
                 string newName = name;
                 string newConn = GetConn(newName, out newName, conn);
@@ -303,9 +312,9 @@ namespace CYQ.Data.SQL
                 }
                 string tableHash = TableInfo.GetHashKey(newName);
                 string dbHash = ConnBean.GetHashKey(conn);
-                if (DBSchema.DBScheams.ContainsKey(dbHash))
+                if (dbScheams.ContainsKey(dbHash))
                 {
-                    return DBSchema.DBScheams[dbHash].Add(tableHash, type, newName);
+                    return dbScheams[dbHash].Add(tableHash, type, newName);
                 }
 
             }

@@ -5,7 +5,7 @@ using CYQ.Data.SQL;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
-
+using CYQ.Data.Cache;
 
 namespace CYQ.Data.Tool
 {
@@ -360,13 +360,10 @@ namespace CYQ.Data.Tool
             List<string> sqls = SqlCreateForSchema.AlterTableSql(tableName, columns, conn);
             if (sqls.Count > 0)
             {
-                DataBaseType dalType = DataBaseType.None;
-                string database = string.Empty;
-
                 using (MProc proc = new MProc(null, conn))
                 {
-                    dalType = proc.DataBaseType;
-                    database = proc.dalHelper.DataBaseName;
+                    DataBaseType dalType = proc.DataBaseType;
+                    string database = proc.dalHelper.DataBaseName;
                     proc.SetAopState(Aop.AopOp.CloseAll);
                     if (proc.DataBaseType == DataBaseType.MsSql)
                     {
@@ -380,13 +377,17 @@ namespace CYQ.Data.Tool
                             proc.RollBack();
                             _ErrorMsg.AppendLine("AlterTable:" + proc.DebugInfo);
                             Log.Write(proc.DebugInfo, LogType.DataBase);
-
                             return false;
                         }
                     }
                     proc.EndTransation();
                 }
-                RemoveCache(tableName, conn);
+                TableInfo tableInfo = GetTableInfo(tableName, conn);
+                if (tableInfo != null)
+                {
+                    tableInfo.Reflesh();//刷新表结构缓存。
+                }
+                RemoveAutoCache(tableName, conn);
                 return true;
             }
             return false;
@@ -440,8 +441,7 @@ namespace CYQ.Data.Tool
                         result = helper.ExeNonQuery("drop table " + Keyword(tableName, dalType), false) != -2;
                         if (result)
                         {
-                            //处理表相关的元数据和数据缓存。
-                            RemoveCache(tableName, conn);
+                            RemoveAutoCache(tableName, conn);
                         }
                         break;
                 }
@@ -452,7 +452,7 @@ namespace CYQ.Data.Tool
             }
             if (result)
             {
-                //处理数据库表字典缓存
+                //处理数据库【表、表结构字典】缓存
                 CrossDB.Remove(tableName, "U", conn);
             }
             return result;
@@ -616,18 +616,10 @@ namespace CYQ.Data.Tool
 
         #endregion
 
-        private static void RemoveCache(string tableName, string conn)
+        private static void RemoveAutoCache(string tableName, string conn)
         {
-            //清内存
-            string key = Cache.CacheManage.GetKey(Cache.CacheKeyType.Schema, tableName, conn);
-            Cache.CacheManage.LocalInstance.Remove(key);
-            //清外置的表结构.tx：
-            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-            {
-                string file = TableSchema.GetSchemaFile(key);
-                IOHelper.Delete(file);
-            }
-            key = Cache.CacheManage.GetKey(Cache.CacheKeyType.AutoCache, tableName, conn);
+            //清除自动缓存
+            string key = Cache.AutoCache.GetBaseKey(tableName, conn);
             Cache.AutoCache.ReadyForRemove(key);
         }
     }
@@ -650,7 +642,7 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static DBInfo GetDBInfo(string conn)
         {
-            return DBSchema.GetSchema(conn, false);
+            return DBSchema.GetSchema(conn);
         }
         public static TableInfo GetTableInfo(string tableName)
         {

@@ -1,5 +1,4 @@
-﻿using CYQ.Data.Cache;
-using CYQ.Data.Orm;
+﻿using CYQ.Data.Orm;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
 using System;
@@ -9,10 +8,12 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.IO;
 using System.Reflection;
-using System.Text;
 
 namespace CYQ.Data.SQL
 {
+    /// <summary>
+    /// 管理表（字段结构）
+    /// </summary>
     internal partial class TableSchema
     {
         /// <summary>
@@ -21,6 +22,10 @@ namespace CYQ.Data.SQL
         private static MDictionary<string, MDataColumn> _ColumnCache = new MDictionary<string, MDataColumn>(StringComparer.OrdinalIgnoreCase);
 
         public static MDataColumn GetColumns(string tableName, string conn)
+        {
+            return GetColumns(tableName, conn, false);
+        }
+        public static MDataColumn GetColumns(string tableName, string conn, bool isIgnoreCache)
         {
             //先修正Conn，否则之前的key和修正后的key对不上。
             string fixName;
@@ -31,33 +36,45 @@ namespace CYQ.Data.SQL
                 return null;
             }
             string key = GetSchemaKey(tableName, conn);
+
             #region 缓存检测
             if (_ColumnCache.ContainsKey(key))
             {
-                return _ColumnCache[key].Clone();
-            }
-            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-            {
-                string fullPath = GetSchemaFile(key);
-                if (System.IO.File.Exists(fullPath))
+                if (isIgnoreCache)
                 {
-                    MDataColumn columns = MDataColumn.CreateFrom(fullPath);
-                    if (columns.Count > 0)
+                    _ColumnCache.Remove(key);
+                }
+                else
+                {
+                    return _ColumnCache[key].Clone();
+                }
+            }
+
+            if (!isIgnoreCache)
+            {
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                {
+                    string fullPath = GetSchemaFile(key);
+                    if (System.IO.File.Exists(fullPath))
                     {
-                        CacheManage.LocalInstance.Set(key, columns.Clone(), 1440);
-                        return columns;
+                        MDataColumn columns = MDataColumn.CreateFrom(fullPath);
+                        if (columns.Count > 0)
+                        {
+                            _ColumnCache.Add(key, columns.Clone());
+                            return columns;
+                        }
                     }
                 }
             }
             #endregion
 
             MDataColumn mdcs = null;
+            bool isTxtDB = false;
             using (DalBase dbHelper = DalCreate.CreateDal(conn))
             {
                 DataBaseType dalType = dbHelper.DataBaseType;
-
-
-                if (dalType == DataBaseType.Txt || dalType == DataBaseType.Xml)
+                isTxtDB = dalType == DataBaseType.Txt || dalType == DataBaseType.Xml;
+                if (isTxtDB)
                 {
                     #region 文本数据库处理。
                     if (!tableName.Contains(" "))// || tableName.IndexOfAny(Path.GetInvalidPathChars()) == -1
@@ -70,7 +87,6 @@ namespace CYQ.Data.SQL
                         mdcs.DataBaseVersion = dbHelper.Version;
                         mdcs.Conn = conn;
                     }
-
                     #endregion
                 }
                 else
@@ -415,13 +431,16 @@ namespace CYQ.Data.SQL
                 }
                 #region 缓存设置
 
-                if (!_ColumnCache.ContainsKey(key) && mdcs.Count > 0)
+                if (mdcs.Count > 0)
                 {
-                    _ColumnCache.Add(key, mdcs.Clone());
-                    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+                    if (!isTxtDB && !string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                     {
                         string path = GetSchemaFile(key);
                         mdcs.WriteSchema(path);
+                    }
+                    else if (!_ColumnCache.ContainsKey(key))
+                    {
+                        _ColumnCache.Add(key, mdcs.Clone());
                     }
                 }
                 #endregion
@@ -449,10 +468,29 @@ namespace CYQ.Data.SQL
             return mdc;
 
         }
+        /// <summary>
+        /// 清空对应表的缓存
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="conn"></param>
+        public static void Remove(string tableName, string conn)
+        {
+            string key = GetSchemaKey(tableName, conn);
+            Remove(key);
+        }
 
+        /// <summary>
+        /// 清空缓存
+        /// </summary>
+        /// <param name="key"></param>
         public static void Remove(string key)
         {
             _ColumnCache.Remove(key);
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            {
+                string path = GetSchemaFile(key);
+                IOHelper.Delete(path);
+            }
         }
         public static void Clear()
         {
@@ -485,13 +523,13 @@ namespace CYQ.Data.SQL
 
         internal static string GetSchemaFile(string key)
         {
-            string folderPath = AppConfig.RunPath + AppConfig.DB.SchemaMapPath;
+            string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath;
 
             if (!System.IO.Directory.Exists(folderPath))
             {
                 System.IO.Directory.CreateDirectory(folderPath);
             }
-            return folderPath + key + ".ts";
+            return folderPath + "/" + key + ".ts";
         }
         /// <summary>
         /// 缓存表架构Key
@@ -504,7 +542,7 @@ namespace CYQ.Data.SQL
                 conn = CrossDB.GetConn(tableName, out tableName, conn);//[TTTT]
             }
             tableName = SqlFormat.NotKeyword(tableName);
-            return ConnBean.GetHashKey(conn) + "_" + "C_" + GetKey(tableName) + "_" + TableInfo.GetHashKey(tableName);
+            return ConnBean.GetHashKey(conn) + "/" + GetKey(tableName) + "_" + TableInfo.GetHashKey(tableName);
         }
         private static string GetKey(string tableName)
         {
@@ -517,11 +555,11 @@ namespace CYQ.Data.SQL
             tableName = tableName.Replace("-", "").Replace("_", "").Replace(".", "").Replace("*", "").Replace(" ", "");
             if (i > 0)
             {
-                tableName = "S_" + tableName;
+                tableName = "S_" + tableName;//sql
             }
             else
             {
-                tableName = "T_" + tableName;
+                tableName = "T_" + tableName;//table
             }
             if (tableName.Length > 30)
             {

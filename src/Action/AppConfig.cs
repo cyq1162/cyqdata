@@ -19,7 +19,7 @@ namespace CYQ.Data
         static AppConfig()
         {
             //这个比较常用，只好把这里当成应用程序入口最早的调用处
-            ThreadPool.QueueUserWorkItem(new WaitCallback(DBSchema.InitDBSchemasForCache));
+            DBSchema.InitDBSchemasOnStart();
         }
         #region 基方法
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -282,7 +282,7 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的运行路径(最外层的目录）
+        /// 框架的运行路径(最外层的目录），以"\\" 或"/"结尾
         /// Win项目：是dll和exe所在的目录；
         /// Asp.net项目：是指根目录；
         /// Asp.net core 项目：是指运行的路径（dll所在的路径，同Win项目）。
@@ -299,7 +299,7 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的程序集所在的运行路径
+        /// 框架的程序集所在的运行路径，以"\\" 或"/"结尾
         /// </summary>
         public static string AssemblyPath
         {
@@ -331,7 +331,8 @@ namespace CYQ.Data
         private static string _WebRootPath;
         //内部变量
         /// <summary>
-        /// Web根目录(ASP.NET Core 项目时，由于机制不同，指向的路径需要调整，所以该值可以修改)
+        /// Web根目录，以"/"或"\"结尾。
+        /// (ASP.NET Core 项目时，由于机制不同，指向的路径需要调整，所以该值可以修改)
         /// </summary>
         public static string WebRootPath
         {
@@ -339,7 +340,6 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_WebRootPath))
                 {
-
                     if (IsNetCore)
                     {
                         string path = Environment.CurrentDirectory + "/wwwroot";
@@ -489,7 +489,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    string dtdUri = GetApp("DtdUri", "/Setting/DTD/xhtml1-transitional.dtd");
+                    string dtdUri = GetApp("DtdUri", (IsWeb ? "/App_Data/dtd/" : "/Setting/DTD/") + "xhtml1-transitional.dtd");
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
                         dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/');//.Replace("/", "\\");
@@ -813,17 +813,13 @@ namespace CYQ.Data
             }
             /// <summary>
             /// MAction 可将表架构映射到外部指定相对路径[外部存储,可避开数据库读取]
+            /// Web 下默认路径：App_Data/schema
             /// </summary>
             public static string SchemaMapPath
             {
                 get
                 {
-                    string path = GetApp("SchemaMapPath", string.Empty);
-                    if (!string.IsNullOrEmpty(path) && !path.EndsWith("\\"))
-                    {
-                        path = path.TrimEnd('/') + "\\";
-                    }
-                    return path;
+                    return GetApp("SchemaMapPath", IsWeb ? "App_Data/schema" : "").Trim(new char[] { '/', '\\' });
                 }
                 set
                 {
@@ -1175,7 +1171,6 @@ namespace CYQ.Data
         /// </summary>
         public static class Log
         {
-            private static string _LogConn = null;
             /// <summary>
             /// CYQ.Data.Log 类记录数据库异常日志 - 数据库链接配置
             /// </summary>
@@ -1183,34 +1178,25 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (_LogConn == null)
-                    {
-                        _LogConn = AppConfig.GetConn("LogConn");
-                    }
-                    return _LogConn;
+                    return GetConn("LogConn");
                 }
                 set
                 {
-                    _LogConn = value;
+                    SetConn("LogConn", value);
                 }
             }
-            private static string _LogPath;
             /// <summary>
-            /// 文本日志的配置相对路径（默认为：Logs"）
+            /// 文本日志的配置相对路径（Web 默认为：App_Data/log"）
             /// </summary>
             public static string LogPath
             {
                 get
                 {
-                    if (string.IsNullOrEmpty(_LogPath))
-                    {
-                        _LogPath = AppConfig.GetApp("LogPath", "Logs");
-                    }
-                    return _LogPath;
+                    return GetApp("LogPath", IsWeb ? "App_Data/log" : "Logs").Trim(new char[] { '/', '\\' });
                 }
                 set
                 {
-                    _LogPath = value;
+                    SetApp("LogPath", value);
                 }
             }
 
@@ -1228,7 +1214,7 @@ namespace CYQ.Data
                     SetApp("IsWriteLog", value.ToString());
                 }
             }
-            private static string _LogTableName;
+
             /// <summary>
             /// 异常日志表名（默认为SysLogs，可配置）
             /// </summary>
@@ -1236,15 +1222,11 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (string.IsNullOrEmpty(_LogTableName))
-                    {
-                        _LogTableName = AppConfig.GetApp("LogTableName", "SysLogs");
-                    }
-                    return _LogTableName;
+                    return GetApp("LogTableName", "SysLogs");
                 }
                 set
                 {
-                    _LogTableName = value;
+                    SetApp("LogTableName", value);
                 }
             }
         }

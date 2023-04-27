@@ -1,9 +1,5 @@
-﻿using CYQ.Data.Orm;
-using CYQ.Data.SQL;
+﻿using CYQ.Data.SQL;
 using CYQ.Data.Table;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CYQ.Data.Tool
 {
@@ -57,6 +53,7 @@ namespace CYQ.Data.Tool
             name = SqlFormat.NotKeyword(name);
             return StaticTool.GetHashKey(name.Replace("-", "").Replace("_", "").Replace(" ", "").ToLower());
         }
+
         /// <summary>
         /// 获取相关的列架构（对表和视图有效）
         /// </summary>
@@ -66,10 +63,27 @@ namespace CYQ.Data.Tool
             {
                 if (Type == "U" || Type == "V")
                 {
-                    return TableSchema.GetColumns(Name, DBInfo.ConnString);
+                    return TableSchema.GetColumns(Name, DBInfo.ConnString);//里面有缓存，所以无需要存档。
                 }
                 return null;
             }
+        }
+        /// <summary>
+        /// 刷新表列结构缓存
+        /// </summary>
+        public void Reflesh()
+        {
+            if (Type == "U" || Type == "V")
+            {
+                TableSchema.GetColumns(Name, DBInfo.ConnString, true);
+            }
+        }
+        /// <summary>
+        /// 清空缓存【内存和硬盘】
+        /// </summary>
+        internal void RemoveCache()
+        {
+            TableSchema.Remove(Name, DBInfo.ConnString);
         }
     }
 }
