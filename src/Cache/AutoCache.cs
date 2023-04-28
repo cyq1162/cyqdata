@@ -808,13 +808,13 @@ namespace CYQ.Data.Cache
             List<string> tables = null;
             if (para.MAction != null)
             {
-                tables = para.MAction.Data.Columns.relationTables;
+                tables = para.MAction.Data.Columns.RelationTables;
             }
             else if (para.MProc != null && !para.IsProc)
             {
                 if (para.Table != null)
                 {
-                    tables = para.Table.Columns.relationTables;
+                    tables = para.Table.Columns.RelationTables;
                 }
                 else
                 {

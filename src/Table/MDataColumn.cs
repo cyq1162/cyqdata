@@ -136,7 +136,7 @@ namespace CYQ.Data.Table
             mcs.isViewOwner = isViewOwner;
             mcs.TableName = TableName;
             mcs.Description = Description;
-            foreach (string item in relationTables)
+            foreach (string item in RelationTables)
             {
                 mcs.AddRelateionTableName(item);
             }
@@ -282,7 +282,7 @@ namespace CYQ.Data.Table
             row.Columns.DataBaseType = DataBaseType;
             row.Columns.DataBaseVersion = DataBaseVersion;
             row.Columns.isViewOwner = isViewOwner;
-            row.Columns.relationTables = relationTables;
+            row.Columns.RelationTables = RelationTables;
             row.Conn = Conn;
             return row;
         }
@@ -390,12 +390,39 @@ namespace CYQ.Data.Table
         /// 该结构是否由视图拥有
         /// </summary>
         internal bool isViewOwner = false;
+
         internal List<string> relationTables = new List<string>();
+        internal List<string> RelationTables
+        {
+            get
+            {
+                if (relationTables.Count == 0 && !string.IsNullOrEmpty(TableName))
+                {
+                    relationTables.Add(TableName);
+                }
+                return relationTables;
+            }
+            set
+            {
+                relationTables = value;
+            }
+        }
         internal void AddRelateionTableName(string tableName)
         {
-            if (!string.IsNullOrEmpty(tableName) && !relationTables.Contains(tableName))
+            if (!string.IsNullOrEmpty(tableName))
             {
-                relationTables.Add(tableName);
+                string[] items = TableName.Split(',');
+                foreach (string name in items)
+                {
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        continue;
+                    }
+                    if (!relationTables.Contains(tableName))
+                    {
+                        relationTables.Add(tableName);
+                    }
+                }
             }
         }
 
@@ -729,7 +756,7 @@ namespace CYQ.Data.Table
                 if (!string.IsNullOrEmpty(json))
                 {
                     dt = MDataTable.CreateFrom(json);
-                    if (json != jsonOrFileName)
+                    if (dt.TableName == MDataTable.DefaultTableName)
                     {
                         dt.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
                     }
@@ -765,6 +792,7 @@ namespace CYQ.Data.Table
                             }
                             mdc.TableName = dt.TableName;
                             mdc.Description = dt.Description;
+                            mdc.relationTables = dt.Columns.relationTables;
                         }
                     }
                 }
@@ -780,21 +808,14 @@ namespace CYQ.Data.Table
             return mdc;
         }
 
-        //internal bool AcceptChanges(AcceptOp op)
+        /// <summary>
+        /// 处理.ts 文件里的Json
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        //private static MDataColumn CreateFromByTsJson(string json)
         //{
-        //    if (_Table == null)
-        //    {
-        //        return false;
-        //    }
-        //    return AcceptChanges(op, _Table.TableName, _Table.Conn);
-        //}
-        //internal bool AcceptChanges(AcceptOp op, string tableName, string newConn)
-        //{
-        //    if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(newConn) || Count == 0)
-        //    {
-        //        return false;
-        //    }
-        //    return true;
+        //    MDataColumn mdc = new MDataColumn();
         //}
     }
 }

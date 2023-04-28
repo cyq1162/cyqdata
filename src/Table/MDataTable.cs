@@ -23,7 +23,7 @@ namespace CYQ.Data.Table
     /// </summary>
     public partial class MDataTable
     {
-        private const string DefaultTableName = "SysDefault";
+        internal const string DefaultTableName = "SysDefault";
         #region ÒþÊ½×ª»»
 
         /// <summary>

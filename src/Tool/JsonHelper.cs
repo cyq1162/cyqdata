@@ -1053,6 +1053,7 @@ namespace CYQ.Data.Tool
                     headText.Append("{");
                     headText.Append("\"TableName\":\"" + column.TableName + "\",");
                     headText.Append("\"Description\":\"" + column.Description + "\",");
+                    headText.Append("\"RelationTables\":\"" + string.Join(",", column.RelationTables.ToArray()) + "\",");
                     headText.Append("\"Columns\":");
                 }
                 foreach (MCellStruct item in column)
@@ -1417,7 +1418,7 @@ namespace CYQ.Data.Tool
         internal static MDataTable ToMDataTable(string jsonOrFileName, MDataColumn mdc, EscapeOp op)
         {
 
-            MDataTable table = new MDataTable("SysDefaultLoadFromJson");
+            MDataTable table = new MDataTable();
             if (mdc != null)
             {
                 table.Columns = mdc;
@@ -1481,6 +1482,10 @@ namespace CYQ.Data.Tool
                             if (dic.ContainsKey("Description"))
                             {
                                 table.Description = dic["Description"];
+                            }
+                            if (dic.ContainsKey("RelationTables"))
+                            {
+                                table.Columns.AddRelateionTableName(dic["RelationTables"]);
                             }
                             result = SplitArray(dic["Columns"]);
                         }
