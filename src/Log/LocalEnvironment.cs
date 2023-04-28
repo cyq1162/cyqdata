@@ -1,5 +1,7 @@
 using System;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace CYQ.Data
 {
@@ -61,16 +63,23 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HostIP))
                 {
-                    IPAddress[] addressList = Dns.GetHostAddresses(HostName);
-                    foreach (IPAddress address in addressList)
+                    var nets = NetworkInterface.GetAllNetworkInterfaces();
+                    foreach (var item in nets)
                     {
-                        string ip = address.ToString();
-                        if (ip.EndsWith(".1") || ip.Contains(":")) // 忽略路由和网卡地址。
+                        var ips = item.GetIPProperties().UnicastAddresses;
+                        foreach (var ip in ips)
                         {
-                            continue;
+                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip.Address))
+                            {
+                                string ipAddr = ip.Address.ToString();
+                                if (ipAddr.EndsWith(".1") || ipAddr.Contains(":")) // 忽略路由和网卡地址。
+                                {
+                                    continue;
+                                }
+                                _HostIP = ipAddr;
+                                break;
+                            }
                         }
-                        _HostIP = ip;
-                        break;
                     }
                 }
                 return _HostIP ?? HostName;

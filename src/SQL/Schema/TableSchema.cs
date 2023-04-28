@@ -548,19 +548,29 @@ namespace CYQ.Data.SQL
         {
             if (string.IsNullOrEmpty(tableName)) { return tableName; }
             int i = tableName.LastIndexOf(')');
+            string pre = "T_";
             if (i > 0)
             {
                 tableName = tableName.Substring(i + 1);
+                pre = "S_";
             }
-            tableName = tableName.Replace("-", "").Replace("_", "").Replace(".", "").Replace("*", "").Replace(" ", "");
-            if (i > 0)
+            if (tableName.StartsWith("V_"))
             {
-                tableName = "S_" + tableName;//sql
+                pre = "V_";
             }
-            else
+            else if (tableName.StartsWith("P_"))
             {
-                tableName = "T_" + tableName;//table
+                pre = "P_";
             }
+            tableName = pre + tableName.Replace("-", "").Replace("_", "").Replace(".", "").Replace("*", "").Replace(" ", "");
+            //if (i > 0)
+            //{
+            //    tableName = "S_" + tableName;//sql
+            //}
+            //else
+            //{
+            //    tableName = "T_" + tableName;//table
+            //}
             if (tableName.Length > 30)
             {
                 return tableName.Substring(0, 30);

@@ -205,11 +205,11 @@ namespace CYQ.Data.SQL
             }
             _InitFlag--;
             //初始化表结构
-            if (info.Tables != null)
+            if (info.Tables != null && info.Tables.Count > 0)
             {
                 foreach (var tableKey in info.TableKeys)
                 {
-                    if(info.Tables.ContainsKey(tableKey))
+                    if (info.Tables.ContainsKey(tableKey))
                     {
                         var table = info.Tables[tableKey];
                         if (table != null)
@@ -219,11 +219,11 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (info.Views != null)
+            if (info.Views != null && info.Views.Count > 0)
             {
                 foreach (var viewKey in info.ViewKeys)
                 {
-                    if(info.Views.ContainsKey(viewKey))
+                    if (info.Views.ContainsKey(viewKey))
                     {
                         var view = info.Views[viewKey];
                         if (view != null)
@@ -233,7 +233,7 @@ namespace CYQ.Data.SQL
                     }
                 }
             }
-            if (info.Procs != null)
+            if (info.Procs != null && info.Procs.Count > 0)
             {
                 foreach (var procKey in info.ProcKeys)
                 {
