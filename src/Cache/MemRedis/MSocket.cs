@@ -273,6 +273,10 @@ namespace CYQ.Data.Cache
                 }
             }
         }
+        /// <summary>
+        /// //跳过N个命令的结果
+        /// </summary>
+        /// <param name="cmdCount"></param>
         public void SkipToEndOfLine(int cmdCount)
         {
             for (int i = 0; i < cmdCount; i++)

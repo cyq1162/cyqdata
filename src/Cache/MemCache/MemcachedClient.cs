@@ -50,11 +50,11 @@ namespace CYQ.Data.Cache
         /// absolute as a DateTime. It is also possible to specify a custom hash to override server selection.
         /// This method returns true if the value was successfully added.
         /// </summary>
-        //public bool Add(string key, object value) { return store("add", key, true, value, hash(key), 0); }
+        public bool Add(string key, object value) { return store("add", key, true, value, hash(key), 0); }
         ////public bool Add(string key, object value, uint hash) { return store("add", key, false, value, this.hash(hash), 0); }
-        //public bool Add(string key, object value, TimeSpan expiry) { return store("add", key, true, value, hash(key), (int)expiry.TotalSeconds); }
+        public bool Add(string key, object value, TimeSpan expiry) { return store("add", key, true, value, hash(key), (int)expiry.TotalSeconds); }
         //public bool Add(string key, object value, uint hash, TimeSpan expiry) { return store("add", key, false, value, this.hash(hash), (int)expiry.TotalSeconds); }
-        //public bool Add(string key, object value, DateTime expiry) { return store("add", key, true, value, hash(key), getUnixTime(expiry)); }
+        public bool Add(string key, object value, DateTime expiry) { return store("add", key, true, value, hash(key), getUnixTime(expiry)); }
         //public bool Add(string key, object value, uint hash, DateTime expiry) { return store("add", key, false, value, this.hash(hash), getUnixTime(expiry)); }
 
         /// <summary>

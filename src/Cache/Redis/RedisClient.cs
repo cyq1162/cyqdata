@@ -41,6 +41,67 @@ namespace CYQ.Data.Cache
         }
         #endregion
 
+        #region SetNx
+        public bool SetNX(string key, object value, int seconds) { return SetNX("setnx", key, true, value, hash(key), seconds); }
+        private bool SetNX(string command, string key, bool keyIsChecked, object value, uint hash, int expirySeconds)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+
+            string result = hostServer.Execute<string>(hash, "", delegate(MSocket socket)
+            {
+                SerializedType type;
+                byte[] bytes;
+                byte[] typeBit = new byte[1];
+                try
+                {
+
+                    bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                    typeBit[0] = (byte)type;
+                }
+                catch (Exception e)
+                {
+                    logger.Error("Error serializing object for key '" + key + "'.", e);
+                    return "";
+                }
+                // CheckDB(socket, hash);
+                int db = GetDBIndex(socket, hash);
+                // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
+                int skipCmd = 0;
+                using (RedisCommand cmd = new RedisCommand(socket))
+                {
+                    if (db > -1)
+                    {
+                        cmd.Reset(2, "Select");
+                        cmd.AddKey(db.ToString());
+                        skipCmd++;
+                    }
+                    cmd.Reset(3, command);
+                    cmd.AddKey(key);
+                    cmd.AddValue(typeBit, bytes);
+                    cmd.Send();
+                    socket.SkipToEndOfLine(skipCmd);
+                    result = socket.ReadResponse();
+                    if (result == ":1")
+                    {
+                        if (expirySeconds > 0)
+                        {
+                            cmd.Reset(3, "EXPIRE");
+                            cmd.AddKey(key);
+                            cmd.AddKey(expirySeconds.ToString());
+                            cmd.Send();
+                            result = socket.ReadResponse();
+                            //socket.SkipToEndOfLine(1);//跳过结果
+                        }
+                    }
+                    return result;
+                }
+            });
+            return result.StartsWith("+OK") || result.StartsWith(":1");
+        }
+        #endregion
 
         #region Set、Append
 
@@ -87,27 +148,17 @@ namespace CYQ.Data.Cache
                       cmd.AddKey(key);
                       cmd.AddValue(typeBit, bytes);
                       skipCmd++;
-                      //cmd.Send();
-                      //if (db != -1)
-                      //{
-                      //    string aaa = socket.ReadLine();
-                      //}
-                      //result = socket.ReadResponse();
-                      //if (result[0] != '-')
-                      //{
+
                       if (expirySeconds > 0)
                       {
                           cmd.Reset(3, "EXPIRE");
                           cmd.AddKey(key);
                           cmd.AddKey(expirySeconds.ToString());
                           skipCmd++;
-                          // cmd.Send();
-                          //result = socket.ReadResponse();
                       }
-                      // }
 
                   }
-                  socket.SkipToEndOfLine(skipCmd - 1);
+                  socket.SkipToEndOfLine(skipCmd - 1);//取最后1次命令的结果
                   return socket.ReadResponse();
 
               });

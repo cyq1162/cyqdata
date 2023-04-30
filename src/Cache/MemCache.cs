@@ -51,6 +51,21 @@ namespace CYQ.Data.Cache
             return client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
 
+        public override bool Add(string key, object value)
+        {
+            return Add(key, value, AppConfig.Cache.DefaultCacheTime, null);
+        }
+        public override bool Add(string key, object value, double cacheMinutes)
+        {
+            return Add(key, value, cacheMinutes, null);
+        }
+        public override bool Add(string key, object value, double cacheMinutes, string fileName)
+        {
+            if (string.IsNullOrEmpty(key)) { return false; }
+            if (value == null) { return Remove(key); }
+            return client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+        }
+
         DateTime allowCacheTableTime = DateTime.Now;
         private MDataTable cacheInfoTable = null;
         public override MDataTable CacheInfo

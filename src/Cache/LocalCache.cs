@@ -321,6 +321,23 @@ namespace CYQ.Data.Cache
             }
         }
 
+        public override bool Add(string key, object value)
+        {
+            return Add(key, value, AppConfig.Cache.DefaultCacheTime, null);
+        }
+        public override bool Add(string key, object value, double cacheMinutes)
+        {
+            return Add(key, value, cacheMinutes, null);
+        }
+        public override bool Add(string key, object value, double cacheMinutes, string fileName)
+        {
+            if (Contains(key))
+            {
+                return false;
+            }
+            return Set(key, value, cacheMinutes, fileName);
+        }
+
         private int GetWorkCount(DateTime cTime)
         {
             TimeSpan ts = cTime - startTime;

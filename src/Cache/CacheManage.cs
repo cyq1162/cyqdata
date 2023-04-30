@@ -147,8 +147,17 @@ namespace CYQ.Data.Cache
         /// 缓存的信息
         /// </summary>
         public abstract MDataTable CacheInfo { get; }
+
         /// <summary>
-        /// 设置一个Cache对象
+        /// 添一个Cache对象(不存在则添加，存在则返回false)
+        /// </summary>
+        public abstract bool Add(string key, object value);
+        public abstract bool Add(string key, object value, double cacheMinutes);
+        public abstract bool Add(string key, object value, double cacheMinutes, string fileName);
+
+
+        /// <summary>
+        /// 设置一个Cache对象(存在则更新，不存在则添加)
         /// </summary>
         public abstract bool Set(string key, object value);
         public abstract bool Set(string key, object value, double cacheMinutes);
