@@ -29,23 +29,24 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.panel2 = new System.Windows.Forms.Panel();
-            this.dgvData = new System.Windows.Forms.DataGridView();
-            this.btnToJson = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.rtxtMsg = new System.Windows.Forms.RichTextBox();
-            this.btnSetOrdinal = new System.Windows.Forms.Button();
-            this.btnCreate = new System.Windows.Forms.Button();
-            this.btnCreateData = new System.Windows.Forms.Button();
-            this.btnDefault = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.btnDefault = new System.Windows.Forms.Button();
+            this.btnCreateData = new System.Windows.Forms.Button();
+            this.btnCreate = new System.Windows.Forms.Button();
+            this.btnSetOrdinal = new System.Windows.Forms.Button();
+            this.btnToJson = new System.Windows.Forms.Button();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.dgvData = new System.Windows.Forms.DataGridView();
+            this.btnReadFromJsn = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
+            this.groupBox2.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvData)).BeginInit();
-            this.groupBox1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -57,51 +58,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(734, 195);
             this.panel1.TabIndex = 0;
-            // 
-            // panel2
-            // 
-            this.panel2.Controls.Add(this.dgvData);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(0, 195);
-            this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(734, 207);
-            this.panel2.TabIndex = 1;
-            // 
-            // dgvData
-            // 
-            this.dgvData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvData.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvData.Location = new System.Drawing.Point(0, 0);
-            this.dgvData.Name = "dgvData";
-            this.dgvData.RowTemplate.Height = 23;
-            this.dgvData.Size = new System.Drawing.Size(734, 207);
-            this.dgvData.TabIndex = 0;
-            // 
-            // btnToJson
-            // 
-            this.btnToJson.Location = new System.Drawing.Point(12, 30);
-            this.btnToJson.Name = "btnToJson";
-            this.btnToJson.Size = new System.Drawing.Size(132, 23);
-            this.btnToJson.TabIndex = 0;
-            this.btnToJson.Text = "ToJson()";
-            this.btnToJson.UseVisualStyleBackColor = true;
-            this.btnToJson.Click += new System.EventHandler(this.btnToJson_Click);
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.dataGridView1);
-            this.groupBox1.Controls.Add(this.btnDefault);
-            this.groupBox1.Controls.Add(this.btnCreateData);
-            this.groupBox1.Controls.Add(this.btnCreate);
-            this.groupBox1.Controls.Add(this.btnSetOrdinal);
-            this.groupBox1.Controls.Add(this.btnToJson);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.groupBox1.Location = new System.Drawing.Point(0, 0);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(472, 195);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Function";
             // 
             // groupBox2
             // 
@@ -123,35 +79,31 @@
             this.rtxtMsg.TabIndex = 0;
             this.rtxtMsg.Text = "";
             // 
-            // btnSetOrdinal
+            // groupBox1
             // 
-            this.btnSetOrdinal.Location = new System.Drawing.Point(176, 30);
-            this.btnSetOrdinal.Name = "btnSetOrdinal";
-            this.btnSetOrdinal.Size = new System.Drawing.Size(87, 23);
-            this.btnSetOrdinal.TabIndex = 1;
-            this.btnSetOrdinal.Text = "SetOrdinal()";
-            this.btnSetOrdinal.UseVisualStyleBackColor = true;
-            this.btnSetOrdinal.Click += new System.EventHandler(this.btnSetOrdinal_Click);
+            this.groupBox1.Controls.Add(this.btnReadFromJsn);
+            this.groupBox1.Controls.Add(this.dataGridView1);
+            this.groupBox1.Controls.Add(this.btnDefault);
+            this.groupBox1.Controls.Add(this.btnCreateData);
+            this.groupBox1.Controls.Add(this.btnCreate);
+            this.groupBox1.Controls.Add(this.btnSetOrdinal);
+            this.groupBox1.Controls.Add(this.btnToJson);
+            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Left;
+            this.groupBox1.Location = new System.Drawing.Point(0, 0);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(472, 195);
+            this.groupBox1.TabIndex = 0;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Function";
             // 
-            // btnCreate
+            // dataGridView1
             // 
-            this.btnCreate.Location = new System.Drawing.Point(12, 106);
-            this.btnCreate.Name = "btnCreate";
-            this.btnCreate.Size = new System.Drawing.Size(132, 23);
-            this.btnCreate.TabIndex = 2;
-            this.btnCreate.Text = "CreateMDataColumn";
-            this.btnCreate.UseVisualStyleBackColor = true;
-            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
-            // 
-            // btnCreateData
-            // 
-            this.btnCreateData.Location = new System.Drawing.Point(12, 145);
-            this.btnCreateData.Name = "btnCreateData";
-            this.btnCreateData.Size = new System.Drawing.Size(132, 23);
-            this.btnCreateData.TabIndex = 3;
-            this.btnCreateData.Text = "CreateAdnAddData";
-            this.btnCreateData.UseVisualStyleBackColor = true;
-            this.btnCreateData.Click += new System.EventHandler(this.btnCreateData_Click);
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Location = new System.Drawing.Point(176, 59);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(240, 109);
+            this.dataGridView1.TabIndex = 5;
             // 
             // btnDefault
             // 
@@ -163,14 +115,74 @@
             this.btnDefault.UseVisualStyleBackColor = true;
             this.btnDefault.Click += new System.EventHandler(this.btnDefault_Click);
             // 
-            // dataGridView1
+            // btnCreateData
             // 
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Location = new System.Drawing.Point(176, 59);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(240, 109);
-            this.dataGridView1.TabIndex = 5;
+            this.btnCreateData.Location = new System.Drawing.Point(12, 145);
+            this.btnCreateData.Name = "btnCreateData";
+            this.btnCreateData.Size = new System.Drawing.Size(132, 23);
+            this.btnCreateData.TabIndex = 3;
+            this.btnCreateData.Text = "CreateAdnAddData";
+            this.btnCreateData.UseVisualStyleBackColor = true;
+            this.btnCreateData.Click += new System.EventHandler(this.btnCreateData_Click);
+            // 
+            // btnCreate
+            // 
+            this.btnCreate.Location = new System.Drawing.Point(12, 106);
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.Size = new System.Drawing.Size(132, 23);
+            this.btnCreate.TabIndex = 2;
+            this.btnCreate.Text = "CreateMDataColumn";
+            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
+            // 
+            // btnSetOrdinal
+            // 
+            this.btnSetOrdinal.Location = new System.Drawing.Point(176, 30);
+            this.btnSetOrdinal.Name = "btnSetOrdinal";
+            this.btnSetOrdinal.Size = new System.Drawing.Size(87, 23);
+            this.btnSetOrdinal.TabIndex = 1;
+            this.btnSetOrdinal.Text = "SetOrdinal()";
+            this.btnSetOrdinal.UseVisualStyleBackColor = true;
+            this.btnSetOrdinal.Click += new System.EventHandler(this.btnSetOrdinal_Click);
+            // 
+            // btnToJson
+            // 
+            this.btnToJson.Location = new System.Drawing.Point(12, 30);
+            this.btnToJson.Name = "btnToJson";
+            this.btnToJson.Size = new System.Drawing.Size(132, 23);
+            this.btnToJson.TabIndex = 0;
+            this.btnToJson.Text = "ToJson()";
+            this.btnToJson.UseVisualStyleBackColor = true;
+            this.btnToJson.Click += new System.EventHandler(this.btnToJson_Click);
+            // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.dgvData);
+            this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel2.Location = new System.Drawing.Point(0, 195);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(734, 207);
+            this.panel2.TabIndex = 1;
+            // 
+            // dgvData
+            // 
+            this.dgvData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvData.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvData.Location = new System.Drawing.Point(0, 0);
+            this.dgvData.Name = "dgvData";
+            this.dgvData.RowTemplate.Height = 23;
+            this.dgvData.Size = new System.Drawing.Size(734, 207);
+            this.dgvData.TabIndex = 0;
+            // 
+            // btnReadFromJsn
+            // 
+            this.btnReadFromJsn.Location = new System.Drawing.Point(328, 30);
+            this.btnReadFromJsn.Name = "btnReadFromJsn";
+            this.btnReadFromJsn.Size = new System.Drawing.Size(88, 23);
+            this.btnReadFromJsn.TabIndex = 6;
+            this.btnReadFromJsn.Text = "ReadFromJson";
+            this.btnReadFromJsn.UseVisualStyleBackColor = true;
+            this.btnReadFromJsn.Click += new System.EventHandler(this.btnReadFromJsn_Click);
             // 
             // Form1
             // 
@@ -183,11 +195,11 @@
             this.Text = "MDataColumn Demo";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.panel1.ResumeLayout(false);
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvData)).EndInit();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -206,6 +218,7 @@
         private System.Windows.Forms.Button btnCreateData;
         private System.Windows.Forms.Button btnDefault;
         private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Button btnReadFromJsn;
     }
 }
 

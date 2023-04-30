@@ -81,5 +81,18 @@ namespace MDataColumn_Demo
         {
             ViewColumns();
         }
+
+        private void btnReadFromJsn_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrEmpty(rtxtMsg.Text))
+            {
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                MDataColumn mdc = MDataColumn.CreateFrom(rtxtMsg.Text);
+                sw.Stop();
+                rtxtMsg.Text = "Milliseconds : " + sw.ElapsedMilliseconds;
+                mdc.ToTable().Bind(dgvData);
+            }
+        }
     }
 }
