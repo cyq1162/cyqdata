@@ -164,9 +164,64 @@ namespace CYQ.Data.Cache
         public abstract bool Set(string key, object value, double cacheMinutes, string fileName);
 
         /// <summary>
+        /// 加锁（分布式锁）
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="waitTimeoutSeconds">尝试获取锁的最大等待时间（s秒），超过这个值，则认为获取锁失败</param>
+        /// <returns></returns>
+        public virtual bool Lock(string key, int waitTimeoutSeconds)
+        {
+            int count = waitTimeoutSeconds * 1000;
+            int sleep = 1;
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            while (true)
+            {
+                if (Add(key, flag, 0.05))//3秒
+                {
+                    AddToWork(key, flag);//循环检测超时时间
+                    return true;
+                }
+                Thread.Sleep(sleep);
+                count -= sleep;
+                if (sleep < 100)
+                {
+                    sleep++;
+                }
+                if (count <= 0)
+                {
+                    return false;
+                }
+            }
+        }
+        /// <summary>
+        /// 释放（分布式锁）
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool UnLock(string key)
+        {
+            RemoveFromWork(key);
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            string value = Get<string>(key);
+            //锁已过期。
+            if (value == null) { return true; }
+            //自身加的锁
+            if (value == flag)
+            {
+                return Remove(key);
+            }
+            return false;
+        }
+
+
+        /// <summary>
         /// 清除所有缓存
         /// </summary>
         public abstract void Clear();
+        /// <summary>
+        /// 是否存在缓存
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public abstract bool Contains(string key);
         /// <summary>
         /// 获和缓存总数
@@ -208,6 +263,50 @@ namespace CYQ.Data.Cache
         public abstract string WorkInfo { get; }
 
     }
+
+    public abstract partial class CacheManage
+    {
+
+        #region 内部定时日志工作
+
+        MDictionary<string, string> keysDic = new MDictionary<string, string>();
+        List<string> keysRemoveList = new List<string>();
+        bool threadIsWorking = false;
+        private void AddToWork(string key, string value)
+        {
+            keysDic.Add(key, value);
+            if (!threadIsWorking)
+            {
+                threadIsWorking = true;
+                ThreadPool.QueueUserWorkItem(new WaitCallback(DoWork), null);
+            }
+        }
+        private void RemoveFromWork(string key)
+        {
+            keysRemoveList.Add(key);
+        }
+        private void DoWork(object p)
+        {
+            while (keysDic.Count > 0)
+            {
+                foreach (string removeKey in keysRemoveList)
+                {
+                    keysDic.Remove(removeKey);
+                }
+                keysRemoveList.Clear();
+
+                foreach (string key in keysDic.Keys)
+                {
+                    //给 key 设置延时时间
+                    Set(key, keysDic[key], 0.05);//延时3秒
+                }
+                Thread.Sleep(1500);//3秒1次循环。
+            }
+        }
+        #endregion
+
+    }
+
     public abstract partial class CacheManage
     {
         /// <summary>

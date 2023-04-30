@@ -338,6 +338,7 @@ namespace CYQ.Data.Cache
             return Set(key, value, cacheMinutes, fileName);
         }
 
+
         private int GetWorkCount(DateTime cTime)
         {
             TimeSpan ts = cTime - startTime;

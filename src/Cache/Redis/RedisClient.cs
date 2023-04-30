@@ -93,7 +93,13 @@ namespace CYQ.Data.Cache
                             cmd.AddKey(expirySeconds.ToString());
                             cmd.Send();
                             result = socket.ReadResponse();
-                            //socket.SkipToEndOfLine(1);//跳过结果
+                            if (result != ":1")
+                            {
+                                 cmd.Reset(2, "DEL");
+                                 cmd.AddKey(key);
+                                 cmd.Send();
+                                 socket.SkipToEndOfLine(1);//跳过结果
+                            }
                         }
                     }
                     return result;
@@ -377,7 +383,10 @@ namespace CYQ.Data.Cache
                             break;
                         }
                         string[] s = line.Split(':');
-                        dic.Add(s[0], s[1]);
+                        if (s.Length > 1)
+                        {
+                            dic.Add(s[0], s[1]);
+                        }
                     }
 
 

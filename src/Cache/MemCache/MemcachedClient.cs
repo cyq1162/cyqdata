@@ -429,7 +429,10 @@ namespace CYQ.Data.Cache
                 while (!(line = socket.ReadResponse().TrimEnd('\0', '\r', '\n')).StartsWith("END"))
                 {
                     string[] s = line.Split(' ');
-                    result.Add(s[1], s[2]);
+                    if (s.Length > 2)
+                    {
+                        result.Add(s[1], s[2]);
+                    }
                 }
             });
             return result;

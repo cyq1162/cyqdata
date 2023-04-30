@@ -66,6 +66,8 @@ namespace CYQ.Data.Cache
             if (value == null) { return Remove(key); }
             return client.SetNX(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
+
+
         DateTime allowCacheTableTime = DateTime.Now;
         private MDataTable cacheInfoTable = null;
         public override MDataTable CacheInfo

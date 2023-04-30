@@ -205,7 +205,7 @@ namespace CYQ.Data.Cache
             if (node.HostNodeBak == null && hostServerBak != null)
             {
                 //为主Socket池挂接备份的Socket池
-                node.HostNodeBak = hostServerBak.GetHost(hash,node.Host);
+                node.HostNodeBak = hostServerBak.GetHost(hash, node.Host);
             }
             return Execute(node, defaultValue, use);
         }
@@ -297,6 +297,21 @@ namespace CYQ.Data.Cache
     internal partial class HostServer
     {
         /// <summary>
+        /// 一致性Hash产生的结点数，数越大，分布越平均
+        /// </summary>
+        private int HashNodeCount
+        {
+            get
+            {
+                //服务节点>1，一致性hash才有意义
+                if (watch.HostList.Count > 1)
+                {
+                    return 50;
+                }
+                return 1;
+            }
+        }
+        /// <summary>
         /// 一致性hash的主机分布列表
         /// </summary>
         private MDictionary<uint, HostNode> hashHostDic = new MDictionary<uint, HostNode>();
@@ -315,7 +330,7 @@ namespace CYQ.Data.Cache
                 //移除hashHost
                 foreach (string host in watch.HostRemoveList.List)
                 {
-                    for (int i = 0; i < 200; i++)
+                    for (int i = 0; i < HashNodeCount; i++)
                     {
                         uint hostHashKey = HashCreator.CreateCode(host + "-" + i);
                         if (hashHostDic.ContainsKey(hostHashKey))
@@ -333,7 +348,7 @@ namespace CYQ.Data.Cache
             foreach (string host in hosts.List)
             {
                 //Create keys for this pool, store each key in the hostDictionary, as well as in the list of keys.
-                for (int i = 0; i < 200; i++)
+                for (int i = 0; i < HashNodeCount; i++)
                 {
                     uint hostHashKey = HashCreator.CreateCode(host + "-" + i);
                     if (!hashHostDic.ContainsKey(hostHashKey) && hostList.ContainsKey(host))

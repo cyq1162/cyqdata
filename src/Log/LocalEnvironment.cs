@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -92,6 +93,21 @@ namespace CYQ.Data
     /// </summary>
     internal partial class LocalEnvironment
     {
+        private static int _ProcessID;
+        /// <summary>
+        /// 当前进程ID
+        /// </summary>
+        public static int ProcessID
+        {
+            get
+            {
+                if (_ProcessID == 0)
+                {
+                    _ProcessID = Process.GetCurrentProcess().Id;
+                }
+                return _ProcessID;
+            }
+        }
         /// <summary>
         /// 当前进程占用的内存（M）
         /// </summary>
