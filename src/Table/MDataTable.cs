@@ -241,7 +241,7 @@ namespace CYQ.Data.Table
             {
                 _Columns = value;
                 _Columns._Table = this;
-                if (_TableName == DefaultTableName)
+                if (string.IsNullOrEmpty(_TableName) || _TableName == DefaultTableName)
                 {
                     _TableName = _Columns.TableName;
                 }

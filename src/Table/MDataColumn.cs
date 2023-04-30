@@ -278,11 +278,12 @@ namespace CYQ.Data.Table
         {
             MDataRow row = new MDataRow(this);
             row.TableName = tableName;
-            row.Columns.CheckDuplicate = CheckDuplicate;
-            row.Columns.DataBaseType = DataBaseType;
-            row.Columns.DataBaseVersion = DataBaseVersion;
-            row.Columns.isViewOwner = isViewOwner;
-            row.Columns.RelationTables = RelationTables;
+            //row.Columns.TableName = tableName;
+            //row.Columns.CheckDuplicate = CheckDuplicate;
+            //row.Columns.DataBaseType = DataBaseType;
+            //row.Columns.DataBaseVersion = DataBaseVersion;
+            //row.Columns.isViewOwner = isViewOwner;
+            //row.Columns.RelationTables = RelationTables;
             row.Conn = Conn;
             return row;
         }
@@ -718,47 +719,64 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static MDataColumn CreateFrom(string jsonOrFileName, bool readTxtOrXml)
         {
+            if (string.IsNullOrEmpty(jsonOrFileName))
+            {
+                return null;
+            }
             MDataColumn mdc = new MDataColumn();
+
             MDataTable dt = null;
             try
             {
                 bool isTxtOrXml = false;
                 string json = string.Empty;
-                string exName = Path.GetExtension(jsonOrFileName);
-                switch (exName.ToLower())
+                char c = jsonOrFileName[0];
+                bool isJson = c == '{' || c == '[' || c == '<';
+                string exName = null ;
+                string fileName = null;
+                if (!isJson)
                 {
-                    case ".ts":
-                    case ".xml":
-                    case ".txt":
-                        string tsFileName = jsonOrFileName.Replace(exName, ".ts");
-                        if (File.Exists(tsFileName))
-                        {
-                            json = IOHelper.ReadAllText(tsFileName);
-                        }
-                        else if (readTxtOrXml && File.Exists(jsonOrFileName))
-                        {
-                            isTxtOrXml = true;
-                            if (exName == ".xml")
+                    exName = Path.GetExtension(jsonOrFileName);
+                    fileName = Path.GetFileNameWithoutExtension(jsonOrFileName);
+                    switch (exName.ToLower())
+                    {
+                        case ".ts":
+                        case ".xml":
+                        case ".txt":
+                            string tsFileName = jsonOrFileName.Replace(exName, ".ts");
+                            if (File.Exists(tsFileName))
                             {
-                                json = IOHelper.ReadAllText(jsonOrFileName, 0, Encoding.UTF8);
+                                json = IOHelper.ReadAllText(tsFileName);
                             }
-                            else if (exName == ".txt")
+                            else if (readTxtOrXml && File.Exists(jsonOrFileName))
                             {
-                                json = IOHelper.ReadAllText(jsonOrFileName);
+                                isTxtOrXml = true;
+                                if (exName == ".xml")
+                                {
+                                    json = IOHelper.ReadAllText(jsonOrFileName, 0, Encoding.UTF8);
+                                }
+                                else if (exName == ".txt")
+                                {
+                                    json = IOHelper.ReadAllText(jsonOrFileName);
+                                }
                             }
-                        }
 
-                        break;
-                    default:
-                        json = jsonOrFileName;
-                        break;
+                            break;
+                        default:
+                            json = jsonOrFileName;
+                            break;
+                    }
+                }
+                else
+                {
+                    json = jsonOrFileName;
                 }
                 if (!string.IsNullOrEmpty(json))
                 {
                     dt = MDataTable.CreateFrom(json);
-                    if (dt.TableName == MDataTable.DefaultTableName)
+                    if (dt.TableName == MDataTable.DefaultTableName && !string.IsNullOrEmpty(fileName))
                     {
-                        dt.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
+                        dt.TableName = fileName;
                     }
                     if (dt.Columns.Count > 0)
                     {

@@ -56,7 +56,8 @@ namespace CYQ.Data.Table
         public MDataRow(MDataColumn mdc)
         {
             CellList = new List<MDataCell>(mdc.Count);
-            Table.Columns.AddRange(mdc);
+            Table.Columns = mdc;
+            //Table.Columns.AddRange(mdc);
         }
         /// <summary>
         /// 获取列头
@@ -1631,7 +1632,7 @@ namespace CYQ.Data.Table
                                     MethodInfo method;
                                     if (isArray)
                                     {
-                                        Object item = ConvertTool.ChangeType(items[i],propType.GetElementType());//Type.GetType(propType.FullName.Replace("[]", "")
+                                        Object item = ConvertTool.ChangeType(items[i], propType.GetElementType());//Type.GetType(propType.FullName.Replace("[]", "")
                                         method = objListType.GetMethod("Set");
                                         if (method != null)
                                         {
