@@ -331,11 +331,14 @@ namespace CYQ.Data.Cache
         }
         public override bool Add(string key, object value, double cacheMinutes, string fileName)
         {
-            if (Contains(key))
+            lock (key)
             {
-                return false;
+                if (Contains(key))
+                {
+                    return false;
+                }
+                return Set(key, value, cacheMinutes, fileName);
             }
-            return Set(key, value, cacheMinutes, fileName);
         }
 
 
