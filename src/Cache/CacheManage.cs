@@ -164,7 +164,7 @@ namespace CYQ.Data.Cache
         public abstract bool Set(string key, object value, double cacheMinutes, string fileName);
 
         /// <summary>
-        /// 加锁（分布式锁）
+        /// 加锁（分布式锁需要启用Redis或Memcached）
         /// </summary>
         /// <param name="key">key</param>
         /// <param name="waitTimeoutSeconds">尝试获取锁的最大等待时间（s秒），超过这个值，则认为获取锁失败</param>
@@ -302,6 +302,7 @@ namespace CYQ.Data.Cache
                 }
                 Thread.Sleep(1500);//3秒1次循环。
             }
+            threadIsWorking = false;
         }
         #endregion
 
