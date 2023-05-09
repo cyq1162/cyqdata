@@ -81,10 +81,15 @@ namespace CYQ.Data.Cache
                     cmd.Reset(3, command);
                     cmd.AddKey(key);
                     cmd.AddValue(typeBit, bytes);
+
+                    cmd.Reset(2, "ttl");
+                    cmd.AddKey(key);//检测失效时间（是否返回-1，可能未设置过期时间，解决setNx和expire原子性问题）
+
                     cmd.Send();
                     socket.SkipToEndOfLine(skipCmd);
                     result = socket.ReadResponse();
-                    if (result == ":1")
+                    string ttl = socket.ReadResponse();
+                    if (result == ":1" || ttl == ":-1")
                     {
                         if (expirySeconds > 0)
                         {
@@ -92,14 +97,14 @@ namespace CYQ.Data.Cache
                             cmd.AddKey(key);
                             cmd.AddKey(expirySeconds.ToString());
                             cmd.Send();
-                            result = socket.ReadResponse();
-                            if (result != ":1")
-                            {
-                                 cmd.Reset(2, "DEL");
-                                 cmd.AddKey(key);
-                                 cmd.Send();
-                                 socket.SkipToEndOfLine(1);//跳过结果
-                            }
+                            //result = socket.ReadResponse();
+                            //if (result != ":1")
+                            //{
+                            //    cmd.Reset(2, "DEL");
+                            //    cmd.AddKey(key);
+                            //    cmd.Send();
+                                socket.SkipToEndOfLine(1);//跳过结果
+                            //}
                         }
                     }
                     return result;

@@ -337,7 +337,7 @@ namespace CYQ.Data
                 object cacheObj = _aop.Para.ExeResult;
                 if (cacheObj is String)
                 {
-                    return JsonHelper.ToList<T>(cacheObj.ToString());
+                    return JsonHelper.ToList<T>(cacheObj.ToString(), EscapeOp.Encode);
                 }
                 return _aop.Para.ExeResult as List<T>;
             }

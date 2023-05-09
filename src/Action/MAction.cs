@@ -1074,7 +1074,7 @@ namespace CYQ.Data
                 {
                     string json = cacheObj.ToString();
                     count = JsonHelper.GetValue<int>(json, "total");
-                    list = JsonHelper.ToList<T>(JsonHelper.GetValue<string>(json, "rows"));
+                    list = JsonHelper.ToList<T>(JsonHelper.GetValue<string>(json, "rows"), EscapeOp.Encode);
                 }
             }
             if (_aop.IsLoadAop && (aopResult == AopResult.Break || aopResult == AopResult.Continue))
