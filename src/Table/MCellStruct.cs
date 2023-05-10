@@ -4,6 +4,7 @@ using System.Text;
 using System.Data;
 using CYQ.Data.SQL;
 using CYQ.Data.Orm;
+using CYQ.Data.Tool;
 
 namespace CYQ.Data.Table
 {

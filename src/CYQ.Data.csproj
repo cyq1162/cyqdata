@@ -170,10 +170,11 @@
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
     <Compile Include="Tool\ConvertTool.cs" />
-    <Compile Include="Tool\DBEntity\TableInfo.cs" />
-    <Compile Include="Tool\DBEntity\DBInfo.cs" />
+    <Compile Include="Tool\DB\TableInfo.cs" />
+    <Compile Include="Tool\DB\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
     <Compile Include="Tool\HashAlgorithms.cs" />
+    <Compile Include="Tool\Json\JsonAttribute.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
     <Compile Include="Tool\SysTypeEnum.cs" />
@@ -234,11 +235,11 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Tool\IOHelper.cs" />
-    <Compile Include="Tool\JsonHelper.cs">
+    <Compile Include="Tool\Json\JsonHelper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tool\DBTool.cs" />
-    <Compile Include="Tool\JsonSplit.cs" />
+    <Compile Include="Tool\DB\DBTool.cs" />
+    <Compile Include="Tool\Json\JsonSplit.cs" />
     <Compile Include="Tool\MDictionary.cs" />
     <Compile Include="Tool\StaticTool.cs" />
     <Compile Include="Tool\ThreadBreak.cs" />
