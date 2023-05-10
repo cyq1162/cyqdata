@@ -1251,6 +1251,7 @@ namespace CYQ.Data.Tool
             string name = pi != null ? pi.Name : fi.Name;
             object objValue = pi != null ? pi.GetValue(entity, null) : fi.GetValue(entity);
             Type type = pi != null ? pi.PropertyType : fi.FieldType;
+            string dateFormat = DateTimeFormatter;
             if (type.IsEnum)
             {
                 if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi))
@@ -1275,12 +1276,19 @@ namespace CYQ.Data.Tool
                 {
                     objValue = (int)objValue;
                 }
-
+            }
+            else if (type.FullName == "System.DateTime" && ReflectTool.ExistsAttr(AppConst.JsonFormatType, pi, fi))
+            {
+               JsonFormatAttribute jf= ReflectTool.GetAttr<JsonFormatAttribute>(pi,fi);
+               if (jf != null)
+               {
+                   dateFormat = jf.DatetimeFormat;
+               }
             }
 
-            SetNameValue(name, objValue, type);
+            SetNameValue(name, objValue, type, dateFormat);
         }
-        private void SetNameValue(string name, object objValue, Type valueType)
+        private void SetNameValue(string name, object objValue, Type valueType, string dateFormat)
         {
             if (IsConvertNameToLower)
             {
@@ -1318,7 +1326,7 @@ namespace CYQ.Data.Tool
                     DateTime dt;
                     if (DateTime.TryParse(value, out dt))
                     {
-                        value = dt.ToString(DateTimeFormatter);
+                        value = dt.ToString(dateFormat);
                     }
                 }
                 else if (group == DataGroupType.Object)
@@ -1663,7 +1671,7 @@ namespace CYQ.Data.Tool
                         return objT;
                     }
                 }
-                #endregion
+                    #endregion
 
             }
             else if (t.FullName.EndsWith("[]"))

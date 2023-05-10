@@ -127,6 +127,7 @@ namespace CYQ.Data
         #region  Ù–‘≥£¡ø
 
         public static Type JsonIgnoreType = typeof(JsonIgnoreAttribute);
+        public static Type JsonFormatType = typeof(JsonFormatAttribute);
         public static Type JsonEnumToStringType = typeof(JsonEnumToStringAttribute);
         public static Type JsonEnumToDescriptionType = typeof(JsonEnumToDescriptionAttribute);
         #endregion

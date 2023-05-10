@@ -176,6 +176,26 @@ namespace CYQ.Data
     {
 
     }
+
+    /// <summary>
+    /// Json 格式化【时间】
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class JsonFormatAttribute : Attribute
+    {
+        private string _DatetimeFormat;
+
+        public string DatetimeFormat
+        {
+            get { return _DatetimeFormat; }
+            set { _DatetimeFormat = value; }
+        }
+        public JsonFormatAttribute(string datetimeFormat)
+        {
+            _DatetimeFormat = datetimeFormat;
+        }
+    }
+
     /// <summary>
     /// Json 枚举字段转字符串
     /// </summary>
