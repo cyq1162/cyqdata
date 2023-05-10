@@ -33,7 +33,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                bool isInheritOrm = t.BaseType.Name.StartsWith("OrmBase") || t.BaseType.Name.StartsWith("SimpleOrmBase");
+                bool isInheritOrm = t.BaseType != null && (t.BaseType.Name.StartsWith("OrmBase") || t.BaseType.Name.StartsWith("SimpleOrmBase"));
                 PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
                 List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
                 try
@@ -64,7 +64,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                bool isInheritOrm = t.BaseType.Name == "OrmBase" || t.BaseType.Name == "SimpleOrmBase";
+                bool isInheritOrm = t.BaseType != null && (t.BaseType.Name == "OrmBase" || t.BaseType.Name == "SimpleOrmBase");
                 FieldInfo[] pInfo = isInheritOrm ? t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetFields();
                 List<FieldInfo> list = new List<FieldInfo>(pInfo.Length);
                 try

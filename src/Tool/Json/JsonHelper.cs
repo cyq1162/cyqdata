@@ -1173,6 +1173,11 @@ namespace CYQ.Data.Tool
                     MDataTable dt = obj as DataTable;
                     Fill(dt);
                 }
+                else if (obj is MDataRowCollection)
+                {
+                    MDataTable dt = (MDataRowCollection)obj;
+                    Fill(dt);
+                }
                 else if (obj is DataRow)
                 {
                     MDataRow row = obj as DataRow;
@@ -1277,13 +1282,13 @@ namespace CYQ.Data.Tool
                     objValue = (int)objValue;
                 }
             }
-            else if (type.FullName == "System.DateTime" && ReflectTool.ExistsAttr(AppConst.JsonFormatType, pi, fi))
+            else if (type.FullName.Contains("System.DateTime") && ReflectTool.ExistsAttr(AppConst.JsonFormatType, pi, fi))
             {
-               JsonFormatAttribute jf= ReflectTool.GetAttr<JsonFormatAttribute>(pi,fi);
-               if (jf != null)
-               {
-                   dateFormat = jf.DatetimeFormat;
-               }
+                JsonFormatAttribute jf = ReflectTool.GetAttr<JsonFormatAttribute>(pi, fi);
+                if (jf != null)
+                {
+                    dateFormat = jf.DatetimeFormat;
+                }
             }
 
             SetNameValue(name, objValue, type, dateFormat);
@@ -1358,56 +1363,68 @@ namespace CYQ.Data.Tool
                     }
                     else
                     {
-                        if (objValue is IEnumerable)
-                        {
-                            int len = ReflectTool.GetArgumentLength(ref valueType);
-                            if (len <= 1)//List<T>
-                            {
-                                JsonHelper js = new JsonHelper(false, false);
-                                js.Level = Level + 1;
-                                js.LoopCheckList = LoopCheckList;
-                                js.Escape = Escape;
-                                js._RowOp = _RowOp;
-                                js.DateTimeFormatter = DateTimeFormatter;
-                                js.IsConvertNameToLower = IsConvertNameToLower;
-                                if (objValue is MDataRowCollection)
-                                {
-                                    MDataTable dtx = (MDataRowCollection)objValue;
-                                    js.Fill(dtx);
-                                }
-                                else
-                                {
-                                    js.Fill(objValue);
-                                }
-                                value = js.ToString(true);
-                                noQuot = true;
-                            }
-                            else if (len == 2)//Dictionary<T,K>
-                            {
-                                MDataRow dicRow = MDataRow.CreateFrom(objValue);
-                                dicRow.DynamicData = LoopCheckList;
-                                value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                                noQuot = true;
-                            }
-                        }
-                        else
-                        {
-                            if (!valueType.FullName.StartsWith("System."))//普通对象。
-                            {
-                                MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(valueType));
-                                oRow.DynamicData = LoopCheckList;
-                                oRow.LoadFrom(objValue);
-                                value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                                noQuot = true;
-                            }
-                            else if (valueType.FullName == "System.Data.DataTable")
-                            {
-                                MDataTable dt = objValue as DataTable;
-                                dt.DynamicData = LoopCheckList;
-                                value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
-                                noQuot = true;
-                            }
-                        }
+                        JsonHelper js = new JsonHelper(false, false);
+                        js.Level = Level + 1;
+                        js.LoopCheckList = LoopCheckList;
+                        js.Escape = Escape;
+                        js._RowOp = _RowOp;
+                        js.DateTimeFormatter = dateFormat;
+                        js.IsConvertNameToLower = IsConvertNameToLower;
+                        js.Fill(objValue);
+                        value = js.ToString(objValue is IList || objValue is IListSource || objValue is IDataRecord);
+                        noQuot = true;
+
+
+                        //if (objValue is IEnumerable)
+                        //{
+                        //    int len = ReflectTool.GetArgumentLength(ref valueType);
+                        //    if (len <= 1)//List<T>
+                        //    {
+                        //        JsonHelper js = new JsonHelper(false, false);
+                        //        js.Level = Level + 1;
+                        //        js.LoopCheckList = LoopCheckList;
+                        //        js.Escape = Escape;
+                        //        js._RowOp = _RowOp;
+                        //        js.DateTimeFormatter = dateFormat;
+                        //        js.IsConvertNameToLower = IsConvertNameToLower;
+                        //        if (objValue is MDataRowCollection)
+                        //        {
+                        //            MDataTable dtx = (MDataRowCollection)objValue;
+                        //            js.Fill(dtx);
+                        //        }
+                        //        else
+                        //        {
+                        //            js.Fill(objValue);
+                        //        }
+                        //        value = js.ToString(true);
+                        //        noQuot = true;
+                        //    }
+                        //    else if (len == 2)//Dictionary<T,K>
+                        //    {
+                        //        MDataRow dicRow = MDataRow.CreateFrom(objValue);
+                        //        dicRow.DynamicData = LoopCheckList;
+                        //        value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
+                        //        noQuot = true;
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    if (!valueType.FullName.StartsWith("System."))//普通对象。
+                        //    {
+                        //        MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(valueType));
+                        //        oRow.DynamicData = LoopCheckList;
+                        //        oRow.LoadFrom(objValue);
+                        //        value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
+                        //        noQuot = true;
+                        //    }
+                        //    else if (valueType.FullName == "System.Data.DataTable")
+                        //    {
+                        //        MDataTable dt = objValue as DataTable;
+                        //        dt.DynamicData = LoopCheckList;
+                        //        value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
+                        //        noQuot = true;
+                        //    }
+                        //}
 
                     }
                     #endregion
@@ -1670,8 +1687,9 @@ namespace CYQ.Data.Tool
                         }
                         return objT;
                     }
-                }
                     #endregion
+                }
+
 
             }
             else if (t.FullName.EndsWith("[]"))
@@ -1686,6 +1704,14 @@ namespace CYQ.Data.Tool
         }
         internal static object ToEntity(Type t, string json, EscapeOp op)
         {
+            if (t.FullName == "System.Data.DataTable")
+            {
+                return MDataTable.CreateFrom(json, null, op).ToDataTable();
+            }
+            if (t.Name == "MDataTable")
+            {
+                return MDataTable.CreateFrom(json, null, op);
+            }
             if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
             {
                 return ToIEnumerator(t, json, op);
@@ -1703,6 +1729,16 @@ namespace CYQ.Data.Tool
         public static T ToEntity<T>(string json, EscapeOp op) where T : class
         {
             Type t = typeof(T);
+            if (t.FullName == "System.Data.DataTable")
+            {
+                object dt = MDataTable.CreateFrom(json, null, op).ToDataTable();
+                return (T)dt;
+            }
+            if (t.Name == "MDataTable")
+            {
+                object mdt = MDataTable.CreateFrom(json, null, op);
+                return (T)mdt;
+            }
             if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
             {
                 return ToIEnumerator<T>(json, op);
@@ -1771,11 +1807,18 @@ namespace CYQ.Data.Tool
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = rowOp;
             js.Fill(obj);
-            return js.ToString(obj is IList || obj is MDataTable || obj is DataTable);
+            return js.ToString(obj is IList || obj is IListSource || obj is IDataRecord);
         }
 
 
 
+
+    }
+    /// <summary>
+    /// Xml <=> Json
+    /// </summary>
+    public partial class JsonHelper
+    {
         #region Xml 转 Json
 
         /// <summary>
@@ -1805,7 +1848,7 @@ namespace CYQ.Data.Tool
         #endregion
 
 
-        #region Json转Xml
+        #region Json 转 Xml
         /// <summary>
         /// Convert json to Xml
         /// <para>将一个Json转成Xml</para>
@@ -1969,7 +2012,6 @@ namespace CYQ.Data.Tool
         }
         #endregion
     }
-
     public partial class JsonHelper
     {
         /// <summary>
