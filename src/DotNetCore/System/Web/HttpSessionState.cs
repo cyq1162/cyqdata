@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using CYQ.Data.Cache;
 
 namespace System.Web
@@ -32,12 +33,17 @@ namespace System.Web
         {
             get
             {
-                var sessionID = context.Request.Cookies["CYQ.SessionID"];
+                if (context.Items.ContainsKey("HttpSessionID"))
+                {
+                    return context.Items["HttpSessionID"] as String;
+                }
+                string sessionID = context.Request.Cookies["CYQ.SessionID"];
                 if (string.IsNullOrEmpty(sessionID))
                 {
                     sessionID = DateTime.Now.ToString("HHmmss") + Guid.NewGuid().GetHashCode();
                     context.Response.Cookies.Append("CYQ.SessionID", sessionID);
                 }
+                context.Items.Add("HttpSessionID", sessionID);
                 return sessionID;
             }
         }

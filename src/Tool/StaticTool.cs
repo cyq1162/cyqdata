@@ -41,29 +41,39 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string GetMasterSlaveKey()
         {
+            return "MasterSlave_" + GetID(true);
+        }
+        /// <summary>
+        /// 用于标识（以用户为单位）的 全局事务 的唯一标识
+        /// </summary>
+        public static string GetTransationKey(string conn)
+        {
+            //在Task 协程 异步中，可能会有不同的线程执行任务，这特殊情况后续再考量。
+            string key = GetID(false) + Thread.CurrentThread.ManagedThreadId.ToString();
+            string hash = ConnBean.GetHashKey(conn);
+            return "Transation_" + key + hash;
+        }
+        private static string GetID(bool isCreate)
+        {
             string id = string.Empty;
+            //避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）
             if (HttpContext.Current != null && HttpContext.Current.Handler != null)
             {
-                if (HttpContext.Current.Session != null)
+                if (HttpContext.Current.Request["token"] != null)
+                {
+                    id = HttpContext.Current.Request["token"];
+                }
+                else if (HttpContext.Current.Request.Headers["token"] != null)
+                {
+                    id = HttpContext.Current.Request.Headers["token"];
+                }
+                else if (HttpContext.Current.Session != null)
                 {
                     id = HttpContext.Current.Session.SessionID;
                 }
-                else if (HttpContext.Current.Request["Token"] != null)
+                if (isCreate && string.IsNullOrEmpty(id))
                 {
-                    id = HttpContext.Current.Request["Token"];
-                }
-                else if (HttpContext.Current.Request.Headers["Token"] != null)
-                {
-                    id = HttpContext.Current.Request.Headers["Token"];
-                }
-                else if (HttpContext.Current.Request["MasterSlaveID"] != null)
-                {
-                    id = HttpContext.Current.Request["MasterSlaveID"];
-                }
-
-                if (string.IsNullOrEmpty(id))
-                {
-                    HttpCookie cookie = HttpContext.Current.Request.Cookies["MasterSlaveID"];
+                    HttpCookie cookie = HttpContext.Current.Request.Cookies["CYQ.SessionID"];
                     if (cookie != null)
                     {
                         id = cookie.Value;
@@ -71,48 +81,16 @@ namespace CYQ.Data.Tool
                     else
                     {
                         id = Guid.NewGuid().ToString().Replace("-", "");
-                        cookie = new HttpCookie("MasterSlaveID", id);
-                        cookie.Expires = DateTime.Now.AddMonths(1);
+                        cookie = new HttpCookie("CYQ.SessionID", id);
                         HttpContext.Current.Response.Cookies.Add(cookie);
                     }
                 }
             }
-            if (string.IsNullOrEmpty(id))
+            if (isCreate && string.IsNullOrEmpty(id))
             {
                 id = DateTime.Now.Minute + Thread.CurrentThread.ManagedThreadId.ToString();
             }
-            return "MasterSlave_" + id;
-        }
-        /// <summary>
-        /// 用于标识（以用户为单位）的 全局事务 的唯一标识
-        /// </summary>
-        public static string GetTransationKey(string conn)
-        {
-            string key = Thread.CurrentThread.ManagedThreadId.ToString();
-            if (HttpContext.Current != null)
-            {
-
-                string id = string.Empty;
-                if (HttpContext.Current.Session != null)
-                {
-                    id = HttpContext.Current.Session.SessionID;
-                }
-                if (string.IsNullOrEmpty(id) && HttpContext.Current.Handler != null)// 增加判断。
-                {
-                    if (HttpContext.Current.Request["Token"] != null)//避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）
-                    {
-                        id = HttpContext.Current.Request["Token"];
-                    }
-                    else if (HttpContext.Current.Request.Headers["Token"] != null)
-                    {
-                        id = HttpContext.Current.Request.Headers["Token"];
-                    }
-                }
-                key = id + key;
-
-            }
-            string hash = ConnBean.GetHashKey(conn);
-            return "Transation_" + key + hash;
+            return id;
         }
     }
 }
