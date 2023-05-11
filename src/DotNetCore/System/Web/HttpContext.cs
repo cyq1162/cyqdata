@@ -152,7 +152,18 @@ namespace System.Web
 
         public void RewritePath(string path)
         {
-            request.Path = '/' + path.TrimStart('/');
+            string newQueryString = null;
+            int num = path.IndexOf('?');
+            if (num >= 0)
+            {
+                newQueryString = ((num < path.Length - 1) ? path.Substring(num) : string.Empty);
+                path = path.Substring(0, num);
+            }
+            NetCoreContext.Request.Path = '/' + path.TrimStart('/');
+            if (!string.IsNullOrEmpty(newQueryString))
+            {
+                NetCoreContext.Request.QueryString = new QueryString(newQueryString);
+            }
         }
     }
 
