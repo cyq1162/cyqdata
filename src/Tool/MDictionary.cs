@@ -34,7 +34,7 @@ namespace CYQ.Data.Tool
 
         }
         /// <summary>
-        /// 添加值【不存则，则添加；存在，则忽略】
+        /// 添加值（带锁）【不存则，则添加；存在，则忽略】
         /// </summary>
         public new void Add(K key, V value)
         {
@@ -71,6 +71,11 @@ namespace CYQ.Data.Tool
                 }
             }
         }
+        /// <summary>
+        /// 移除（带锁）
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public new bool Remove(K key)
         {
             return Remove(key, 1);
@@ -108,7 +113,7 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 索引取值
+        /// 索引取值（带锁）
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
@@ -131,7 +136,7 @@ namespace CYQ.Data.Tool
             }
         }
         /// <summary>
-        /// 通过index索引取值
+        /// 通过index索引取值（带锁）
         /// </summary>
         /// <returns></returns>
         public V this[int index]
@@ -190,7 +195,7 @@ namespace CYQ.Data.Tool
         }
 
         /// <summary>
-        /// 当Key为int时，通过此方法取值
+        /// 当Key为int时，通过此方法取值（带锁）
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
@@ -206,7 +211,7 @@ namespace CYQ.Data.Tool
             return default(V);
         }
         /// <summary>
-        /// 检查值存在【则更新】，不存在则添加
+        /// 检查值存在【则更新】，不存在则添加（带锁）
         /// </summary>
         public void Set(K key, V value)
         {
@@ -222,6 +227,9 @@ namespace CYQ.Data.Tool
                 }
             }
         }
+        /// <summary>
+        /// 清空数据（带锁）
+        /// </summary>
         public new void Clear()
         {
             if (Count > 0)

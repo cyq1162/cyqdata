@@ -493,6 +493,10 @@ namespace CYQ.Data
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
                         dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/');//.Replace("/", "\\");
+                        if (!dtdUri.StartsWith("/") && dtdUri.Contains(":\\"))
+                        {
+                            dtdUri = dtdUri.Replace("/", "\\");
+                        }
                     }
                     return dtdUri;
                 }
