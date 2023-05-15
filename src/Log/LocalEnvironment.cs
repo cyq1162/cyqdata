@@ -78,7 +78,7 @@ namespace CYQ.Data
                                     continue;
                                 }
                                 _HostIP = ipAddr;
-                                break;
+                                return _HostIP;
                             }
                         }
                     }
