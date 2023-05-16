@@ -1184,7 +1184,7 @@ namespace CYQ.Data.Xml
                         //{
                         //    tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));//格式化{0}、{1}的占位符
                         //}
-                        if (tempText.Contains("${"))
+                        if (tempText.IndexOf("${") > -1 || tempText.IndexOf("<%#") > -1)
                         {
                             tempText = ReplaceCustomFlag(tempText, values, _Table.Rows[k]);
                             //#region 处理标签占位符
@@ -1509,7 +1509,8 @@ namespace CYQ.Data.Xml
             {
                 if (js.RowCount == 0)
                 {
-                    return "fuck";
+                    return "";
+                   // return "fuck"; //卧槽，怎么有这样的代码？
                 }
             }
             return result;
