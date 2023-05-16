@@ -484,19 +484,22 @@ namespace CYQ.Data.Cache
             lock (obj2)
             {
                 string fileName = e.FullPath;
+
                 string folder = Path.GetDirectoryName(fileName);
                 if (theFolderKeys.ContainsKey(folder))
                 {
-                    MList<string> keys = theFolderKeys[folder];//.GetList();
+                    MList<string> keys = theFolderKeys[folder];
                     int count = keys.Count;
-                    //统一路径方式
-                    fileName = fileName.Replace("/", "\\");
+                    bool isVSBug = fileName.EndsWith("~");//VS Debug 模式下，VS的Bug，只能按整个文件夹清空缓存。
+
+                    //正常，统一路径方式，按文件清空缓存
+                    fileName = fileName.Replace("/", "\\").Replace("\\\\", "\\");
                     for (int i = 0; i < count; i++)
                     {
                         if (i < keys.Count)
                         {
-                            string path = theFileName[keys[i]].Replace("/", "\\");
-                            if (string.Compare(path, fileName, StringComparison.OrdinalIgnoreCase) == 0)
+                            string path = theFileName[keys[i]].Replace("/", "\\").Replace("\\\\", "\\");
+                            if (isVSBug || string.Compare(path, fileName, StringComparison.OrdinalIgnoreCase) == 0)
                             {
                                 Remove(keys[i]);
                                 keys.Remove(keys[i]);
@@ -504,7 +507,6 @@ namespace CYQ.Data.Cache
                             }
                         }
                     }
-
                 }
             }
         }

@@ -828,7 +828,7 @@ namespace CYQ.Data.Xml
                     }
                     html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
                     #endregion
-                    if (html.Contains("${")) // 替换自定义标签。
+                    if (html.IndexOf("${") > -1 || html.IndexOf("<%#") > -1) // 替换自定义标签。
                     {
                         html = ReplaceCustomFlag(html, null, null);
                     }
