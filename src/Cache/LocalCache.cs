@@ -355,25 +355,25 @@ namespace CYQ.Data.Cache
         public override bool Remove(string key)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
-            DBSchema.Remove(key);
-            TableSchema.Remove(key);
-            if (key.StartsWith("CCache_"))
-            {
-                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-                {
-                    IOHelper.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".ts");
-                    //顺带移除数据库表、视图、存储过程 名称列表缓存。
-                    string[] files = Directory.GetFiles(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, "*.json");
-                    if (files != null && files.Length > 0)
-                    {
-                        foreach (string file in files)
-                        {
-                            IOHelper.Delete(file);
-                        }
-                    }
+            //DBSchema.Remove(key);
+            //TableSchema.Remove(key);
+            //if (key.StartsWith("CCache_"))
+            //{
+            //    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            //    {
+            //        IOHelper.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".ts");
+            //        //顺带移除数据库表、视图、存储过程 名称列表缓存。
+            //        string[] files = Directory.GetFiles(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, "*.json");
+            //        if (files != null && files.Length > 0)
+            //        {
+            //            foreach (string file in files)
+            //            {
+            //                IOHelper.Delete(file);
+            //            }
+            //        }
 
-                }
-            }
+            //    }
+            //}
             return theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>
@@ -432,10 +432,6 @@ namespace CYQ.Data.Cache
             {
                 lock (lockObj)
                 {
-                    DBSchema.Clear();//清空数据库缓存
-                    TableSchema.Clear();//清空表结构缓存
-                    NoSqlAction.Clear();//清空文本数据库相关缓存
-
                     theCache.Clear();
                     theTime.Clear();
                     theFileName.Clear();
@@ -447,14 +443,8 @@ namespace CYQ.Data.Cache
                     }
                     theFolderWatcher.Clear();
                     theFolderKeys.Clear();
-                    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-                    {
-                        if (Directory.Exists(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath))
-                        {
-                            Directory.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, true);
-                        }
-                    }
                 }
+                ClearDB();
             }
             catch
             {
@@ -462,6 +452,23 @@ namespace CYQ.Data.Cache
             }
         }
 
+        /// <summary>
+        /// 清空外部缓存数据
+        /// </summary>
+        private void ClearDB()
+        {
+            DBSchema.Clear();//清空数据库缓存
+            TableSchema.Clear();//清空表结构缓存
+            NoSqlAction.Clear();//清空文本数据库相关缓存
+            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            {
+                if (Directory.Exists(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath))
+                {
+                    Directory.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, true);
+                }
+            }
+        }
+             
 
         public override CacheType CacheType
         {

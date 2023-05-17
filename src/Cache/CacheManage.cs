@@ -295,11 +295,13 @@ namespace CYQ.Data.Cache
                 }
                 keysRemoveList.Clear();
 
-                foreach (string key in keysDic.Keys)
+                List<string> list = keysDic.GetKeys();
+                foreach (string key in list)
                 {
                     //给 key 设置延时时间
                     Set(key, keysDic[key], 0.05);//延时3秒
                 }
+                list.Clear();
                 Thread.Sleep(1500);//3秒1次循环。
             }
             threadIsWorking = false;

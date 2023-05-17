@@ -41,7 +41,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\CYQ.Data.xml</DocumentationFile>
@@ -131,6 +131,7 @@
     <Compile Include="DAL\NoSql\NoSqlTransaction.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
+    <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
     <Compile Include="Log\LocalEnvironment.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 
 namespace CYQ.Data.Tool
 {
@@ -12,7 +13,7 @@ namespace CYQ.Data.Tool
     /// <typeparam name="V">value</typeparam>
     public partial class MDictionary<K, V> : Dictionary<K, V>
     {
-        private static readonly object lockObj = new object();
+        private ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
         public MDictionary()
             : base()
         {
@@ -38,37 +39,17 @@ namespace CYQ.Data.Tool
         /// </summary>
         public new void Add(K key, V value)
         {
-            Add(key, value, 1);
-        }
-        private void Add(K key, V value, int times)
-        {
+            _lock.TryEnterWriteLock(Timeout.Infinite);
             try
-            {
-                lock (lockObj)
-                {
-                    if (!ContainsKey(key))
-                    {
-                        base.Add(key, value);
-                    }
-                }
-            }
-            catch (Exception err)
             {
                 if (!ContainsKey(key))
                 {
-
-                    if (times > 3)
-                    {
-                        Log.Write(err, LogType.Error);
-                        return;
-                    }
-                    else if (times > 2)
-                    {
-                        System.Threading.Thread.Sleep(10);
-                    }
-                    times++;
-                    Add(key, value, times);
+                    base.Add(key, value);
                 }
+            }
+            finally
+            {
+                _lock.ExitWriteLock();
             }
         }
         /// <summary>
@@ -78,39 +59,16 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public new bool Remove(K key)
         {
-            return Remove(key, 1);
-        }
-        private bool Remove(K key, int times)
-        {
+            _lock.TryEnterWriteLock(Timeout.Infinite);
             try
             {
-                lock (lockObj)
-                {
-                    if (ContainsKey(key))
-                    {
-                        return base.Remove(key);
-                    }
-                }
-                return true;
+                return base.Remove(key);
             }
-            catch (Exception err)
+            finally
             {
-                if (ContainsKey(key))
-                {
-                    if (times > 3)
-                    {
-                        Log.Write(err, LogType.Error);
-                        return false;
-                    }
-                    else if (times > 2)
-                    {
-                        System.Threading.Thread.Sleep(10);
-                    }
-                    times++;
-                    return Remove(key, times);
-                }
-                return false;
+                _lock.ExitWriteLock();
             }
+
         }
         /// <summary>
         /// 索引取值（带锁）
@@ -121,18 +79,34 @@ namespace CYQ.Data.Tool
         {
             get
             {
-                lock (lockObj)
+                _lock.TryEnterReadLock(Timeout.Infinite);
+                try
                 {
                     if (base.ContainsKey(key))
                     {
                         return base[key];
                     }
+                    return default(V);
                 }
-                return default(V);
+                finally
+                {
+                    _lock.ExitReadLock();
+                }
             }
             set
             {
-                base[key] = value;
+                _lock.TryEnterWriteLock(Timeout.Infinite);
+                try
+                {
+                    if (base.ContainsKey(key))
+                    {
+                        base[key] = value;
+                    }
+                }
+                finally
+                {
+                    _lock.ExitWriteLock();
+                }
             }
         }
         /// <summary>
@@ -143,9 +117,10 @@ namespace CYQ.Data.Tool
         {
             get
             {
-                if (index >= 0 && index < this.Count)
+                _lock.TryEnterReadLock(Timeout.Infinite);
+                try
                 {
-                    lock (lockObj)
+                    if (index >= 0 && index < this.Count)
                     {
                         int i = 0;
                         foreach (V value in this.Values)
@@ -157,22 +132,27 @@ namespace CYQ.Data.Tool
                             i++;
                         }
                     }
-                }
-                else // 兼容存档hash int
-                {
-                    K key = ConvertTool.ChangeType<K>(index);
-                    if (base.ContainsKey(key))
+                    else // 兼容存档hash int
                     {
-                        return base[key];
+                        K key = ConvertTool.ChangeType<K>(index);
+                        if (base.ContainsKey(key))
+                        {
+                            return base[key];
+                        }
                     }
+                    return default(V);
                 }
-                return default(V);
+                finally
+                {
+                    _lock.ExitReadLock();
+                }
             }
             set
             {
-                if (index >= 0 && index < this.Count)
+                _lock.TryEnterWriteLock(Timeout.Infinite);
+                try
                 {
-                    lock (lockObj)
+                    if (index >= 0 && index < this.Count)
                     {
                         int i = 0;
                         foreach (K key in this.Keys)
@@ -185,11 +165,15 @@ namespace CYQ.Data.Tool
                             i++;
                         }
                     }
+                    else
+                    {
+                        K key = ConvertTool.ChangeType<K>(index);
+                        base[key] = value;
+                    }
                 }
-                else
+                finally
                 {
-                    K key = ConvertTool.ChangeType<K>(index);
-                    base[key] = value;
+                    _lock.ExitWriteLock();
                 }
             }
         }
@@ -201,21 +185,27 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public V Get(K key)
         {
-            lock (lockObj)
+            _lock.TryEnterReadLock(Timeout.Infinite);
+            try
             {
                 if (base.ContainsKey(key))
                 {
                     return base[key];
                 }
+                return default(V);
             }
-            return default(V);
+            finally
+            {
+                _lock.ExitReadLock();
+            }
         }
         /// <summary>
         /// 检查值存在【则更新】，不存在则添加（带锁）
         /// </summary>
         public void Set(K key, V value)
         {
-            lock (lockObj)
+            _lock.TryEnterWriteLock(Timeout.Infinite);
+            try
             {
                 if (base.ContainsKey(key))
                 {
@@ -226,28 +216,55 @@ namespace CYQ.Data.Tool
                     base.Add(key, value);
                 }
             }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
         }
         /// <summary>
         /// 清空数据（带锁）
         /// </summary>
         public new void Clear()
         {
-            if (Count > 0)
+            _lock.TryEnterWriteLock(Timeout.Infinite);
+            try
             {
-                lock (lockObj)
+                if (Count > 0)
                 {
-                    if (Count > 0)
-                    {
-                        base.Clear();
-                    }
+                    base.Clear();
                 }
             }
+            finally
+            {
+                _lock.ExitWriteLock();
+            }
+
         }
 
         public new bool ContainsKey(K key)
         {
             if (key == null) { return false; }
             return base.ContainsKey(key);
+        }
+        /// <summary>
+        /// 获取键值列表（带锁）
+        /// </summary>
+        public List<K> GetKeys()
+        {
+            _lock.TryEnterReadLock(Timeout.Infinite);
+            try
+            {
+                List<K> keys = new List<K>(base.Keys.Count);
+                foreach (K item in base.Keys)
+                {
+                    keys.Add(item);
+                }
+                return keys;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
         }
     }
 
