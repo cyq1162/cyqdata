@@ -247,7 +247,7 @@ namespace CYQ.Data.Tool
             return base.ContainsKey(key);
         }
         /// <summary>
-        /// 获取键值列表（带锁）
+        /// 获取键列表（带锁）
         /// </summary>
         public List<K> GetKeys()
         {
@@ -260,6 +260,27 @@ namespace CYQ.Data.Tool
                     keys.Add(item);
                 }
                 return keys;
+            }
+            finally
+            {
+                _lock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// 获取值列表（带锁）
+        /// </summary>
+        public List<V> GetValues()
+        {
+            _lock.TryEnterReadLock(Timeout.Infinite);
+            try
+            {
+                List<V> values = new List<V>(base.Values.Count);
+                foreach (V item in base.Values)
+                {
+                    values.Add(item);
+                }
+                return values;
             }
             finally
             {
