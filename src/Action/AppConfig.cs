@@ -299,7 +299,7 @@ namespace CYQ.Data
             }
         }
         /// <summary>
-        /// 框架的程序集所在的运行路径，以"\\" 或"/"结尾
+        /// 框架的程序集(dll)所在的运行路径，以"\\" 或"/"结尾
         /// </summary>
         public static string AssemblyPath
         {
@@ -342,7 +342,15 @@ namespace CYQ.Data
                 {
                     if (IsNetCore)
                     {
-                        string path = Environment.CurrentDirectory + "/wwwroot";
+                        string path = AppDomain.CurrentDomain.BaseDirectory + "wwwroot";
+                        if (path.StartsWith("/"))
+                        {
+                            path = path + "/";
+                        }
+                        else
+                        {
+                            path = path + "\\";
+                        }
                         if (Directory.Exists(path))
                         {
                             _WebRootPath = path;
@@ -352,10 +360,7 @@ namespace CYQ.Data
                     {
                         _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
                     }
-                }
-                if (!_WebRootPath.EndsWith("\\") && !_WebRootPath.EndsWith("/"))
-                {
-                    _WebRootPath = _WebRootPath + "/";
+
                 }
                 return _WebRootPath;
             }
@@ -379,7 +384,7 @@ namespace CYQ.Data
                 if (webState == -1)
                 {
                     if (HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config")
-                       || (WebRootPath.Contains("wwwroot") && Directory.Exists(WebRootPath))
+                       || (WebRootPath.Contains("wwwroot"))
                        || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll")
                        || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Aries.Core.dll"))
                     {

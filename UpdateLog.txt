@@ -1000,6 +1000,6 @@
 -------------------------------------------------------------------------------------
 752：优化：MDictionary 新增 GetKeys 方法【加锁】。（2023-05-16）【V5.8.6.7】
 753：优化：NetCore：MDictionary 内部锁优化【lock变更为读写锁】。（2023-05-17）
-
+754：修复：NetCore：dotnet /home/xxx/xx.dll 启动方式时，AppConfig.WebRootPath 获取问题。（2023-05-18）
 
 //后续：XHtmlAction 内部大优化 = 》setforeach 之前处理 set 的值。

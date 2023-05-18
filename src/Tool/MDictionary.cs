@@ -243,7 +243,7 @@ namespace CYQ.Data.Tool
 
         public new bool ContainsKey(K key)
         {
-            if (key == null) { return false; }
+            if (key == null || base.Count == 0) { return false; }
             return base.ContainsKey(key);
         }
         /// <summary>
