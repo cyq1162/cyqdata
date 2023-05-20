@@ -15,22 +15,22 @@ namespace CYQ.Data.Cache
         MemcachedClient client;
         internal MemCache()
         {
-            if (string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
+            if (string.IsNullOrEmpty(AppConfig.MemCache.Servers))
             {
-                string err = "AppConfig.Cache.MemCacheServers cant' be Empty!";
+                string err = "AppConfig.MemCache.Servers cant' be Empty!";
                 Log.WriteLogToTxt(err, LogType.Cache);
                 Error.Throw(err);
             }
-            client = MemcachedClient.Create(AppConfig.Cache.MemCacheServers);
+            client = MemcachedClient.Create(AppConfig.MemCache.Servers);
             if (client.hostServer.HostList.Count == 0)
             {
-                string err = "AppConfig.Cache.MemCacheServers can't find the host for service : " + AppConfig.Cache.MemCacheServers;
+                string err = "AppConfig.MemCache.Servers can't find the host for service : " + AppConfig.MemCache.Servers;
                 Log.WriteLogToTxt(err, LogType.Cache);
                 Error.Throw(err);
             }
-            if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServersBak))
+            if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
             {
-                MemcachedClient clientBak = MemcachedClient.Create(AppConfig.Cache.MemCacheServersBak);
+                MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
                 client.hostServer.hostServerBak = clientBak.hostServer;
             }
 
@@ -53,7 +53,7 @@ namespace CYQ.Data.Cache
 
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.Cache.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.DefaultCacheTime, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {

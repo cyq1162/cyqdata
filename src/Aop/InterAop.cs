@@ -50,11 +50,11 @@ namespace CYQ.Data.Aop
             outerAop = GetFromConfig();
             if (outerAop == null)
             {
-                aopOp = AppConfig.Cache.IsAutoCache ? AopOp.OnlyInner : AopOp.CloseAll;
+                aopOp = AppConfig.AutoCache.IsEnable ? AopOp.OnlyInner : AopOp.CloseAll;
             }
             else
             {
-                aopOp = AppConfig.Cache.IsAutoCache ? AopOp.OpenAll : AopOp.OnlyOuter;
+                aopOp = AppConfig.AutoCache.IsEnable ? AopOp.OpenAll : AopOp.OnlyOuter;
             }
         }
         #region IAop ≥…‘±

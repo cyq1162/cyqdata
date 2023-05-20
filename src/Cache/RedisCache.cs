@@ -15,22 +15,22 @@ namespace CYQ.Data.Cache
         RedisClient client;
         internal RedisCache()
         {
-            if (string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
+            if (string.IsNullOrEmpty(AppConfig.Redis.Servers))
             {
-                string err = "AppConfig.Cache.RedisServers cant' be Empty!";
+                string err = "AppConfig.Redis.Servers cant' be Empty!";
                 Log.WriteLogToTxt(err, LogType.Cache);
                 Error.Throw(err);
             }
-            client = RedisClient.Create(AppConfig.Cache.RedisServers);
+            client = RedisClient.Create(AppConfig.Redis.Servers);
             if (client.hostServer.HostList.Count == 0)
             {
-                string err = "AppConfig.Cache.RedisServers can't find the host for service : " + AppConfig.Cache.RedisServers;
+                string err = "AppConfig.Redis.Servers can't find the host for service : " + AppConfig.Redis.Servers;
                 Log.WriteLogToTxt(err, LogType.Cache);
                 Error.Throw(err);
             }
-            if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServersBak))
+            if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
             {
-                RedisClient clientBak = RedisClient.Create(AppConfig.Cache.RedisServersBak);
+                RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
                 client.hostServer.hostServerBak = clientBak.hostServer;
             }
 
@@ -54,7 +54,7 @@ namespace CYQ.Data.Cache
         }
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.Cache.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.DefaultCacheTime, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {

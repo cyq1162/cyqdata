@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using CYQ.Data.Tool;
 using System.Text;
 using System.Web;
+using static System.Net.Mime.MediaTypeNames;
+using System.Threading;
 
 namespace CYQ.Data.Xml
 {
@@ -168,12 +170,11 @@ namespace CYQ.Data.Xml
             }
             if (attrAndValue != null && attrAndValue.Length % 2 == 0)
             {
-                string attr = "", value = "";
                 for (int i = 0; i < attrAndValue.Length; i++)
                 {
-                    attr = attrAndValue[i];
+                    string attr = attrAndValue[i];
                     i++;
-                    value = attrAndValue[i];
+                    string value = attrAndValue[i];
                     xElement.SetAttribute(attr, value);
                 }
             }
@@ -814,6 +815,7 @@ namespace CYQ.Data.Xml
                         }
                     }
                     #endregion
+
                     #region 处理XHtml 头前缀、清空CData
 
                     string xml = _XmlDocument.InnerXml.Replace(".dtd\"[]>", ".dtd\">");
@@ -828,38 +830,51 @@ namespace CYQ.Data.Xml
                     }
                     html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
                     #endregion
-                    if (html.IndexOf("${") > -1 || html.IndexOf("<%#") > -1) // 替换自定义标签。
+
+                    #region 处理剩余的占位符替换
+                    if (html.IndexOf("${") > -1 || html.IndexOf("<%#") > -1)
                     {
-                        html = ReplaceCustomFlag(html, null, null);
+                        html = FormatHtml(html, null);
                     }
+                    #endregion
+
                     return html;
                 }
                 return string.Empty;
             }
         }
-        private string ReplaceCustomFlag(string html, MDictionary<string, string> values, MDataRow row)
+        /// <summary>
+        /// 对Html的内容，进行标签替换【1次替换】
+        /// </summary>
+        /// <param name="html">需要被替换的内容</param>
+        /// <param name="values">用于值替换搜索的字典数据</param>
+        /// <returns></returns>
+        private string FormatHtml(string html, MDictionary<string, string> values)
         {
-            #region 替换自定义标签
+
             if (html.IndexOf("${") > -1)
             {
+                #region 替换占位符号
                 MatchCollection matchs = Regex.Matches(html, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 if (matchs != null && matchs.Count > 0)
                 {
+                    //过滤重复的占位符。
                     List<string> keys = new List<string>(matchs.Count);
                     foreach (Match match in matchs)
                     {
-                        //原始的占位符
+                        //原始的占位符 ${txt#name:xx#xx}
                         string value = match.Groups[0].Value;//${txt#name:xx#xx}，${'aaa'+txt#name:xx#xx+'bbb'}
-                        if (keys.Contains(value))
+                        if (string.IsNullOrEmpty(value) || keys.Contains(value))
                         {
                             continue;
                         }
                         keys.Add(value);
-                        #region 分解占位符
 
-                        //先处理+号 ${'aaa'+txt#name:xx#xx+'bbb'}
+                        #region 分解占位符
+                        //先处理+号 ${'aaa'+txt#name:xx#xx+'bbb'} formatter= 'aaa'{0}
                         string formatter = "", key = "";
-                        foreach (string item in match.Groups[1].Value.Trim().Split('+'))
+                        string[] items = match.Groups[1].Value.Trim().Split('+');//['aa',txt#name]
+                        foreach (string item in items)
                         {
                             if (item[0] == '"')
                             {
@@ -881,20 +896,21 @@ namespace CYQ.Data.Xml
                         }
                         string columnName = key.Split(':')[0];//name
                         #endregion
+
                         string replaceValue = "";
 
                         #region 获取占位符的值
-                        if (value != null && row != null)
+                        if (values != null)
                         {
-                            replaceValue = GetValueByTable(columnName, key, values, row);
+                            replaceValue = GetValue1(columnName, values);
                         }
                         if (string.IsNullOrEmpty(replaceValue))
                         {
-                            replaceValue = GetValueByKeyValue(columnName);
+                            replaceValue = GetValueByKeyValue2(columnName);
                         }
                         if (string.IsNullOrEmpty(replaceValue))
                         {
-                            replaceValue = GetValueByRequest(columnName, key);
+                            replaceValue = GetValueByRequest3(columnName, key);
                         }
                         #endregion
 
@@ -905,9 +921,11 @@ namespace CYQ.Data.Xml
                     keys = null;
                     matchs = null;
                 }
+                #endregion
             }
             if (html.IndexOf("<%#") > -1)//js eval 执行
             {
+                #region 替换JavaScript语法
                 MatchCollection matchs = Regex.Matches(html, @"<%#([\S\s]*?)%>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                 if (matchs != null && matchs.Count > 0)
                 {
@@ -921,27 +939,44 @@ namespace CYQ.Data.Xml
                         {
                             evalValue = Convert.ToString(Microsoft.JScript.Eval.JScriptEvaluate(value1, Microsoft.JScript.Vsa.VsaEngine.CreateEngine()));
                         }
-                        catch(Exception err) 
+                        catch (Exception err)
                         {
                             Log.WriteLogToTxt(err);
                         }
                         html = html.Replace(value, evalValue);
                     }
                 }
+                #endregion
             }
-            #endregion
+
             return html;
         }
-        private string GetValueByKeyValue(string columnName)
+        private string GetValue1(string columnName, MDictionary<string, string> values)//, MDataRow row
         {
-            //if (PreList != null && PreList.Contains(pre) && _Row != null)
+            if (values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
+            {
+                return values[columnName];
+            }
+            else if (columnName.Length < 3)
+            {
+                int i = 0;
+                if (int.TryParse(columnName, out i) && i < values.Count)
+                {
+                    return values[i]; //数字
+                }
+            }
+            //else
             //{
-            //    MDataCell matchCell = _Row[columnName];
+            //    MDataCell matchCell = row[columnName];
             //    if (matchCell != null)
             //    {
             //        return matchCell.ToString();
             //    }
             //}
+            return string.Empty;
+        }
+        private string GetValueByKeyValue2(string columnName)
+        {
             //处理keyValue替换
             if (KeyValue.Count > 0 && KeyValue.ContainsKey(columnName))
             {
@@ -949,23 +984,8 @@ namespace CYQ.Data.Xml
             }
             return string.Empty;
         }
-        private string GetValueByTable(string columnName, string key, MDictionary<string, string> values, MDataRow row)
-        {
-            if (values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
-            {
-                return values[columnName];
-            }
-            else
-            {
-                MDataCell matchCell = row[columnName];
-                if (matchCell != null)
-                {
-                    return matchCell.ToString();
-                }
-            }
-            return string.Empty;
-        }
-        private string GetValueByRequest(string columnName, string key)
+
+        private string GetValueByRequest3(string columnName, string key)
         {
             string replaceValue = string.Empty;
             if (HttpContext.Current != null && HttpContext.Current.Handler != null)
@@ -986,51 +1006,41 @@ namespace CYQ.Data.Xml
     {
         #region 操作数据
         MDataRow _Row;
-        MDataTable _Table;
-
-
 
         #region 加载表格循环方式
 
-        /// <summary>
-        /// 加载MDataTable的多行数据
-        /// </summary>
-        public void LoadData(object anyObjToTable)
-        {
-            LoadData(MDataTable.CreateFrom(anyObjToTable));
-        }
-        /// <summary>
-        /// 装载数据行 （一般后续配合SetForeach方法使用）
-        /// </summary>
-        public void LoadData(MDataTable table)
-        {
-            _Table = table;
-            if (_Table.Rows.Count > 0)
-            {
-                _Row = _Table.Rows[0];
-            }
-        }
         public delegate string SetForeachEventHandler(string text, MDictionary<string, string> values, int rowIndex);
         /// <summary>
         /// 对于SetForeach函数调用的格式化事件
         /// </summary>
         public event SetForeachEventHandler OnForeach;
-        public void SetForeach()
+        public void SetForeach(MDataTable dataSource)
         {
-            if (_Table != null)
+            if (dataSource != null)
             {
-                XmlNode node = Get(_Table.TableName + "View");
+                XmlNode node = Get(dataSource.TableName + "View");
                 if (node == null)
                 {
                     node = Get("defaultView");
                 }
                 if (node != null)
                 {
-                    SetForeach(node, node.InnerXml);
+                    SetForeach(dataSource, node, node.InnerXml, OnForeach);
                 }
             }
         }
-        public void SetForeach(string idOrName, SetType setType, params object[] formatValues)
+        public void SetForeach(MDataTable dataSource, string idOrName)
+        {
+            XmlNode node = Get(idOrName);
+            SetForeach(dataSource, node, node.InnerXml, OnForeach);
+        }
+        public void SetForeach(MDataTable dataSource, string idOrName, string text)
+        {
+            XmlNode node = Get(idOrName);
+            SetForeach(dataSource, node, text, OnForeach);
+        }
+
+        public void SetForeach(MDataTable dataSource, string idOrName, SetType setType)
         {
             string text = string.Empty;
             XmlNode node = Get(idOrName);
@@ -1063,23 +1073,36 @@ namespace CYQ.Data.Xml
                     }
                     break;
             }
-            SetForeach(node, text, formatValues);
+            SetForeach(dataSource, node, text, OnForeach);
         }
-        public void SetForeach(string idOrName, string text, params object[] formatValues)
+
+        public void SetForeach(MDataTable dataSource, XmlNode node)
         {
-            XmlNode node = Get(idOrName);
-            SetForeach(node, text, formatValues);
+            if (node == null) { return; }
+            SetForeach(dataSource, node, node.InnerXml, OnForeach);
         }
-        public void SetForeach(XmlNode node, string text, params object[] formatValues)
+        public void SetForeach(MDataTable dataSource, XmlNode node, string text)
+        {
+            if (node == null) { return; }
+            SetForeach(dataSource, node, text, OnForeach);
+        }
+        /// <summary>
+        /// 对列表进行循环绑定处理
+        /// </summary>
+        /// <param name="dataSource">数据源</param>
+        /// <param name="node">处理的节点</param>
+        /// <param name="text">用于循环的内容【通常传递node.InnerXml】</param>
+        /// <param name="eventOnForeach">自定义事件</param>
+        public void SetForeach(MDataTable dataSource, XmlNode node, string text, SetForeachEventHandler eventOnForeach)
         {
             try
             {
-                #region 基本判断
-                if (node == null)
+                #region 前置条件处理
+                if (node == null || string.IsNullOrEmpty(text))
                 {
                     return;
                 }
-                if (_Table == null || _Table.Rows.Count == 0)
+                if (dataSource == null || dataSource.Rows.Count == 0 || dataSource.Columns.Count == 0)
                 {
                     if (node.Attributes["clearflag"] == null)
                     {
@@ -1090,150 +1113,23 @@ namespace CYQ.Data.Xml
                 RemoveAttr(node, "clearflag");
                 #endregion
 
-                int fvLen = formatValues.Length;
-                int colLen = _Table.Columns.Count;
                 StringBuilder innerXml = new StringBuilder();
-                if (string.IsNullOrEmpty(text))
-                {
-                    if (node.Name == "select")
-                    {
-                        text = "<option value=\"{0}\">{1}</option>";
-                    }
-                    else
-                    {
-                        #region 补列头
-                        for (int i = 0; i < colLen; i++)
-                        {
-                            if (i == 0)
-                            {
-                                innerXml.Append(_Table.Columns[i].ColumnName);
-                            }
-                            else
-                            {
-                                innerXml.Append(" - " + _Table.Columns[i].ColumnName);
-                            }
-                        }
-                        innerXml.Append("<hr />");
-                        #endregion
 
-                        #region 空文本，默认补个简单的Table给它。
-                        StringBuilder sb = new StringBuilder();
-                        int min = fvLen == 0 ? colLen : Math.Min(fvLen, colLen);
-                        for (int i = 0; i < min; i++)
-                        {
-                            if (i == 0)
-                            {
-                                sb.Append("{0}");
-                            }
-                            else
-                            {
-                                sb.Append(" - {" + i + "}");
-                            }
-                        }
-                        sb.Append("<hr />");
-                        text = sb.ToString();
-                        #endregion
-                    }
-                }
-                if (fvLen == 0)
+                for (int k = 0; k < dataSource.Rows.Count; k++)
                 {
-                    formatValues = new object[colLen];
-                }
-                MDictionary<string, string> values = new MDictionary<string, string>(formatValues.Length, StringComparer.OrdinalIgnoreCase);
-                // object[] values = new object[formatValues.Length];//用于格式化{0}、{1}的占位符
-
-                //foreach (MDataRow row in _Table.Rows)
-                string newText = text;
-                MDataCell cell;
-                for (int k = 0; k < _Table.Rows.Count; k++)
-                {
-                    for (int i = 0; i < formatValues.Length; i++)
+                    string newText = text;
+                    MDictionary<string, string> values = dataSource.Rows[k].ToEntity<MDictionary<string, string>>();  
+                    if (eventOnForeach != null)
                     {
-                        #region 从指定的列把值放到values数组
-                        if (formatValues[i] == null)
-                        {
-                            formatValues[i] = i;
-                        }
-                        cell = _Table.Rows[k][formatValues[i].ToString()];
-                        if (cell == null && string.Compare(formatValues[i].ToString(), "row", true) == 0) // 多年以后，自己也没看懂比较row是为了什么
-                        {
-                            values.Add(formatValues[i].ToString(), (k + 1).ToString());
-                            //values[i] = k + 1;//也没看懂，为啥值是自增加1，我靠，难道是行号？或者楼层数？隐匿功能？
-                        }
-                        else if (cell != null)
-                        {
-                            values.Add(cell.ColumnName, cell.StringValue);
-                            //values[i] = cell.Value;
-                        }
-                        #endregion
-                    }
-                    if (OnForeach != null)
-                    {
-                        newText = OnForeach(text, values, k);//遍历每一行，产生新text。
+                        newText = eventOnForeach(text, values, k);//遍历每一行，产生新text。
                     }
                     try
                     {
-                        string tempText = newText;
-                        int j = 0;
-                        foreach (KeyValuePair<string, string> kv in values)
+                        if (newText.IndexOf("${") > -1 || newText.IndexOf("<%#") > -1)
                         {
-                            tempText = tempText.Replace("{" + j + "}", kv.Value);//格式化{0}、{1}的占位符
-                            j++;
+                            newText = FormatHtml(newText, values);
                         }
-                        //for (int j = 0; j < values.Length; j++)
-                        //{
-                        //    tempText = tempText.Replace("{" + j + "}", Convert.ToString(values[j]));//格式化{0}、{1}的占位符
-                        //}
-                        if (tempText.IndexOf("${") > -1 || tempText.IndexOf("<%#") > -1)
-                        {
-                            tempText = ReplaceCustomFlag(tempText, values, _Table.Rows[k]);
-                            //#region 处理标签占位符
-                            //MatchCollection matchs = Regex.Matches(tempText, @"\$\{([\S\s]*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                            //if (matchs != null && matchs.Count > 0)
-                            //{
-                            //    MDataCell matchCell = null;
-                            //    string columnName = null, value = null;
-                            //    List<string> keys = new List<string>(matchs.Count);
-                            //    foreach (Match match in matchs)
-                            //    {
-                            //        value = match.Groups[0].Value;
-                            //        columnName = match.Groups[1].Value.Split(':')[0].Trim();
-                            //        if (!keys.Contains(value))
-                            //        {
-                            //            keys.Add(value);
-                            //            string replaceValue = "";
-                            //            if (value.Contains(columnName) && values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
-                            //            {
-                            //                replaceValue = values[columnName];
-                            //            }
-                            //            else
-                            //            {
-                            //                matchCell = _Table.Rows[k][columnName];
-                            //                if (matchCell != null)
-                            //                {
-                            //                    replaceValue = matchCell.ToString();
-                            //                }
-                            //                else if (HttpContext.Current != null && HttpContext.Current.Request[columnName] != null)
-                            //                {
-                            //                    replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
-                            //                }
-                            //            }
-                            //            if (string.IsNullOrEmpty(replaceValue) && value.Contains(":"))
-                            //            {
-                            //                replaceValue = value.Substring(value.IndexOf(':') + 1).TrimEnd('}');
-                            //            }
-                            //            tempText = tempText.Replace(value, replaceValue ?? "");
-                            //        }
-                            //    }
-                            //    keys.Clear();
-                            //    keys = null;
-                            //}
-                            //matchs = null;
-                            //#endregion
-                        }
-                        //处理${}语法
-                        innerXml.Append(tempText);
-                        // innerXml += tempText;//string.Format(newText, values);
+                        innerXml.Append(newText);
                     }
                     catch (Exception err)
                     {
@@ -1263,9 +1159,9 @@ namespace CYQ.Data.Xml
             }
             finally
             {
-                if (OnForeach != null)
+                if (eventOnForeach != null)
                 {
-                    OnForeach = null;
+                    eventOnForeach = null;
                 }
             }
         }
@@ -1320,7 +1216,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 为节点设置值，通常在LoadData后使用。
         /// </summary>
-        /// <param name="id">节点的id</param>
+        /// <param name="idOrName">节点的id或name</param>
         public void SetFor(string idOrName)
         {
             SetFor(idOrName, SetType.InnerXml);
@@ -1370,6 +1266,19 @@ namespace CYQ.Data.Xml
 
         #endregion
 
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            KeyValue.Clear();
+            _Row = null;
+        }
+    }
+    /// <summary>
+    /// Json 交互
+    /// </summary>
+    public partial class XHtmlAction
+    {
         #region 转Json
         /// <summary>
         /// 转Json
@@ -1510,20 +1419,11 @@ namespace CYQ.Data.Xml
                 if (js.RowCount == 0)
                 {
                     return "";
-                   // return "fuck"; //卧槽，怎么有这样的代码？
+                    // return "fuck"; //卧槽，怎么有这样的代码？
                 }
             }
             return result;
         }
         #endregion
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            KeyValue.Clear();
-            _Row = null;
-            _Table = null;
-        }
     }
-
 }

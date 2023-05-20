@@ -32,11 +32,11 @@ namespace CYQ.Data.Cache
         {
             get
             {
-                if (!string.IsNullOrEmpty(AppConfig.Cache.RedisServers))
+                if (!string.IsNullOrEmpty(AppConfig.Redis.Servers))
                 {
                     return RedisInstance;
                 }
-                else if (!string.IsNullOrEmpty(AppConfig.Cache.MemCacheServers))
+                else if (!string.IsNullOrEmpty(AppConfig.MemCache.Servers))
                 {
                     return MemCacheInstance;
                 }

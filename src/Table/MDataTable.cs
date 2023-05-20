@@ -784,7 +784,7 @@ namespace CYQ.Data.Table
                     result = action.Auto(true);
                     break;
             }
-            if (result && AppConfig.Cache.IsAutoCache)
+            if (result && AppConfig.AutoCache.IsEnable)
             {
                 //È¡ÏûAOP»º´æ¡£
                 AutoCache.ReadyForRemove(AutoCache.GetBaseKey(TableName, newConn));

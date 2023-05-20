@@ -1,5 +1,8 @@
+using CYQ.Data.Table;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
@@ -229,7 +232,7 @@ namespace CYQ.Data.Tool
             _lock.TryEnterWriteLock(Timeout.Infinite);
             try
             {
-                if (Count > 0)
+                if (base.Count > 0)
                 {
                     base.Clear();
                 }

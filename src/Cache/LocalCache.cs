@@ -216,7 +216,7 @@ namespace CYQ.Data.Cache
         /// <param name="value">对象值</param>
         public override bool Set(string key, object value)
         {
-            return Set(key, value, AppConfig.Cache.DefaultCacheTime);
+            return Set(key, value, AppConfig.DefaultCacheTime);
         }
         /// <param name="cacheMinutes">缓存时间(单位分钟)</param>
         public override bool Set(string key, object value, double cacheMinutes)
@@ -244,7 +244,7 @@ namespace CYQ.Data.Cache
                     double cacheTime = cacheMinutes;
                     if (cacheMinutes <= 0)
                     {
-                        cacheTime = AppConfig.Cache.DefaultCacheTime;
+                        cacheTime = AppConfig.DefaultCacheTime;
                     }
                     DateTime cTime = DateTime.Now.AddMinutes(cacheTime);
                     int workCount = GetWorkCount(cTime);
@@ -323,7 +323,7 @@ namespace CYQ.Data.Cache
 
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.Cache.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.DefaultCacheTime, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {

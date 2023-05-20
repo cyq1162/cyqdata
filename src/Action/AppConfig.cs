@@ -68,10 +68,19 @@ namespace CYQ.Data
             }
             else
             {
-                string value = ConfigurationManager.AppSettings[key];
+                var appSettings = ConfigurationManager.AppSettings;
+                string value = appSettings[key];
                 if (string.IsNullOrEmpty(value) && key.IndexOf('.') > 0)
                 {
-                    value = ConfigurationManager.AppSettings[key.Substring(key.IndexOf('.') + 1)];
+                    value = appSettings[key.Replace(".", "")];
+                    if (string.IsNullOrEmpty(value) && IsNetCore)
+                    {
+                        value = Convert.ToString(ConfigurationManager.GetSection(key));
+                    }
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        value = appSettings[key.Substring(key.IndexOf('.') + 1)];
+                    }
                 }
                 value = string.IsNullOrEmpty(value) ? defaultValue : value;
                 // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
@@ -194,7 +203,6 @@ namespace CYQ.Data
             }
             return true;
         }
-
         #endregion
 
 
@@ -258,20 +266,6 @@ namespace CYQ.Data
         }
 
         /// <summary>
-        /// 生成的实体类的后缀。
-        /// </summary>
-        public static string EntitySuffix
-        {
-            get
-            {
-                return GetApp("EntitySuffix", "Bean");
-            }
-            set
-            {
-                SetApp("EntitySuffix", value);
-            }
-        }
-        /// <summary>
         /// 获取当前Dll的版本号
         /// </summary>
         public static string Version
@@ -323,6 +317,20 @@ namespace CYQ.Data
             }
         }
 
+        /// <summary>
+        /// Cache.CacheManage 默认缓存项的时间[分钟(默认60)]
+        /// </summary>
+        public static int DefaultCacheTime
+        {
+            get
+            {
+                return GetAppInt("DefaultCacheTime", 60);
+            }
+            set
+            {
+                SetApp("DefaultCacheTime", value.ToString());
+            }
+        }
     }
     public static partial class AppConfig
     {
@@ -494,7 +502,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    string dtdUri = GetApp("DtdUri", (IsWeb ? "/App_Data/dtd/" : "/Setting/DTD/") + "xhtml1-transitional.dtd");
+                    string dtdUri = GetApp("XHtml.DtdUri", (IsWeb ? "/App_Data/dtd/" : "/Setting/DTD/") + "xhtml1-transitional.dtd");
                     if (dtdUri != null && dtdUri.IndexOf("http://") == -1)//相对路径
                     {
                         dtdUri = AppConfig.WebRootPath + dtdUri.TrimStart('/');//.Replace("/", "\\");
@@ -507,7 +515,7 @@ namespace CYQ.Data
                 }
                 set
                 {
-                    SetApp("DtdUri", value);
+                    SetApp("XHtml.DtdUri", value);
                 }
             }
             private static string _Domain;
@@ -521,7 +529,7 @@ namespace CYQ.Data
                     if (string.IsNullOrEmpty(_Domain))
                     {
                         Uri uri = AppConfig.WebUri;
-                        string domainList = GetApp("Domain", "");
+                        string domainList = GetApp("XHtml.Domain", "");
                         if (!string.IsNullOrEmpty(domainList))
                         {
                             string[] domains = domainList.Split(',');
@@ -558,7 +566,7 @@ namespace CYQ.Data
                 set
                 {
                     _Domain = string.Empty;
-                    SetApp("Domain", value);
+                    SetApp("XHtml.Domain", value);
                 }
             }
             //private static int _UserFileLoadXml = -1;
@@ -588,11 +596,11 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("SysLangKey", "Chinese");
+                    return GetApp("XHtml.SysLangKey", "Chinese");
                 }
                 set
                 {
-                    SetApp("SysLangKey", value);
+                    SetApp("XHtml.SysLangKey", value);
                 }
             }
         }
@@ -605,34 +613,7 @@ namespace CYQ.Data
         /// </summary>
         public static class DB
         {
-            /// <summary>
-            /// 文本数据库是否只读（用于Demo演示，避免演示账号或数据被删除）
-            /// </summary>
-            public static bool IsTxtReadOnly
-            {
-                get
-                {
-                    return GetAppBool("IsTxtReadOnly", false);
-                }
-                set
-                {
-                    SetApp("IsTxtReadOnly", value.ToString());
-                }
-            }
-            /// <summary>
-            /// Postgre 是否小写模式(默认false)。
-            /// </summary>
-            public static bool IsPostgreLower
-            {
-                get
-                {
-                    return GetAppBool("IsPostgreLower", false);
-                }
-                set
-                {
-                    SetApp("IsPostgreLower", value.ToString());
-                }
-            }
+           
             static string _DefaultConn = string.Empty;
             /// <summary>
             /// 默认数据库链接（可赋完整链接语句或Web.config配置项名称）
@@ -766,19 +747,51 @@ namespace CYQ.Data
             //        SetApp("LockOnDbExe", value.ToString());
             //    }
             //}
+
+            /// <summary>
+            /// 文本数据库是否只读（用于Demo演示，避免演示账号或数据被删除）
+            /// 配置项：DB.IsTxtReadOnly ：false
+            /// </summary>
+            public static bool IsTxtReadOnly
+            {
+                get
+                {
+                    return GetAppBool("DB.IsTxtReadOnly", false);
+                }
+                set
+                {
+                    SetApp("DB.IsTxtReadOnly", value.ToString());
+                }
+            }
+            /// <summary>
+            /// Postgre 是否小写模式(默认false)。
+            /// 配置项：DB.IsPostgreLower ：false
+            /// </summary>
+            public static bool IsPostgreLower
+            {
+                get
+                {
+                    return GetAppBool("DB.IsPostgreLower", false);
+                }
+                set
+                {
+                    SetApp("DB.IsPostgreLower", value.ToString());
+                }
+            }
             /// <summary>
             /// MAction所有操作中的where条件，默认有超强的过滤单词，来过滤Sql注入关键字，如果语句包含指定的过滤词，则会返回错误信息，并记录日志。
             /// 如果需要自定义关键字，可配置此项，如：“delete;from,truncate，其它单词”，分号表词组，需要同时包含两个词； 多个过滤词组以","逗号分隔
+            /// 配置项：DB.FilterSqlInjection ：
             /// </summary>
             public static string FilterSqlInjection
             {
                 get
                 {
-                    return GetApp("FilterSqlInjection", SqlInjection.filterSqlInjection);
+                    return GetApp("DB.FilterSqlInjection", SqlInjection.filterSqlInjection);
                 }
                 set
                 {
-                    SetApp("FilterSqlInjection", value);
+                    SetApp("DB.ilterSqlInjection", value);
                     if (!string.IsNullOrEmpty(value))
                     {
                         List<string> list = new List<string>();
@@ -807,71 +820,73 @@ namespace CYQ.Data
             /// <summary>
             /// MAction 操作 Oracle 时自增加int类型id所需要配置的序列id，Guid为id则不用。
             /// 如果需要为每个表都配置一个序列号，可以使用：SEQ_{0} 其中{0}会自动配对成表名，如果没有{0}，则为整个数据库共用一个序列。
-            /// 默认参数值：SEQ_{0}
+            ///  配置项：DB.AutoID ：SEQ_{0}
             /// </summary>
             public static string AutoID
             {
                 get
                 {
-                    return GetApp("AutoID", "SEQ_{0}");
+                    return GetApp("DB.AutoID", "SEQ_{0}");
                 }
                 set
                 {
-                    SetApp("AutoID", value);
+                    SetApp("DB.AutoID", value);
                 }
             }
             /// <summary>
             /// MAction 可将表架构映射到外部指定相对路径[外部存储,可避开数据库读取]
-            /// Web 下默认路径：App_Data/schema
+            /// 配置项：DB.SchemaMapPath ： App_Data/schema
             /// </summary>
             public static string SchemaMapPath
             {
                 get
                 {
-                    return GetApp("SchemaMapPath", IsWeb ? "App_Data/schema" : "").Trim(new char[] { '/', '\\' });
+                    return GetApp("DB.SchemaMapPath", IsWeb ? "App_Data/schema" : "").Trim(new char[] { '/', '\\' });
                 }
                 set
                 {
-                    SetApp("SchemaMapPath", value);
+                    SetApp("DB.SchemaMapPath", value);
                 }
             }
             /// <summary>
             /// 软删除字段名称（若表存在此设置的字段名称时，MActon的删除操作将变更变为更新操作）
-            /// 默认：IsDeleted（若不想启用，配置为空。）
+            /// 配置项：DB.DeleteField ： IsDeleted
             /// </summary>
             public static string DeleteField
             {
                 get
                 {
-                    return GetApp("DeleteField", "IsDeleted");
+                    return GetApp("DB.DeleteField", "IsDeleted");
                 }
                 set
                 {
-                    SetApp("DeleteField", value);
+                    SetApp("DB.DeleteField", value);
                 }
             }
             /// <summary>
             /// 更新时间字段名称（若表存在指定字段名称时，自动更新时间，多个用逗号分隔）
+            /// 配置项：DB.EditTimeFields ： 
             /// </summary>
             public static string EditTimeFields
             {
                 get
                 {
-                    return GetApp("EditTimeFields", string.Empty);
+                    return GetApp("DB.EditTimeFields", string.Empty);
                 }
                 set
                 {
-                    SetApp("EditTimeFields", value);
+                    SetApp("DB.EditTimeFields", value);
                 }
             }
             /// <summary>
-            ///系统全局要隐藏的字段名称（默认值为："cyqrownum,rowguid,deletefield"）
+            /// 系统全局要隐藏的字段名称（默认值为："cyqrownum,rowguid,deletefield"）
+            /// 配置项：DB.HiddenFields ： cyqrownum,rowguid
             /// </summary>
             public static string HiddenFields
             {
                 get
                 {
-                    string result = GetApp("HiddenFields", "cyqrownum,rowguid");
+                    string result = GetApp("DB.HiddenFields", "cyqrownum,rowguid");
                     //if (result == string.Empty)
                     //{
                     //    result = "cyqrownum,rowguid," + DeleteField;
@@ -884,208 +899,275 @@ namespace CYQ.Data
                     {
                         value = "cyqrownum,rowguid," + value;
                     }
-                    SetApp("HiddenFields", value);
+                    SetApp("DB.HiddenFields", value);
                 }
             }
 
             /// <summary>
             /// 全局的数据库命令默认超时设置，默认值120秒（单位：秒）
+            /// 配置项：DB.CommandTimeout ： 120
             /// </summary>
             public static int CommandTimeout
             {
                 get
                 {
-                    return GetAppInt("CommandTimeout", 120);
+                    return GetAppInt("DB.CommandTimeout", 120);
                 }
                 set
                 {
-                    SetApp("CommandTimeout", value.ToString());
+                    SetApp("DB.CommandTimeout", value.ToString());
                 }
             }
             /// <summary>
             /// 读写分离时用户对主数据库操作持续时间，默认值10秒s（单位：秒s）
+            /// 配置项：DB.MasterSlaveTime ： 10
             /// </summary>
             public static int MasterSlaveTime
             {
                 get
                 {
-                    return GetAppInt("MasterSlaveTime", 10);
+                    return GetAppInt("DB.MasterSlaveTime", 10);
                 }
                 set
                 {
-                    SetApp("MasterSlaveTime", value.ToString());
+                    SetApp("DB.MasterSlaveTime", value.ToString());
+                }
+            }
+            /// <summary>
+            /// 毫秒数（记录数据库执行时时长(ms)的SQL语句写入日志，对应配置项Log.Path的配置路径）
+            /// 配置项：DB.SqlFilter ： -1
+            /// </summary>
+            public static int SqlFilter
+            {
+                get
+                {
+                    return GetAppInt("DB.SqlFilter", -1);
+                }
+                set
+                {
+                    SetApp("DB.SqlFilter", value.ToString());
+                }
+            }
+            /// <summary>
+            /// 生成的实体类的后缀。
+            /// 配置项：DB.EntitySuffix ：Bean
+            /// </summary>
+            public static string EntitySuffix
+            {
+                get
+                {
+                    return GetApp("DB.EntitySuffix", "Bean");
+                }
+                set
+                {
+                    SetApp("DB.EntitySuffix", value);
                 }
             }
         }
         #endregion
 
 
-        #region 缓存相关配置
+        #region 分布式缓存
+
         /// <summary>
-        /// 缓存相关的配置
+        /// Redis 配置
         /// </summary>
-        public static class Cache
+        public static class Redis
         {
-            /// <summary>
-            /// MemCache分布式缓存的服务器配置，多个用逗号（,）分隔
-            /// </summary>
-            public static string MemCacheServers
-            {
-                get
-                {
-                    return GetApp("MemCacheServers", string.Empty);
-                }
-                set
-                {
-                    SetApp("MemCacheServers", value);
-                }
-            }
-
-            /// <summary>
-            /// MemCache 备份服务器（当主服务器挂了后，请求会转向备用机）
-            /// </summary>
-            public static string MemCacheServersBak
-            {
-                get
-                {
-                    return GetApp("MemCacheServersBak", string.Empty);
-                }
-                set
-                {
-                    SetApp("MemCacheServersBak", value);
-                }
-            }
-
             /// <summary>
             /// Redis分布式缓存的服务器配置，多个用逗号（,）分隔
             /// 格式：ip:port - password
+            /// 配置项：Redis.Servers ：192.168.1.9:6379 - 888888
             /// </summary>
-            public static string RedisServers
+            public static string Servers
             {
                 get
                 {
-                    return GetApp("RedisServers", string.Empty);
+                    return GetApp("Redis.Servers", string.Empty);
                 }
                 set
                 {
-                    SetApp("RedisServers", value);
+                    SetApp("Redis.Servers", value);
                 }
             }
             /// <summary>
             /// Redis 使用的DB数（默认1，使用db0）
+            /// 配置项：Redis.UseDBCount ：1
             /// </summary>
-            public static int RedisUseDBCount
+            public static int UseDBCount
             {
                 get
                 {
-                    return GetAppInt("RedisUseDBCount", 1);
+                    return GetAppInt("Redis.UseDBCount", 1);
                 }
                 set
                 {
-                    SetApp("RedisUseDBCount", value.ToString());
+                    SetApp("Redis.UseDBCount", value.ToString());
                 }
             }
             /// <summary>
             /// Redis 使用的DB 索引（默认0，若配置，则会忽略RedisUseDBCount）
+            /// 配置项：Redis.UseDBIndex ：0
             /// </summary>
-            public static int RedisUseDBIndex
+            public static int UseDBIndex
             {
                 get
                 {
-                    return GetAppInt("RedisUseDBIndex", 0);
+                    return GetAppInt("Redis.UseDBIndex", 0);
                 }
                 set
                 {
-                    SetApp("RedisUseDBIndex", value.ToString());
+                    SetApp("Redis.UseDBIndex", value.ToString());
                 }
             }
             /// <summary>
             /// Redis  备份服务器（当主服务器挂了后，请求会转向备用机），多个用逗号（,）分隔
             /// 格式：ip:port - password
+            /// 配置项：Redis.ServersBak ：192.168.1.9:6379 - 888888
             /// </summary>
-            public static string RedisServersBak
+            public static string ServersBak
             {
                 get
                 {
-                    return GetApp("RedisServersBak", string.Empty);
+                    return GetApp("Redis.ServersBak", string.Empty);
                 }
                 set
                 {
-                    SetApp("RedisServersBak", value);
+                    SetApp("Redis.ServersBak", value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// MemCache 配置
+        /// </summary>
+        public static class MemCache
+        {
+            /// <summary>
+            /// MemCache分布式缓存的服务器配置，多个用逗号（,）分隔
+            /// 格式：ip:port
+            /// 配置项：MemCache.Servers ：192.168.1.9:12121
+            /// </summary>
+            public static string Servers
+            {
+                get
+                {
+                    return GetApp("MemCache.Servers", string.Empty);
+                }
+                set
+                {
+                    SetApp("MemCache.Servers", value);
                 }
             }
 
             /// <summary>
-            /// Cache.CacheManage 默认缓存项的时间[分钟(默认60)]
+            /// MemCache 备份服务器（当主服务器挂了后，请求会转向备用机）
+            /// 格式：ip:port
+            /// 配置项：MemCache.ServersBak ：192.168.1.9:12121
             /// </summary>
-            public static int DefaultCacheTime
+            public static string ServersBak
             {
                 get
                 {
-                    return GetAppInt("DefaultCacheTime", 60);
+                    return GetApp("MemCache.ServersBak", string.Empty);
                 }
                 set
                 {
-                    SetApp("DefaultCacheTime", value.ToString());
+                    SetApp("MemCache.ServersBak", value);
                 }
             }
+        }
 
+        #endregion
+
+        #region 自动缓存相关配置
+
+        /// <summary>
+        /// 自动缓存相关的配置
+        /// </summary>
+        public static class AutoCache
+        {
             /// <summary>
-            /// 是否智能缓存数据（默认开启）
+            /// 是否启用智能自动缓存数据（默认开启）
+            /// 配置项：AutoCache.IsEnable ：true
             /// </summary>
-            public static bool IsAutoCache
+            public static bool IsEnable
             {
                 get
                 {
-                    return GetAppBool("IsAutoCache", true);
+                    string value = GetApp("AutoCache.IsEnable");
+                    if(!string.IsNullOrEmpty(value))
+                    {
+                        bool result;
+                        bool.TryParse(value, out result);
+                        return result;
+                    }
+                    return GetAppBool("IsAutoCache", true);//兼容旧配置
                 }
                 set
                 {
-                    SetApp("IsAutoCache", value.ToString());
+                    SetApp("AutoCache.IsEnable", value.ToString());
                 }
             }
             /// <summary>
             /// AutoCache开启时，可以设置仅需要缓存的Table，多个用逗号分隔（此项配置时，NoCacheTables配置则被无忽略）
+            /// 配置项：AutoCache.Tables ：users,user_vip
             /// </summary>
-            public static string CacheTables
+            public static string Tables
             {
                 get
                 {
-                    return GetApp("CacheTables", "");
+                    string value = GetApp("AutoCache.Tables");
+                    if(!string.IsNullOrEmpty(value))
+                    {
+                        return value;
+                    }
+                    return GetApp("CacheTables", "");//兼容旧配置
                 }
                 set
                 {
-                    SetApp("CacheTables", value);
+                    SetApp("AutoCache.Tables", value);
                 }
             }
             /// <summary>
             /// AutoCache开启时，可以设置不缓存的Table，多个用逗号分隔
+            /// 配置项：AutoCache.IngoreTables ：logs,logs_temp
             /// </summary>
-            public static string NoCacheTables
+            public static string IngoreTables
             {
                 get
                 {
-                    return GetApp("NoCacheTables", "");
+                    string value = GetApp("AutoCache.IngoreTables");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        return value;
+                    }
+                    return GetApp("NoCacheTables", "");//兼容旧配置
                 }
                 set
                 {
-                    SetApp("NoCacheTables", value);
+                    SetApp("AutoCache.IngoreTables", value);
                 }
             }
 
             /// <summary>
             /// AutoCache开启时，可以设置不受更新影响的列名，用Json格式。
-            /// {talbeName1:'column1,column2',talbeName2:'column1,column2'}
+            /// 配置项：AutoCache.IngoreColumns ：{user:'updatetime,createtime',tb2:'col1,2'}
             /// </summary>
-            public static string IngoreCacheColumns
+            public static string IngoreColumns
             {
                 get
                 {
+                    string value = GetApp("AutoCache.IngoreColumns");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        return value;
+                    }
                     return GetApp("IngoreCacheColumns", "");
                 }
                 set
                 {
-                    SetApp("IngoreCacheColumns", value);
+                    SetApp("AutoCache.IngoreColumns", value);
                     CYQ.Data.Cache.AutoCache.IngoreCacheColumns = null;
                 }
             }
@@ -1093,8 +1175,9 @@ namespace CYQ.Data
             /// <summary>
             /// CYQ.Data.Cache 自动缓存 - 数据库链接配置
             /// 在多个不同的应用项目里操作同一个数据库时（又不想使用分布式缓存MemCache或Redis），可以开启此项，达到缓存智能清除的效果。
+            /// 配置项：AutoCacheConn：server=.;database=x;uid=s;pwd=p;
             /// </summary>
-            public static string AutoCacheConn
+            public static string Conn
             {
                 get
                 {
@@ -1111,16 +1194,17 @@ namespace CYQ.Data
             }
             /// <summary>
             /// 当AutoCacheConn开启后，定时扫描数据库的任务时间（毫秒）,默认1000
+            /// 配置项：AutoCache.TaskTime：1000
             /// </summary>
-            public static int AutoCacheTaskTime
+            public static int TaskTime
             {
                 get
                 {
-                    return GetAppInt("AutoCacheTaskTime", 1000);
+                    return GetAppInt("AutoCache.TaskTime", 1000);
                 }
                 set
                 {
-                    SetApp("AutoCacheTaskTime", value.ToString());
+                    SetApp("AutoCache.TaskTime", value.ToString());
                 }
 
             }
@@ -1181,9 +1265,32 @@ namespace CYQ.Data
         public static class Log
         {
             /// <summary>
-            /// CYQ.Data.Log 类记录数据库异常日志 - 数据库链接配置
+            /// 是否写数据库异常日志（默认true）:开启时：有异常不抛出，转写入数据库；不开启：有异常会抛出
+            /// 配置项：Log.IsEnable ：true
             /// </summary>
-            public static string LogConn
+            public static bool IsEnable
+            {
+                get
+                {
+                    string value = GetApp("Log.IsEnable");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        bool result;
+                        bool.TryParse(value, out result);
+                        return result;
+                    }
+                    return GetAppBool("IsWriteLog", true);//兼容旧配置
+                }
+                set
+                {
+                    SetApp("Log.IsEnable", value.ToString());
+                }
+            }
+            /// <summary>
+            /// CYQ.Data.Log 类记录数据库异常日志 - 数据库链接配置
+            /// 配置项：LogConn：server=.;database=x;uid=s;pwd=p;
+            /// </summary>
+            public static string Conn
             {
                 get
                 {
@@ -1196,46 +1303,35 @@ namespace CYQ.Data
             }
             /// <summary>
             /// 文本日志的配置相对路径（Web 默认为：App_Data/log"）
+            /// 配置项：Log.Path ：App_Data/log
             /// </summary>
-            public static string LogPath
+            public static string Path
             {
                 get
                 {
-                    return GetApp("LogPath", IsWeb ? "App_Data/log" : "Logs").Trim(new char[] { '/', '\\' });
+                    return GetApp("Log.Path", IsWeb ? "App_Data/log" : "Logs").Trim(new char[] { '/', '\\' });
                 }
                 set
                 {
-                    SetApp("LogPath", value);
+                    SetApp("Log.Path", value);
                 }
             }
 
-            /// <summary>
-            /// 是否写数据库异常日志（默认true）:开启时：有异常不抛出，转写入数据库；不开启：有异常会抛出
-            /// </summary>
-            public static bool IsWriteLog
-            {
-                get
-                {
-                    return GetAppBool("IsWriteLog", true);
-                }
-                set
-                {
-                    SetApp("IsWriteLog", value.ToString());
-                }
-            }
+
 
             /// <summary>
             /// 异常日志表名（默认为SysLogs，可配置）
+            /// 配置项：Log.TableName ：SysLogs
             /// </summary>
-            public static string LogTableName
+            public static string TableName
             {
                 get
                 {
-                    return GetApp("LogTableName", "SysLogs");
+                    return GetApp("Log.TableName", "SysLogs");
                 }
                 set
                 {
-                    SetApp("LogTableName", value);
+                    SetApp("Log.TableName", value);
                 }
             }
         }
@@ -1249,51 +1345,28 @@ namespace CYQ.Data
         public class Debug
         {
             #region 配置文件的其它属性
-            /// <summary>
-            ///毫秒数（这个是在对所有SQL语句的：将所有长时间(ms)的SQL语句写入日志，对应配置项LogPath的路径）
-            /// 此项设置后，即启用（无视OpenDebugInfo是否设置）
-            /// </summary>
-            public static int SqlFilter
-            {
-                get
-                {
-                    return GetAppInt("SqlFilter", -1);
-                }
-                set
-                {
-                    SetApp("SqlFilter", value.ToString());
-                }
-            }
-
-            /// <summary>
-            /// 毫秒数（这个是在AppDebug开启后的：可通过此项设置条件过滤出时间(ms)较长的SQL语句）
-            /// OpenDebugInfo为true，同时 AppDebug.Start() 后，此项才有效。
-            /// </summary>
-            public static int InfoFilter
-            {
-                get
-                {
-                    return GetAppInt("InfoFilter", 0);
-                }
-                set
-                {
-                    SetApp("InfoFilter", value.ToString());
-                }
-            }
 
             /// <summary>
             /// 开启信息调试记录：开启后MAction.DebugInfo可输出执行日志。
             /// 同时AppDebug若要使用，也需要开启此项。
+            /// 配置项：Debug.IsEnable ：false
             /// </summary>
-            public static bool OpenDebugInfo
+            public static bool IsEnable
             {
                 get
                 {
-                    return GetAppBool("OpenDebugInfo", false);
+                    string value = GetApp("Debug.IsEnable");
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        bool result;
+                        bool.TryParse(value, out result);
+                        return result;
+                    }
+                    return GetAppBool("OpenDebugInfo", false);//兼容旧配置
                 }
                 set
                 {
-                    SetApp("OpenDebugInfo", value.ToString());
+                    SetApp("Debug.IsEnable", value.ToString());
                 }
             }
             #endregion
@@ -1301,20 +1374,24 @@ namespace CYQ.Data
         #endregion
 
         #region UI 相关的配置
+        /// <summary>
+        /// 有UI界面的Web、Winform、WPF。
+        /// </summary>
         public static class UI
         {
             /// <summary>
             /// UI取值的默认前缀（ddl,chb,txt)，多个用逗号（,）分隔
+            /// 配置项：UI.AutoPrefixs ：txt,chb,ddl
             /// </summary>
             public static string AutoPrefixs
             {
                 get
                 {
-                    return GetApp("AutoPrefixs", "txt,chb,ddl");
+                    return GetApp("UI.AutoPrefixs", "txt,chb,ddl");
                 }
                 set
                 {
-                    SetApp("AutoPrefixs", value);
+                    SetApp("UI.AutoPrefixs", value);
                 }
             }
         }

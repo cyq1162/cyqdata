@@ -866,11 +866,11 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static MDataRow CreateFrom(object anyObj)
         {
-            return CreateFrom(anyObj, null);
+            return CreateFrom(anyObj, null, BreakOp.None, JsonHelper.DefaultEscape);
         }
         public static MDataRow CreateFrom(object anyObj, Type valueType)
         {
-            return CreateFrom(anyObj, valueType, BreakOp.None);
+            return CreateFrom(anyObj, valueType, BreakOp.None, JsonHelper.DefaultEscape);
         }
         public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
         {
@@ -882,17 +882,17 @@ namespace CYQ.Data.Table
         public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp breakOp, EscapeOp escapeOp)
         {
             MDataRow row = new MDataRow();
-            if (anyObj is string)
+            if (anyObj is MDataRow)
+            {
+                row.LoadFrom(anyObj as MDataRow, (breakOp == BreakOp.Null ? RowOp.IgnoreNull : RowOp.None), true);
+            }
+            else if (anyObj is string)
             {
                 row.LoadFrom(anyObj as string, escapeOp, breakOp);
             }
             else if (anyObj is IEnumerable)
             {
                 row.LoadFrom(anyObj as IEnumerable, valueType, escapeOp, breakOp);
-            }
-            else if (anyObj is MDataRow)
-            {
-                row.LoadFrom(row as MDataRow, (breakOp == BreakOp.Null ? RowOp.IgnoreNull : RowOp.None), true);
             }
             else
             {
@@ -907,7 +907,7 @@ namespace CYQ.Data.Table
         /// </summary>
         public string ToJson()
         {
-            return ToJson(RowOp.IgnoreNull, false);
+            return ToJson(RowOp.IgnoreNull, false, EscapeOp.Default);
         }
         public string ToJson(bool isConvertNameToLower)
         {
@@ -918,7 +918,7 @@ namespace CYQ.Data.Table
         /// </summary>
         public string ToJson(RowOp op)
         {
-            return ToJson(op, false);
+            return ToJson(op, false, EscapeOp.Default);
         }
         public string ToJson(RowOp op, bool isConvertNameToLower)
         {
@@ -932,17 +932,18 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public string ToJson(RowOp op, bool isConvertNameToLower, EscapeOp escapeOp)
         {
-            JsonHelper helper = new JsonHelper();
-            if (DynamicData != null && DynamicData is MDictionary<int, int>)
-            {
-                helper.LoopCheckList = DynamicData as MDictionary<int, int>;//继承父的数据，避免循环引用父
-                helper.Level = helper.LoopCheckList[helper.LoopCheckList.Count - 1] + 1;
-            }
-            helper.IsConvertNameToLower = isConvertNameToLower;
-            helper.Escape = escapeOp;
-            helper.RowOp = op;
-            helper.Fill(this);
-            return helper.ToString();
+            return JsonHelper.ToJson(this, isConvertNameToLower, op, escapeOp);
+            //JsonHelper helper = new JsonHelper();
+            //if (DynamicData != null && DynamicData is MDictionary<int, int>)
+            //{
+            //    helper.LoopCheckList = DynamicData as MDictionary<int, int>;//继承父的数据，避免循环引用父
+            //    helper.Level = helper.LoopCheckList[helper.LoopCheckList.Count - 1] + 1;
+            //}
+            //helper.IsConvertNameToLower = isConvertNameToLower;
+            //helper.Escape = escapeOp;
+            //helper.RowOp = op;
+            //helper.Fill(this);
+            //return helper.ToString();
         }
 
         internal string ToXml(bool isConvertNameToLower)
@@ -970,8 +971,9 @@ namespace CYQ.Data.Table
         public T ToEntity<T>()
         {
             Type t = typeof(T);
+            SysType sysType = ReflectTool.GetSystemType(ref t);
             bool isOrmBase = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
-            return ToEntity<T>(isOrmBase);
+            return ToEntity<T>(isOrmBase || sysType != SysType.Custom);
         }
         /// <summary>
         /// 转成实体
@@ -995,17 +997,17 @@ namespace CYQ.Data.Table
             {
                 return this;
             }
+            return GetObj(t, this);
+            //switch (ReflectTool.GetSystemType(ref t))
+            //{
+            //    case SysType.Base:
+            //        return ConvertTool.ChangeType(this[0].Value, t);
 
-            switch (ReflectTool.GetSystemType(ref t))
-            {
-                case SysType.Base:
-                    return ConvertTool.ChangeType(this[0].Value, t);
-
-            }
-            //return FastToT.Create(t)(this);
-            object obj = Activator.CreateInstance(t);
-            SetToEntity(ref obj, this);
-            return obj;
+            //}
+            ////return FastToT.Create(t)(this);
+            //object obj = Activator.CreateInstance(t);
+            //SetToEntity(ref obj, this);
+            //return obj;
         }
 
         private object GetValue(MDataRow row, Type type)
@@ -1658,7 +1660,7 @@ namespace CYQ.Data.Table
                         }
                         else if (len == 2) // row
                         {
-                            MDataRow mRow = MDataRow.CreateFrom(value, argTypes[1]);
+                            MDataRow mRow = MDataRow.CreateFrom(objValue, argTypes[1]);
                             returnObj = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
                             Type objListType = returnObj.GetType();
                             foreach (MDataCell mCell in mRow)

@@ -14,9 +14,9 @@ namespace CYQ.Data
 
         public SysLogs()
         {
-            if (!string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (!string.IsNullOrEmpty(AppConfig.Log.Conn))
             {
-                base.SetInit(this, AppConfig.Log.LogTableName, AppConfig.Log.LogConn);
+                base.SetInit(this, AppConfig.Log.TableName, AppConfig.Log.Conn);
             }
             else
             {
@@ -205,7 +205,7 @@ namespace CYQ.Data
         /// </summary>
         public void Write()
         {
-            if (!AppConfig.Log.IsWriteLog)
+            if (!AppConfig.Log.IsEnable)
             {
                 Error.Throw("Error : " + LogType + " : " + Message);
             }

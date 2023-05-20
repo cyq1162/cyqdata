@@ -621,7 +621,7 @@ namespace CYQ.Data
         {
             get
             {
-                return AppConfig.Cache.IsAutoCache && (_aop.aopOp == AopOp.OpenAll || _aop.aopOp == AopOp.OnlyInner);
+                return AppConfig.AutoCache.IsEnable && (_aop.aopOp == AopOp.OpenAll || _aop.aopOp == AopOp.OnlyInner);
             }
             set
             {

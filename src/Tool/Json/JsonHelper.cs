@@ -1371,7 +1371,7 @@ namespace CYQ.Data.Tool
                         js.DateTimeFormatter = dateFormat;
                         js.IsConvertNameToLower = IsConvertNameToLower;
                         js.Fill(objValue);
-                        value = js.ToString(objValue is IList || objValue is IListSource || objValue is IDataRecord);
+                        value = js.ToString(objValue is IList || objValue is MDataTable || objValue is DataTable);
                         noQuot = true;
 
 
@@ -1648,8 +1648,9 @@ namespace CYQ.Data.Tool
                 else
                 {
                     #region Dictionary
-                    if (t.FullName.Contains("Dictionary") && ts[0].Name == "String" && ts[1].Name == "String")
+                    if (t.Name.StartsWith("Dictionary") && ts[0].Name == "String" && ts[1].Name == "String")
                     {
+                        //忽略MDictionary
                         return Split(json);
                     }
 
@@ -1807,7 +1808,7 @@ namespace CYQ.Data.Tool
             js.IsConvertNameToLower = isConvertNameToLower;
             js.RowOp = rowOp;
             js.Fill(obj);
-            return js.ToString(obj is IList || obj is IListSource || obj is IDataRecord);
+            return js.ToString(obj is IList || obj is DataTable || obj is MDataTable);
         }
 
 

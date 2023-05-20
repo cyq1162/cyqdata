@@ -27,7 +27,7 @@ namespace CYQ.Data
         }
         public static void Write(Exception err, string logType)
         {
-            if (!string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (!string.IsNullOrEmpty(AppConfig.Log.Conn))
             {
                 WriteLogToDB(err, logType);
             }
@@ -45,7 +45,7 @@ namespace CYQ.Data
         }
         public static void Write(string message, string logType)
         {
-            if (!string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (!string.IsNullOrEmpty(AppConfig.Log.Conn))
             {
                 WriteLogToDB(message, logType);
             }
@@ -114,7 +114,7 @@ namespace CYQ.Data
         public static void WriteLogToDB(string message, string logType)
         {
             if (string.IsNullOrEmpty(message)) { return; }
-            if (string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (string.IsNullOrEmpty(AppConfig.Log.Conn))
             {
                 Error.Throw("you need to add LogConn connectionString on *.config or *.json");
             }
@@ -126,7 +126,7 @@ namespace CYQ.Data
 
         private static void ReadyForWork(string message, string logType, bool isWriteTxt)
         {
-            if (!AppConfig.Log.IsWriteLog)
+            if (!AppConfig.Log.IsEnable)
             {
                 Error.Throw("Error : " + logType + " : " + message);
             }

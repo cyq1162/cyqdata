@@ -1001,5 +1001,9 @@
 752：优化：MDictionary 新增 GetKeys 方法【加锁】。（2023-05-16）【V5.8.6.7】
 753：优化：NetCore：MDictionary 内部锁优化【lock变更为读写锁】。（2023-05-17）
 754：修复：NetCore：dotnet /home/xxx/xx.dll 启动方式时，AppConfig.WebRootPath 获取问题。（2023-05-18）
+755：优化：AppConfig.GetApp("X.Y")，对于NetCore json 配置方式，会搜索其它节点位置配置。（2023-05-19）
+756：优化：AppConfig.GetApp("X.Y") 搜索方式 【AppSettings节点X.Y】 =>【NetCore X节点Y】=> 【AppSettings节点XY】=>【AppSettings节点Y】 。（2023-05-19）
+757：优化：AppConfig 配置项名称调整（仍保留旧有配置的兼容性），调整名称涉及：Log、Cache（分拆出AutoCache、Redis、MemCache）（2023-05-19）
+758：优化：XHtmlAction 内部调整优化：SetForeach 方法，方便处理循环嵌套事件（2023-05-20）
 
 //后续：XHtmlAction 内部大优化 = 》setforeach 之前处理 set 的值。

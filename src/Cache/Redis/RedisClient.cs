@@ -259,9 +259,9 @@ namespace CYQ.Data.Cache
         #region Select DB
         internal int GetDBIndex(MSocket socket, uint hash)
         {
-            if (AppConfig.Cache.RedisUseDBCount > 1 || AppConfig.Cache.RedisUseDBIndex > 0)
+            if (AppConfig.Redis.UseDBCount > 1 || AppConfig.Redis.UseDBIndex > 0)
             {
-                return AppConfig.Cache.RedisUseDBIndex > 0 ? AppConfig.Cache.RedisUseDBIndex : (int)(hash % AppConfig.Cache.RedisUseDBCount);//默认分散在16个DB中。
+                return AppConfig.Redis.UseDBIndex > 0 ? AppConfig.Redis.UseDBIndex : (int)(hash % AppConfig.Redis.UseDBCount);//默认分散在16个DB中。
                 //if (socket.DB != db)
                 //{
                 //    socket.DB = db;

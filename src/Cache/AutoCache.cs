@@ -157,7 +157,7 @@ namespace CYQ.Data.Cache
             {
                 return;//
             }
-            double cacheTime = AppConfig.Cache.DefaultCacheTime;// Math.Abs(12 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存中午或到夜里1点
+            double cacheTime = AppConfig.DefaultCacheTime;// Math.Abs(12 - DateTime.Now.Hour) * 60 + DateTime.Now.Second;//缓存中午或到夜里1点
             if (flag == 1 || aopInfo.PageIndex > 2) // 后面的页数，缓存时间可以短一些
             {
                 cacheTime = 1;//未知道操作何表时，只缓存1分钟（比如存储过程等语句）
@@ -335,7 +335,7 @@ namespace CYQ.Data.Cache
             {
                 if (_IngoreCacheColumns.Count == 0)
                 {
-                    string ignoreColumns = AppConfig.Cache.IngoreCacheColumns;
+                    string ignoreColumns = AppConfig.AutoCache.IngoreColumns;
                     if (!string.IsNullOrEmpty(ignoreColumns))
                     {
                         lock (obj)
@@ -593,8 +593,8 @@ namespace CYQ.Data.Cache
             List<string> tables = GetRelationTables(para);
             if (tables != null && tables.Count > 0)
             {
-                string cacheTables = "," + AppConfig.Cache.CacheTables + ",";//demo.Aa
-                string nNoCacheTables = "," + AppConfig.Cache.NoCacheTables + ",";
+                string cacheTables = "," + AppConfig.AutoCache.Tables + ",";//demo.Aa
+                string nNoCacheTables = "," + AppConfig.AutoCache.IngoreTables + ",";
                 foreach (string tableName in tables)
                 {
                     if (cacheTables.Length > 2)
@@ -888,7 +888,7 @@ namespace CYQ.Data.Cache
             System.Diagnostics.Debug.WriteLine("AutoCache.AutoCacheKeyTask on Thread :" + threadID);
             while (true)//定时扫描数据库
             {
-                int time = AppConfig.Cache.AutoCacheTaskTime;
+                int time = AppConfig.AutoCache.TaskTime;
                 if (time <= 0)
                 {
                     time = 1000;
@@ -961,9 +961,9 @@ namespace CYQ.Data.Cache
             public static bool HasAutoCacheTable = false;
             public static bool CheckSysAutoCacheTable()
             {
-                if (!HasAutoCacheTable && !string.IsNullOrEmpty(AppConfig.Cache.AutoCacheConn))
+                if (!HasAutoCacheTable && !string.IsNullOrEmpty(AppConfig.AutoCache.Conn))
                 {
-                    string AutoCacheConn = AppConfig.Cache.AutoCacheConn;
+                    string AutoCacheConn = AppConfig.AutoCache.Conn;
                     if (DBTool.TestConn(AutoCacheConn))
                     {
                         HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);
@@ -993,7 +993,7 @@ namespace CYQ.Data.Cache
                 {
                     if (_ActionInstance == null)
                     {
-                        _ActionInstance = new MAction(KeyTableName, AppConfig.Cache.AutoCacheConn);
+                        _ActionInstance = new MAction(KeyTableName, AppConfig.AutoCache.Conn);
                         _ActionInstance.SetAopState(AopOp.CloseAll);//关掉自动缓存和Aop
                         _ActionInstance.dalHelper.IsWriteLogOnError = false;
                     }

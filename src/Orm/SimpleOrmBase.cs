@@ -208,7 +208,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         private void SetDelayInit(Object entityInstance, string tableName, string conn)
         {
-            if (tableName == AppConfig.Log.LogTableName && string.IsNullOrEmpty(AppConfig.Log.LogConn))
+            if (tableName == AppConfig.Log.TableName && string.IsNullOrEmpty(AppConfig.Log.Conn))
             {
                 return;
             }

@@ -23,20 +23,18 @@ namespace CYQ.Data.UI
                 #region XHtmlAction 对象处理
                 XHtmlAction doc = ct as XHtmlAction;
                 MDataTable dt = source as MDataTable;
-                doc.LoadData(dt);
-                XmlNode node = null;
                 if (string.IsNullOrEmpty(nodeID))
                 {
-                    doc.SetForeach();
+                    doc.SetForeach(dt);
                 }
                 else
                 {
-                    node = doc.Get(nodeID);
+                    XmlNode node = doc.Get(nodeID);
                     if (node != null)
                     {
-                        doc.SetForeach(node, node.InnerXml);
+                        doc.SetForeach(dt, node, node.InnerXml);
                     }
-                } 
+                }
                 #endregion
             }
             else
@@ -72,7 +70,7 @@ namespace CYQ.Data.UI
                                 source = new MDataView(ref dt);
                             }
                             p.SetValue(ct, source, null);//winform
-                        } 
+                        }
                         #endregion
                     }
                     else //wpf,sliverlight

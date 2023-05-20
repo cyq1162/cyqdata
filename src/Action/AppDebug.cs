@@ -36,7 +36,7 @@ namespace CYQ.Data
             get
             {
                 string info = string.Empty;
-                if (AppConfig.Debug.OpenDebugInfo)
+                if (AppConfig.Debug.IsEnable)
                 {
                     info = Convert.ToString(_Cache.Get(_Key));
                     object time = _Cache.Get(_KeyTime);
@@ -49,6 +49,21 @@ namespace CYQ.Data
                 }
                 return info;
 
+            }
+        }
+        private static int _InfoFilter = 0;
+        /// <summary>
+        /// 设置Info信息进行过滤（毫秒ms)SQL语句。
+        /// </summary>
+        public static int InfoFilter
+        {
+            get
+            {
+                return _InfoFilter;
+            }
+            set
+            {
+                _InfoFilter = value;
             }
         }
         /// <summary>

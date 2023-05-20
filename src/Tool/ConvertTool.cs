@@ -213,16 +213,14 @@ namespace CYQ.Data.Tool
                     {
                         case SysType.Custom:
                             return MDataRow.CreateFrom(value).ToEntity(t);
-                        case SysType.Generic:
                         case SysType.Collection:
                             return MDataTable.CreateFrom(value).ToList(t);
-                        //case SysType.Generic:
-                        //    if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
-                        //    {
-                        //        return JsonSplit.ToEntity(t, strValue, EscapeOp.Default);
-                        //        //return MDataTable.CreateFrom(strValue).ToList(t);
-                        //    }
-                        // break;
+                        case SysType.Generic:
+                            if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
+                            {
+                                return MDataTable.CreateFrom(value).ToList(t);
+                            }
+                            return MDataRow.CreateFrom(value).ToEntity(t);
                         case SysType.Array:
                             if (t.Name == "Byte[]")
                             {

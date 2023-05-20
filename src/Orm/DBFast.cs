@@ -337,9 +337,9 @@ namespace CYQ.Data.Orm
             if (!string.IsNullOrEmpty(tName))
             {
                 t = null;
-                if (tName.EndsWith(AppConfig.EntitySuffix))
+                if (tName.EndsWith(AppConfig.DB.EntitySuffix))
                 {
-                    tName = tName.Substring(0, tName.Length - AppConfig.EntitySuffix.Length);
+                    tName = tName.Substring(0, tName.Length - AppConfig.DB.EntitySuffix.Length);
                 }
 
             }

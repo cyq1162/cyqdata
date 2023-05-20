@@ -204,7 +204,7 @@ namespace CYQ.Data
         {
             get
             {
-                return (AppConfig.Debug.OpenDebugInfo || AppConfig.Debug.SqlFilter > -1) && _IsRecordDebugInfo;
+                return (AppConfig.Debug.IsEnable || AppConfig.DB.SqlFilter > -1) && _IsRecordDebugInfo;
             }
             set
             {
@@ -734,15 +734,15 @@ namespace CYQ.Data
                 _watch.Stop();
                 double ms = _watch.Elapsed.TotalMilliseconds;
                 tempSql += ms + " (ms)" + AppConst.HR;
-                if (AppConfig.Debug.OpenDebugInfo)
+                if (AppConfig.Debug.IsEnable)
                 {
                     DebugInfo.Append(tempSql);
-                    if (AppDebug.IsRecording && ms >= AppConfig.Debug.InfoFilter)
+                    if (AppDebug.IsRecording && ms >= AppDebug.InfoFilter)
                     {
                         AppDebug.Add(tempSql);
                     }
                 }
-                if (AppConfig.Debug.SqlFilter >= 0 && ms >= AppConfig.Debug.SqlFilter)
+                if (AppConfig.DB.SqlFilter >= 0 && ms >= AppConfig.DB.SqlFilter)
                 {
                     Log.Write(tempSql, LogType.Debug);
                 }
