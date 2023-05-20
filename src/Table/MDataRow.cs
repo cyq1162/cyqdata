@@ -1661,7 +1661,8 @@ namespace CYQ.Data.Table
                         else if (len == 2) // row
                         {
                             MDataRow mRow = MDataRow.CreateFrom(objValue, argTypes[1]);
-                            returnObj = Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
+                            returnObj = propType.Name.Contains("Dictionary") ? Activator.CreateInstance(propType, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(propType); 
+                            //Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
                             Type objListType = returnObj.GetType();
                             foreach (MDataCell mCell in mRow)
                             {
