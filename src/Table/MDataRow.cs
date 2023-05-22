@@ -1804,8 +1804,16 @@ namespace CYQ.Data.Table
                     #endregion
                     break;
                 case SysType.Custom://¼ÌÐøµÝ¹é
-                    MDataRow mr = new MDataRow(TableSchema.GetColumnByType(propType));
-                    mr.LoadFrom(value);
+                    MDataRow mr = null;
+                    if (objValue is MDataRow)
+                    {
+                        mr = objValue as MDataRow;
+                    }
+                    else
+                    {
+                        mr = new MDataRow(TableSchema.GetColumnByType(propType));
+                        mr.LoadFrom(objValue);
+                    }
                     returnObj = Activator.CreateInstance(propType);
                     SetToEntity(ref returnObj, mr);
                     mr = null;
