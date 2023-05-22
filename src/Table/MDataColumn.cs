@@ -35,10 +35,25 @@ namespace CYQ.Data.Table
         /// 存储列名的索引
         /// </summary>
         private MDictionary<string, int> columnIndex = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private int _CheckDuplicateState = -1;
         /// <summary>
         /// 添加列时，检测名称是否重复(默认为true)。
         /// </summary>
-        public bool CheckDuplicate = true;
+        public bool CheckDuplicate
+        {
+            get
+            {
+                if (_CheckDuplicateState == -1)
+                {
+                    return structList.Count < 100;//列多时，会影响性能，默认超过100条后，不检测重复项。
+                }
+                return _CheckDuplicateState == 1;
+            }
+            set
+            {
+                _CheckDuplicateState = value ? 1 : 0;
+            }
+        }
         /// <summary>
         /// 隐式转换列头
         /// </summary>
@@ -188,29 +203,6 @@ namespace CYQ.Data.Table
                 {
                     return columnIndex[columnName];
                 }
-                //else 提前存好，避开后续查询。
-                //{
-                //    //开启默认前缀检测
-                //    string[] items = AppConfig.UI.AutoPrefixs.Split(',');
-                //    if (items != null && items.Length > 0)
-                //    {
-                //        foreach (string item in items)
-                //        {
-                //            columnName = columnName.StartsWith(item) ? columnName.Substring(3) : item + columnName;
-                //            if (columnIndex.ContainsKey(columnName))
-                //            {
-                //                return columnIndex[columnName];
-                //            }
-                //        }
-                //    }
-                //}
-                //for (int i = 0; i < Count; i++)
-                //{
-                //    if (string.Compare(this[i].ColumnName.Replace("_", ""), columnName, StringComparison.OrdinalIgnoreCase) == 0)//第三个参数用StringComparison.OrdinalIgnoreCase比用true快。
-                //    {
-                //        return i;
-                //    }
-                //}
             }
             return -1;
         }
@@ -509,7 +501,7 @@ namespace CYQ.Data.Table
 
         public void Add(MCellStruct item)
         {
-            if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
+            if (item != null && (!CheckDuplicate || !Contains(item.ColumnName)))//&& !this.Contains(item)
             {
                 if (DataBaseType == DataBaseType.None)
                 {
@@ -732,7 +724,7 @@ namespace CYQ.Data.Table
                 string json = string.Empty;
                 char c = jsonOrFileName[0];
                 bool isJson = c == '{' || c == '[' || c == '<';
-                string exName = null ;
+                string exName = null;
                 string fileName = null;
                 if (!isJson)
                 {

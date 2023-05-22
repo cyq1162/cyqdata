@@ -49,16 +49,9 @@ namespace CYQ.Data.SQL
                             dbSchema = GetSchemaDic(cb.ConnName, false);
                         }
                     }
-                    if (!_DBScheams.ContainsKey(hash))
+                    if (dbSchema != null && !_DBScheams.ContainsKey(hash))
                     {
-                        if (dbSchema != null)
-                        {
-                            _DBScheams.Add(hash, dbSchema);
-                        }
-                        else
-                        {
-                            return null;
-                        }
+                        _DBScheams.Add(hash, dbSchema);
                     }
 
                 }
@@ -233,23 +226,6 @@ namespace CYQ.Data.SQL
                         if (view != null)
                         {
                             view.Reflesh();
-                            Thread.Sleep(1);
-                        }
-                    }
-                }
-            }
-            var procs = info.Procs;
-            if (procs != null && procs.Count > 0)
-            {
-                var keys = procs.GetKeys();
-                foreach (var procKey in keys)
-                {
-                    if (procs.ContainsKey(procKey))
-                    {
-                        var proc = procs[procKey];
-                        if (proc != null)
-                        {
-                            proc.Reflesh();
                             Thread.Sleep(1);
                         }
                     }

@@ -628,7 +628,7 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 获取配置项中所有的数据库列表
         /// </summary>
-        public static Dictionary<string, DBInfo> DataBases
+        public static MDictionary<string, DBInfo> DataBases
         {
             get
             {
