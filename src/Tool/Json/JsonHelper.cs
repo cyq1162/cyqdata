@@ -1100,6 +1100,16 @@ namespace CYQ.Data.Tool
                 {
                     Fill(Convert.ToString(obj));
                 }
+                else if (obj is DataTable)
+                {
+                    MDataTable dt = obj as DataTable;
+                    Fill(dt);
+                }
+                else if (obj is DataRow)
+                {
+                    MDataRow row = obj as DataRow;
+                    Fill(row);
+                }
                 else if (obj is MDataTable)
                 {
                     Fill(obj as MDataTable);
@@ -1107,6 +1117,37 @@ namespace CYQ.Data.Tool
                 else if (obj is MDataRow)
                 {
                     Fill(obj as MDataRow);
+                }
+                else if (obj is DataRowCollection)
+                {
+                    MDataTable dt = (MDataRowCollection)obj;
+                    Fill(dt);
+                }
+                else if (obj is MDataRowCollection)
+                {
+                    MDataTable dt = (MDataRowCollection)obj;
+                    Fill(dt);
+                }
+                else if (obj is DataColumnCollection)
+                {
+                    MDataColumn mdc = obj as DataColumnCollection;
+                    Fill(mdc, true);
+                }
+                else if (obj is Dictionary<string, string>)
+                {
+                    Fill(obj as Dictionary<string, string>);//避开转Row，提升性能
+                }
+                else if (obj is MDictionary<string, string>)
+                {
+                    Fill(obj as MDictionary<string, string>);//避开转Row，提升性能
+                }
+                else if (obj is Dictionary<string, object>)
+                {
+                    Fill(obj as Dictionary<string, object>);//避开转Row，提升性能
+                }
+                else if (obj is MDictionary<string, object>)
+                {
+                    Fill(obj as MDictionary<string, object>);//避开转Row，提升性能
                 }
                 else if (obj is IEnumerable)
                 {
@@ -1164,36 +1205,13 @@ namespace CYQ.Data.Tool
                     }
                     else if (len == 2)
                     {
-                        Fill(MDataRow.CreateFrom(obj));
+                        Fill(MDataRow.CreateFrom(obj, t));
                     }
                     #endregion
-                }
-                else if (obj is DataTable)
-                {
-                    MDataTable dt = obj as DataTable;
-                    Fill(dt);
-                }
-                else if (obj is MDataRowCollection)
-                {
-                    MDataTable dt = (MDataRowCollection)obj;
-                    Fill(dt);
-                }
-                else if (obj is DataRow)
-                {
-                    MDataRow row = obj as DataRow;
-                    Fill(row);
-                }
-                else if (obj is DataColumnCollection)
-                {
-                    MDataColumn mdc = obj as DataColumnCollection;
-                    Fill(mdc, true);
                 }
                 else
                 {
                     FillEntity(obj);
-                    //MDataRow row = new MDataRow();
-                    //row.LoadFrom(obj);
-                    //Fill(row);
                 }
             }
         }
@@ -1221,6 +1239,39 @@ namespace CYQ.Data.Tool
                 }
             }
         }
+
+        public void Fill(Dictionary<string, string> dic)
+        {
+            foreach (var item in dic)
+            {
+                Add(item.Key, item.Value);
+            }
+        }
+
+        public void Fill(MDictionary<string, string> dic)
+        {
+            foreach (var item in dic)
+            {
+                Add(item.Key, item.Value);
+            }
+        }
+        public void Fill(Dictionary<string, object> dic)
+        {
+            foreach (var item in dic)
+            {
+                Add(item.Key, item.Value);
+            }
+        }
+
+        public void Fill(MDictionary<string, object> dic)
+        {
+            foreach (var item in dic)
+            {
+                Add(item.Key, item.Value);
+            }
+        }
+
+
 
         /// <summary>
         /// 加载实体

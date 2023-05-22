@@ -77,12 +77,9 @@ namespace CYQ.Data.Tool
                 _DataBaseType = value;
             }
         }
-        /// <summary>
-        /// 用于遍历使用（多线程下）
-        /// </summary>
-        public List<string> TableKeys = new List<string>();
-        private Dictionary<string, TableInfo> _Tables = new Dictionary<string, TableInfo>();
-        public Dictionary<string, TableInfo> Tables
+
+        private MDictionary<string, TableInfo> _Tables = new MDictionary<string, TableInfo>();
+        public MDictionary<string, TableInfo> Tables
         {
             get
             {
@@ -91,22 +88,10 @@ namespace CYQ.Data.Tool
             internal set
             {
                 _Tables = value;
-                TableKeys.Clear();
-                if (value != null)
-                {
-                    foreach (var key in value.Keys)
-                    {
-                        TableKeys.Add(key);
-                    }
-                }
             }
         }
-        /// <summary>
-        /// 用于遍历使用（多线程下）
-        /// </summary>
-        public List<string> ViewKeys = new List<string>();
-        private Dictionary<string, TableInfo> _Views = new Dictionary<string, TableInfo>();
-        public Dictionary<string, TableInfo> Views
+        private MDictionary<string, TableInfo> _Views = new MDictionary<string, TableInfo>();
+        public MDictionary<string, TableInfo> Views
         {
             get
             {
@@ -120,22 +105,13 @@ namespace CYQ.Data.Tool
             internal set
             {
                 _Views = value;
-                ViewKeys.Clear();
-                if (value != null)
-                {
-                    foreach (var key in value.Keys)
-                    {
-                        ViewKeys.Add(key);
-                    }
-                }
             }
         }
         /// <summary>
         /// 用于遍历使用（多线程下）
         /// </summary>
-        public List<string> ProcKeys = new List<string>();
-        private Dictionary<string, TableInfo> _Procs = new Dictionary<string, TableInfo>();
-        public Dictionary<string, TableInfo> Procs
+        private MDictionary<string, TableInfo> _Procs = new MDictionary<string, TableInfo>();
+        public MDictionary<string, TableInfo> Procs
         {
             get
             {
@@ -149,14 +125,6 @@ namespace CYQ.Data.Tool
             internal set
             {
                 _Procs = value;
-                ProcKeys.Clear();
-                if (value != null)
-                {
-                    foreach (var key in value.Keys)
-                    {
-                        ProcKeys.Add(key);
-                    }
-                }
             }
         }
         /// <summary>
@@ -210,19 +178,16 @@ namespace CYQ.Data.Tool
         {
             if (Tables != null && (type == null || type == "U") && Tables.ContainsKey(tableHash))
             {
-                RefleshKeys(ref TableKeys, tableHash, false);
                 Tables[tableHash].RemoveCache();
                 return Tables.Remove(tableHash);
             }
             if (Views != null && (type == null || type == "V") && Views.ContainsKey(tableHash))
             {
-                RefleshKeys(ref ViewKeys, tableHash, false);
                 Views[tableHash].RemoveCache();
                 return Views.Remove(tableHash);
             }
             if (Procs != null && (type == null || type == "P") && Procs.ContainsKey(tableHash))
             {
-                RefleshKeys(ref ProcKeys, tableHash, false);
                 Procs[tableHash].RemoveCache();
                 return Procs.Remove(tableHash);
             }
@@ -242,18 +207,16 @@ namespace CYQ.Data.Tool
             {
                 if (Tables != null && (type == null || type == "U") && !Tables.ContainsKey(tableHash))
                 {
-                    RefleshKeys(ref TableKeys, tableHash, true);
                     Tables.Add(tableHash, new TableInfo(name, type, null, this));
                 }
                 if (Views != null && (type == null || type == "V") && !Views.ContainsKey(tableHash))
                 {
                     Views.Add(tableHash, new TableInfo(name, type, null, this));
-                    RefleshKeys(ref ViewKeys, tableHash, true);
+                    
                 }
                 if (Procs != null && (type == null || type == "P") && !Procs.ContainsKey(tableHash))
                 {
                     Procs.Add(tableHash, new TableInfo(name, type, null, this));
-                    RefleshKeys(ref ProcKeys, tableHash, true);
                 }
                 return true;
             }
@@ -261,27 +224,6 @@ namespace CYQ.Data.Tool
             {
                 return false;
             }
-        }
-
-        /// <summary>
-        /// 多线程下，不能直接操作Keys的添加或移除
-        /// </summary>
-        private void RefleshKeys(ref List<string> keys, string hash, bool isAdd)
-        {
-            List<string> newKeys = new List<string>();
-
-            foreach (string key in keys)
-            {
-                if (isAdd || key != hash)
-                {
-                    newKeys.Add(key);
-                }
-            }
-            if (isAdd)
-            {
-                newKeys.Add(hash);
-            }
-            keys = newKeys;
         }
 
         /// <summary>
@@ -350,7 +292,7 @@ namespace CYQ.Data.Tool
                 }
                 if (infoDic != null && infoDic.Count > 0)
                 {
-                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                    MDictionary<string, TableInfo> dic = new MDictionary<string, TableInfo>();
                     foreach (KeyValuePair<string, string> item in infoDic)
                     {
                         string hash = TableInfo.GetHashKey(item.Key);

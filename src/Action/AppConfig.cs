@@ -613,7 +613,7 @@ namespace CYQ.Data
         /// </summary>
         public static class DB
         {
-           
+
             static string _DefaultConn = string.Empty;
             /// <summary>
             /// 默认数据库链接（可赋完整链接语句或Web.config配置项名称）
@@ -841,7 +841,15 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("DB.SchemaMapPath", IsWeb ? "App_Data/schema" : "").Trim(new char[] { '/', '\\' });
+                    string path = GetApp("DB.SchemaMapPath");
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        if (IsWeb)
+                        {
+                            return "App_Data" + (WebRootPath[0] == '/' ? "/" : "\\") + "schema";
+                        }
+                    }
+                    return path.Trim(new char[] { '/', '\\' });
                 }
                 set
                 {
@@ -1096,7 +1104,7 @@ namespace CYQ.Data
                 get
                 {
                     string value = GetApp("AutoCache.IsEnable");
-                    if(!string.IsNullOrEmpty(value))
+                    if (!string.IsNullOrEmpty(value))
                     {
                         bool result;
                         bool.TryParse(value, out result);
@@ -1118,7 +1126,7 @@ namespace CYQ.Data
                 get
                 {
                     string value = GetApp("AutoCache.Tables");
-                    if(!string.IsNullOrEmpty(value))
+                    if (!string.IsNullOrEmpty(value))
                     {
                         return value;
                     }
@@ -1309,7 +1317,19 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("Log.Path", IsWeb ? "App_Data/log" : "Logs").Trim(new char[] { '/', '\\' });
+                    string path = GetApp("Log.Path");
+                    if (string.IsNullOrEmpty(path))
+                    {
+                        if (IsWeb)
+                        {
+                            return "App_Data" + (WebRootPath[0] == '/' ? "/" : "\\") + "log";
+                        }
+                        else
+                        {
+                            return "Logs";
+                        }
+                    }
+                    return path.Trim(new char[] { '/', '\\' });
                 }
                 set
                 {

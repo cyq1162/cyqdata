@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using CYQ.Data.Tool;
 using System.Text;
 using System.Web;
-using static System.Net.Mime.MediaTypeNames;
 using System.Threading;
 
 namespace CYQ.Data.Xml
@@ -996,7 +995,7 @@ namespace CYQ.Data.Xml
             {
                 replaceValue = key.Substring(key.LastIndexOf(':') + 1);
             }
-            return replaceValue;
+            return replaceValue ?? "";
         }
         #endregion
     }
@@ -1118,7 +1117,7 @@ namespace CYQ.Data.Xml
                 for (int k = 0; k < dataSource.Rows.Count; k++)
                 {
                     string newText = text;
-                    MDictionary<string, string> values = dataSource.Rows[k].ToEntity<MDictionary<string, string>>();  
+                    MDictionary<string, string> values = dataSource.Rows[k].ToEntity<MDictionary<string, string>>();
                     if (eventOnForeach != null)
                     {
                         newText = eventOnForeach(text, values, k);//遍历每一行，产生新text。

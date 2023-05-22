@@ -142,7 +142,7 @@ namespace CYQ.Data.SQL
             return GetTableInfoByName(name, null);
         }
         /// <summary>
-        /// 获得数据库表相关信息
+        /// 获得数据库表相关信息（会搜寻最新数据库内容）
         /// </summary>
         /// <param name="conn">指定时优先寻找。</param>
         /// <param name="name">表名</param>
@@ -190,7 +190,8 @@ namespace CYQ.Data.SQL
                         }
                     }
                 }
-                foreach (string key in DBSchema.DBScheamKeys)
+                List<string> keys = dbScheams.GetKeys();
+                foreach (string key in keys)
                 {
                     if (dbScheams.ContainsKey(key))
                     {
@@ -204,6 +205,7 @@ namespace CYQ.Data.SQL
             }
             return null;
         }
+
         /// <summary>
         /// 是否存在指定的表名、视图名、存储过程名
         /// </summary>
@@ -251,7 +253,8 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    foreach (string key in DBSchema.DBScheamKeys)
+                    List<string> keys = dbScheams.GetKeys();
+                    foreach (string key in keys)
                     {
                         if (dbScheams.ContainsKey(key))
                         {
@@ -288,7 +291,8 @@ namespace CYQ.Data.SQL
                 }
                 else
                 {
-                    foreach (string key in DBSchema.DBScheamKeys)
+                    List<string> keys = dbScheams.GetKeys();
+                    foreach (string key in keys)
                     {
                         if (dbScheams[key].Remove(tableHash, type))
                         {

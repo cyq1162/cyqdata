@@ -16,11 +16,9 @@ namespace CYQ.Data.SQL
         private static MDictionary<string, DBInfo> _DBScheams = new MDictionary<string, DBInfo>();
 
         /// <summary>
-        /// 存档数据库对应的keys，用于遍历。
+        /// 获取所有表架构（如果未缓存完成，会重新读取完整后才进行返回（有阻塞可能）
         /// </summary>
-        public static List<string> DBScheamKeys = new List<string>();
-
-        public static Dictionary<string, DBInfo> DBScheams
+        public static MDictionary<string, DBInfo> DBScheams
         {
             get
             {
@@ -43,20 +41,23 @@ namespace CYQ.Data.SQL
                 string hash = cb.GetHashKey();
                 if (!_DBScheams.ContainsKey(hash))
                 {
+                    DBInfo dbSchema = null;
                     lock (cb)
                     {
                         if (!_DBScheams.ContainsKey(hash))
                         {
-                            DBInfo dbSchema = GetSchemaDic(cb.ConnName, false);
-                            if (dbSchema != null)
-                            {
-                                if (!_DBScheams.ContainsKey(hash))
-                                {
-                                    _DBScheams.Add(hash, dbSchema);
-                                    DBScheamKeys.Add(hash);
-                                }
-                            }
-                            return dbSchema;
+                            dbSchema = GetSchemaDic(cb.ConnName, false);
+                        }
+                    }
+                    if (!_DBScheams.ContainsKey(hash))
+                    {
+                        if (dbSchema != null)
+                        {
+                            _DBScheams.Add(hash, dbSchema);
+                        }
+                        else
+                        {
+                            return null;
                         }
                     }
 
@@ -81,7 +82,7 @@ namespace CYQ.Data.SQL
                 Dictionary<string, string> tables = dal.GetTables(isIgnoreCache);
                 if (tables != null && tables.Count > 0)
                 {
-                    Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                    MDictionary<string, TableInfo> dic = new MDictionary<string, TableInfo>();
                     foreach (KeyValuePair<string, string> item in tables)
                     {
                         string hash = TableInfo.GetHashKey(item.Key);
@@ -99,7 +100,7 @@ namespace CYQ.Data.SQL
                     Dictionary<string, string> views = dal.GetViews(isIgnoreCache);
                     if (views != null && views.Count > 0)
                     {
-                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        MDictionary<string, TableInfo> dic = new MDictionary<string, TableInfo>();
                         foreach (KeyValuePair<string, string> item in views)
                         {
                             string hash = TableInfo.GetHashKey(item.Key);
@@ -114,7 +115,7 @@ namespace CYQ.Data.SQL
                     Dictionary<string, string> procs = dal.GetProcs(isIgnoreCache);
                     if (procs != null && procs.Count > 0)
                     {
-                        Dictionary<string, TableInfo> dic = new Dictionary<string, TableInfo>();
+                        MDictionary<string, TableInfo> dic = new MDictionary<string, TableInfo>();
                         foreach (KeyValuePair<string, string> item in procs)
                         {
                             string hash = TableInfo.GetHashKey(item.Key);
@@ -139,7 +140,6 @@ namespace CYQ.Data.SQL
         public static void Remove(string key)
         {
             _DBScheams.Remove(key);
-            DBScheamKeys.Remove(key);
         }
 
         /// <summary>
@@ -148,7 +148,6 @@ namespace CYQ.Data.SQL
         public static void Clear()
         {
             _DBScheams.Clear();
-            DBScheamKeys.Clear();
         }
 
 
@@ -186,7 +185,8 @@ namespace CYQ.Data.SQL
             {
                 foreach (string item in connNames)
                 {
-                    ThreadPool.QueueUserWorkItem(new WaitCallback(InitDBSchemaByThreadWork), item);
+                    Thread thread = new Thread(new ParameterizedThreadStart(InitDBSchemaByThreadWork));
+                    thread.Start(item);
                 }
             }
         }
@@ -197,52 +197,60 @@ namespace CYQ.Data.SQL
             if (cb == null) { return; }
             string key = cb.GetHashKey();
             DBInfo info = GetSchemaDic(cb.ConnName, true);
-
             if (!_DBScheams.ContainsKey(key))
             {
                 _DBScheams.Add(key, info);
-                DBScheamKeys.Add(key);
             }
             _InitFlag--;
+            Thread.Sleep(100);//等待其它线程处理完。
+            var tables = info.Tables;
             //初始化表结构
-            if (info.Tables != null && info.Tables.Count > 0)
+            if (tables != null && tables.Count > 0)
             {
-                foreach (var tableKey in info.TableKeys)
+                var keys = tables.GetKeys();
+                foreach (var tableKey in keys)
                 {
-                    if (info.Tables.ContainsKey(tableKey))
+                    if (tables.ContainsKey(tableKey))
                     {
-                        var table = info.Tables[tableKey];
+                        var table = tables[tableKey];
                         if (table != null)
                         {
                             table.Reflesh();
+                            Thread.Sleep(1);
                         }
                     }
                 }
             }
-            if (info.Views != null && info.Views.Count > 0)
+            var views = info.Views;
+            if (views != null && views.Count > 0)
             {
-                foreach (var viewKey in info.ViewKeys)
+                var keys = views.GetKeys();
+                foreach (var viewKey in keys)
                 {
-                    if (info.Views.ContainsKey(viewKey))
+                    if (views.ContainsKey(viewKey))
                     {
-                        var view = info.Views[viewKey];
+                        var view = views[viewKey];
                         if (view != null)
                         {
                             view.Reflesh();
+                            Thread.Sleep(1);
                         }
                     }
                 }
             }
-            if (info.Procs != null && info.Procs.Count > 0)
+            var procs = info.Procs;
+            if (procs != null && procs.Count > 0)
             {
-                foreach (var procKey in info.ProcKeys)
+                var keys = procs.GetKeys();
+                foreach (var procKey in keys)
                 {
-                    if (info.Procs.ContainsKey(procKey))
+                    if (procs.ContainsKey(procKey))
                     {
-                        var proc = info.Procs[procKey];
+                        var proc = procs[procKey];
                         if (proc != null)
                         {
                             proc.Reflesh();
+                            Thread.Sleep(1);
                         }
                     }
                 }
@@ -252,19 +260,19 @@ namespace CYQ.Data.SQL
         private static readonly object oo = new object();
         public static void InitDBSchemasAgain()
         {
-            lock (oo)
+            if (!IsInitDBCompleted)
             {
-                if (!IsInitDBCompleted)
+                List<string> connNames = new List<string>();
+                foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
                 {
-                    List<string> connNames = new List<string>();
-                    foreach (ConnectionStringSettings item in ConfigurationManager.ConnectionStrings)
+                    if (!string.IsNullOrEmpty(item.Name) && item.Name.ToLower().EndsWith("conn"))
                     {
-                        if (!string.IsNullOrEmpty(item.Name) && item.Name.ToLower().EndsWith("conn"))
-                        {
-                            connNames.Add(item.Name);
-                        }
+                        connNames.Add(item.Name);
                     }
-                    if (connNames.Count > 0)
+                }
+                if (connNames.Count > 0)
+                {
+                    lock (oo)
                     {
                         foreach (string item in connNames)
                         {
@@ -275,9 +283,10 @@ namespace CYQ.Data.SQL
                             GetSchema(item);
                         }
                     }
-                    _InitFlag = 0;
                 }
+                _InitFlag = 0;
             }
+
 
         }
     }

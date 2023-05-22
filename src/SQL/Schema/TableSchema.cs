@@ -112,17 +112,17 @@ namespace CYQ.Data.SQL
                         }
                         if (!isView)
                         {
-                            Dictionary<string, string> tables = helper.GetTables();
-                            if (tables.ContainsKey(mdcs.TableName))
+                            TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);//先查缓存
+                            if (info != null)
                             {
-                                mdcs.Description = tables[mdcs.TableName];
+                                mdcs.Description = info.Description;
                             }
                             else
                             {
-                                TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);
-                                if (info != null)
+                                Dictionary<string, string> tables = helper.GetTables();
+                                if (tables.ContainsKey(mdcs.TableName))
                                 {
-                                    mdcs.Description = info.Description;
+                                    mdcs.Description = tables[mdcs.TableName];
                                 }
                             }
                         }
@@ -510,17 +510,13 @@ namespace CYQ.Data.SQL
             }
             row = mdcs.ToRow(sourceTableName);
             return true;
-
-            //if (FillSchemaFromCache(ref row, tableName, sourceTableName))
-            //{
-            //    return true;
-            //}
-            //else//从Cache加载失败
-            //{
-            //    return FillSchemaFromDb(ref row, tableName, sourceTableName);
-            //}
         }
 
+        /// <summary>
+        /// 获取表结构Key：*.txt
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         internal static string GetSchemaFile(string key)
         {
             string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath;

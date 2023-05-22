@@ -1244,6 +1244,8 @@ namespace CYQ.Data.Table
                 }
                 string key = null; object value = null;
                 Type t = null;
+                PropertyInfo keyPro = null;
+                PropertyInfo valuePro = null;
                 int i = -1;
                 foreach (object o in dic)
                 {
@@ -1263,8 +1265,13 @@ namespace CYQ.Data.Table
                     }
                     else
                     {
-                        t = o.GetType();
-                        value = t.GetProperty("Value").GetValue(o, null);
+                        if (t == null)
+                        {
+                            t = o.GetType();
+                            keyPro = t.GetProperty("Key");
+                            valuePro = t.GetProperty("Value");
+                        }
+                        value = valuePro.GetValue(o, null);
                         bool isContinue = false;
                         switch (breakOp)
                         {
@@ -1289,7 +1296,128 @@ namespace CYQ.Data.Table
 
                         }
                         if (isContinue) { continue; }
-                        key = Convert.ToString(t.GetProperty("Key").GetValue(o, null));
+                        key = Convert.ToString(keyPro.GetValue(o, null));
+                        //if (value != null)
+                        //{
+
+                        //}
+                    }
+                    //if (value != null)
+                    //{
+                    if (isAddColumn)
+                    {
+                        SqlDbType sdType = sdt;
+                        if (sdt == SqlDbType.Variant)
+                        {
+                            if (value == null)
+                            {
+                                sdType = SqlDbType.NVarChar;
+                            }
+                            else
+                            {
+                                sdType = DataType.GetSqlType(value.GetType());
+                            }
+                        }
+                        Add(key, sdType, value);
+                    }
+                    else
+                    {
+                        if (value != null && value is string)
+                        {
+                            value = JsonHelper.UnEscape(value.ToString(), op);
+                        }
+                        Set(key, value);
+                    }
+                    // }
+                }
+            }
+        }
+        internal void LoadFrom2(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
+        {
+            if (dic != null)
+            {
+                if (dic is MDataRow)
+                {
+                    LoadFrom(dic as MDataRow, RowOp.None, true);
+                    return;
+                }
+                bool isNameValue = dic is NameValueCollection;
+                bool isAddColumn = Columns.Count == 0;
+                SqlDbType sdt = SqlDbType.NVarChar;
+                if (isAddColumn)
+                {
+                    if (valueType != null)
+                    {
+                        sdt = DataType.GetSqlType(valueType);
+                    }
+                    else if (!isNameValue)
+                    {
+                        Type type = dic.GetType();
+                        if (type.IsGenericType)
+                        {
+                            sdt = DataType.GetSqlType(type.GetGenericArguments()[1]);
+                        }
+                        else
+                        {
+                            sdt = SqlDbType.Variant;
+                        }
+                    }
+                }
+                string key = null; object value = null;
+                Type t = null;
+                PropertyInfo keyPro = null;
+                PropertyInfo valuePro = null;
+                int i = -1;
+                foreach (object o in dic)
+                {
+                    i++;
+                    if (isNameValue)
+                    {
+                        if (o == null)
+                        {
+                            key = "null";
+                            value = ((NameValueCollection)dic)[i];
+                        }
+                        else
+                        {
+                            key = Convert.ToString(o);
+                            value = ((NameValueCollection)dic)[key];
+                        }
+                    }
+                    else
+                    {
+                        if (t == null)
+                        {
+                            t = o.GetType();
+                            keyPro = t.GetProperty("Key");
+                            valuePro = t.GetProperty("Value");
+                        }
+                        value = valuePro.GetValue(o, null);
+                        bool isContinue = false;
+                        switch (breakOp)
+                        {
+                            case BreakOp.Null:
+                                if (value == null)
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+                            case BreakOp.Empty:
+                                if (value != null && Convert.ToString(value) == "")
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+                            case BreakOp.NullOrEmpty:
+                                if (Convert.ToString(value) == "")
+                                {
+                                    isContinue = true;
+                                }
+                                break;
+
+                        }
+                        if (isContinue) { continue; }
+                        key = Convert.ToString(keyPro.GetValue(o, null));
                         //if (value != null)
                         //{
 
@@ -1661,7 +1789,7 @@ namespace CYQ.Data.Table
                         else if (len == 2) // row
                         {
                             MDataRow mRow = MDataRow.CreateFrom(objValue, argTypes[1]);
-                            returnObj = propType.Name.Contains("Dictionary") ? Activator.CreateInstance(propType, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(propType); 
+                            returnObj = propType.Name.Contains("Dictionary") ? Activator.CreateInstance(propType, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(propType);
                             //Activator.CreateInstance(propType, mRow.Columns.Count);//´´½¨ÊµÀý
                             Type objListType = returnObj.GetType();
                             foreach (MDataCell mCell in mRow)

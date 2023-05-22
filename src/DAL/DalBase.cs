@@ -278,6 +278,7 @@ namespace CYQ.Data
         {
             return GetSchemaDic(GetSchemaSql("P"), "P", isIgnoreCache);
         }
+
         protected Dictionary<string, string> GetSchemaDic(string sql, string type, bool isIgnoreCache)
         {
             if (string.IsNullOrEmpty(sql))
@@ -287,16 +288,19 @@ namespace CYQ.Data
             Dictionary<string, string> dic = null;
             string key = ConnBean.GetHashKey(ConnName) + "_" + DataBaseName + "_" + type + "_" + StaticTool.GetHashKey(sql);
             #region 缓存检测
-            if (!isIgnoreCache && !string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
+            if (!isIgnoreCache)
             {
-                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
-                if (System.IO.File.Exists(fullPath))
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                 {
-                    string json = IOHelper.ReadAllText(fullPath);
-                    dic = JsonHelper.ToEntity<Dictionary<string, string>>(json);
-                    if (dic != null && dic.Count > 0)
+                    string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
+                    if (System.IO.File.Exists(fullPath))
                     {
-                        return dic;
+                        string json = IOHelper.ReadAllText(fullPath);
+                        dic = JsonHelper.ToEntity<Dictionary<string, string>>(json);
+                        if (dic != null && dic.Count > 0)
+                        {
+                            return dic;
+                        }
                     }
                 }
             }
@@ -319,16 +323,24 @@ namespace CYQ.Data
                 sdr = null;
             }
             #region 缓存设置
-            if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath) && dic != null && dic.Count > 0)
+            if (dic != null && dic.Count > 0)
             {
-                string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
-                string folder = Path.GetDirectoryName(fullPath);
-                if (!System.IO.Directory.Exists(folder))
+                if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                 {
-                    System.IO.Directory.CreateDirectory(folder);
+                    //缓存写入硬盘
+                    Thread thread = new Thread(() =>
+                    {
+                        string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".json";
+                        string folder = Path.GetDirectoryName(fullPath);
+                        if (!System.IO.Directory.Exists(folder))
+                        {
+                            System.IO.Directory.CreateDirectory(folder);
+                        }
+                        string json = JsonHelper.ToJson(dic);
+                        IOHelper.Write(fullPath, json);
+                    });
+                    thread.Start();
                 }
-                string json = JsonHelper.ToJson(dic);
-                IOHelper.Write(fullPath, json);
             }
             #endregion
             return dic;
