@@ -43,6 +43,7 @@ namespace CYQ.Data.Table
         {
             get
             {
+                //return true;
                 if (_CheckDuplicateState == -1)
                 {
                     return structList.Count < 100;//列多时，会影响性能，默认超过100条后，不检测重复项。
@@ -501,7 +502,7 @@ namespace CYQ.Data.Table
 
         public void Add(MCellStruct item)
         {
-            if (item != null && (!CheckDuplicate || !Contains(item.ColumnName)))//&& !this.Contains(item)
+            if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))//
             {
                 if (DataBaseType == DataBaseType.None)
                 {
@@ -590,7 +591,7 @@ namespace CYQ.Data.Table
 
         public void Insert(int index, MCellStruct item)
         {
-            if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))
+            if (item != null && !this.Contains(item) && (!CheckDuplicate || !Contains(item.ColumnName)))// 
             {
                 item.MDataColumn = this;
                 structList.Insert(index, item);
