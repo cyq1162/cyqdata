@@ -46,7 +46,7 @@ namespace CYQ.Data
             //检测文件夹
             string folder = AppConfig.WebRootPath;
             string logPath = AppConfig.Log.Path;
-            logPath = logPath.TrimEnd('/', '\\') + "/";
+            logPath = logPath.Trim('/', '\\') + "/";
             if (logPath.StartsWith("~/"))
             {
                 logPath = logPath.Substring(2);

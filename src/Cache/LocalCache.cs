@@ -462,9 +462,10 @@ namespace CYQ.Data.Cache
             NoSqlAction.Clear();//清空文本数据库相关缓存
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                if (Directory.Exists(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath))
+                string path = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\');
+                if (Directory.Exists(path))
                 {
-                    Directory.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, true);
+                    Directory.Delete(path, true);
                 }
             }
         }

@@ -117,9 +117,7 @@ namespace CYQ.Data
         /// </summary>
         public static bool GetAppBool(string key, bool defaultValue)
         {
-            bool result;
-            bool.TryParse(GetApp(key, defaultValue.ToString()), out result);
-            return result;
+            return ConvertTool.ChangeType<bool>(GetApp(key, defaultValue.ToString()));
         }
 
         /// <summary>
@@ -835,21 +833,13 @@ namespace CYQ.Data
             }
             /// <summary>
             /// MAction 可将表架构映射到外部指定相对路径[外部存储,可避开数据库读取]
-            /// 配置项：DB.SchemaMapPath ： App_Data/schema
+            /// 配置项：DB.SchemaMapPath ： /App_Data/schema
             /// </summary>
             public static string SchemaMapPath
             {
                 get
                 {
-                    string path = GetApp("DB.SchemaMapPath");
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        if (IsWeb)
-                        {
-                            return "App_Data" + (WebRootPath[0] == '/' ? "/" : "\\") + "schema";
-                        }
-                    }
-                    return path.Trim(new char[] { '/', '\\' });
+                    return GetApp("DB.SchemaMapPath", IsWeb? "/App_Data/schema":"");
                 }
                 set
                 {
@@ -1310,26 +1300,14 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// 文本日志的配置相对路径（Web 默认为：App_Data/log"）
-            /// 配置项：Log.Path ：App_Data/log
+            /// 文本日志的配置相对路径（Web 默认为：/App_Data/log"）
+            /// 配置项：Log.Path ：/App_Data/log
             /// </summary>
             public static string Path
             {
                 get
                 {
-                    string path = GetApp("Log.Path");
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        if (IsWeb)
-                        {
-                            return "App_Data" + (WebRootPath[0] == '/' ? "/" : "\\") + "log";
-                        }
-                        else
-                        {
-                            return "Logs";
-                        }
-                    }
-                    return path.Trim(new char[] { '/', '\\' });
+                    return GetApp("Log.Path", IsWeb ? "/App_Data/log" : "/Logs");
                 }
                 set
                 {

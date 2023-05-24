@@ -144,14 +144,15 @@ namespace CYQ.Data
                 if (AppConfig.IsWeb && HttpContext.Current != null && HttpContext.Current.Handler != null)
                 {
                     HttpRequest request = HttpContext.Current.Request;
+                    log.HttpMethod = request.HttpMethod;
+                    log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
                     Uri uri = request.Url;
                     log.PageUrl = uri.Scheme + "://" + uri.Authority + HttpUtility.UrlDecode(request.RawUrl);
                     if (request.UrlReferrer != null && uri != request.UrlReferrer)
                     {
                         log.RefererUrl = HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                     }
-                    log.HttpMethod = request.HttpMethod;
-                    log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
+                    
                 }
             }
             catch
