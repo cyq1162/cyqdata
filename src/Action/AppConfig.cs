@@ -839,7 +839,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("DB.SchemaMapPath", IsWeb? "/App_Data/schema":"");
+                    return GetApp("DB.SchemaMapPath", IsWeb ? "/App_Data/schema" : "");
                 }
                 set
                 {
@@ -1385,7 +1385,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("UI.AutoPrefixs", "txt,chb,ddl");
+                    return GetApp("UI.AutoPrefixs", IsNetCore ? "" : "txt,chb,ddl");
                 }
                 set
                 {
