@@ -152,7 +152,9 @@ namespace CYQ.Data.Tool
                         case "success":
                         case "1":
                         case "on":
+                        case "ok":
                         case "是":
+                        case "√":
                             if (t.Name == "Boolean")
                                 return true;
                             else strValue = "1";

@@ -76,7 +76,13 @@ namespace System.Web
         {
             get
             {
-                return cache.Get(GetName(name));
+                string key = GetName(name);
+                object obj = cache.Get(key);
+                if (obj != null && DateTime.Now.Second % 9 == 0)
+                {
+                    cache.Set(key, obj, Timeout);//用随机概率延长时间
+                }
+                return obj;
             }
             set
             {
