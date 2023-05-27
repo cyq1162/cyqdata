@@ -1,11 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Data;
-using CYQ.Data.Table;
-using CYQ.Data.SQL;
-using System.IO;
 using System.Web;
 using System.Threading;
 
@@ -41,54 +34,46 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static string GetMasterSlaveKey()
         {
-            return "MasterSlave_" + GetID(true);
+            return "MasterSlave_" + GetMasterSlaveID();
         }
         /// <summary>
-        /// 用于标识（以用户为单位）的 全局事务 的唯一标识
+        /// 用于标识（以线程为单位）的 全局事务 的唯一标识
         /// </summary>
         public static string GetTransationKey(string conn)
         {
             //在Task 协程 异步中，可能会有不同的线程执行任务，这特殊情况后续再考量。
-            string key = GetID(false) + Thread.CurrentThread.ManagedThreadId.ToString();
             string hash = ConnBean.GetHashKey(conn);
-            return "Transation_" + key + hash;
+            return "Transation_" + Thread.CurrentThread.ManagedThreadId + hash;
         }
-        private static string GetID(bool isCreate)
+
+        private static string GetMasterSlaveID()
         {
             string id = string.Empty;
             //避开异常：请求在此上下文中不可用（Global.asax.cs：Application_Start 方法）
-            if (HttpContext.Current != null && HttpContext.Current.Handler != null)
+            HttpContext context = HttpContext.Current;
+            if (context != null && context.Handler != null)
             {
-                if (HttpContext.Current.Request["token"] != null)
+                HttpRequest request = context.Request;
+                if (request["token"] != null)
                 {
-                    id = HttpContext.Current.Request["token"];
+                    id = request["token"];
                 }
-                else if (HttpContext.Current.Request.Headers["token"] != null)
+                else if (request.Headers["token"] != null)
                 {
-                    id = HttpContext.Current.Request.Headers["token"];
+                    id = request.Headers["token"];
                 }
-                else if (HttpContext.Current.Session != null)
+                else if (context.Session != null)
                 {
-                    id = HttpContext.Current.Session.SessionID;
+                    id = context.Session.SessionID;
                 }
-                if (isCreate && string.IsNullOrEmpty(id))
+                if (string.IsNullOrEmpty(id))
                 {
-                    HttpCookie cookie = HttpContext.Current.Request.Cookies["CYQ.SessionID"];
-                    if (cookie != null)
-                    {
-                        id = cookie.Value;
-                    }
-                    else
-                    {
-                        id = Guid.NewGuid().ToString().Replace("-", "");
-                        cookie = new HttpCookie("CYQ.SessionID", id);
-                        HttpContext.Current.Response.Cookies.Add(cookie);
-                    }
+                    id = request.UserHostAddress;//获取IP地址。
                 }
             }
-            if (isCreate && string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(id))
             {
-                id = DateTime.Now.Minute + Thread.CurrentThread.ManagedThreadId.ToString();
+                id = LocalEnvironment.ProcessID.ToString();//winform
             }
             return id;
         }

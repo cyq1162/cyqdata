@@ -36,14 +36,19 @@ namespace CYQ.Data.Orm
         /// 存档事务的标识
         /// </summary>
         public static MDictionary<string, IsolationLevel> TransationKeys = new MDictionary<string, IsolationLevel>();
+        
         /// <summary>
-        /// 开启事务 (Web 状态下以（Session+线程ID）为单位，其它状态下仅以线程ID为单位)
-        /// 如果已存在事务（则返回false）
+        /// 开启事务：如果已存在事务（则返回false）
         /// </summary>
         public static bool BeginTransation(string conn)
         {
             return BeginTransation(conn, IsolationLevel.ReadCommitted);
         }
+        /// <summary>
+        /// 开启事务：如果已存在事务（则返回false）
+        /// </summary>
+        /// <param name="conn">链接配置项名称或链接字符串</param>
+        /// <param name="level">事务等级</param>
         public static bool BeginTransation(string conn, IsolationLevel level)
         {
             string key = StaticTool.GetTransationKey(conn);

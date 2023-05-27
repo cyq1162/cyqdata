@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Threading;
 using CYQ.Data.Cache;
 
 namespace CYQ.Data
 {
     /// <summary>
     /// this class can intercept sql
-    ///<para> 应用程序调试类,能截到应用程序所有执行的SQL</para>
+    ///<para> 应用程序调试类,能截到应用程序执行的SQL</para>
     /// </summary>
     public static class AppDebug
     {
@@ -18,15 +19,46 @@ namespace CYQ.Data
         {
             get
             {
-                return _Cache.Contains(_Key);
+                return _Cache.Contains(Key);
             }
         }
-        private const string _Key = "AppDebug_RecordSQL";// "CYQ.Data.AppDebug_RecordSQL";
-        private const string _KeyTime = "AppDebug_RecordTime";// "CYQ.Data.AppDebug_RecordTime";
+        private static string Key
+        {
+            get
+            {
+                return "AppDebug_Key" + Thread.CurrentThread.ManagedThreadId;// "CYQ.Data.AppDebug_RecordSQL";
+            }
+        }
+
+        private static string KeyTime
+        {
+            get
+            {
+                return "AppDebug_KeyTime" + Thread.CurrentThread.ManagedThreadId;// "CYQ.Data.AppDebug_RecordSQL";
+            }
+        }
+        private static string KeySys
+        {
+            get
+            {
+                return "AppDebug_KeySys" + Thread.CurrentThread.ManagedThreadId;// "CYQ.Data.AppDebug_RecordSQL";
+            }
+        }
         /// <summary>
         /// 输出信息时是否包含框架内部Sql（默认否，屏蔽框架内部产生的Sql）。
         /// </summary>
-        internal static bool IsContainSysSql = false;
+        internal static bool IsContainSysSql
+        {
+            get
+            {
+                return _Cache.Get<bool>(KeySys);
+            }
+            set
+            {
+                _Cache.Set(KeySys, value);
+            }
+        }
+
         /// <summary>
         /// get sql detail info
         /// <para>获取调试信息</para>
@@ -35,12 +67,11 @@ namespace CYQ.Data
         {
             get
             {
-                string info = string.Empty;
-                if (AppConfig.Debug.IsEnable)
+                string info = _Cache.Get<string>(Key);
+                if (!string.IsNullOrEmpty(info))
                 {
-                    info = Convert.ToString(_Cache.Get(_Key));
-                    object time = _Cache.Get(_KeyTime);
-                    if (time != null && time is DateTime)
+                    DateTime time = _Cache.Get<DateTime>(KeyTime);
+                    if (time != DateTime.MinValue)
                     {
                         DateTime start = (DateTime)time;
                         TimeSpan ts = DateTime.Now - start;
@@ -73,9 +104,9 @@ namespace CYQ.Data
         /// </summary>
         public static void Start(bool isContainSysSql)
         {
-            _Cache.Set(_Key, string.Empty);
-            _Cache.Set(_KeyTime, DateTime.Now);
-            IsContainSysSql = isContainSysSql;
+            _Cache.Set(Key, string.Empty);
+            _Cache.Set(KeyTime, DateTime.Now);
+            _Cache.Set(KeySys, isContainSysSql);
         }
         /// <summary>
         /// start to record sql
@@ -91,14 +122,14 @@ namespace CYQ.Data
         /// </summary>
         public static void Stop()
         {
-            _Cache.Remove(_Key);
-            _Cache.Remove(_KeyTime);
-            IsContainSysSql = false;
+            _Cache.Remove(Key);
+            _Cache.Remove(KeyTime);
+            _Cache.Remove(KeySys);
         }
         internal static void Add(string sql)
         {
-            object sqlObj = _Cache.Get(_Key);
-            _Cache.Set(_Key, sqlObj + sql);
+            string sqlObj = _Cache.Get<string>(Key);
+            _Cache.Set(Key, sqlObj + sql);
         }
     }
 }

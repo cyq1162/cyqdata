@@ -933,17 +933,17 @@ namespace CYQ.Data
             }
             /// <summary>
             /// 毫秒数（记录数据库执行时时长(ms)的SQL语句写入日志，对应配置项Log.Path的配置路径）
-            /// 配置项：DB.SqlFilter ： -1
+            /// 配置项：DB.PrintSql ： -1
             /// </summary>
-            public static int SqlFilter
+            public static int PrintSql
             {
                 get
                 {
-                    return GetAppInt("DB.SqlFilter", -1);
+                    return GetAppInt("DB.PrintSql", -1);
                 }
                 set
                 {
-                    SetApp("DB.SqlFilter", value.ToString());
+                    SetApp("DB.PrintSql", value.ToString());
                 }
             }
             /// <summary>

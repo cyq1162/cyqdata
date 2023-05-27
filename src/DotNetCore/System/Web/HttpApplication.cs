@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace System.Web
 {
@@ -38,10 +39,10 @@ namespace System.Web
             try
             {
                 BeginRequest?.Invoke(this, null);
-                if (!Context.TraceIdentifier.StartsWith("IsEnd:"))
+                if (!Context.Items.Contains("IsRunToEnd"))
                 {
                     PostMapRequestHandler?.Invoke(this, null);
-                    if (!Context.TraceIdentifier.StartsWith("IsEnd:"))
+                    if (!Context.Items.Contains("IsRunToEnd"))
                     {
                         AcquireRequestState?.Invoke(this, null);
                     }

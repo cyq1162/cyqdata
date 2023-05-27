@@ -29,16 +29,16 @@ namespace System.Web
         #region 兼容Web
         public void End()
         {
-            if (string.IsNullOrEmpty(context.TraceIdentifier) || !context.TraceIdentifier.StartsWith("IsEnd:"))
+            if (!context.Items.ContainsKey("IsRunToEnd"))
             {
-                context.TraceIdentifier = "IsEnd:" + context.TraceIdentifier;
+                context.Items.Add("IsRunToEnd", true);
             }
         }
         private bool IsEnd
         {
             get
             {
-                return context.TraceIdentifier.StartsWith("IsEnd:");
+                return context.Items.ContainsKey("IsRunToEnd");
             }
         }
         public string Charset

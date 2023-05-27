@@ -169,7 +169,7 @@ namespace CYQ.Data
         {
             get
             {
-                return _Message;
+                return _Message ?? "";
             }
             set
             {

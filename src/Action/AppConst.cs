@@ -55,7 +55,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HR))
                 {
-                    _HR = AppConfig.IsWeb ? "<hr>" : NewLine + "<---END--->" + NewLine;
+                    _HR = AppConfig.IsWeb ? "<hr />" : NewLine + "<---END--->" + NewLine;
                 }
                 return _HR;
             }
