@@ -757,7 +757,7 @@ namespace CYQ.Data
                 }
                 if (AppConfig.DB.PrintSql >= 0 && ms >= AppConfig.DB.PrintSql)
                 {
-                    Log.Write(tempSql, LogType.Info);
+                    Log.Write(tempSql, LogType.Debug + "_PrintSql");
                 }
                 tempSql = null;
             }
