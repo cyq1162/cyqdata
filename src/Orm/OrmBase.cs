@@ -10,7 +10,7 @@ namespace CYQ.Data.Orm
 {
 
     /// <summary>
-    /// ORM扩展基类
+    /// ORM 基类【内置RealProxy，能拦截属性赋值变化，实现按需要插入或更新，NetCore下该属性无效】
     /// </summary>
     [AopAttribute]
     public abstract partial class OrmBase : ContextBoundObject, IDisposable
@@ -141,7 +141,7 @@ namespace CYQ.Data.Orm
         ///  插入数据
         /// </summary>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Insert(bool autoSetValue)
+        public bool Insert(bool autoSetValue)
         {
             return sob.Insert(autoSetValue, InsertOp.ID, false);
         }
@@ -149,7 +149,7 @@ namespace CYQ.Data.Orm
         ///  插入数据
         /// </summary>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Insert(bool autoSetValue, InsertOp option)
+        public bool Insert(bool autoSetValue, InsertOp option)
         {
             return sob.Insert(autoSetValue, option, false);
         }

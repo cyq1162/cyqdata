@@ -31,7 +31,7 @@ namespace CYQ.Data.Orm
     //    BothOfAll
     //}
     /// <summary>
-    /// 简单ORM基类（纯数据交互功能）
+    /// 简单ORM基类（无属性拦截，实体全量更新或插入）
     /// </summary>
     public abstract class SimpleOrmBase<T> : SimpleOrmBase where T : class
     {
@@ -68,7 +68,7 @@ namespace CYQ.Data.Orm
     internal class SimpleOrmBaseDefaultInstance : SimpleOrmBase
     { }
     /// <summary>
-    /// 简单ORM基类（纯数据交互功能）
+    /// 简单ORM基类（无属性拦截，实体全量更新或插入）
     /// </summary>
     public abstract class SimpleOrmBase : IDisposable
     {
@@ -318,7 +318,7 @@ namespace CYQ.Data.Orm
         ///  插入数据
         /// </summary>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Insert(bool autoSetValue)
+        public bool Insert(bool autoSetValue)
         {
             return Insert(autoSetValue, InsertOp.ID, false);
         }
@@ -326,7 +326,7 @@ namespace CYQ.Data.Orm
         ///  插入数据
         /// </summary>
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Insert(bool autoSetValue, InsertOp option)
+        public bool Insert(bool autoSetValue, InsertOp option)
         {
             return Insert(autoSetValue, option, false);
         }
