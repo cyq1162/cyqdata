@@ -74,7 +74,7 @@ namespace CYQ.Data.Orm
     {
         OrmBaseInfo _BaseInfo;
         /// <summary>
-        /// 获取 基类 ORM 的相关信息
+        /// 获取 - 基类 ORM 的相关信息【Orm内部属性】
         /// </summary>
         [JsonIgnore]
         public OrmBaseInfo BaseInfo

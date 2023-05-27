@@ -16,7 +16,7 @@ namespace CYQ.Data.Orm
     public abstract partial class OrmBase : ContextBoundObject, IDisposable
     {
         /// <summary>
-        /// 获取 基类 ORM 的相关信息
+        /// 获取 - 基类 ORM 的相关信息【Orm内部属性】
         /// </summary>
         [JsonIgnore]
         public OrmBaseInfo BaseInfo
@@ -386,7 +386,7 @@ namespace CYQ.Data.Orm
             Action.SetExpression(updateExpression);
         }
         /// <summary>
-        /// UI操作
+        /// UI 操作【WebForm、Winform、WPF等自动取值或赋值】【Orm内部属性】
         /// </summary>
         [JsonIgnore]
         public MActionUI UI
