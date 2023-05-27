@@ -116,7 +116,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.WriteLogToTxt(err);
+                Log.WriteLogToTxt(err, LogType.Error);
             }
             return string.Empty;
         }

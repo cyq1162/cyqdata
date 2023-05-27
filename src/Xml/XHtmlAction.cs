@@ -940,7 +940,7 @@ namespace CYQ.Data.Xml
                         }
                         catch (Exception err)
                         {
-                            Log.WriteLogToTxt(err);
+                            Log.WriteLogToTxt(err, LogType.Error);
                         }
                         html = html.Replace(value, evalValue);
                     }

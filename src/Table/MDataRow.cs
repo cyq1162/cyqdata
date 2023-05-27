@@ -1657,7 +1657,7 @@ namespace CYQ.Data.Table
             {
                 string msg = "[AttachInfo]:" + string.Format("ObjName:{0} PropertyName:{1}", objName, cellName) + "\r\n";
                 msg += Log.GetExceptionMessage(err);
-                Log.WriteLogToTxt(msg);
+                Log.WriteLogToTxt(msg, LogType.Error);
             }
         }
 

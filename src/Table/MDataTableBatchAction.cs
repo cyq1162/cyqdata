@@ -95,7 +95,7 @@ namespace CYQ.Data.Table
                 if (!DBTool.CreateTable(mdt.TableName, mdt.Columns, _Conn) && (DBTool.ErrorMsg == null || !DBTool.ErrorMsg.Contains("已存在")))
                 {
                     string err = "MDataTableBatchAction.Init Create Table Error:" + mdt.TableName + DBTool.ErrorMsg;
-                    Log.Write(err);
+                    Log.Write(err, LogType.DataBase);
                     Error.Throw(err);
                 }
             }
@@ -104,7 +104,7 @@ namespace CYQ.Data.Table
             if (mdt.Columns.Count == 0)
             {
                 string err = "After fix table columns, length can't be zero";
-                Log.Write(err);
+                Log.Write(err, LogType.DataBase);
                 Error.Throw(err);
             }
             dalTypeTo = column.DataBaseType;

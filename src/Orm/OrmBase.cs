@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using CYQ.Data.Table;
-using System.Reflection;
-
 using CYQ.Data.Tool;
-using CYQ.Data.Cache;
-using CYQ.Data.SQL;
 using System.Data;
 using CYQ.Data.UI;
 using CYQ.Data.Aop;
@@ -32,7 +26,7 @@ namespace CYQ.Data.Orm
                 return sob.BaseInfo;
             }
         }
-        private SimpleOrmBase sob = new SimpleOrmBase();
+        private SimpleOrmBaseDefaultInstance sob = new SimpleOrmBaseDefaultInstance();
         ///// <summary>
         /////  字段来源（当字段变更时，可以设置此属性来切换更新）
         ///// </summary>
@@ -125,7 +119,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Insert()
         {
-            return Insert(false, InsertOp.ID);
+            return sob.Insert(false, InsertOp.ID, false);
         }
         /// <summary>
         ///  插入数据
@@ -133,24 +127,41 @@ namespace CYQ.Data.Orm
         /// <param name="option">插入选项</param>
         public bool Insert(InsertOp option)
         {
-            return Insert(false, option);
+            return sob.Insert(false, option, false);
         }
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="autoSetValue">自动从控制获取值</param>
-        public bool Insert(bool autoSetValue)
+        /// <param name="insertID">插入主键</param>
+        public bool Insert(InsertOp option, bool insertID)
         {
-            return Insert(autoSetValue, InsertOp.ID);
+            return sob.Insert(false, option, insertID);
         }
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="autoSetValue">自动从控制获取值</param>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
+        internal bool Insert(bool autoSetValue)
+        {
+            return sob.Insert(autoSetValue, InsertOp.ID, false);
+        }
+        /// <summary>
+        ///  插入数据
+        /// </summary>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
+        internal bool Insert(bool autoSetValue, InsertOp option)
+        {
+            return sob.Insert(autoSetValue, option, false);
+        }
+        /// <summary>
+        ///  插入数据
+        /// </summary>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
         /// <param name="option">插入选项</param>
-        public bool Insert(bool autoSetValue, InsertOp option)
+        /// <param name="insertID">自定义插入主键</param>
+        public bool Insert(bool autoSetValue, InsertOp option, bool insertID)
         {
-            return sob.Insert(autoSetValue, option, AllowInsertID);
+            return sob.Insert(autoSetValue, option, insertID);
         }
         #endregion
 
@@ -374,42 +385,16 @@ namespace CYQ.Data.Orm
         {
             Action.SetExpression(updateExpression);
         }
-
-        /// <summary>
-        /// 是否允许插入自增id
-        /// </summary>
-        public bool AllowInsertID
-        {
-            get
-            {
-                return Action.AllowInsertID;
-            }
-            set { Action.AllowInsertID = value; }
-        }
-
         /// <summary>
         /// UI操作
         /// </summary>
+        [JsonIgnore]
         public MActionUI UI
         {
             get
             {
-                if (Action.UI.IsOnAfterGetFromEventNull)
-                {
-                    Action.UI.OnAfterGetFromEvent += new CYQ.Data.UI.MActionUI.OnAfterGetFrom(UI_OnAfterGetFromEvent);
-                }
-                return Action.UI;
+                return sob.UI;
             }
         }
-
-        void UI_OnAfterGetFromEvent(string propValue)
-        {
-            if (!string.IsNullOrEmpty(propValue))
-            {
-                sob.SetValueToEntity(propValue, RowOp.IgnoreNull);
-            }
-        }
-
-
     }
 }

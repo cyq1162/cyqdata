@@ -7,6 +7,7 @@ using CYQ.Data.Tool;
 using CYQ.Data.SQL;
 using System.Data;
 using CYQ.Data.Aop;
+using CYQ.Data.UI;
 
 
 namespace CYQ.Data.Orm
@@ -32,7 +33,7 @@ namespace CYQ.Data.Orm
     /// <summary>
     /// 简单ORM基类（纯数据交互功能）
     /// </summary>
-    public class SimpleOrmBase<T> : SimpleOrmBase where T : class
+    public abstract class SimpleOrmBase<T> : SimpleOrmBase where T : class
     {
         public new T Get(object where)
         {
@@ -63,10 +64,13 @@ namespace CYQ.Data.Orm
             return base.Select<T>(pageIndex, pageSize, where, out count);
         }
     }
+
+    internal class SimpleOrmBaseDefaultInstance : SimpleOrmBase
+    { }
     /// <summary>
     /// 简单ORM基类（纯数据交互功能）
     /// </summary>
-    public class SimpleOrmBase : IDisposable
+    public abstract class SimpleOrmBase : IDisposable
     {
         OrmBaseInfo _BaseInfo;
         /// <summary>
@@ -91,6 +95,7 @@ namespace CYQ.Data.Orm
         /// <summary>
         /// 标识是否允许写日志(默认true)
         /// </summary>
+        [JsonIgnore]
         internal bool IsWriteLogOnError
         {
             set
@@ -125,6 +130,7 @@ namespace CYQ.Data.Orm
         Object entity;//实体对象
         Type typeInfo;//实体对象类型
         private MAction _Action;
+        [JsonIgnore]
         internal MAction Action
         {
             get
@@ -251,7 +257,7 @@ namespace CYQ.Data.Orm
                         if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
                         {
                             string err = "SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg;
-                            Log.Write(err);
+                            Log.Write(err, LogType.DataBase);
                             Error.Throw(err);
                         }
                     }
@@ -290,7 +296,7 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Insert()
         {
-            return Insert(InsertOp.ID);
+            return Insert(false, InsertOp.ID, false);
         }
         /// <summary>
         ///  插入数据
@@ -308,26 +314,29 @@ namespace CYQ.Data.Orm
         {
             return Insert(false, option, insertID);
         }
-        /*
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="autoSetValue">自动从控制获取值</param>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
         internal bool Insert(bool autoSetValue)
         {
-            return Insert(autoSetValue, InsertOp.ID);
-        }
-        internal bool Insert(bool autoSetValue, InsertOp option)
-        {
             return Insert(autoSetValue, InsertOp.ID, false);
-        }*/
+        }
         /// <summary>
         ///  插入数据
         /// </summary>
-        /// <param name="autoSetValue">自动从控制获取值</param>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
+        internal bool Insert(bool autoSetValue, InsertOp option)
+        {
+            return Insert(autoSetValue, option, false);
+        }
+        /// <summary>
+        ///  插入数据
+        /// </summary>
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
         /// <param name="option">插入选项</param>
         /// <param name="insertID">插入主键</param>
-        internal bool Insert(bool autoSetValue, InsertOp option, bool insertID)
+        public bool Insert(bool autoSetValue, InsertOp option, bool insertID)
         {
             if (autoSetValue)
             {
@@ -366,8 +375,8 @@ namespace CYQ.Data.Orm
         ///  更新数据(受影响行数>0才为true)
         /// </summary>
         /// <param name="where">where条件,可直接传id的值如:[88],或传完整where条件如:[id=88 and name='路过秋天']</param>
-        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用SetAutoPrefix或SetAutoParentControl方法设置控件前缀]</param>
-        internal bool Update(object where, bool autoSetValue, params string[] updateColumns)
+        /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
+        public bool Update(object where, bool autoSetValue, params string[] updateColumns)
         {
             if (autoSetValue)
             {
@@ -658,6 +667,32 @@ namespace CYQ.Data.Orm
                 _Action.Data.Clear();
             }
         }
+
+        /// <summary>
+        /// UI操作
+        /// </summary>
+        [JsonIgnore]
+        public MActionUI UI
+        {
+            get
+            {
+                if (Action.UI.IsOnAfterGetFromEventNull)
+                {
+                    Action.UI.OnAfterGetFromEvent += new CYQ.Data.UI.MActionUI.OnAfterGetFrom(UI_OnAfterGetFromEvent);
+                }
+                return Action.UI;
+            }
+        }
+
+        void UI_OnAfterGetFromEvent(string propValue)
+        {
+            if (!string.IsNullOrEmpty(propValue))
+            {
+                SetValueToEntity(propValue, RowOp.IgnoreNull);
+            }
+        }
+
+
         #region IDisposable 成员
         /// <summary>
         /// 释放资源

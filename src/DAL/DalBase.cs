@@ -756,7 +756,7 @@ namespace CYQ.Data
                 }
                 if (AppConfig.DB.SqlFilter >= 0 && ms >= AppConfig.DB.SqlFilter)
                 {
-                    Log.Write(tempSql, LogType.Debug);
+                    Log.Write(tempSql, LogType.Info);
                 }
                 _watch.Reset();
                 tempSql = null;

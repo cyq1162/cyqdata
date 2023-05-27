@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Data.SqlClient;
-
 using System.Threading;
-using CYQ.Data.Tool;
 using System.Web;
 
 

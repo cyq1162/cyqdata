@@ -300,7 +300,11 @@ namespace CYQ.Data.Tool
                                     {
                                         if (errIndex.ContainsKey(p.Name))
                                         {
-                                            objValue = reader.GetString(errIndex[p.Name]);
+                                            int index = errIndex[p.Name];
+                                            if (!reader.IsDBNull(index))
+                                            {
+                                                objValue = reader.GetString(index);
+                                            }
                                         }
                                         else
                                         {
@@ -310,7 +314,10 @@ namespace CYQ.Data.Tool
                                     catch
                                     {
                                         int index = reader.GetOrdinal(p.Name);
-                                        errIndex.Add(p.Name, index);
+                                        if (!errIndex.ContainsKey(p.Name))
+                                        {
+                                            errIndex.Add(p.Name, index);
+                                        }
                                         objValue = reader.GetString(index);
                                     }
 

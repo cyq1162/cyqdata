@@ -96,7 +96,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.Write(err);
+                Log.Write(err, LogType.Error);
                 throw;
             }
 
@@ -113,7 +113,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.Write(err);
+                Log.Write(err, LogType.Error);
                 throw;
             }
 
@@ -131,7 +131,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.Write(err);
+                Log.Write(err, LogType.Error);
                 throw;
             }
 
@@ -146,7 +146,7 @@ namespace CYQ.Data.Tool
             }
             catch (Exception err)
             {
-                Log.Write(err);
+                Log.Write(err, LogType.Error);
                 throw;
             }
         }
