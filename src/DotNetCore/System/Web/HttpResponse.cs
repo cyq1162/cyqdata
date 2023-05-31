@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 using CYQ.Data;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace System.Web
 {
@@ -253,6 +254,7 @@ namespace System.Web
             response.Redirect(location, permanent);
             End();
         }
+
         /// <summary>
         /// 内部：异步执行的（未等待）
         /// </summary>

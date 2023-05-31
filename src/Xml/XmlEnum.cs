@@ -33,6 +33,7 @@ namespace CYQ.Data.Xml
         Title,
         Link,
         Style,
+        ClearFlag,
         /// <summary>
         /// 自定义，以“属性,值,属性,值”这样的对应设置，无个数限制。
         /// </summary>

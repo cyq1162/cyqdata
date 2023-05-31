@@ -613,6 +613,7 @@ namespace CYQ.Data.Xml
                     case SetType.Visible:
                     case SetType.Title:
                     case SetType.Style:
+                    case SetType.ClearFlag:
                         string key = setType.ToString().ToLower();
                         SetAttrValue(node, key, values[0]);
                         break;

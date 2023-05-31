@@ -1095,13 +1095,16 @@ namespace CYQ.Data.Table
                 bool isGoOn = true;
                 if (IsTruncate)
                 {
-                    if (dalTypeTo == DataBaseType.Txt || dalTypeTo == DataBaseType.Xml)
+                    if (dalTypeTo == DataBaseType.Txt || dalTypeTo == DataBaseType.Xml || dalTypeTo == DataBaseType.SQLite)
                     {
-                        action.Delete("1=1");
+                        if (!action.Delete("2=2"))//删除表
+                        {
+                            result = isGoOn = false;
+                        }
                     }
                     else if (action.dalHelper.ExeNonQuery(string.Format(SqlCreate.TruncateTable, SqlFormat.Keyword(action.TableName, dalTypeTo)), false) == -2)
                     {
-                        isGoOn = false;
+                        result = isGoOn = false;
                         sourceTable.DynamicData = action.DebugInfo;
                         Log.Write(action.DebugInfo, LogType.DataBase);
                     }

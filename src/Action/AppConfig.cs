@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Diagnostics;
 
 namespace CYQ.Data
 {
@@ -62,42 +64,38 @@ namespace CYQ.Data
         /// </summary>
         public static string GetApp(string key, string defaultValue)
         {
-            if (appConfigs.ContainsKey(key))
+            // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
+            if (string.IsNullOrEmpty(key)) { return defaultValue; }
+            var appSettings = ConfigurationManager.AppSettings;
+            string[] items = key.Split(',');
+            foreach (string item in items)
             {
-                return appConfigs[key];
-            }
-            else
-            {
-                var appSettings = ConfigurationManager.AppSettings;
-                string value = appSettings[key];
-                if (string.IsNullOrEmpty(value) && key.IndexOf('.') > 0)
+                if (appConfigs.ContainsKey(item))
                 {
-                    value = appSettings[key.Replace(".", "")];
+                    return appConfigs[item];
+                }
+                string value = appSettings[item];
+                if (string.IsNullOrEmpty(value))
+                {
+                    if (item.IndexOf('.') > 0)
+                    {
+                        value = appSettings[item.Replace(".", "")];
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            value = appSettings[item.Substring(item.IndexOf('.') + 1)];
+                        }
+                    }
                     if (string.IsNullOrEmpty(value) && IsNetCore)
                     {
-                        value = Convert.ToString(ConfigurationManager.GetSection(key));
-                    }
-                    if (string.IsNullOrEmpty(value))
-                    {
-                        value = appSettings[key.Substring(key.IndexOf('.') + 1)];
+                        value = Convert.ToString(ConfigurationManager.GetSection(item));
                     }
                 }
-                value = string.IsNullOrEmpty(value) ? defaultValue : value;
-                // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
-                //try
-                //{
-                //    if (!string.IsNullOrEmpty(value)) 
-                //    {
-                //        appConfigs.Add(key, value);
-                //    }
-                //}
-                //catch
-                //{
-
-                //}
-
-                return value;
+                if (!string.IsNullOrEmpty(value))
+                {
+                    return value;
+                }
             }
+            return defaultValue;
         }
         /// <summary>
         /// 获取Web.config或App.config的数字值（允许值不存在或为空时输出默认值）。
@@ -119,7 +117,13 @@ namespace CYQ.Data
         {
             return ConvertTool.ChangeType<bool>(GetApp(key, defaultValue.ToString()));
         }
-
+        /// <summary>
+        /// 获取Web.config或App.config的数字值（允许值不存在或为空时输出默认值）。
+        /// </summary>
+        public static T GetApp<T>(string key, T defaultValue)
+        {
+            return ConvertTool.ChangeType<T>(GetApp(key, defaultValue.ToString()));
+        }
         /// <summary>
         /// 获取Web.config或App.config的connectionStrings节点的值。
         /// </summary>
@@ -334,6 +338,12 @@ namespace CYQ.Data
     {
         #region Web相关
 
+        [Conditional("DEBUG")]
+        private static void SetDebugRootPath(ref string path)
+        {
+            path = Environment.CurrentDirectory;
+            path = path + (path[0] == '/' ? '/' : '\\');
+        }
         private static string _WebRootPath;
         //内部变量
         /// <summary>
@@ -348,8 +358,10 @@ namespace CYQ.Data
                 {
                     if (IsNetCore)
                     {
-                        string path = AppDomain.CurrentDomain.BaseDirectory + "wwwroot";
-                        if (path.StartsWith("/"))
+                        string path = AppDomain.CurrentDomain.BaseDirectory;
+                        SetDebugRootPath(ref path);
+                        path = path + "wwwroot";
+                        if (path[0] == '/')
                         {
                             path = path + "/";
                         }

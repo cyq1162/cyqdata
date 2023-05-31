@@ -19,7 +19,7 @@ namespace System.Web
         {
             if (!AppConfig.WebRootPath.Contains("wwwroot")) //NetCore项目不存在wwwroot文件夹
             {
-                AppConfig.WebRootPath = AppConfig.WebRootPath + "wwwroot" + (AppConfig.WebRootPath.StartsWith("/") ? "/" : "\\");//设置根目录地址，ASPNETCore的根目录和其它应用不一样。
+                AppConfig.WebRootPath = AppConfig.WebRootPath + "wwwroot" + (AppConfig.WebRootPath[0]=='/' ? "/" : "\\");//设置根目录地址，ASPNETCore的根目录和其它应用不一样。
             }
         }
         public HttpContext Context
