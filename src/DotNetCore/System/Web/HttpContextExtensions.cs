@@ -19,9 +19,9 @@ namespace Microsoft.AspNetCore.Http
 
         public static IApplicationBuilder UseHttpContext(this IApplicationBuilder app)
         {
-            if(!IsUseHttpContext)
+            if (!IsUseHttpContext)
             {
-                IsUseHttpContext= true;
+                IsUseHttpContext = true;
                 var httpContextAccessor = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
                 System.Web.HttpContext.Configure(httpContextAccessor);
             }
