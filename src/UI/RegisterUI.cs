@@ -9,7 +9,7 @@ namespace CYQ.Data.UI
     /// </summary>
     public static class RegisterUI
     {
-        internal static Dictionary<string, string> UIList;
+        internal static Dictionary<string, string> UIList = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 添加要注册的第三方控件名称。
         /// </summary>
@@ -17,34 +17,17 @@ namespace CYQ.Data.UI
         /// <param name="propertyName">控件的自动取值或赋值属性名称，如：Text</param>
         public static void Add(string controlClassName, string propertyName)
         {
-            try
+            if (!UIList.ContainsKey(controlClassName))
             {
-                if (UIList == null)
-                {
-                    UIList = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                }
-                if (!UIList.ContainsKey(controlClassName))
-                {
-                    UIList.Add(controlClassName, propertyName);
-                }
+                UIList.Add(controlClassName, propertyName);
             }
-            catch
-            {
-
-
-            }
-
         }
         /// <summary>
         /// 清除UI注册
         /// </summary>
         public static void Clear()
         {
-            if (UIList != null)
-            {
-                UIList.Clear();
-                UIList = null;
-            }
+            UIList.Clear();
         }
     }
 }
