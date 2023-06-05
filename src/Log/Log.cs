@@ -149,7 +149,10 @@ namespace CYQ.Data
                     {
                         log.RefererUrl = HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                     }
-
+                }
+                else
+                {
+                    log.TraceID = LocalEnvironment.ProcessID.ToString();
                 }
             }
             catch
