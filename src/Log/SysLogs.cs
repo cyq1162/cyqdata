@@ -251,7 +251,11 @@ namespace CYQ.Data
             }
             if (!string.IsNullOrEmpty(RefererUrl))
             {
-                title += AppConst.NewLine + AppConst.NewLine + "Referer : " + RefererUrl;
+                if (string.IsNullOrEmpty(TraceID))
+                {
+                    title += AppConst.NewLine;
+                }
+                title += AppConst.NewLine + "Referer : " + RefererUrl;
             }
             string body = title + AppConst.NewLine + AppConst.NewLine + Message.Replace("<br />", AppConst.NewLine) + AppConst.NewLine + AppConst.NewLine;
             body += "---------------------------------------" + AppConst.NewLine + AppConst.NewLine;
