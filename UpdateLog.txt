@@ -1019,6 +1019,6 @@
 768：优化：AppConfig：WebRootPath、GetApp(...)。（2023-05-31）
 769：新增：AppConfig：GetApp<T>(...)。（2023-05-31）
 -------------------------------------------------------------------------------------
-1、新增：HttpContext 增加扩展方法：GetTraceID()（2023-06-05）【V5.8.7.1】
-2、新增：Log TraceID（字段），记录分布式追踪ID。（2023-06-05）
-3、优化：Log PageUrl 调整名称为：RequestUrl（2023-06-05）
+770：新增：HttpContext 增加扩展方法：GetTraceID()（2023-06-05）【V5.8.7.1】
+771：新增：Log（SysLog） TraceID（字段），记录分布式追踪ID。（2023-06-05）
+772：优化：Log（SysLog） PageUrl 调整名称为：RequestUrl（2023-06-05）
