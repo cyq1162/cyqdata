@@ -150,6 +150,20 @@ namespace System.Web
         public CancellationToken RequestAborted { get => NetCoreContext.RequestAborted; set => NetCoreContext.RequestAborted = value; }
         public string TraceIdentifier { get => NetCoreContext.TraceIdentifier; set => NetCoreContext.TraceIdentifier = value; }
 
+        /// <summary>
+        /// 获取分布式追踪ID。
+        /// </summary>
+        /// <returns></returns>
+        public string GetTraceID()
+        {
+            string tid = request.Headers["X-Request-ID"];
+            if (!string.IsNullOrEmpty(tid))
+            {
+                return tid;
+            }
+            return TraceIdentifier;
+        }
+
         public void RewritePath(string path)
         {
             string newQueryString = null;

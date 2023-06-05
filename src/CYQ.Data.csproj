@@ -131,6 +131,10 @@
     <Compile Include="DAL\NoSql\NoSqlTransaction.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
+    <Compile Include="DotNet\ExtensionAttribute.cs" />
+    <Compile Include="DotNet\HttpContexExtend.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
     <Compile Include="Log\LocalEnvironment.cs">
       <SubType>Code</SubType>

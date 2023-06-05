@@ -136,18 +136,20 @@ namespace CYQ.Data
             log.CreateTime = DateTime.Now;
             try
             {
-                if (AppConfig.IsWeb && HttpContext.Current != null && HttpContext.Current.Handler != null)
+                HttpContext context = HttpContext.Current;
+                if (AppConfig.IsWeb && context != null && context.Handler != null)
                 {
-                    HttpRequest request = HttpContext.Current.Request;
+                    HttpRequest request = context.Request;
                     log.HttpMethod = request.HttpMethod;
                     log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
+                    log.TraceID = context.GetTraceID();
                     Uri uri = request.Url;
-                    log.PageUrl = uri.Scheme + "://" + uri.Authority + HttpUtility.UrlDecode(request.RawUrl);
+                    log.RequestUrl = uri.Scheme + "://" + uri.Authority + HttpUtility.UrlDecode(request.RawUrl);
                     if (request.UrlReferrer != null && uri != request.UrlReferrer)
                     {
                         log.RefererUrl = HttpUtility.UrlDecode(request.UrlReferrer.ToString());
                     }
-                    
+
                 }
             }
             catch

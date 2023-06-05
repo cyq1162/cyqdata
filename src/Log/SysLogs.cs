@@ -51,6 +51,24 @@ namespace CYQ.Data
             get { return _LogType ?? ""; }
             set { _LogType = value; }
         }
+
+        private string _TraceID;
+        /// <summary>
+        /// 分布式追踪ID
+        /// </summary>
+        [Length(50)]
+        public string TraceID
+        {
+            get
+            {
+                return _TraceID;
+            }
+            set
+            {
+                _TraceID = value;
+            }
+        }
+
         private string _HostName;
         /// <summary>
         /// 请求的主机名称(系统默认读取主机名)
@@ -125,20 +143,20 @@ namespace CYQ.Data
                 _ClientIP = value == "::1" ? "127.0.0.1" : value;
             }
         }
-        private string _PageUrl;
+        private string _RequestUrl;
         /// <summary>
         /// 请求的地址
         /// </summary>
         [Length(500)]
-        public string PageUrl
+        public string RequestUrl
         {
             get
             {
-                return _PageUrl;
+                return _RequestUrl;
             }
             set
             {
-                _PageUrl = value;
+                _RequestUrl = value;
             }
         }
 
@@ -222,10 +240,14 @@ namespace CYQ.Data
         internal string GetFormatterText()
         {
             string title = string.Format("V{0} Record On : {1} : {2} {3}",
-                AppConfig.Version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), HttpMethod, PageUrl ?? "");// + Log.Url;
+                AppConfig.Version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), HttpMethod, RequestUrl ?? "");// + Log.Url;
             if (!string.IsNullOrEmpty(ClientIP))
             {
                 title += " - " + ClientIP;
+            }
+            if (!string.IsNullOrEmpty(TraceID))
+            {
+                title += AppConst.NewLine + AppConst.NewLine + "TraceID : " + TraceID;
             }
             if (!string.IsNullOrEmpty(RefererUrl))
             {

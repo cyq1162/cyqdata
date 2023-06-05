@@ -7,9 +7,9 @@
     <PackageId>cyqdatacore</PackageId>
     <Version>5.8.5.0</Version>
     <Authors>路过秋天</Authors>
-    <Description>cyq.data is a high-performance and the most powerful orm.（.Net 最好用的ORM数据层框架，木有之一，低调持续更新15年！支持.Net Framework 2.0+，支持.Net Core 2.1+，自带数据库读写分离，分布式缓存，分布式锁等）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。</Description>
+    <Description>cyq.data is a high-performance and the most powerful orm.（.Net 最好用的ORM数据层框架，木有之一，低调持续更新15年！支持.Net Framework 2.0+，支持.Net Core 2.1+，自带数据库读写分离，分布式缓存，分布式锁等）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。【开源：https://github.com/cyq1162/cyqdata】</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2023-06-01）</Company>
+    <Company>路过秋天 （2023-06-05）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -32,8 +32,8 @@
 662：优化：实体转MDataRow、MDataTable、Json时：成员变量也加入列头、或Json值的输出。(2021-06-30、2021-07-01)</PackageReleaseNotes>
     <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.8.7.0</AssemblyVersion>
-    <FileVersion>5.8.7.0</FileVersion>
+    <AssemblyVersion>5.8.7.1</AssemblyVersion>
+    <FileVersion>5.8.7.1</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
