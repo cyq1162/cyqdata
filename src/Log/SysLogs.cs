@@ -61,7 +61,7 @@ namespace CYQ.Data
         {
             get
             {
-                return _TraceID;
+                return _TraceID ?? "";
             }
             set
             {

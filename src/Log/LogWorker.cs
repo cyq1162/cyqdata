@@ -22,7 +22,7 @@ namespace CYQ.Data
         static bool threadIsWorking = false;
         public static void Add(SysLogs log)
         {
-            long hash = log.Message.GetHashCode() + log.LogType.GetHashCode();
+            long hash = log.Message.GetHashCode() + log.LogType.GetHashCode() + log.TraceID.GetHashCode();
             if (hashObj.ContainsKey(hash))
             {
                 if (hashObj[hash].AddMinutes(3) < DateTime.Now)
