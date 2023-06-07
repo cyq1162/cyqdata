@@ -1866,9 +1866,7 @@ namespace CYQ.Data.Tool
 
 
     }
-    /// <summary>
-    /// Xml <=> Json
-    /// </summary>
+
     public partial class JsonHelper
     {
         #region Xml 转 Json

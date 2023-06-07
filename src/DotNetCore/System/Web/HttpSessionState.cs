@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net;
+using CYQ.Data;
 using CYQ.Data.Cache;
+using Microsoft.Extensions.Primitives;
 
 namespace System.Web
 {
@@ -40,6 +42,14 @@ namespace System.Web
                 string sessionID = context.Request.Cookies["CYQ.SessionID"];
                 if (string.IsNullOrEmpty(sessionID))
                 {
+                    if (context.Request.Cookies.Count == 0)
+                    {
+                        string referer = context.Request.Headers["Referer"];
+                        if (string.IsNullOrEmpty(referer))
+                        {
+                            return string.Empty;//API请求，不产生Cookie。
+                        }
+                    }
                     sessionID = DateTime.Now.ToString("HHmmss") + Guid.NewGuid().GetHashCode();
                     context.Response.Cookies.Append("CYQ.SessionID", sessionID);
                 }
