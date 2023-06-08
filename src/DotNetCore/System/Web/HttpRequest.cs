@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CYQ.Data;
+using Microsoft.AspNetCore.Http;
 using System.Collections.Specialized;
 using System.IO;
 using System.Text;
@@ -162,18 +163,14 @@ namespace System.Web
             get
             {
                 //涉及Url重写时，不能缓存。
-                Uri uri = new Uri(new StringBuilder()
+                string url = new StringBuilder()
             .Append(request.Scheme)
             .Append("://")
             .Append(request.Host)
             .Append(request.PathBase)
             .Append(request.Path.Value.Split('?')[0])
-            .Append(request.QueryString).ToString());
-                return uri;
-
-
-
-
+            .Append(request.QueryString).ToString();
+                return new Uri(url);
             }
         }
         public Uri UrlReferrer
