@@ -2,6 +2,8 @@
 using System.Net;
 using CYQ.Data;
 using CYQ.Data.Cache;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Primitives;
 
 namespace System.Web
@@ -51,7 +53,7 @@ namespace System.Web
                         }
                     }
                     sessionID = DateTime.Now.ToString("HHmmss") + Guid.NewGuid().GetHashCode();
-                    context.Response.Cookies.Append("CYQ.SessionID", sessionID);
+                    context.Response.Cookies.Append("CYQ.SessionID", sessionID, new CookieOptions() { SameSite = SameSiteMode.None });
                 }
                 context.Items.Add("HttpSessionID", sessionID);
                 return sessionID;
