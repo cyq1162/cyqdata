@@ -146,7 +146,7 @@ namespace CYQ.Data
         public bool IsWriteLogOnError = true;
 
         protected bool isUseUnsafeModeOnSqlite = false;
-        private bool isAllowResetConn = true;//如果执行了非查询之后，为了数据的一致性，不允许切换到Slave数据库链接
+        //private bool isAllowResetConn = true;//如果执行了非查询之后，为了数据的一致性，不允许切换到Slave数据库链接
         private string tempSql = string.Empty;//附加信息，包括调试信息
 
 
@@ -973,7 +973,7 @@ namespace CYQ.Data
         private int ExeNonQuerySQL(string cmdText, bool isProc)
         {
             RecordsAffected = -2;
-            if (IsOpenTrans && UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
+            if (IsOpenTrans || UsingConnBean.IsSlave)// && 事务操作时，如果在从库，切回主库
             {
                 ResetConn(ConnObj.Master);
             }
@@ -1254,7 +1254,7 @@ namespace CYQ.Data
                 if (result && _IsRecordDebugInfo)
                 {
                     ConnObj.SetFocusOnMaster();
-                    isAllowResetConn = false;
+                    //isAllowResetConn = false;
                 }
                 return result;
             }
@@ -1277,7 +1277,6 @@ namespace CYQ.Data
                     if (IsOpenTrans && cb.IsSlave)
                     {
                         ResetConn(ConnObj.Master);
-
                     }
                 }
                 if (!cb.IsOK)
@@ -1299,7 +1298,7 @@ namespace CYQ.Data
                         }
                     }
                 }
-                else if (!IsOpenTrans && cb != UsingConnBean && isAllowResetConn && ConnObj.IsAllowSlave())
+                else if (!IsOpenTrans && cb != UsingConnBean  && ConnObj.IsAllowSlave())//&& isAllowResetConn
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
@@ -1322,7 +1321,6 @@ namespace CYQ.Data
                 UsingConnBean.IsOK = false;
                 UsingConnBean.ErrorMsg = err.Message;
                 return OpenCon(null, leve);
-
             }
         }
         private void Open()
