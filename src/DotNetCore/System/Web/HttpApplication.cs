@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace System.Web
 {
@@ -19,7 +18,7 @@ namespace System.Web
         {
             if (!AppConfig.WebRootPath.Contains("wwwroot")) //NetCore项目不存在wwwroot文件夹
             {
-                AppConfig.WebRootPath = AppConfig.WebRootPath + "wwwroot" + (AppConfig.WebRootPath[0]=='/' ? "/" : "\\");//设置根目录地址，ASPNETCore的根目录和其它应用不一样。
+                AppConfig.WebRootPath = AppConfig.WebRootPath + "wwwroot" + (AppConfig.WebRootPath[0] == '/' ? "/" : "\\");//设置根目录地址，ASPNETCore的根目录和其它应用不一样。
             }
         }
         public HttpContext Context
@@ -32,6 +31,7 @@ namespace System.Web
         public event EventHandler BeginRequest;
         public event EventHandler PostMapRequestHandler;
         public event EventHandler AcquireRequestState;
+        public event EventHandler PreSendRequestContent;
         public event EventHandler Error;
         public event EventHandler Disposed;
         public void ExecuteEventHandler()
@@ -41,13 +41,8 @@ namespace System.Web
                 BeginRequest?.Invoke(this, null);
                 if (!Context.Items.Contains("IsRunToEnd"))
                 {
-                    PostMapRequestHandler?.Invoke(this, null);
-                    if (!Context.Items.Contains("IsRunToEnd"))
-                    {
-                        AcquireRequestState?.Invoke(this, null);
-                    }
+                    AcquireRequestState?.Invoke(this, null);
                 }
-
             }
             catch (Exception err)
             {
