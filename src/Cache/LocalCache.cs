@@ -486,13 +486,12 @@ namespace CYQ.Data.Cache
             fsy.Changed += new FileSystemEventHandler(fsy_Changed);
             return fsy;
         }
-        private static readonly object obj2 = new object();
+
         void fsy_Changed(object sender, FileSystemEventArgs e)
         {
-            lock (obj2)
+            lock (e.FullPath)
             {
                 string fileName = e.FullPath;
-
                 string folder = Path.GetDirectoryName(fileName);
                 if (theFolderKeys.ContainsKey(folder))
                 {

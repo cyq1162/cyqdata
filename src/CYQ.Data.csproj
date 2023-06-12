@@ -179,6 +179,10 @@
     <Compile Include="Tool\DB\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
     <Compile Include="Tool\HashAlgorithms.cs" />
+    <Compile Include="Tool\IO\IOHelper.cs" />
+    <Compile Include="Tool\IO\IOInfo.cs" />
+    <Compile Include="Tool\IO\IOWatch.cs" />
+    <Compile Include="Tool\IO\TextEncodingDetect.cs" />
     <Compile Include="Tool\Json\JsonAttribute.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
@@ -239,7 +243,6 @@
     <Compile Include="Table\MDataTableFilter.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tool\IOHelper.cs" />
     <Compile Include="Tool\Json\JsonHelper.cs">
       <SubType>Code</SubType>
     </Compile>

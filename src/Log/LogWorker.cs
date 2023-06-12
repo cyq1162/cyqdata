@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Web.UI;
 
 namespace CYQ.Data
 {
@@ -91,7 +92,7 @@ namespace CYQ.Data
                     //检测数据库
                     //检测文件路径：
                     string body = sys.GetFormatterText();
-                    IOHelper.Save(filePath, body, true, false);
+                    IOHelper.Save(filePath, body, true, false, IOHelper.DefaultEncoding);
                     try
                     {
                         if (!dbErr)

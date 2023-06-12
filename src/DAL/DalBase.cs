@@ -296,10 +296,13 @@ namespace CYQ.Data
                     if (System.IO.File.Exists(fullPath))
                     {
                         string json = IOHelper.ReadAllText(fullPath);
-                        dic = JsonHelper.ToEntity<Dictionary<string, string>>(json);
-                        if (dic != null && dic.Count > 0)
+                        if (!string.IsNullOrEmpty(json))
                         {
-                            return dic;
+                            dic = JsonHelper.ToEntity<Dictionary<string, string>>(json);
+                            if (dic != null && dic.Count > 0)
+                            {
+                                return dic;
+                            }
                         }
                     }
                 }
