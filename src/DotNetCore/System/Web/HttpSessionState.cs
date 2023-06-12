@@ -53,7 +53,15 @@ namespace System.Web
                         }
                     }
                     sessionID = DateTime.Now.ToString("HHmmss") + Guid.NewGuid().GetHashCode();
-                    context.Response.Cookies.Append("CYQ.SessionID", sessionID, new CookieOptions() { SameSite = SameSiteMode.None });
+                    if(context.Request.IsHttps)
+                    {
+                        context.Response.Cookies.Append("CYQ.SessionID", sessionID, new CookieOptions() { SameSite = SameSiteMode.None, Secure = true });
+                    }
+                    else
+                    {
+                        context.Response.Cookies.Append("CYQ.SessionID", sessionID);
+                    }
+                    
                 }
                 context.Items.Add("HttpSessionID", sessionID);
                 return sessionID;
