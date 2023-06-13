@@ -94,17 +94,19 @@ namespace CYQ.Data.Tool
         private static string Encrypt(string text, byte[] hashKey)
         {
             string result = string.Empty;
-            using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
+            if (!string.IsNullOrEmpty(text))
             {
-                DES.Key = hashKey;
-                DES.Mode = CipherMode.ECB;
-                ICryptoTransform DESEncrypt = DES.CreateEncryptor();
+                using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
+                {
+                    DES.Key = hashKey;
+                    DES.Mode = CipherMode.ECB;
+                    ICryptoTransform DESEncrypt = DES.CreateEncryptor();
 
-                byte[] Buffer = ASCIIEncoding.UTF8.GetBytes(text);
-                string pass = Convert.ToBase64String(DESEncrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
-                result = pass.Replace('=', '$').Replace("+", "-").Replace("/", "_");
+                    byte[] Buffer = ASCIIEncoding.UTF8.GetBytes(text);
+                    string pass = Convert.ToBase64String(DESEncrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
+                    result = pass.Replace('=', '$').Replace("+", "-").Replace("/", "_");
+                }
             }
-
             return result;
         }//end method
 
