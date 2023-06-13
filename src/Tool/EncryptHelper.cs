@@ -153,20 +153,24 @@ namespace CYQ.Data.Tool
         {
             string result = "";
             text = text.Replace('#', '=').Replace("$", "=").Replace("-", "+").Replace("_", "/");
-            using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
+            if (text.Length % 4 == 0)
             {
-                DES.Key = hashKey;
-                DES.Mode = CipherMode.ECB;
+                using (TripleDESCryptoServiceProvider DES = new TripleDESCryptoServiceProvider())
+                {
+                    DES.Key = hashKey;
+                    DES.Mode = CipherMode.ECB;
 
-                ICryptoTransform DESDecrypt = DES.CreateDecryptor();
-                try
-                {
-                    byte[] Buffer = Convert.FromBase64String(text);
-                    result = ASCIIEncoding.UTF8.GetString(DESDecrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
-                }
-                catch
-                {
-                    return text;
+                    ICryptoTransform DESDecrypt = DES.CreateDecryptor();
+                    try
+                    {
+
+                        byte[] Buffer = Convert.FromBase64String(text);
+                        result = ASCIIEncoding.UTF8.GetString(DESDecrypt.TransformFinalBlock(Buffer, 0, Buffer.Length));
+                    }
+                    catch
+                    {
+                        return string.Empty;
+                    }
                 }
             }
             return result;
