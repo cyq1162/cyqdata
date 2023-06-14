@@ -6,6 +6,8 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
+using static CYQ.Data.AppConfig;
+using System.Text.RegularExpressions;
 
 namespace CYQ.Data.Xml
 {
@@ -187,7 +189,27 @@ namespace CYQ.Data.Xml
                         }
                         xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
                     }
-                    // xml = xml.Replace("http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd", AppConfig.XHtml.DtdUri);
+
+                    if (xml.IndexOf(AppConfig.XHtml.CDataLeft) == -1)
+                    {
+                        int body = Math.Max(xml.IndexOf("<body"), xml.IndexOf("</head>"));
+                        int scriptStart = xml.IndexOf("<script", body);
+                        if (scriptStart > 0)
+                        {
+                            int scriptEnd = xml.IndexOf("</script>", scriptStart);
+                            while (scriptStart < scriptEnd && scriptStart > 0)
+                            {
+                                //检测是否存在脚本，若存在，追加CData
+                                xml = xml.Insert(scriptEnd + 9, AppConfig.XHtml.CDataRight);
+                                xml = xml.Insert(scriptStart, AppConfig.XHtml.CDataLeft);
+                                scriptStart = xml.IndexOf("<script", scriptEnd + 10);
+                                if (scriptStart > 0)
+                                {
+                                    scriptEnd = xml.IndexOf("</script>", scriptStart);
+                                }
+                            }
+                        }
+                    }
                 }
                 xml = Filter(xml);
                 _XmlDocument.LoadXml(xml);
