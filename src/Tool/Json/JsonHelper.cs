@@ -1205,7 +1205,19 @@ namespace CYQ.Data.Tool
                     }
                     else if (len == 2)
                     {
-                        Fill(MDataRow.CreateFrom(obj, t));
+                        if (t.Name.StartsWith("MDictionary") && argTypes[0].Name == "String")
+                        {
+                            List<string> items = t.GetMethod("GetKeys").Invoke(obj, new object[0]) as List<string>;
+                            MethodInfo methodGet = t.GetMethod("Get");
+                            foreach (var item in items)
+                            {
+                                Add(item, methodGet.Invoke(obj, new object[] { item }));
+                            }
+                        }
+                        else
+                        {
+                            Fill(MDataRow.CreateFrom(obj, t));
+                        }
                     }
                     #endregion
                 }
@@ -1250,9 +1262,10 @@ namespace CYQ.Data.Tool
 
         public void Fill(MDictionary<string, string> dic)
         {
-            foreach (var item in dic)
+            List<string> items = dic.GetKeys();
+            foreach (var item in items)
             {
-                Add(item.Key, item.Value);
+                Add(item, dic[item]);
             }
         }
         public void Fill(Dictionary<string, object> dic)
@@ -1265,9 +1278,10 @@ namespace CYQ.Data.Tool
 
         public void Fill(MDictionary<string, object> dic)
         {
-            foreach (var item in dic)
+            List<string> items = dic.GetKeys();
+            foreach (var item in items)
             {
-                Add(item.Key, item.Value);
+                Add(item, dic[item]);
             }
         }
 
