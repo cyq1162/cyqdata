@@ -702,6 +702,10 @@ namespace CYQ.Data.Xml
                                 key = setType.ToString().ToLower();
                                 SetAttrValue(node, key, key);
                                 break;
+                            case "0":
+                            case "false":
+                                RemoveAttr(node, setType.ToString().ToLower());
+                                break;
                         }
                         break;
                 }

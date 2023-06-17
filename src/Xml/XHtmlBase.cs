@@ -6,7 +6,6 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
-using static CYQ.Data.AppConfig;
 using System.Text.RegularExpressions;
 
 namespace CYQ.Data.Xml
