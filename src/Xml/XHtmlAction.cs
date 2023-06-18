@@ -689,7 +689,8 @@ namespace CYQ.Data.Xml
                         }
                         break;
                     case SetType.Checked:
-                        if (node.Name == "input" && node.Attributes["type"].Value == "radio")
+                        string type = GetAttrValue(node, "type");
+                        if (node.Name == "input" && type == "radio")
                         {
                             values[0] = "1";
                         }
@@ -704,7 +705,10 @@ namespace CYQ.Data.Xml
                                 break;
                             case "0":
                             case "false":
-                                RemoveAttr(node, setType.ToString().ToLower());
+                                if (type == "checkbox")
+                                {
+                                    RemoveAttr(node, setType.ToString().ToLower());
+                                }
                                 break;
                         }
                         break;
