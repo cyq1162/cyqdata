@@ -1,7 +1,6 @@
 ﻿using CYQ.Data;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace System.Web
 {
@@ -10,8 +9,21 @@ namespace System.Web
     /// </summary>
     public class HttpApplication
     {
+        private static Dictionary<string, HttpApplication> keyValues= new Dictionary<string, HttpApplication>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
-        /// 单例处理（不需要延时）
+        /// 根据指定 Key 获得唯一实例
+        /// </summary>
+        /// <param name="key">在不同的NetCore中间件被使用时，用Key区分</param>
+        /// <returns></returns>
+        public static HttpApplication GetInstance(string key)
+        {
+            if(keyValues.ContainsKey(key)) return keyValues[key];
+            HttpApplication instance = new HttpApplication();
+            keyValues.Add(key, instance);
+            return instance;
+        }
+        /// <summary>
+        /// 单例处理，（对于多个中间件，请使用GetInstance方法）
         /// </summary>
         public static HttpApplication Instance => LocalShell.instance;
         private HttpApplication()
