@@ -219,6 +219,7 @@ namespace CYQ.Data.Cache
     /// </summary>
     public abstract partial class CacheManage
     {
+        private Dictionary<string, int> lockAgain = new Dictionary<string, int>();
         /// <summary>
         /// 分布式锁（分布式锁需要启用Redis或Memcached）
         /// </summary>
@@ -227,23 +228,27 @@ namespace CYQ.Data.Cache
         /// <returns></returns>
         public virtual bool Lock(string key, int millisecondsTimeout)
         {
-
-            //    string localKey=Thread.CurrentThread.ManagedThreadId + "-" + key;
-            //    //分布式锁，处理锁可重入问题
-            //    if (LocalInstance.Contains(localKey))
-            //    {
-            //        LocalInstance.Set(localKey,
-            //    }
+            #region 可重入锁
 
             string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
-            int sleep = 5;
+            //已存在锁，锁重入。
+            if (lockAgain.ContainsKey(flag))
+            {
+                lockAgain[flag]++;
+                //Console.WriteLine("Lock Again:" + flag);
+                return true;
+            }
 
+            #endregion
+
+            int sleep = 5;
             int count = millisecondsTimeout;
             while (true)
             {
                 if (Add(key, flag, 0.1))
                 {
-                    //Console.WriteLine("Lock :--------------------------");
+                    lockAgain.Add(flag, 0);
+                    //Console.WriteLine("Lock :" + flag);
                     AddToWork(key, flag);//循环检测超时时间，执行期间，服务挂了，然后重启了？
                     return true;
                 }
@@ -265,7 +270,27 @@ namespace CYQ.Data.Cache
         /// <returns></returns>
         public virtual bool UnLock(string key)
         {
-            //Console.WriteLine("Un Lock :--------------------------");
+            #region 可重入锁检测
+
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            if (lockAgain.ContainsKey(flag))
+            {
+
+                if (lockAgain[flag] > 0)
+                {
+                    lockAgain[flag]--;
+                    //Console.WriteLine("Un Lock Again:" + flag + " - " + lockAgain[flag]);
+                    return true;
+                }
+                else
+                {
+                    lockAgain.Remove(flag);
+                }
+            }
+            #endregion
+
+
+            //Console.WriteLine("Un Lock :" + flag);
             RemoveFromWork(key);
 
             //--释放机制有些问题，需要调整。
@@ -275,7 +300,7 @@ namespace CYQ.Data.Cache
             {
                 return true;
             }
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+
             //自身加的锁
             if (value == flag)
             {
@@ -315,7 +340,7 @@ namespace CYQ.Data.Cache
             while (true)
             {
                 Thread.Sleep(3000);//循环。
-               // Console.WriteLine("DoWork :--------------------------Count : " + keysDic.Count);
+                // Console.WriteLine("DoWork :--------------------------Count : " + keysDic.Count);
                 if (keysDic.Count > 0)
                 {
                     List<string> list = keysDic.GetKeys();
@@ -325,7 +350,7 @@ namespace CYQ.Data.Cache
                         if (keysDic.ContainsKey(key))
                         {
                             Set(key, keysDic[key], 0.1);//延时锁：6秒
-                            
+
                         }
                     }
                     list.Clear();
