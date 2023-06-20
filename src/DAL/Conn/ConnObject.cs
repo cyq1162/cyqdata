@@ -184,6 +184,17 @@ namespace CYQ.Data
         {
             connDicCache.Remove(key);
         }
+    }
+
+    /// <summary>
+    /// 线程任务
+    /// </summary>
+    internal partial class ConnObject
+    {
+        static ConnObject()
+        {
+            ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(CheckConnIsOk));//主从链接的检测机制。
+        }
         /// <summary>
         /// 定时检测异常的链接是否恢复。
         /// </summary>

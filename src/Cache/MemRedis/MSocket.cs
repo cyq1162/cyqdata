@@ -27,14 +27,16 @@ namespace CYQ.Data.Cache
         private Socket socket;
         private Stream stream;
         public readonly DateTime CreateTime;
-        public MSocket(HostNode socketPool, string host)
+        public MSocket(HostNode hostNode, string host)
         {
-            this.hostNode = socketPool;
-            CreateTime = DateTime.Now;
             socket = SocketCreate.New(host);
-
-            //Wraps two layers of streams around the socket for communication.
-            stream = new BufferedStream(new NetworkStream(socket, false));
+            if (socket != null)
+            {
+                this.hostNode = hostNode;
+                CreateTime = DateTime.Now;
+                //Wraps two layers of streams around the socket for communication.
+                stream = new BufferedStream(new NetworkStream(socket, false));
+            }
         }
 
         /// <summary>

@@ -164,56 +164,6 @@ namespace CYQ.Data.Cache
         public abstract bool Set(string key, object value, double cacheMinutes, string fileName);
 
         /// <summary>
-        /// 加锁（分布式锁需要启用Redis或Memcached）
-        /// </summary>
-        /// <param name="key">key</param>
-        /// <param name="waitTimeoutSeconds">尝试获取锁的最大等待时间（s秒），超过这个值，则认为获取锁失败</param>
-        /// <returns></returns>
-        public virtual bool Lock(string key, int waitTimeoutSeconds)
-        {
-            int count = waitTimeoutSeconds * 1000;
-            int sleep = 1;
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
-            while (true)
-            {
-                if (Add(key, flag, 0.05))//3秒
-                {
-                    AddToWork(key, flag);//循环检测超时时间
-                    return true;
-                }
-                Thread.Sleep(sleep);
-                count -= sleep;
-                if (sleep < 100)
-                {
-                    sleep++;
-                }
-                if (count <= 0)
-                {
-                    return false;
-                }
-            }
-        }
-        /// <summary>
-        /// 释放（分布式锁）
-        /// </summary>
-        /// <returns></returns>
-        public virtual bool UnLock(string key)
-        {
-            RemoveFromWork(key);
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
-            string value = Get<string>(key);
-            //锁已过期。
-            if (value == null) { return true; }
-            //自身加的锁
-            if (value == flag)
-            {
-                return Remove(key);
-            }
-            return false;
-        }
-
-
-        /// <summary>
         /// 清除所有缓存
         /// </summary>
         public abstract void Clear();
@@ -264,47 +214,123 @@ namespace CYQ.Data.Cache
 
     }
 
+    /// <summary>
+    /// 处理分布式锁
+    /// </summary>
     public abstract partial class CacheManage
     {
+        /// <summary>
+        /// 分布式锁（分布式锁需要启用Redis或Memcached）
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="millisecondsTimeout">尝试获取锁的最大等待时间（ms毫秒），超过这个值，则认为获取锁失败</param>
+        /// <returns></returns>
+        public virtual bool Lock(string key, int millisecondsTimeout)
+        {
+
+            //    string localKey=Thread.CurrentThread.ManagedThreadId + "-" + key;
+            //    //分布式锁，处理锁可重入问题
+            //    if (LocalInstance.Contains(localKey))
+            //    {
+            //        LocalInstance.Set(localKey,
+            //    }
+
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            int sleep = 5;
+
+            int count = millisecondsTimeout;
+            while (true)
+            {
+                if (Add(key, flag, 0.1))
+                {
+                    //Console.WriteLine("Lock :--------------------------");
+                    AddToWork(key, flag);//循环检测超时时间，执行期间，服务挂了，然后重启了？
+                    return true;
+                }
+                Thread.Sleep(sleep);
+                count -= sleep;
+                if (sleep < 1000)
+                {
+                    sleep += 5;
+                }
+                if (count <= 0)
+                {
+                    return false;
+                }
+            }
+        }
+        /// <summary>
+        /// 释放（分布式锁）
+        /// </summary>
+        /// <returns></returns>
+        public virtual bool UnLock(string key)
+        {
+            //Console.WriteLine("Un Lock :--------------------------");
+            RemoveFromWork(key);
+
+            //--释放机制有些问题，需要调整。
+            string value = Get<string>(key);
+            //锁已过期。
+            if (value == null)
+            {
+                return true;
+            }
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            //自身加的锁
+            if (value == flag)
+            {
+                return Remove(key);
+            }
+            return false;
+
+        }
+
 
         #region 内部定时日志工作
 
         MDictionary<string, string> keysDic = new MDictionary<string, string>();
-        List<string> keysRemoveList = new List<string>();
         bool threadIsWorking = false;
         private void AddToWork(string key, string value)
         {
+            keysDic.Remove(key);
             keysDic.Add(key, value);
             if (!threadIsWorking)
             {
-                threadIsWorking = true;
-                ThreadPool.QueueUserWorkItem(new WaitCallback(DoWork), null);
+                lock (this)
+                {
+                    if (!threadIsWorking)
+                    {
+                        threadIsWorking = true;
+                        ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(DoLockWork));
+                    }
+                }
             }
         }
         private void RemoveFromWork(string key)
         {
-            keysRemoveList.Add(key);
+            keysDic.Remove(key);
         }
-        private void DoWork(object p)
+        private void DoLockWork(object p)
         {
-            while (keysDic.Count > 0)
+            while (true)
             {
-                foreach (string removeKey in keysRemoveList)
+                Thread.Sleep(3000);//循环。
+               // Console.WriteLine("DoWork :--------------------------Count : " + keysDic.Count);
+                if (keysDic.Count > 0)
                 {
-                    keysDic.Remove(removeKey);
+                    List<string> list = keysDic.GetKeys();
+                    foreach (string key in list)
+                    {
+                        //给 key 设置延时时间
+                        if (keysDic.ContainsKey(key))
+                        {
+                            Set(key, keysDic[key], 0.1);//延时锁：6秒
+                            
+                        }
+                    }
+                    list.Clear();
                 }
-                keysRemoveList.Clear();
-
-                List<string> list = keysDic.GetKeys();
-                foreach (string key in list)
-                {
-                    //给 key 设置延时时间
-                    Set(key, keysDic[key], 0.05);//延时3秒
-                }
-                list.Clear();
-                Thread.Sleep(1500);//3秒1次循环。
             }
-            threadIsWorking = false;
         }
         #endregion
 

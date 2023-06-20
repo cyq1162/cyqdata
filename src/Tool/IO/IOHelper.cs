@@ -246,7 +246,7 @@ namespace CYQ.Data.Tool
             }
             catch (AbandonedMutexException ex)
             {
-                //其它进程直接关闭，未释放即退出时
+                //其它进程直接关闭，未释放即退出时【锁未对外开放，因此不存在重入锁问题，释放1次即可】。
                 mutex.ReleaseMutex();
                 mutex.WaitOne();
             }

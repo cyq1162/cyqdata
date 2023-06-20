@@ -5,7 +5,7 @@ using CYQ.Data.Tool;
 
 namespace CYQ.Data.Cache
 {
-    internal abstract class ClientBase
+    internal abstract partial class ClientBase
     {
         /// <summary>
         /// 主机服务
@@ -62,33 +62,27 @@ namespace CYQ.Data.Cache
         }
 
         #region Status
-        DateTime allowGetWorkInfoTime = DateTime.Now;
-        string workInfo = string.Empty;
         public string WorkInfo
         {
             get
             {
-                if (workInfo == string.Empty || DateTime.Now > allowGetWorkInfoTime)
+                Dictionary<string, Dictionary<string, string>> status = GetAllHostNodeStatus();
+                if (status != null)
                 {
-                    Dictionary<string, Dictionary<string, string>> status = GetAllHostNodeStatus();
-                    if (status != null)
+                    JsonHelper js = new JsonHelper(false, false);
+                    js.Add("OKServerCount", OkServer.ToString());
+                    js.Add("DeadServerCount", ErrorServer.ToString());
+                    foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
                     {
-                        JsonHelper js = new JsonHelper(false, false);
-                        js.Add("OKServerCount", OkServer.ToString());
-                        js.Add("DeadServerCount",ErrorServer.ToString());
-                        foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
-                        {
-                            js.Add(item.Key, JsonHelper.ToJson(item.Value));
-                        }
-                        js.AddBr();
-                        workInfo = js.ToString();
+                        js.Add(item.Key, JsonHelper.ToJson(item.Value));
                     }
-                    allowGetWorkInfoTime = DateTime.Now.AddSeconds(5);
+                    js.AddBr();
+                    return js.ToString();
                 }
-                return workInfo;
+                return string.Empty;
             }
         }
-        public int OkServer = 0, ErrorServer = 0;
+        private int OkServer = 0, ErrorServer = 0;
         /// <summary>
         /// 获取主机节点的基础信息
         /// </summary>
@@ -109,15 +103,17 @@ namespace CYQ.Data.Cache
             Dictionary<string, string> result = new Dictionary<string, string>();
             if (!host.IsEndPointDead)
             {
-                if(!isBackup) OkServer++;
-                result.Add("Status", "Ok");
-                result.Add("Sockets in pool", host.Poolsize.ToString());
+                if (!isBackup) OkServer++;
+                result.Add("Status", "OK");
                 result.Add("Acquired sockets", host.Acquired.ToString());
-                result.Add("Sockets reused", host.ReusedSockets.ToString());
+                result.Add("Acquired timeout from socket pool", host.TimeoutFromSocketPool.ToString());
                 result.Add("New sockets created", host.NewSockets.ToString());
                 result.Add("New sockets failed", host.FailedNewSockets.ToString());
+                result.Add("Sockets in pool", host.Poolsize.ToString());
+                result.Add("Sockets reused", host.ReusedSockets.ToString());
                 result.Add("Sockets died in pool", host.DeadSocketsInPool.ToString());
                 result.Add("Sockets died on return", host.DeadSocketsOnReturn.ToString());
+                result.Add("Sockets close", host.CloseSockets.ToString());
             }
             else
             {

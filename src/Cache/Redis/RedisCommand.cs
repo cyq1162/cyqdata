@@ -84,8 +84,8 @@ redis允许客户端以TCP方式连接，默认6379端口。传输数据都以\r
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="data1"></param>
-        /// <param name="data2"></param>
+        /// <param name="dataType"></param>
+        /// <param name="dataValue"></param>
         public void AddValue(byte[] dataType, byte[] dataValue)
         {
             int len = dataType.Length;

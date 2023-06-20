@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-
 using CYQ.Data.Tool;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
@@ -15,7 +14,7 @@ namespace CYQ.Data.Cache
     /// 单机缓存类
     /// 为兼容.NET Core 去掉Web.Caching，重写
     /// </summary>
-    internal class LocalCache : CacheManage
+    internal partial class LocalCache : CacheManage
     {
         private MDictionary<string, object> theCache = new MDictionary<string, object>(2048, StringComparer.OrdinalIgnoreCase);//key,cache
         private MDictionary<string, DateTime> theKeyTime = new MDictionary<string, DateTime>(2048, StringComparer.OrdinalIgnoreCase);//key,time
@@ -66,16 +65,14 @@ namespace CYQ.Data.Cache
             thread.Start();
         }
 
+        /// <summary>
+        /// 单例，可以构造函数里使用。
+        /// </summary>
         void ThreadTask()
         {
             try
             {
                 ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearState));
-                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ConnObject.CheckConnIsOk));//主从链接的检测机制。
-                //if (AppConfig.Cache.IsAutoCache) // 机制变更为Aop也可控制，所以这个参数还决定不了
-                //{
-                ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(AutoCache.ClearCache));
-                //}
             }
             catch (Exception err)
             {
@@ -469,7 +466,7 @@ namespace CYQ.Data.Cache
                 }
             }
         }
-             
+
 
         public override CacheType CacheType
         {
@@ -518,5 +515,60 @@ namespace CYQ.Data.Cache
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// 处理分布式锁【单机】
+    /// </summary>
+    internal partial class LocalCache
+    {
+        public override bool Lock(string key, int millisecondsTimeout)
+        {
+            return MutexWaitOne(key, millisecondsTimeout);
+        }
+        public override bool UnLock(string key)
+        {
+            return MutexRelease(key);
+        }
+        private static bool MutexWaitOne(string key, int millisecondsTimeout)
+        {
+            key = "LocalCache-" + key;
+            var mutex = new Mutex(false, key);
+
+            try
+            {
+                //其它进程直接关闭，未释放即退出时，引发此异常。
+                return mutex.WaitOne(millisecondsTimeout);
+            }
+            catch
+            {
+                //释放其它进程直接关闭导致的锁。
+                mutex.ReleaseMutex();
+                try
+                {
+                    //如果存在重入锁【锁多次进入，未释放】，会引发此异常。
+                    return mutex.WaitOne(millisecondsTimeout);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+        private static bool MutexRelease(string key)
+        {
+            key = "LocalCache-" + key;
+            var mutex = new Mutex(false, key);
+            try
+            {
+                mutex.ReleaseMutex();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+
+        }
     }
 }

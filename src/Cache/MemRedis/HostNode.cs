@@ -28,6 +28,8 @@ namespace CYQ.Data.Cache
         public string Password;
         //Debug variables and properties
         public int NewSockets = 0;
+        public int CloseSockets = 0;
+        public int TimeoutFromSocketPool = 0;
         public int FailedNewSockets = 0;
         public int ReusedSockets = 0;
         public int DeadSocketsInPool = 0;
@@ -58,18 +60,34 @@ namespace CYQ.Data.Cache
         /// </summary>
         private DateTime socketDeadTime = DateTime.MinValue;
 
-        private int maxQueue = 128;
-        private int minQueue = 2;
+        private int MaxQueue
+        {
+            get
+            {
+                return hostServer.serverType == CacheType.Redis ? AppConfig.Redis.MaxSocket : AppConfig.MemCache.MaxSocket;
+            }
+        }
+        /// <summary>
+        /// 超出最大链接后的等待时间。
+        /// </summary>
+        private int MaxWait
+        {
+            get
+            {
+                return hostServer.serverType == CacheType.Redis ? AppConfig.Redis.MaxWait : AppConfig.MemCache.MaxWait;
+            }
+        }
+        private int minQueue = 1;
 
         /// <summary>
         /// If the host stops responding, we mark it as dead for this amount of seconds, 
         /// and we double this for each consecutive failed retry. If the host comes alive
         /// again, we reset this to 1 again.
         /// </summary>
-        private int deadEndPointSecondsUntilRetry = 1;
+        private int deadEndPointSecondsUntilRetry = 10;
         private const int maxDeadEndPointSecondsUntilRetry = 60 * 10; //10 minutes
         private HostServer hostServer;
-        private Queue<MSocket> socketQueue = new Queue<MSocket>(16);
+        private Queue<MSocket> socketQueue = new Queue<MSocket>(128);
 
         internal HostNode(HostServer hostServer, string host)
         {
@@ -82,6 +100,52 @@ namespace CYQ.Data.Cache
             }
         }
 
+        /// <summary>
+        /// 从队列获取数据，并可能进行等待。
+        /// </summary>
+        /// <param name="wait"></param>
+        /// <returns></returns>
+        private MSocket GetFromQueue(int wait)
+        {
+            //Do we have free sockets in the pool?
+            //if so - return the first working one.
+            //if not - create a new one.
+            int count = 0;
+            while (true)
+            {
+                count++;
+                if (socketQueue.Count > 0)
+                {
+                    MSocket mSocket = null;
+                    lock (socketQueue)
+                    {
+                        if (socketQueue.Count > 0)
+                        {
+                            mSocket = socketQueue.Dequeue();
+                        }
+                    }
+                    if (mSocket != null)
+                    {
+                        if (mSocket.IsAlive)
+                        {
+                            Interlocked.Increment(ref ReusedSockets);
+                            return mSocket;
+                        }
+                        else
+                        {
+                            Interlocked.Increment(ref DeadSocketsInPool);
+                            Interlocked.Increment(ref CloseSockets);
+                            return null;
+                        }
+                    }
+                }
+                if (count > wait)
+                {
+                    return null;
+                }
+                Thread.Sleep(1);
+            }
+        }
 
         /// <summary>
         /// Gets a socket from the pool.
@@ -98,70 +162,94 @@ namespace CYQ.Data.Cache
             {
                 return HostNodeBak.Acquire();
             }
-
-            //Do we have free sockets in the pool?
-            //if so - return the first working one.
-            //if not - create a new one.
-            Interlocked.Increment(ref Acquired);
-            lock (socketQueue)
+            else
             {
-                while (socketQueue.Count > 0)
+                Interlocked.Increment(ref Acquired);
+            }
+            //已经生产超过最大队列值
+            MSocket socket = GetFromQueue(0);
+            if (socket != null) { return socket; }
+
+            //提前检测，少进锁
+            if (NewSockets - CloseSockets >= MaxQueue)
+            {
+                //Try to create a new socket. On failure, mark endpoint as dead and return null.
+                socket = GetFromQueue(MaxWait);
+                if (socket != null) { return socket; }
+                string timeout = "The timeout period elapsed prior to obtaining a connection from the socket pool.";
+                logger.Error(timeout);
+                Interlocked.Increment(ref TimeoutFromSocketPool);
+                return null;
+            }
+
+            //加锁，避免并发瞬时产生太多链接，浪费资源
+            lock (this)
+            {
+                if (NewSockets - CloseSockets < MaxQueue)
                 {
-                    MSocket socket = socketQueue.Dequeue();
-                    if (socket != null && socket.IsAlive)
+                    //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
+                    if (IsEndPointDead)
                     {
-                        Interlocked.Increment(ref ReusedSockets);
-                        return socket;
+                        if (DateTime.Now > DeadEndPointRetryTime)
+                        {
+                            //Retry
+                            IsEndPointDead = false;
+                        }
+                        else
+                        {
+                            //Still dead
+                            return null;
+                        }
                     }
-                    Interlocked.Increment(ref DeadSocketsInPool);
+                    socket = new MSocket(this, Host);
+                    if (socket.IsAlive)
+                    {
+                        Interlocked.Increment(ref NewSockets);//先处理计数器
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref FailedNewSockets);//先处理计数器
+                    }
                 }
             }
-
-
-            //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
-            if (IsEndPointDead)
+            if (socket == null)
             {
-                if (DateTime.Now > DeadEndPointRetryTime)
+                if (NewSockets - CloseSockets >= MaxQueue)
                 {
-                    //Retry
-                    IsEndPointDead = false;
+                    //Try to create a new socket. On failure, mark endpoint as dead and return null.
+                    socket = GetFromQueue(MaxWait);
+                    if (socket != null) { return socket; }
+                    string timeout = "The timeout period elapsed prior to obtaining a connection from the socket pool.";
+                    logger.Error(timeout);
+                    Interlocked.Increment(ref TimeoutFromSocketPool);
                 }
-                else
-                {
-                    //Still dead
-                    return null;
-                }
+                return null;
             }
-
-            //Try to create a new socket. On failure, mark endpoint as dead and return null.
-            try
+            if (socket.IsAlive)
             {
-
-                MSocket socket = new MSocket(this, Host);
-                Interlocked.Increment(ref NewSockets);
+                deadEndPointSecondsUntilRetry = 10;
                 //Reset retry timer on success.
                 //不抛异常，则正常链接。
                 if (OnAfterSocketCreateEvent != null)
                 {
                     OnAfterSocketCreateEvent(socket);
                 }
-                deadEndPointSecondsUntilRetry = 1;
                 return socket;
             }
-            catch (Exception e)
+            else
             {
-                Interlocked.Increment(ref FailedNewSockets);
-                logger.Error("Error connecting to: " + Host, e);
                 //Mark endpoint as dead
                 IsEndPointDead = true;
+                socketDeadTime = DateTime.Now;
+
                 //Retry in 2 minutes
                 DeadEndPointRetryTime = DateTime.Now.AddSeconds(deadEndPointSecondsUntilRetry);
-                if (deadEndPointSecondsUntilRetry < maxDeadEndPointSecondsUntilRetry)
+                if (deadEndPointSecondsUntilRetry < maxDeadEndPointSecondsUntilRetry && deadEndPointSecondsUntilRetry < 120)
                 {
-                    deadEndPointSecondsUntilRetry = deadEndPointSecondsUntilRetry * 2; //Double retry interval until next time
+                    deadEndPointSecondsUntilRetry += 10; //Double retry interval until next time
                 }
 
-                socketDeadTime = DateTime.Now;
+                logger.Error("Error connecting to: " + Host);
                 //返回备份的池
                 if (HostNodeBak != null)
                 {
@@ -186,6 +274,7 @@ namespace CYQ.Data.Cache
             if (!socket.IsAlive || hasDisponse)
             {
                 Interlocked.Increment(ref DeadSocketsOnReturn);
+                Interlocked.Increment(ref CloseSockets);
                 socket.Close();
             }
             else
@@ -193,15 +282,17 @@ namespace CYQ.Data.Cache
                 //Clean up socket
                 socket.Reset();
                 //Check pool size.
-                if (socketQueue.Count >= maxQueue)
+                if (socketQueue.Count >= MaxQueue)
                 {
                     //If the pool is full, destroy the socket.
+                    Interlocked.Increment(ref CloseSockets);
                     socket.Close();
                 }
-                else if (socketQueue.Count > minQueue && socket.CreateTime.AddMinutes(30) < DateTime.Now)
+                else if (socketQueue.Count > minQueue && socket.CreateTime.AddMinutes(10) < DateTime.Now)
                 {
                     //socket 服务超过半小时的，也可以休息了，只保留最底个数。
                     //If we have more than the minimum amount of sockets, but less than the max, and the socket is older than the recycle age, we destroy it.
+                    Interlocked.Increment(ref CloseSockets);
                     socket.Close();
                 }
                 else

@@ -15,7 +15,7 @@ namespace CYQ.Data.Cache
     /// <summary>
     /// 内部智能缓存
     /// </summary>
-    internal static class AutoCache
+    internal static partial class AutoCache
     {
         private static CacheManage _AutoCache = CacheManage.Instance;//有可能使用MemCache操作
 
@@ -826,6 +826,123 @@ namespace CYQ.Data.Cache
 
         #endregion
 
+   
+
+        class KeyTable
+        {
+            public const string KeyTableName = "SysAutoCache";
+            public static bool HasAutoCacheTable = false;
+            public static bool CheckSysAutoCacheTable()
+            {
+                if (!HasAutoCacheTable && !string.IsNullOrEmpty(AppConfig.AutoCache.Conn))
+                {
+                    string AutoCacheConn = AppConfig.AutoCache.Conn;
+                    if (DBTool.TestConn(AutoCacheConn))
+                    {
+                        HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);
+                        //检测数据是否存在表
+                        if (!HasAutoCacheTable)
+                        {
+                            MDataColumn mdc = new MDataColumn();
+                            mdc.Add("CacheKey", System.Data.SqlDbType.NVarChar, false, false, 200, true, null);
+                            mdc.Add("CacheTime", System.Data.SqlDbType.BigInt, false, false, -1);
+                            HasAutoCacheTable = DBTool.CreateTable(KeyTableName, mdc, AutoCacheConn);
+                            if (!HasAutoCacheTable)//若创建失败，可能并发下其它进程创建了。
+                            {
+                                HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);//重新检测表是否存在。
+                            }
+                        }
+                    }
+                }
+                return HasAutoCacheTable;
+            }
+            private static MAction _ActionInstance;
+            /// <summary>
+            /// 使用同一个链接，并且不关闭。
+            /// </summary>
+            public static MAction ActionInstance
+            {
+                get
+                {
+                    if (_ActionInstance == null)
+                    {
+                        _ActionInstance = new MAction(KeyTableName, AppConfig.AutoCache.Conn);
+                        _ActionInstance.SetAopState(AopOp.CloseAll);//关掉自动缓存和Aop
+                        _ActionInstance.dalHelper.IsWriteLogOnError = false;
+                    }
+                    return _ActionInstance;
+                }
+
+            }
+            public static void SetKey(string key)
+            {
+                MAction action = ActionInstance;//
+                if (action.Exists(key))//更新时间
+                {
+                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    action.Update(key);
+                }
+                else
+                {
+                    action.Set(0, key);
+                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+                    action.AllowInsertID = true;
+                    action.Insert(InsertOp.None);
+
+                }
+
+            }
+            public static string keyTime = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+            public static void ReadAndRemoveKey()
+            {
+                MAction action = ActionInstance;//
+                string cacheTime = DBTool.Keyword("CacheTime", action.DataBaseType);
+                MDataTable dt = action.Select(cacheTime + ">" + keyTime + " order by " + cacheTime + " asc");
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (MDataRow row in dt.Rows)
+                    {
+                        RemoveCache(row.Get<string>(0));//移除。
+                    }
+                    keyTime = dt.Rows[dt.Rows.Count - 1].Get<string>(1);//将时间重置为为最后一次最大的时间。
+                }
+            }
+        }
+        /*
+        #region 实例对象
+        /// <summary>
+        /// 单例
+        /// </summary>
+        public static AutoCache Instance
+        {
+            get
+            {
+
+                return Shell.instance;
+            }
+        }
+        class Shell
+        {
+            internal static readonly AutoCache instance = new AutoCache();
+        }
+        internal AutoCache()
+        {
+            
+        }
+
+        #endregion
+         */
+    }
+
+    /// <summary>
+    /// 线程任务
+    /// </summary>
+    internal static partial class AutoCache
+    {
+        static AutoCache()
+        {
+            ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(ClearCache));
+        }
         #region 定时清理Cache机制
         //根据移除的频率，控制该项缓存的存在。
         //此缓存算法，后续增加
@@ -955,109 +1072,5 @@ namespace CYQ.Data.Cache
         }
         #endregion
 
-        class KeyTable
-        {
-            public const string KeyTableName = "SysAutoCache";
-            public static bool HasAutoCacheTable = false;
-            public static bool CheckSysAutoCacheTable()
-            {
-                if (!HasAutoCacheTable && !string.IsNullOrEmpty(AppConfig.AutoCache.Conn))
-                {
-                    string AutoCacheConn = AppConfig.AutoCache.Conn;
-                    if (DBTool.TestConn(AutoCacheConn))
-                    {
-                        HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);
-                        //检测数据是否存在表
-                        if (!HasAutoCacheTable)
-                        {
-                            MDataColumn mdc = new MDataColumn();
-                            mdc.Add("CacheKey", System.Data.SqlDbType.NVarChar, false, false, 200, true, null);
-                            mdc.Add("CacheTime", System.Data.SqlDbType.BigInt, false, false, -1);
-                            HasAutoCacheTable = DBTool.CreateTable(KeyTableName, mdc, AutoCacheConn);
-                            if (!HasAutoCacheTable)//若创建失败，可能并发下其它进程创建了。
-                            {
-                                HasAutoCacheTable = DBTool.Exists(KeyTableName, AutoCacheConn);//重新检测表是否存在。
-                            }
-                        }
-                    }
-                }
-                return HasAutoCacheTable;
-            }
-            private static MAction _ActionInstance;
-            /// <summary>
-            /// 使用同一个链接，并且不关闭。
-            /// </summary>
-            public static MAction ActionInstance
-            {
-                get
-                {
-                    if (_ActionInstance == null)
-                    {
-                        _ActionInstance = new MAction(KeyTableName, AppConfig.AutoCache.Conn);
-                        _ActionInstance.SetAopState(AopOp.CloseAll);//关掉自动缓存和Aop
-                        _ActionInstance.dalHelper.IsWriteLogOnError = false;
-                    }
-                    return _ActionInstance;
-                }
-
-            }
-            public static void SetKey(string key)
-            {
-                MAction action = ActionInstance;//
-                if (action.Exists(key))//更新时间
-                {
-                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
-                    action.Update(key);
-                }
-                else
-                {
-                    action.Set(0, key);
-                    action.Set(1, DateTime.Now.ToString("yyyyMMddHHmmssfff"));
-                    action.AllowInsertID = true;
-                    action.Insert(InsertOp.None);
-
-                }
-
-            }
-            public static string keyTime = DateTime.Now.ToString("yyyyMMddHHmmssfff");
-            public static void ReadAndRemoveKey()
-            {
-                MAction action = ActionInstance;//
-                string cacheTime = DBTool.Keyword("CacheTime", action.DataBaseType);
-                MDataTable dt = action.Select(cacheTime + ">" + keyTime + " order by " + cacheTime + " asc");
-                if (dt.Rows.Count > 0)
-                {
-                    foreach (MDataRow row in dt.Rows)
-                    {
-                        RemoveCache(row.Get<string>(0));//移除。
-                    }
-                    keyTime = dt.Rows[dt.Rows.Count - 1].Get<string>(1);//将时间重置为为最后一次最大的时间。
-                }
-            }
-        }
-        /*
-        #region 实例对象
-        /// <summary>
-        /// 单例
-        /// </summary>
-        public static AutoCache Instance
-        {
-            get
-            {
-
-                return Shell.instance;
-            }
-        }
-        class Shell
-        {
-            internal static readonly AutoCache instance = new AutoCache();
-        }
-        internal AutoCache()
-        {
-            
-        }
-
-        #endregion
-         */
     }
 }

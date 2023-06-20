@@ -20,6 +20,7 @@ namespace CYQ.Data.Cache
         //    return New(host);
         //}
 
+        
         public static Socket New(string host)
         {
             IPEndPoint endPoint = GetEndPoint(host);
@@ -40,9 +41,13 @@ namespace CYQ.Data.Cache
             bool success = result.AsyncWaitHandle.WaitOne(3000, false);
             if (!success)
             {
-                try { socket.Close(); }
+                try 
+                {
+                    socket.Close(); 
+                }
                 catch { }
-                throw new SocketException();
+                return null;
+                //throw new SocketException();
             }
             socket.EndConnect(result);
             return socket;

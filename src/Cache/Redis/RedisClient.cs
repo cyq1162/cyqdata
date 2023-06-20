@@ -167,7 +167,6 @@ namespace CYQ.Data.Cache
                           cmd.AddKey(expirySeconds.ToString());
                           skipCmd++;
                       }
-
                   }
                   socket.SkipToEndOfLine(skipCmd - 1);//取最后1次命令的结果
                   return socket.ReadResponse();

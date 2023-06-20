@@ -1046,6 +1046,37 @@ namespace CYQ.Data
                     SetApp("Redis.ServersBak", value);
                 }
             }
+
+            /// <summary>
+            /// Redis 单个主机节点最大的链接数
+            /// 配置项：Redis.MaxSocket ：32
+            /// </summary>
+            public static int MaxSocket
+            {
+                get
+                {
+                    return GetAppInt("Redis.MaxSocket", 32);
+                }
+                set
+                {
+                    SetApp("Redis.MaxSocket", value.ToString());
+                }
+            }
+            /// <summary>
+            /// Redis 超出最大链接数后等等时间（ms毫秒)
+            /// 配置项：Redis.MaxWait ：1000
+            /// </summary>
+            public static int MaxWait
+            {
+                get
+                {
+                    return GetAppInt("Redis.MaxWait", 1000);
+                }
+                set
+                {
+                    SetApp("Redis.MaxWait", value.ToString());
+                }
+            }
         }
 
         /// <summary>
@@ -1084,6 +1115,37 @@ namespace CYQ.Data
                 set
                 {
                     SetApp("MemCache.ServersBak", value);
+                }
+            }
+
+            /// <summary>
+            /// MemCache 单个主机节点最大的链接数
+            /// 配置项：MemCache.MaxSocket ：32
+            /// </summary>
+            public static int MaxSocket
+            {
+                get
+                {
+                    return GetAppInt("MemCache.MaxSocket", 32);
+                }
+                set
+                {
+                    SetApp("MemCache.MaxSocket", value.ToString());
+                }
+            }
+            /// <summary>
+            /// MemCache 超出最大链接数后等等时间（ms毫秒)
+            /// 配置项：MemCache.MaxWait ：1000
+            /// </summary>
+            public static int MaxWait
+            {
+                get
+                {
+                    return GetAppInt("MemCache.MaxWait", 1000);
+                }
+                set
+                {
+                    SetApp("MemCache.MaxWait", value.ToString());
                 }
             }
         }
