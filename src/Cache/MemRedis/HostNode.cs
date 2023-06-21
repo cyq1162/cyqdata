@@ -122,6 +122,7 @@ namespace CYQ.Data.Cache
                         if (socketQueue.Count > 0)
                         {
                             mSocket = socketQueue.Dequeue();
+                            mSocket.Reset();
                         }
                     }
                     if (mSocket != null)

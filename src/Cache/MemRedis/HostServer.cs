@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace CYQ.Data.Cache
 {
@@ -231,6 +232,7 @@ namespace CYQ.Data.Cache
                 //Socket is probably broken
                 if (sock != null)
                 {
+                    Interlocked.Increment(ref host.CloseSockets);
                     sock.Close();
                 }
             }
@@ -265,6 +267,7 @@ namespace CYQ.Data.Cache
                 //Socket is probably broken
                 if (sock != null)
                 {
+                    Interlocked.Increment(ref host.CloseSockets);
                     sock.Close();
                 }
             }

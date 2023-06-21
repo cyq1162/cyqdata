@@ -216,9 +216,9 @@ namespace CYQ.Data.Cache
         {
             string response = ReadLine();
 
-            if (String.IsNullOrEmpty(response))
+            if (string.IsNullOrEmpty(response))
             {
-                Error.Throw("Received empty response.");
+                return "";
             }
 
             if (response.StartsWith("-ERR")

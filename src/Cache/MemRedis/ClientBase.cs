@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using CYQ.Data.Table;
 using CYQ.Data.Tool;
 
 namespace CYQ.Data.Cache
@@ -66,22 +67,50 @@ namespace CYQ.Data.Cache
         {
             get
             {
-                Dictionary<string, Dictionary<string, string>> status = GetAllHostNodeStatus();
-                if (status != null)
-                {
-                    JsonHelper js = new JsonHelper(false, false);
-                    js.Add("OKServerCount", OkServer.ToString());
-                    js.Add("DeadServerCount", ErrorServer.ToString());
-                    foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
-                    {
-                        js.Add(item.Key, JsonHelper.ToJson(item.Value));
-                    }
-                    js.AddBr();
-                    return js.ToString();
-                }
-                return string.Empty;
+                var status = GetAllHostNodeStatus();//这里会重置OK和Dead数量。
+                JsonHelper js = new JsonHelper(false, false);
+                js.Add("OK", OkServer.ToString());
+                js.Add("Dead", ErrorServer.ToString());
+                js.Add("Servers", JsonHelper.ToJson(status));
+                return js.ToString();
             }
         }
+
+        //private MDataTable WorkTable
+        //{
+        //    get
+        //    {
+        //        MDataTable cacheTable = new MDataTable();
+
+        //        #region Create Table
+        //        Dictionary<string, Dictionary<string, string>> status = GetAllHostNodeStatus();
+        //        if (status != null)
+        //        {
+        //            foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
+        //            {
+        //                if (item.Value.Count > 0)
+        //                {
+        //                    MDataTable dt = MDataTable.CreateFrom(item.Value);
+        //                    if (cacheTable.Columns.Count == 0)//第一次
+        //                    {
+        //                        cacheTable = dt;
+        //                    }
+        //                    else
+        //                    {
+        //                        cacheTable.JoinOnName = "Key";
+        //                        cacheTable = cacheTable.Join(dt, "Value");
+        //                    }
+        //                    cacheTable.Columns["Value"].ColumnName = item.Key;
+        //                }
+        //            }
+        //        }
+        //        cacheTable.TableName = "WorkTable";
+        //        #endregion
+
+        //        return cacheTable;
+        //    }
+        //}
+
         private int OkServer = 0, ErrorServer = 0;
         /// <summary>
         /// 获取主机节点的基础信息

@@ -99,7 +99,7 @@ namespace CYQ.Data.Cache
                         }
                     }
                     cacheTable.TableName = "MemCache";
-                    allowCacheTableTime = DateTime.Now.AddSeconds(5); 
+                    allowCacheTableTime = DateTime.Now.AddSeconds(1); 
                     #endregion
 
                     cacheInfoTable = cacheTable;

@@ -50,7 +50,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            string result = hostServer.Execute<string>(hash, "", delegate(MSocket socket)
+            string result = hostServer.Execute<string>(hash, "", delegate (MSocket socket)
             {
                 SerializedType type;
                 byte[] bytes;
@@ -103,7 +103,7 @@ namespace CYQ.Data.Cache
                             //    cmd.Reset(2, "DEL");
                             //    cmd.AddKey(key);
                             //    cmd.Send();
-                                socket.SkipToEndOfLine(1);//跳过结果
+                            socket.SkipToEndOfLine(1);//跳过结果
                             //}
                         }
                     }
@@ -127,7 +127,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            string result = hostServer.Execute<string>(hash, "", delegate(MSocket socket)
+            string result = hostServer.Execute<string>(hash, "", delegate (MSocket socket)
               {
                   SerializedType type;
                   byte[] bytes;
@@ -186,7 +186,7 @@ namespace CYQ.Data.Cache
             {
                 checkKey(key);
             }
-            object value = hostServer.Execute<object>(hash, null, delegate(MSocket socket)
+            object value = hostServer.Execute<object>(hash, null, delegate (MSocket socket)
             {
                 int db = GetDBIndex(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -233,7 +233,7 @@ namespace CYQ.Data.Cache
             {
                 checkKey(key);
             }
-            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket)
+            return hostServer.Execute<bool>(hash, false, delegate (MSocket socket)
             {
                 int db = GetDBIndex(socket, hash);
                 //Console.WriteLine("ContainsKey :" + key + ":" + hash + " db." + db);
@@ -284,7 +284,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket)
+            return hostServer.Execute<bool>(hash, false, delegate (MSocket socket)
             {
                 int db = GetDBIndex(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -331,7 +331,7 @@ namespace CYQ.Data.Cache
             foreach (KeyValuePair<string, HostNode> item in hostServer.HostList)
             {
                 HostNode pool = item.Value;
-                hostServer.Execute(pool, delegate(MSocket socket)
+                hostServer.Execute(pool, delegate (MSocket socket)
                 {
                     using (RedisCommand cmd = new RedisCommand(socket, 1, "flushall"))
                     {
@@ -364,12 +364,8 @@ namespace CYQ.Data.Cache
 
         private Dictionary<string, string> stats(HostNode pool)
         {
-            if (pool == null)
-            {
-                return null;
-            }
             Dictionary<string, string> dic = new Dictionary<string, string>();
-            hostServer.Execute(pool, delegate(MSocket socket)
+            hostServer.Execute(pool, delegate (MSocket socket)
             {
                 using (RedisCommand cmd = new RedisCommand(socket, 1, "info"))
                 {
@@ -379,17 +375,38 @@ namespace CYQ.Data.Cache
                 if (!string.IsNullOrEmpty(result) && (result[0] == '$' || result == "+OK"))
                 {
                     string line = null;
+                    bool isEnd = false;
                     while (true)
                     {
-                        line = socket.ReadLine();
-                        if (line == null)
+                        try
+                        {
+                            line = socket.ReadLine();
+                        }
+                        catch(Exception err) 
                         {
                             break;
+                        }
+                        
+                        if (line == null)
+                        {
+                            if (isEnd)
+                            {
+                                break;
+                            }
+                            continue;
+                        }
+                        else if (line == "# Keyspace")
+                        {
+                            isEnd = true;
                         }
                         string[] s = line.Split(':');
                         if (s.Length > 1)
                         {
                             dic.Add(s[0], s[1]);
+                        }
+                        else
+                        {
+                            dic.Add(line, "- - -");
                         }
                     }
 

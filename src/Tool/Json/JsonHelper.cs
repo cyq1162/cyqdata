@@ -532,6 +532,12 @@ namespace CYQ.Data.Tool
             string result = string.Empty;
             if (!string.IsNullOrEmpty(json))
             {
+                Dictionary<string, string> jsonDic = Split(json);//先取top1
+                if (jsonDic != null && jsonDic.Count > 0 && jsonDic.ContainsKey(key))
+                {
+                    return jsonDic[key];
+                }
+
                 string[] items = key.Split('.');
                 string fKey = items[0];
                 int i = -1;
@@ -562,7 +568,6 @@ namespace CYQ.Data.Tool
                 }
                 else // 非数字
                 {
-                    Dictionary<string, string> jsonDic = Split(json);//只取top1
                     if (jsonDic != null && jsonDic.Count > 0)
                     {
                         if (items.Length == 1)
