@@ -1052,6 +1052,23 @@ namespace CYQ.Data
                 }
             }
 
+
+            /// <summary>
+            /// Redis Socket 链接建立超时时间（毫秒ms）
+            /// 配置项：Redis.Timeout ：1000
+            /// </summary>
+            public static int Timeout
+            {
+                get
+                {
+                    return GetAppInt("Redis.Timeout", 1000);
+                }
+                set
+                {
+                    SetApp("Redis.Timeout", value.ToString());
+                }
+            }
+
             /// <summary>
             /// Redis 单个主机节点最大的链接数
             /// 配置项：Redis.MaxSocket ：32
@@ -1120,6 +1137,22 @@ namespace CYQ.Data
                 set
                 {
                     SetApp("MemCache.ServersBak", value);
+                }
+            }
+
+            /// <summary>
+            /// MemCache Socket 链接建立超时时间（毫秒ms）
+            /// 配置项：MemCache.Timeout ：1000
+            /// </summary>
+            public static int Timeout
+            {
+                get
+                {
+                    return GetAppInt("MemCache.Timeout", 1000);
+                }
+                set
+                {
+                    SetApp("MemCache.Timeout", value.ToString());
                 }
             }
 

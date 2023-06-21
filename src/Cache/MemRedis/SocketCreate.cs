@@ -20,8 +20,8 @@ namespace CYQ.Data.Cache
         //    return New(host);
         //}
 
-        
-        public static Socket New(string host)
+
+        public static Socket New(string host, int timeout)
         {
             IPEndPoint endPoint = GetEndPoint(host);
             //Set up the socket.
@@ -38,12 +38,12 @@ namespace CYQ.Data.Cache
 
             //Establish connection asynchronously to enable connect timeout.
             IAsyncResult result = socket.BeginConnect(endPoint, null, null);
-            bool success = result.AsyncWaitHandle.WaitOne(3000, false);
+            bool success = result.AsyncWaitHandle.WaitOne(timeout, false);
             if (!success)
             {
-                try 
+                try
                 {
-                    socket.Close(); 
+                    socket.Close();
                 }
                 catch { }
                 return null;

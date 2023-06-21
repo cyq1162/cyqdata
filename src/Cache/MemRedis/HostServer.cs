@@ -24,8 +24,17 @@ namespace CYQ.Data.Cache
 
         private static LogAdapter logger = LogAdapter.GetLogger(typeof(HostServer));
 
-        internal CacheType serverType = CacheType.MemCache;
-
+        private CacheType serverType = CacheType.MemCache;
+        /// <summary>
+        /// 缓存类型
+        /// </summary>
+        public CacheType ServerType
+        {
+            get
+            {
+                return serverType;
+            }
+        }
         /// <summary>
         /// 备份的主机池，如果某主机挂了，在配置了备份的情况下，会由备份提供服务。
         /// </summary>

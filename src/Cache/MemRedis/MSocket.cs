@@ -29,7 +29,7 @@ namespace CYQ.Data.Cache
         public readonly DateTime CreateTime;
         public MSocket(HostNode hostNode, string host)
         {
-            socket = SocketCreate.New(host);
+            socket = SocketCreate.New(host, hostNode.HostServer.ServerType == CacheType.Redis ? AppConfig.Redis.Timeout : AppConfig.MemCache.Timeout);
             if (socket != null)
             {
                 this.hostNode = hostNode;

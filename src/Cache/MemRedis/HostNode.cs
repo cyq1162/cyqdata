@@ -1,8 +1,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Net;
 using System.Threading;
 
 namespace CYQ.Data.Cache
@@ -60,24 +58,24 @@ namespace CYQ.Data.Cache
         /// </summary>
         private DateTime socketDeadTime = DateTime.MinValue;
 
-        private int MaxQueue
+        public int MaxQueue
         {
             get
             {
-                return hostServer.serverType == CacheType.Redis ? AppConfig.Redis.MaxSocket : AppConfig.MemCache.MaxSocket;
+                return hostServer.ServerType == CacheType.Redis ? AppConfig.Redis.MaxSocket : AppConfig.MemCache.MaxSocket;
             }
         }
         /// <summary>
         /// 超出最大链接后的等待时间。
         /// </summary>
-        private int MaxWait
+        public int MaxWait
         {
             get
             {
-                return hostServer.serverType == CacheType.Redis ? AppConfig.Redis.MaxWait : AppConfig.MemCache.MaxWait;
+                return hostServer.ServerType == CacheType.Redis ? AppConfig.Redis.MaxWait : AppConfig.MemCache.MaxWait;
             }
         }
-        private int minQueue = 1;
+        public int minQueue = 1;
 
         /// <summary>
         /// If the host stops responding, we mark it as dead for this amount of seconds, 
@@ -87,6 +85,16 @@ namespace CYQ.Data.Cache
         private int deadEndPointSecondsUntilRetry = 10;
         private const int maxDeadEndPointSecondsUntilRetry = 60 * 10; //10 minutes
         private HostServer hostServer;
+        /// <summary>
+        /// 主机服务。
+        /// </summary>
+        public HostServer HostServer
+        {
+            get
+            {
+                return hostServer;
+            }
+        }
         private Queue<MSocket> socketQueue = new Queue<MSocket>(128);
 
         internal HostNode(HostServer hostServer, string host)
