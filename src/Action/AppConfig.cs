@@ -289,7 +289,12 @@ namespace CYQ.Data
             {
                 if (AppConfig.IsWeb)
                 {
-                    return AppDomain.CurrentDomain.BaseDirectory;
+                    string path = AppDomain.CurrentDomain.BaseDirectory;
+                    if (IsNetCore)
+                    {
+                        SetDebugRootPath(ref path);
+                    }
+                    return path;
                 }
                 return AppConst.AssemblyPath;
             }

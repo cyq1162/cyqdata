@@ -32,16 +32,16 @@ namespace System.Configuration
             ReInitConfig(filePath);
             IOWatch.On(filePath, delegate (FileSystemEventArgs e)
             {
-                Thread.Sleep(500);
                 ReInitConfig(e.FullPath);
             });
         }
         static void ReInitConfig(string filePath)
         {
             appSettingJson = JsonHelper.ReadJson(filePath);
+           // Log.WriteLogToTxt("ReInitConfig :" + appSettingJson, LogType.Debug);
             _AppSettings.Clear();
             _ConnectionStrings.Clear();
-          //  AppConfig.Clear();通过代码设置的数据，不随配置文件修改而改变。
+            //  AppConfig.Clear();通过代码设置的数据，不随配置文件修改而改变。
             ConnBean.Clear();
             ConnObject.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。
