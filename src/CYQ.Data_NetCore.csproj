@@ -32,7 +32,7 @@
 662：优化：实体转MDataRow、MDataTable、Json时：成员变量也加入列头、或Json值的输出。(2021-06-30、2021-07-01)</PackageReleaseNotes>
     <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.8.7.4</AssemblyVersion>
+    <AssemblyVersion>5.8.7.5</AssemblyVersion>
     <FileVersion>5.8.7.4</FileVersion>
   </PropertyGroup>
 

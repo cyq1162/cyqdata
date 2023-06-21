@@ -1126,7 +1126,7 @@ namespace CYQ.Data.Xml
                 for (int k = 0; k < dataSource.Rows.Count; k++)
                 {
                     string newText = text;
-                    MDictionary<string, string> values = dataSource.Rows[k].ToEntity<MDictionary<string, string>>();
+                    MDictionary<string, string> values = GetFromRow(dataSource.Rows[k]);
                     if (eventOnForeach != null)
                     {
                         newText = eventOnForeach(text, values, k);//遍历每一行，产生新text。
@@ -1172,6 +1172,19 @@ namespace CYQ.Data.Xml
                     eventOnForeach = null;
                 }
             }
+        }
+
+        /// <summary>
+        /// 能减少反射就减少反射
+        /// </summary>
+        private MDictionary<string, string> GetFromRow(MDataRow row)
+        {
+            MDictionary<string, string> keyValuePairs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in row)
+            {
+                keyValuePairs.Add(item.ColumnName, item.StringValue);
+            }
+            return keyValuePairs;
         }
         #endregion
 
