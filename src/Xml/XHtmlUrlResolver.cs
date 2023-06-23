@@ -5,13 +5,13 @@ using System.IO;
 
 namespace CYQ.Data.Xml
 {
-    internal class ResolverDtd
-    {
-        public static void Resolver(ref System.Xml.XmlDocument xmlDoc)
-        {
-            xmlDoc.XmlResolver = XHtmlUrlResolver.Instance;
-        }
-    }
+    //internal class ResolverDtd
+    //{
+    //    public static void Resolver(ref System.Xml.XmlDocument xmlDoc)
+    //    {
+    //        string uri = XHtmlUrlResolver.Instance.DtdUri;// xmlDoc.XmlResolver =
+    //    }
+    //}
     internal class XHtmlUrlResolver : System.Xml.XmlUrlResolver
     {
         private static XHtmlUrlResolver _Resolver = null;
@@ -35,33 +35,7 @@ namespace CYQ.Data.Xml
             {
                 if (dtdUri == null)
                 {
-                    dtdUri = AppConfig.XHtml.DtdUri;
-                    string folder = Path.GetDirectoryName(dtdUri);
-                    //检测文件是否存在
-                    if (!Directory.Exists(folder))//有异常直接抛
-                    {
-                        Directory.CreateDirectory(folder);
-                    }
-                    string[] items = new string[] { "/xhtml1-transitional.dtd", "/xhtml-lat1.ent", "/xhtml-special.ent", "/xhtml-symbol.ent" };
-                    if (!File.Exists(folder + items[0]))
-                    {
-                        using (FileStream fs = File.Create(folder + items[0]))
-                        {
-                            fs.Write(Resources.xhtml1_transitional, 0, Resources.xhtml1_transitional.Length);
-                        }
-                        using (FileStream fs = File.Create(folder + items[1]))
-                        {
-                            fs.Write(Resources.xhtml_lat1, 0, Resources.xhtml_lat1.Length);
-                        }
-                        using (FileStream fs = File.Create(folder + items[2]))
-                        {
-                            fs.Write(Resources.xhtml_special, 0, Resources.xhtml_special.Length);
-                        }
-                        using (FileStream fs = File.Create(folder + items[3]))
-                        {
-                            fs.Write(Resources.xhtml_symbol, 0, Resources.xhtml_symbol.Length);
-                        }
-                    }
+                    InitDTD();
                 }
                 return dtdUri;
             }
@@ -75,5 +49,40 @@ namespace CYQ.Data.Xml
             }
             return base.ResolveUri(baseUri, relativeUri);
         }
+
+        /// <summary>
+        /// 初始化DTD文件
+        /// </summary>
+        public void InitDTD()
+        {
+            dtdUri = AppConfig.XHtml.DtdUri;
+            string folder = Path.GetDirectoryName(dtdUri);
+            //检测文件是否存在
+            if (!Directory.Exists(folder))//有异常直接抛
+            {
+                Directory.CreateDirectory(folder);
+            }
+            string[] items = new string[] { "/xhtml1-transitional.dtd", "/xhtml-lat1.ent", "/xhtml-special.ent", "/xhtml-symbol.ent" };
+            if (!File.Exists(folder + items[0]))
+            {
+                using (FileStream fs = File.Create(folder + items[0]))
+                {
+                    fs.Write(Resources.xhtml1_transitional, 0, Resources.xhtml1_transitional.Length);
+                }
+                using (FileStream fs = File.Create(folder + items[1]))
+                {
+                    fs.Write(Resources.xhtml_lat1, 0, Resources.xhtml_lat1.Length);
+                }
+                using (FileStream fs = File.Create(folder + items[2]))
+                {
+                    fs.Write(Resources.xhtml_special, 0, Resources.xhtml_special.Length);
+                }
+                using (FileStream fs = File.Create(folder + items[3]))
+                {
+                    fs.Write(Resources.xhtml_symbol, 0, Resources.xhtml_symbol.Length);
+                }
+            }
+        }
+
     }
 }

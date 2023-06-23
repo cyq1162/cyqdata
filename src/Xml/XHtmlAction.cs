@@ -40,15 +40,15 @@ namespace CYQ.Data.Xml
         /// 构造函数
         /// </summary>
         /// <param name="isForHtml">true时，将自动载入html的名称空间(http://www.w3.org/1999/xhtml)</param>
-        /// <param name="isNoClone">true时文档应为只读，所获取是同一份文档引用；false时文档可写，每次获取会克隆一份文档返回。</param>
-        public XHtmlAction(bool isForHtml, bool isNoClone)
+        /// <param name="isReadOnly">true时文档应为只读，所获取是同一份文档引用；false时文档可写，每次获取会克隆一份文档返回。</param>
+        public XHtmlAction(bool isForHtml, bool isReadOnly)
             : base()
         {
             if (isForHtml)
             {
                 base.LoadNameSpace(htmlNameSpace);
             }
-            IsNoClone = isNoClone;
+            IsReadOnly = isReadOnly;
         }
         /// <summary>
         /// 构造函数

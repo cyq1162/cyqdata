@@ -6,7 +6,6 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
-using System.Text.RegularExpressions;
 
 namespace CYQ.Data.Xml
 {
@@ -76,19 +75,19 @@ namespace CYQ.Data.Xml
         /// xml缓存的key
         /// </summary>
         public string XmlCacheKey = string.Empty;
-        private bool _IsNoClone;
+        private bool _IsReadOnly;
         /// <summary>
-        /// 存取档不克隆（此时XHtml应是只读模式)
+        /// XHtml 加载的模板是否只读模式
         /// </summary>
-        public bool IsNoClone
+        public bool IsReadOnly
         {
             get
             {
-                return _IsNoClone;
+                return _IsReadOnly;
             }
             set
             {
-                _IsNoClone = value;
+                _IsReadOnly = value;
             }
         }
         private bool _IsLoadFromCache;
@@ -142,10 +141,14 @@ namespace CYQ.Data.Xml
         ///// 加载Html后是否清除所有注释节点。
         ///// </summary>
         //private bool clearCommentOnLoad = false;
+        static XHtmlBase()
+        {
+            XHtmlUrlResolver.Instance.InitDTD();
+        }
+
 
         public XHtmlBase()
         {
-            //License.Check(DAL.DalCreate.XHtmlClient);
             _XmlDocument = new XmlDocument();
             theCache = CacheManage.LocalInstance;
         }
@@ -266,7 +269,7 @@ namespace CYQ.Data.Xml
         {
             if (theCache.Contains(key))//缓存中存在对应值是key的对象
             {
-                if (_IsNoClone)
+                if (_IsReadOnly)
                 {
                     _XmlDocument = theCache.Get(key) as XmlDocument;
                 }
@@ -304,7 +307,7 @@ namespace CYQ.Data.Xml
                 if (xnm != null)
                 {
                     html = IOHelper.ReadAllText(fileName, 0, _Encoding);
-                    ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
+                    //ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
                 }
 
                 if (html != string.Empty)
@@ -322,7 +325,7 @@ namespace CYQ.Data.Xml
                 XmlCacheKey = GenerateKey(fileName);
                 if (!theCache.Contains(XmlCacheKey))
                 {
-                    SaveToCache(XmlCacheKey, !IsNoClone);
+                    SaveToCache(XmlCacheKey, !IsReadOnly);
                 }
                 return true;
             }

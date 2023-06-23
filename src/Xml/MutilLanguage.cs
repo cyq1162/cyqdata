@@ -89,7 +89,7 @@ namespace CYQ.Data.Xml
         private void Init(string filePath, bool isForHtml, bool isInitValueFromCookie)
         {
             helper = new XHtmlAction(isForHtml);
-            helper.IsNoClone = true;//只读，节省Clone，节省CPU
+            helper.IsReadOnly = true;//只读，节省Clone，节省CPU
             if (!helper.Load(filePath, XmlCacheLevel.Day))
             {
                 Error.Throw("Load xml failed : " + filePath);

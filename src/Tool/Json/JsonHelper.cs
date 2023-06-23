@@ -1918,7 +1918,6 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 转Json
         /// <param name="xml">xml字符串</param>
-        /// <param name="isConvertNameToLower">字段是否转小写</param>
         /// <param name="isWithAttr">是否将属性值也输出</param>
         /// </summary>
         private static string XmlToJson(string xml, bool isWithAttr)
