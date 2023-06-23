@@ -12,30 +12,26 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal class RedisCache : CacheManage
     {
-        RedisClient client;
+        private RedisClient client;
+        /// <summary>
+        /// ¶ÁÈ¡¿Í»§¶Ë
+        /// </summary>
+        public RedisClient Client { get { return client; } }
         internal RedisCache()
         {
-            if (string.IsNullOrEmpty(AppConfig.Redis.Servers))
-            {
-                string err = "AppConfig.Redis.Servers cant' be Empty!";
-                Log.WriteLogToTxt(err, LogType.Cache);
-                Error.Throw(err);
-            }
             client = RedisClient.Create(AppConfig.Redis.Servers);
-            if (client.hostServer.HostList.Count == 0)
-            {
-                string err = "AppConfig.Redis.Servers can't find the host for service : " + AppConfig.Redis.Servers;
-                Log.WriteLogToTxt(err, LogType.Cache);
-                Error.Throw(err);
-            }
             if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
             {
                 RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
-                client.hostServer.hostServerBak = clientBak.hostServer;
+                client.HostServer.HostServerBak = clientBak.HostServer;
             }
-
-
         }
+
+        public override void RefleshConfig(string newConfigValue)
+        {
+            client.HostServer.RefleshHostServer(newConfigValue);
+        }
+
         public override bool Set(string key, object value)
         {
             return Set(key, value, 60 * 24 * 30);

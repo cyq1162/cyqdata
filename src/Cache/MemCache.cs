@@ -12,30 +12,25 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal class MemCache : CacheManage
     {
-        MemcachedClient client;
+        private MemcachedClient client;
+        /// <summary>
+        /// ·µ»Ø¿Í»§¶Ë
+        /// </summary>
+        public MemcachedClient Client { get { return client; } }
         internal MemCache()
         {
-            if (string.IsNullOrEmpty(AppConfig.MemCache.Servers))
-            {
-                string err = "AppConfig.MemCache.Servers cant' be Empty!";
-                Log.WriteLogToTxt(err, LogType.Cache);
-                Error.Throw(err);
-            }
             client = MemcachedClient.Create(AppConfig.MemCache.Servers);
-            if (client.hostServer.HostList.Count == 0)
-            {
-                string err = "AppConfig.MemCache.Servers can't find the host for service : " + AppConfig.MemCache.Servers;
-                Log.WriteLogToTxt(err, LogType.Cache);
-                Error.Throw(err);
-            }
             if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
             {
                 MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
-                client.hostServer.hostServerBak = clientBak.hostServer;
+                client.HostServer.HostServerBak = clientBak.HostServer;
             }
-
-
         }
+        public override void RefleshConfig(string newConfigValue)
+        {
+            client.HostServer.RefleshHostServer(newConfigValue);
+        }
+
         public override bool Set(string key, object value)
         {
             return Set(key, value, 60 * 24 * 30);
@@ -99,7 +94,7 @@ namespace CYQ.Data.Cache
                         }
                     }
                     cacheTable.TableName = "MemCache";
-                    allowCacheTableTime = DateTime.Now.AddSeconds(1); 
+                    allowCacheTableTime = DateTime.Now.AddSeconds(1);
                     #endregion
 
                     cacheInfoTable = cacheTable;

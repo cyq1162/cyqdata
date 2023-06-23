@@ -38,7 +38,8 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 备份的主机池，如果某主机挂了，在配置了备份的情况下，会由备份提供服务。
         /// </summary>
-        internal HostServer hostServerBak;
+        private HostServer hostServerBak;
+        public HostServer HostServerBak { get { return hostServerBak; } set { hostServerBak = value; } }
 
         //Expose the socket pools.
         //private HostInstance[] hostList;
@@ -115,23 +116,33 @@ namespace CYQ.Data.Cache
         internal HostServer(CacheType cacheType, string configValue)
         {
             this.serverType = cacheType;
-            watch = new HostConfigWatch(cacheType, configValue);
+            watch = new HostConfigWatch(configValue);
             watch.OnConfigChangedEvent += new HostConfigWatch.OnConfigChangedDelegate(watch_OnConfigChangedEvent);
-            ResetHostServer();
+            RefleshHostServer(configValue);
         }
 
         /// <summary>
         /// 缓存配置文件修改时
         /// </summary>
-        void watch_OnConfigChangedEvent()
+        void watch_OnConfigChangedEvent(string configValue)
         {
-            ResetHostServer();
+            RefleshHostServer(configValue);
         }
-        void ResetHostServer()
+        /// <summary>
+        /// 刷新主机配置
+        /// </summary>
+        public void RefleshHostServer(string configValue)
         {
+            if (string.IsNullOrEmpty(configValue))
+            {
+                hostList.Clear();
+                hashHostDic.Clear();
+                hashKeys = null;
+                return;
+            }
             lock (o)
             {
-                if (CreateHost())
+                if (CreateHost(configValue))
                 {
                     CreateHashHost();
                     CreateHashKeys();
@@ -151,8 +162,9 @@ namespace CYQ.Data.Cache
                 return hostList;
             }
         }
-        private bool CreateHost()
+        private bool CreateHost(string configValue)
         {
+            watch.CompareHostListByConfig(configValue);
             if (hostList.Count == 0)
             {
                 AddHost(watch.HostList);

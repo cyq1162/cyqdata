@@ -140,6 +140,15 @@ namespace CYQ.Data.Cache
         #endregion
 
         /// <summary>
+        /// Redis、MemCache 需要手工刷新配置值时使用。
+        /// </summary>
+        /// <param name="newConfigValue">新的配置值</param>
+        public virtual void RefleshConfig(string newConfigValue)
+        {
+
+        }
+
+        /// <summary>
         /// 缓存的实例类型
         /// </summary>
         public abstract CacheType CacheType { get; }

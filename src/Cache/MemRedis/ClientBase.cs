@@ -8,11 +8,11 @@ namespace CYQ.Data.Cache
 {
     internal abstract partial class ClientBase
     {
+        protected HostServer hostServer;
         /// <summary>
         /// 主机服务
         /// </summary>
-        internal HostServer hostServer;
-
+        public HostServer HostServer { get { return hostServer; } set { hostServer = value; } }
         /// <summary>
         /// 指定数据长度超过值时进行压缩，默认128K
         /// </summary>

@@ -9,6 +9,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Diagnostics;
+using CYQ.Data.Cache;
 
 namespace CYQ.Data
 {

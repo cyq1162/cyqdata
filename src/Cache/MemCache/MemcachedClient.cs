@@ -23,7 +23,7 @@ namespace CYQ.Data.Cache
         //Private constructor
         private MemcachedClient(string configValue)
         {
-            hostServer = new HostServer(CacheType.MemCache, configValue);
+            this.HostServer = new HostServer(CacheType.MemCache, configValue);
         }
 
         #endregion
