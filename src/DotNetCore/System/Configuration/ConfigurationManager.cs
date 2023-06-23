@@ -37,8 +37,13 @@ namespace System.Configuration
         }
         static void ReInitConfig(string filePath)
         {
+
             appSettingJson = JsonHelper.ReadJson(filePath);
-           // Log.WriteLogToTxt("ReInitConfig :" + appSettingJson, LogType.Debug);
+            if (settings != null)
+            {
+                settings.Clear();
+            }
+            settings = JsonHelper.Split(appSettingJson);
             _AppSettings.Clear();
             _ConnectionStrings.Clear();
             //  AppConfig.Clear();通过代码设置的数据，不随配置文件修改而改变。
@@ -52,20 +57,23 @@ namespace System.Configuration
         {
             get
             {
-                if (_AppSettings.Count == 0 && !string.IsNullOrEmpty(appSettingJson))
+                if (_AppSettings.Count == 0)
                 {
                     lock (o)
                     {
-                        if (_AppSettings.Count == 0 && !string.IsNullOrEmpty(appSettingJson))
+                        if (_AppSettings.Count == 0)
                         {
-                            //EscapeOp.Default 参数若不设置，会造成死循环
-                            string settingValue = JsonHelper.GetValue(appSettingJson, "appsettings", EscapeOp.Default);
-                            if (!string.IsNullOrEmpty(settingValue))
+                            if (settings.ContainsKey("appsettings"))
                             {
-                                NameValueCollection nvc = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
-                                if (nvc != null && nvc.Count > 0)
+                                //EscapeOp.Default 参数若不设置，会造成死循环
+                                string settingValue = settings["appsettings"];
+                                if (!string.IsNullOrEmpty(settingValue))
                                 {
-                                    _AppSettings = nvc;
+                                    NameValueCollection nvc = JsonHelper.ToEntity<NameValueCollection>(settingValue, EscapeOp.Default);
+                                    if (nvc != null && nvc.Count > 0)
+                                    {
+                                        _AppSettings = nvc;
+                                    }
                                 }
                             }
                         }
@@ -86,9 +94,9 @@ namespace System.Configuration
                     {
                         if (_ConnectionStrings.Count == 0)
                         {
-                            if (!string.IsNullOrEmpty(appSettingJson))
+                            if (settings.ContainsKey("connectionStrings"))
                             {
-                                string settingValue = JsonHelper.GetValue(appSettingJson, "connectionStrings");
+                                string settingValue = settings["connectionStrings"];
                                 if (!string.IsNullOrEmpty(settingValue))
                                 {
                                     NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(settingValue);
@@ -148,6 +156,12 @@ namespace System.Configuration
                 }
             }
         }
+
+        /// <summary>
+        /// appsetting.json
+        /// </summary>
+        private static Dictionary<string, string> settings = null;
+
         /// <summary>
         /// 获得其它节点的值(字符串)。
         /// </summary>
@@ -155,8 +169,32 @@ namespace System.Configuration
         /// <returns></returns>
         public static object GetSection(string key)
         {
-            ////EscapeOp.Default 参数若不设置，会造成死循环
-            return JsonHelper.GetValue(appSettingJson, key, EscapeOp.Default);
+            if (settings.ContainsKey(key))
+            {
+                return settings[key];
+            }
+            if (key.IndexOf('.') > -1)
+            {
+                string[] items = key.Split('.');
+                string firstKey = items[0];
+                for (int i = 0; i < items.Length - 1; i++)
+                {
+                    if (i > 0)
+                    {
+                        firstKey += "." + items[i];
+                    }
+                    if (settings.ContainsKey(firstKey))
+                    {
+                        //性能优化，仅找到首个key的，才进行后续取值操作。
+                        string json = settings[firstKey];
+                        string leftKey = key.Substring(firstKey.Length + 1);
+                        //EscapeOp.Default 参数若不设置，会造成死循环
+                        return JsonHelper.GetValue(json, leftKey, EscapeOp.Default);
+                    }
+                }
+            }
+
+            return null;
         }
 
     }

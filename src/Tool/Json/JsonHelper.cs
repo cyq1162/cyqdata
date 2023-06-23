@@ -1213,10 +1213,35 @@ namespace CYQ.Data.Tool
                         if (t.Name.StartsWith("MDictionary") && argTypes[0].Name == "String")
                         {
                             List<string> items = t.GetMethod("GetKeys").Invoke(obj, new object[0]) as List<string>;
-                            MethodInfo methodGet = t.GetMethod("Get");
-                            foreach (var item in items)
+                            IEnumerable values = t.GetMethod("GetValues").Invoke(obj, new object[0]) as IEnumerable;
+                            int i = 0;
+                            foreach (object value in values)
                             {
-                                Add(item, methodGet.Invoke(obj, new object[] { item }));
+                                Add(items[i], value);
+                                i++;
+                            }
+
+                            //MethodInfo methodGet = t.GetMethod("Get");
+                            //foreach (var item in items)
+                            //{
+                            //    Add(item, methodGet.Invoke(obj, new object[] { item }));
+                            //}
+                        }
+                        else if (t.Name.StartsWith("Dictionary") && argTypes[0].Name == "String")
+                        {
+                            IEnumerable keys = t.GetProperty("Keys").GetValue(obj, null) as IEnumerable;
+                            IEnumerable values = t.GetProperty("Values").GetValue(obj, null) as IEnumerable;
+
+                            List<string> items = new List<string>();
+                            foreach (string key in keys)
+                            {
+                                items.Add(key);
+                            }
+                            int i = 0;
+                            foreach (object value in values)
+                            {
+                                Add(items[i], value);
+                                i++;
                             }
                         }
                         else
