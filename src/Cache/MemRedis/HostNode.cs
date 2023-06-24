@@ -1,4 +1,5 @@
 
+using CYQ.Data.Tool;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -9,7 +10,7 @@ namespace CYQ.Data.Cache
     /// The SocketPool encapsulates the list of PooledSockets against one specific host, and contains methods for 
     /// acquiring or returning PooledSockets.
     /// </summary>
-    internal class HostNode : IDisposable
+    internal partial class HostNode : IDisposable
     {
 
         //用于验证权限的委托事件。
@@ -52,7 +53,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
         /// </summary>
-        public HostNode HostNodeBak;
+        // public HostNode HostNodeBak;
         /// <summary>
         /// Socket的挂科时间。
         /// </summary>
@@ -82,8 +83,8 @@ namespace CYQ.Data.Cache
         /// and we double this for each consecutive failed retry. If the host comes alive
         /// again, we reset this to 1 again.
         /// </summary>
-        private int deadEndPointSecondsUntilRetry = 10;
-        private const int maxDeadEndPointSecondsUntilRetry = 60 * 10; //10 minutes
+        private int deadEndPointSecondsUntilRetry = 1;
+        private const int maxDeadEndPointSecondsUntilRetry = 60;
         private HostServer hostServer;
         /// <summary>
         /// 主机服务。
@@ -95,7 +96,7 @@ namespace CYQ.Data.Cache
                 return hostServer;
             }
         }
-        private Queue<MSocket> socketQueue = new Queue<MSocket>(128);
+        private Queue<MSocket> socketQueue = new Queue<MSocket>(32);
 
         internal HostNode(HostServer hostServer, string host)
         {
@@ -130,7 +131,6 @@ namespace CYQ.Data.Cache
                         if (socketQueue.Count > 0)
                         {
                             mSocket = socketQueue.Dequeue();
-                            mSocket.Reset();
                         }
                     }
                     if (mSocket != null)
@@ -166,15 +166,19 @@ namespace CYQ.Data.Cache
         /// </summary>
         internal MSocket Acquire()
         {
+            if (IsEndPointDead) { return null; }
+            //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
+
             //检测当前是否挂科，如果是(15分钟内)，由备份服务器提供服务
-            if (socketDeadTime.AddMinutes(15) >= DateTime.Now && HostNodeBak != null)
-            {
-                return HostNodeBak.Acquire();
-            }
-            else
-            {
-                Interlocked.Increment(ref Acquired);
-            }
+            //if (socketDeadTime.AddMinutes(15) >= DateTime.Now && HostNodeBak != null)
+            //{
+            //    return HostNodeBak.Acquire();
+            //}
+            //else
+            //{
+            Interlocked.Increment(ref Acquired);
+
+            //}
             //已经生产超过最大队列值
             MSocket socket = GetFromQueue(0);
             if (socket != null) { return socket; }
@@ -197,19 +201,7 @@ namespace CYQ.Data.Cache
                 if (NewSockets - CloseSockets < MaxQueue)
                 {
                     //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
-                    if (IsEndPointDead)
-                    {
-                        if (DateTime.Now > DeadEndPointRetryTime)
-                        {
-                            //Retry
-                            IsEndPointDead = false;
-                        }
-                        else
-                        {
-                            //Still dead
-                            return null;
-                        }
-                    }
+                    if (IsEndPointDead) { return null; }
                     socket = new MSocket(this, Host);
                     if (socket.IsAlive)
                     {
@@ -218,6 +210,7 @@ namespace CYQ.Data.Cache
                     else
                     {
                         Interlocked.Increment(ref FailedNewSockets);//先处理计数器
+                        AddToDeadPool();
                     }
                 }
             }
@@ -236,8 +229,6 @@ namespace CYQ.Data.Cache
             }
             if (socket.IsAlive)
             {
-                deadEndPointSecondsUntilRetry = 10;
-                //Reset retry timer on success.
                 //不抛异常，则正常链接。
                 if (OnAfterSocketCreateEvent != null)
                 {
@@ -247,23 +238,12 @@ namespace CYQ.Data.Cache
             }
             else
             {
-                //Mark endpoint as dead
-                IsEndPointDead = true;
-                socketDeadTime = DateTime.Now;
-
-                //Retry in 2 minutes
-                DeadEndPointRetryTime = DateTime.Now.AddSeconds(deadEndPointSecondsUntilRetry);
-                if (deadEndPointSecondsUntilRetry < maxDeadEndPointSecondsUntilRetry && deadEndPointSecondsUntilRetry < 120)
-                {
-                    deadEndPointSecondsUntilRetry += 10; //Double retry interval until next time
-                }
-
                 logger.Error("Error connecting to: " + Host);
                 //返回备份的池
-                if (HostNodeBak != null)
-                {
-                    return HostNodeBak.Acquire();
-                }
+                //if (HostNodeBak != null)
+                //{
+                //    return HostNodeBak.Acquire();
+                //}
                 return null;
             }
         }
@@ -315,6 +295,67 @@ namespace CYQ.Data.Cache
             }
         }
 
+        /// <summary>
+        /// 线程池里重试链接。
+        /// </summary>
+        /// <returns></returns>
+        internal bool TryConnection()
+        {
+            if (DateTime.Now > DeadEndPointRetryTime)
+            {
+                MSocket socket = new MSocket(this, Host);
+                if (socket.IsAlive)
+                {
+                    IsEndPointDead = false;
+                    deadEndPointSecondsUntilRetry = 1; //Reset retry timer on success.
+                    if (OnAfterSocketCreateEvent != null)
+                    {
+                        OnAfterSocketCreateEvent(socket);//身份验证
+                    }
+                    Return(socket);//不浪费，丢到池里重用。
+                    return true;
+                }
+                else
+                {
+                    //Retry in 1 minutes
+                    DeadEndPointRetryTime = DateTime.Now.AddSeconds(deadEndPointSecondsUntilRetry);
+                    if (deadEndPointSecondsUntilRetry < maxDeadEndPointSecondsUntilRetry)
+                    {
+                        deadEndPointSecondsUntilRetry += 1; //Double retry interval until next time
+                    }
+                }
+            }
+            return false;
+        }
+
+
+        static bool isTaskDoing = false;
+        /// <summary>
+        /// 添加故障节点
+        /// </summary>
+        /// <param name="hostNode"></param>
+        public void AddToDeadPool()
+        {
+            if (!IsEndPointDead)
+            {
+                IsEndPointDead = true;
+                socketDeadTime = DateTime.Now;
+                if (!deadNode.ContainsKey(Host))
+                {
+                    deadNode.Add(Host, this);
+                }
+                if (!isTaskDoing)
+                {
+                    lock (deadNode)
+                    {
+                        isTaskDoing = true;
+                        ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(DoHostNodeTask));
+                    }
+                }
+            }
+        }
+
+
         #region IDisposable 成员
         bool hasDisponse = false;
         public void Dispose()
@@ -327,5 +368,38 @@ namespace CYQ.Data.Cache
         }
 
         #endregion
+    }
+
+    internal partial class HostNode
+    {
+        /// <summary>
+        /// 已故障节点
+        /// </summary>
+        static MDictionary<string, HostNode> deadNode = new MDictionary<string, HostNode>();
+
+        /// <summary>
+        /// 线程检测已故障节点。
+        /// </summary>
+        /// <param name="threadID"></param>
+        static void DoHostNodeTask(object threadID)
+        {
+            while (true)
+            {
+                Thread.Sleep(1000);
+                if (deadNode.Count > 0)
+                {
+                    List<string> keys = deadNode.GetKeys();
+                    foreach (string key in keys)
+                    {
+                        if (deadNode[key].TryConnection())
+                        {
+                            deadNode.Remove(key);
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }

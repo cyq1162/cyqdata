@@ -41,7 +41,7 @@ namespace CYQ.Data.Cache
         public bool Set(string key, object value, TimeSpan expiry) { return store("set", key, true, value, hash(key), (int)expiry.TotalSeconds); }
         //public bool Set(string key, object value, uint hash, TimeSpan expiry) { return store("set", key, false, value, this.hash(hash), (int)expiry.TotalSeconds); }
         public bool Set(string key, object value, DateTime expiry) { return store("set", key, true, value, hash(key), getUnixTime(expiry)); }
-       // public bool Set(string key, object value, uint hash, DateTime expiry) { return store("set", key, false, value, this.hash(hash), getUnixTime(expiry)); }
+        // public bool Set(string key, object value, uint hash, DateTime expiry) { return store("set", key, false, value, this.hash(hash), getUnixTime(expiry)); }
 
         /// <summary>
         /// This method corresponds to the "add" command in the memcached protocol. 
@@ -120,23 +120,13 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            return hostServer.Execute<string>(hash, "", delegate(MSocket socket)
+            return hostServer.Execute<string>(hash, "", delegate(MSocket socket, out bool isNoResponse)
             {
                 SerializedType type;
                 byte[] bytes;
 
                 //Serialize object efficiently, store the datatype marker in the flags property.
-                try
-                {
-                    bytes = Serializer.Serialize(value, out type, compressionThreshold);
-                }
-                catch (Exception e)
-                {
-                    //If serialization fails, return false;
-
-                    logger.Error("Error serializing object for key '" + key + "'.", e);
-                    return "";
-                }
+                bytes = Serializer.Serialize(value, out type, compressionThreshold);
 
                 //Create commandline
                 string commandline = "";
@@ -160,7 +150,9 @@ namespace CYQ.Data.Cache
                 socket.Write(commandline);
                 socket.Write(bytes);
                 socket.Write("\r\n");
-                return socket.ReadResponse();
+                string result = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(result);
+                return result;
             });
         }
 
@@ -176,7 +168,7 @@ namespace CYQ.Data.Cache
         /// Use the overload to specify a custom hash to override server selection.
         /// </summary>
         public object Get(string key) { ulong i; return get("get", key, true, hash(key), out i); }
-       // public object Get(string key, uint hash) { ulong i; return get("get", key, false, this.hash(hash), out i); }
+        // public object Get(string key, uint hash) { ulong i; return get("get", key, false, this.hash(hash), out i); }
 
         private object get(string command, string key, bool keyIsChecked, uint hash, out ulong unique)
         {
@@ -186,12 +178,12 @@ namespace CYQ.Data.Cache
             }
 
             ulong __unique = 0;
-            object value = hostServer.Execute<object>(hash, null, delegate(MSocket socket)
+            object value = hostServer.Execute<object>(hash, null, delegate(MSocket socket, out bool isNoResponse)
             {
                 socket.Write(command + " " + key + "\r\n");
                 object _value;
                 ulong _unique;
-                if (readValue(socket, out _value, out key, out _unique))
+                if (readValue(socket, out _value, out key, out _unique, out isNoResponse))
                 {
                     socket.ReadLine(); //Read the trailing END.
                 }
@@ -272,7 +264,8 @@ namespace CYQ.Data.Cache
                     object gottenObject;
                     string gottenKey;
                     ulong unique;
-                    while (readValue(socket, out gottenObject, out gottenKey, out unique))
+                    bool isNoResponse;
+                    while (readValue(socket, out gottenObject, out gottenKey, out unique, out isNoResponse))
                     {
                         foreach (int position in kv.Value[gottenKey])
                         {
@@ -287,9 +280,10 @@ namespace CYQ.Data.Cache
         }
 
         //Private method for reading results of the "get" command.
-        private bool readValue(MSocket socket, out object value, out string key, out ulong unique)
+        private bool readValue(MSocket socket, out object value, out string key, out ulong unique, out bool isNoResponse)
         {
             string response = socket.ReadResponse();
+            isNoResponse = string.IsNullOrEmpty(response);
             string[] parts = response.Split(' '); //Result line from server: "VALUE <key> <flags> <bytes> <cas unique>"
             if (parts[0] == "VALUE")
             {
@@ -306,16 +300,9 @@ namespace CYQ.Data.Cache
                 }
                 socket.Read(bytes);
                 socket.SkipToEndOfLine(); //Skip the trailing \r\n
-                try
-                {
-                    value = Serializer.DeSerialize(bytes, type);
-                }
-                catch (Exception e)
-                {
-                    //If deserialization fails, return null
-                    value = null;
-                    logger.Error("Error deserializing object for key '" + key + "' of type " + type + ".", e);
-                }
+
+                value = Serializer.DeSerialize(bytes, type);
+
                 return true;
             }
             else
@@ -345,7 +332,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket)
+            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket, out bool isNoResponse)
             {
                 string commandline;
                 if (time == 0)
@@ -357,7 +344,9 @@ namespace CYQ.Data.Cache
                     commandline = "delete " + key + " " + time + "\r\n";
                 }
                 socket.Write(commandline);
-                return socket.ReadResponse().StartsWith("DELETED");
+                string result = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(result);
+                return result.StartsWith("DELETED");
             });
         }
         #endregion
@@ -440,5 +429,75 @@ namespace CYQ.Data.Cache
 
         #endregion
 
+        #region Exe All
+        public void SetAll(string key, object value, DateTime expiry) { storeAll("set", key, true, value, getUnixTime(expiry), 0); }
+        private void storeAll(string command, string key, bool keyIsChecked, object value, int expiry, ulong unique)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+
+            hostServer.ExecuteAll(delegate(MSocket socket)
+            {
+                SerializedType type;
+                byte[] bytes;
+
+                //Serialize object efficiently, store the datatype marker in the flags property.
+                bytes = Serializer.Serialize(value, out type, compressionThreshold);
+
+                //Create commandline
+                string commandline = "";
+                switch (command)
+                {
+                    case "set":
+                    case "add":
+                    case "replace":
+                        commandline = command + " " + key + " " + (ushort)type + " " + expiry + " " + bytes.Length + "\r\n";
+                        break;
+                    case "append":
+                    case "prepend":
+                        commandline = command + " " + key + " 0 0 " + bytes.Length + "\r\n";
+                        break;
+                    case "cas":
+                        commandline = command + " " + key + " " + (ushort)type + " " + expiry + " " + bytes.Length + " " + unique + "\r\n";
+                        break;
+                }
+
+                //Write commandline and serialized object.
+                socket.Write(commandline);
+                socket.Write(bytes);
+                socket.Write("\r\n");
+                socket.SkipToEndOfLine();
+            });
+        }
+
+        public void DeleteAll(string key) {  DeleteAll(key, true, hash(key), 0); }
+
+
+        private void DeleteAll(string key, bool keyIsChecked, uint hash, int time)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+
+            hostServer.ExecuteAll(delegate(MSocket socket)
+            {
+                string commandline;
+                if (time == 0)
+                {
+                    commandline = "delete " + key + "\r\n";
+                }
+                else
+                {
+                    commandline = "delete " + key + " " + time + "\r\n";
+                }
+                socket.Write(commandline);
+                socket.SkipToEndOfLine();
+            });
+        }
+
+        #endregion
     }
 }

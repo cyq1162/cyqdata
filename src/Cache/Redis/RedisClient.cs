@@ -50,22 +50,15 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            string result = hostServer.Execute<string>(hash, "", delegate (MSocket socket)
+            string result = hostServer.Execute<string>(hash, "", delegate(MSocket socket, out bool isNoResponse)
             {
                 SerializedType type;
                 byte[] bytes;
                 byte[] typeBit = new byte[1];
-                try
-                {
 
-                    bytes = Serializer.Serialize(value, out type, compressionThreshold);
-                    typeBit[0] = (byte)type;
-                }
-                catch (Exception e)
-                {
-                    logger.Error("Error serializing object for key '" + key + "'.", e);
-                    return "";
-                }
+                bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                typeBit[0] = (byte)type;
+
                 // CheckDB(socket, hash);
                 int db = GetDBIndex(socket, hash);
                 // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
@@ -107,6 +100,7 @@ namespace CYQ.Data.Cache
                             //}
                         }
                     }
+                    isNoResponse = string.IsNullOrEmpty(result);
                     return result;
                 }
             });
@@ -127,22 +121,16 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            string result = hostServer.Execute<string>(hash, "", delegate (MSocket socket)
+            string result = hostServer.Execute<string>(hash, "", delegate(MSocket socket, out bool isNoResponse)
               {
                   SerializedType type;
                   byte[] bytes;
                   byte[] typeBit = new byte[1];
-                  try
-                  {
 
-                      bytes = Serializer.Serialize(value, out type, compressionThreshold);
-                      typeBit[0] = (byte)type;
-                  }
-                  catch (Exception e)
-                  {
-                      logger.Error("Error serializing object for key '" + key + "'.", e);
-                      return "";
-                  }
+
+                  bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                  typeBit[0] = (byte)type;
+
                   // CheckDB(socket, hash);
                   int db = GetDBIndex(socket, hash);
                   // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
@@ -169,10 +157,17 @@ namespace CYQ.Data.Cache
                       }
                   }
                   socket.SkipToEndOfLine(skipCmd - 1);//取最后1次命令的结果
-                  return socket.ReadResponse();
+                  result = socket.ReadResponse();
+                  isNoResponse = string.IsNullOrEmpty(result);
+                  return result;
 
               });
-            return result == "+OK" || result == ":1";
+            bool ret = result == "+OK" || result == ":1";
+            if (!ret)
+            {
+
+            }
+            return ret;
         }
 
         #endregion
@@ -186,7 +181,7 @@ namespace CYQ.Data.Cache
             {
                 checkKey(key);
             }
-            object value = hostServer.Execute<object>(hash, null, delegate (MSocket socket)
+            object value = hostServer.Execute<object>(hash, null, delegate(MSocket socket, out bool isNoResponse)
             {
                 int db = GetDBIndex(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -201,6 +196,7 @@ namespace CYQ.Data.Cache
                 }
                 if (db > -1) { socket.SkipToEndOfLine(); }
                 string result = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(result);
                 if (!string.IsNullOrEmpty(result) && result[0] == '$')
                 {
                     int len = 0;
@@ -233,7 +229,7 @@ namespace CYQ.Data.Cache
             {
                 checkKey(key);
             }
-            return hostServer.Execute<bool>(hash, false, delegate (MSocket socket)
+            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket, out bool isNoResponse)
             {
                 int db = GetDBIndex(socket, hash);
                 //Console.WriteLine("ContainsKey :" + key + ":" + hash + " db." + db);
@@ -249,6 +245,7 @@ namespace CYQ.Data.Cache
                 }
                 if (db > -1) { socket.SkipToEndOfLine(); }
                 string result = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(result);
                 return !result.StartsWith(":0") && !result.StartsWith("-");
             });
         }
@@ -261,11 +258,6 @@ namespace CYQ.Data.Cache
             if (AppConfig.Redis.UseDBCount > 1 || AppConfig.Redis.UseDBIndex > 0)
             {
                 return AppConfig.Redis.UseDBIndex > 0 ? AppConfig.Redis.UseDBIndex : (int)(hash % AppConfig.Redis.UseDBCount);//默认分散在16个DB中。
-                //if (socket.DB != db)
-                //{
-                //    socket.DB = db;
-                //    return (int)db;
-                //}
             }
             return -1;
         }
@@ -284,7 +276,7 @@ namespace CYQ.Data.Cache
                 checkKey(key);
             }
 
-            return hostServer.Execute<bool>(hash, false, delegate (MSocket socket)
+            return hostServer.Execute<bool>(hash, false, delegate(MSocket socket, out bool isNoResponse)
             {
                 int db = GetDBIndex(socket, hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -302,6 +294,7 @@ namespace CYQ.Data.Cache
                     socket.SkipToEndOfLine();
                 }
                 string result = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(result);
                 return result.StartsWith(":1");
             });
         }
@@ -331,7 +324,7 @@ namespace CYQ.Data.Cache
             foreach (KeyValuePair<string, HostNode> item in hostServer.HostList)
             {
                 HostNode pool = item.Value;
-                hostServer.Execute(pool, delegate (MSocket socket)
+                hostServer.Execute(pool, delegate(MSocket socket)
                 {
                     using (RedisCommand cmd = new RedisCommand(socket, 1, "flushall"))
                     {
@@ -365,7 +358,7 @@ namespace CYQ.Data.Cache
         private Dictionary<string, string> stats(HostNode pool)
         {
             Dictionary<string, string> dic = new Dictionary<string, string>();
-            hostServer.Execute(pool, delegate (MSocket socket)
+            hostServer.Execute(pool, delegate(MSocket socket)
             {
                 using (RedisCommand cmd = new RedisCommand(socket, 1, "info"))
                 {
@@ -382,11 +375,11 @@ namespace CYQ.Data.Cache
                         {
                             line = socket.ReadLine();
                         }
-                        catch(Exception err) 
+                        catch (Exception err)
                         {
                             break;
                         }
-                        
+
                         if (line == null)
                         {
                             if (isEnd)
@@ -418,6 +411,87 @@ namespace CYQ.Data.Cache
 
         #endregion
 
+
+        #region Exe All
+        public void SetAll(string key, object value, int seconds) { SetAll("set", key, true, value, hash(key), seconds); }
+        private void SetAll(string command, string key, bool keyIsChecked, object value, uint hash, int expirySeconds)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+
+            hostServer.ExecuteAll(delegate(MSocket socket)
+            {
+                SerializedType type;
+                byte[] bytes;
+                byte[] typeBit = new byte[1];
+
+
+                bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                typeBit[0] = (byte)type;
+
+                // CheckDB(socket, hash);
+                int db = GetDBIndex(socket, hash);
+                // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
+                int skipCmd = 0;
+                using (RedisCommand cmd = new RedisCommand(socket))
+                {
+                    if (db > -1)
+                    {
+                        cmd.Reset(2, "Select");
+                        cmd.AddKey(db.ToString());
+                        skipCmd++;
+                    }
+                    cmd.Reset(3, command);
+                    cmd.AddKey(key);
+                    cmd.AddValue(typeBit, bytes);
+                    skipCmd++;
+
+                    if (expirySeconds > 0)
+                    {
+                        cmd.Reset(3, "EXPIRE");
+                        cmd.AddKey(key);
+                        cmd.AddKey(expirySeconds.ToString());
+                        skipCmd++;
+                    }
+                }
+                socket.SkipToEndOfLine(skipCmd);//取最后N次命令的结果
+            });
+        }
+
+        public void DeleteAll(string key)
+        {
+            DeleteAll(key, true, hash(key), 0);
+        }
+        private void DeleteAll(string key, bool keyIsChecked, uint hash, int time)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+
+            hostServer.ExecuteAll(delegate(MSocket socket)
+            {
+                int db = GetDBIndex(socket, hash);
+                using (RedisCommand cmd = new RedisCommand(socket))
+                {
+                    if (db > -1)
+                    {
+                        cmd.Reset(2, "Select");
+                        cmd.AddKey(db.ToString());
+                    }
+                    cmd.Reset(2, "DEL");
+                    cmd.AddKey(key);
+                }
+                if (db > -1)
+                {
+                    socket.SkipToEndOfLine();
+                }
+                socket.SkipToEndOfLine();
+            });
+        }
+        #endregion
 
     }
 }

@@ -10,7 +10,7 @@ namespace CYQ.Data.Cache
     /// <summary>
     /// MemCache分布式缓存类
     /// </summary>
-    internal class MemCache : CacheManage
+    internal partial class MemCache : CacheManage
     {
         private MemcachedClient client;
         /// <summary>
@@ -20,11 +20,11 @@ namespace CYQ.Data.Cache
         internal MemCache()
         {
             client = MemcachedClient.Create(AppConfig.MemCache.Servers);
-            if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
-            {
-                MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
-                client.HostServer.HostServerBak = clientBak.HostServer;
-            }
+            //if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
+            //{
+            //    MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
+            //    client.HostServer.HostServerBak = clientBak.HostServer;
+            //}
         }
         public override void RefleshConfig(string newConfigValue)
         {
@@ -158,6 +158,21 @@ namespace CYQ.Data.Cache
         public override CacheType CacheType
         {
             get { return CacheType.MemCache; }
+        }
+    }
+
+    /// <summary>
+    /// 分布式锁
+    /// </summary>
+    internal partial class MemCache
+    {
+        internal override void SetAll(string key, string value, double cacheMinutes)
+        {
+            client.SetAll(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+        }
+        internal override void RemoveAll(string key)
+        {
+            client.DeleteAll(key);
         }
     }
 }

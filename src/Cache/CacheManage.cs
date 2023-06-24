@@ -277,7 +277,7 @@ namespace CYQ.Data.Cache
         /// 释放（分布式锁）
         /// </summary>
         /// <returns></returns>
-        public virtual bool UnLock(string key)
+        public virtual void UnLock(string key)
         {
             #region 可重入锁检测
 
@@ -289,7 +289,7 @@ namespace CYQ.Data.Cache
                 {
                     lockAgain[flag]--;
                     //Console.WriteLine("Un Lock Again:" + flag + " - " + lockAgain[flag]);
-                    return true;
+                    return;
                 }
                 else
                 {
@@ -304,21 +304,25 @@ namespace CYQ.Data.Cache
 
             //--释放机制有些问题，需要调整。
             string value = Get<string>(key);
-            //锁已过期。
-            if (value == null)
-            {
-                return true;
-            }
-
             //自身加的锁
             if (value == flag)
             {
-                return Remove(key);
+                RemoveAll(key);
             }
-            return false;
+        }
+
+        /// <summary>
+        /// 往所有节点写入数据【用于分布式锁的超时机制】
+        /// </summary>
+        internal virtual void SetAll(string key, string value, double cacheMinutes)
+        {
 
         }
 
+        internal virtual void RemoveAll(string key)
+        {
+
+        }
 
         #region 内部定时日志工作
 
@@ -348,7 +352,6 @@ namespace CYQ.Data.Cache
         {
             while (true)
             {
-                Thread.Sleep(3000);//循环。
                 // Console.WriteLine("DoWork :--------------------------Count : " + keysDic.Count);
                 if (keysDic.Count > 0)
                 {
@@ -358,12 +361,12 @@ namespace CYQ.Data.Cache
                         //给 key 设置延时时间
                         if (keysDic.ContainsKey(key))
                         {
-                            Set(key, keysDic[key], 0.1);//延时锁：6秒
-
+                            SetAll(key, keysDic[key], 0.1);//延时锁：6秒
                         }
                     }
                     list.Clear();
                 }
+                Thread.Sleep(3000);//循环。
             }
         }
         #endregion

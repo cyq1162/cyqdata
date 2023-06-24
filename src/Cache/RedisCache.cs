@@ -10,7 +10,7 @@ namespace CYQ.Data.Cache
     /// <summary>
     /// Redis分布式缓存类
     /// </summary>
-    internal class RedisCache : CacheManage
+    internal partial class RedisCache : CacheManage
     {
         private RedisClient client;
         /// <summary>
@@ -20,11 +20,11 @@ namespace CYQ.Data.Cache
         internal RedisCache()
         {
             client = RedisClient.Create(AppConfig.Redis.Servers);
-            if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
-            {
-                RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
-                client.HostServer.HostServerBak = clientBak.HostServer;
-            }
+            //if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
+            //{
+            //    RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
+            //    client.HostServer.HostServerBak = clientBak.HostServer;
+            //}
         }
 
         public override void RefleshConfig(string newConfigValue)
@@ -180,6 +180,21 @@ namespace CYQ.Data.Cache
         public override CacheType CacheType
         {
             get { return CacheType.Redis; }
+        }
+    }
+
+    /// <summary>
+    /// 分布式锁
+    /// </summary>
+    internal partial class RedisCache
+    {
+        internal override void SetAll(string key, string value, double cacheMinutes)
+        {
+            client.SetAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+        }
+        internal override void RemoveAll(string key)
+        {
+            client.DeleteAll(key);
         }
     }
 }

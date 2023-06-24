@@ -149,10 +149,10 @@ namespace CYQ.Data.Cache
                 if (!isBackup) ErrorServer++;
                 result.Add("Status", "Dead , next retry at : " + host.DeadEndPointRetryTime);
                 result.Add("Error", host.Error);
-                if (host.HostNodeBak != null)
-                {
-                    result.Add("Backup - " + host.HostNodeBak.Host, JsonHelper.ToJson(GetInfoByHost(host.HostNodeBak, true)));
-                }
+                //if (host.HostNodeBak != null)
+                //{
+                //    result.Add("Backup - " + host.HostNodeBak.Host, JsonHelper.ToJson(GetInfoByHost(host.HostNodeBak, true)));
+                //}
             }
 
             return result;

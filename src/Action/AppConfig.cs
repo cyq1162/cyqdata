@@ -1041,17 +1041,17 @@ namespace CYQ.Data
             /// 格式：ip:port - password
             /// 配置项：Redis.ServersBak ：192.168.1.9:6379 - 888888
             /// </summary>
-            public static string ServersBak
-            {
-                get
-                {
-                    return GetApp("Redis.ServersBak", string.Empty);
-                }
-                set
-                {
-                    SetApp("Redis.ServersBak", value);
-                }
-            }
+            //public static string ServersBak
+            //{
+            //    get
+            //    {
+            //        return GetApp("Redis.ServersBak", string.Empty);
+            //    }
+            //    set
+            //    {
+            //        SetApp("Redis.ServersBak", value);
+            //    }
+            //}
 
 
             /// <summary>
@@ -1129,17 +1129,17 @@ namespace CYQ.Data
             /// 格式：ip:port
             /// 配置项：MemCache.ServersBak ：192.168.1.9:12121
             /// </summary>
-            public static string ServersBak
-            {
-                get
-                {
-                    return GetApp("MemCache.ServersBak", string.Empty);
-                }
-                set
-                {
-                    SetApp("MemCache.ServersBak", value);
-                }
-            }
+            //public static string ServersBak
+            //{
+            //    get
+            //    {
+            //        return GetApp("MemCache.ServersBak", string.Empty);
+            //    }
+            //    set
+            //    {
+            //        SetApp("MemCache.ServersBak", value);
+            //    }
+            //}
 
             /// <summary>
             /// MemCache Socket 链接建立超时时间（毫秒ms）

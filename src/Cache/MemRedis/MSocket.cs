@@ -60,7 +60,10 @@ namespace CYQ.Data.Cache
             {
                 try
                 {
-                    stream.Close();
+                    if (socket.Connected && stream.CanWrite)
+                    {
+                        stream.Close();
+                    }
                 }
                 catch (Exception e)
                 {
@@ -111,24 +114,16 @@ namespace CYQ.Data.Cache
         /// </summary>
         public void Write(byte[] bytes)
         {
-            try
+            if (stream != null && stream.CanWrite)
             {
-                if (stream != null && stream.CanWrite)
-                {
-                    stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
-                    stream.Write(bytes, 0, bytes.Length);
-                    //IAsyncResult result = stream.BeginWrite(bytes, 0, bytes.Length, null, null);
-                    //stream.EndWrite(result);
-                    //if (result.AsyncWaitHandle.WaitOne(3000))
-                    //{
-                    //    stream.EndWrite(result);
-                    //}
-                }
-
-            }
-            catch (Exception e)
-            {
-                logger.Error("Error socket Write : bytes length " + bytes.Length, e);
+                stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
+                stream.Write(bytes, 0, bytes.Length);//有异常直接往上抛。
+                //IAsyncResult result = stream.BeginWrite(bytes, 0, bytes.Length, null, null);
+                //stream.EndWrite(result);
+                //if (result.AsyncWaitHandle.WaitOne(3000))
+                //{
+                //    stream.EndWrite(result);
+                //}
             }
         }
         /// <summary>

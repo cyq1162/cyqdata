@@ -526,9 +526,9 @@ namespace CYQ.Data.Cache
         {
             return MutexWaitOne(key, millisecondsTimeout);
         }
-        public override bool UnLock(string key)
+        public override void UnLock(string key)
         {
-            return MutexRelease(key);
+            MutexRelease(key);
         }
         private static bool MutexWaitOne(string key, int millisecondsTimeout)
         {

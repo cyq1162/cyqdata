@@ -7,8 +7,8 @@ using System.Threading;
 
 namespace CYQ.Data.Cache
 {
-    internal delegate T UseSocket<T>(MSocket socket);
-    internal delegate void UseSocket(MSocket socket);
+    internal delegate T UseSocket<T>(MSocket socket, out bool isNoResponse);
+    internal delegate void UseSocketVoid(MSocket socket);
 
     /// <summary>
     /// The ServerPool encapsulates a collection of memcached servers and the associated SocketPool objects.
@@ -38,8 +38,8 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 备份的主机池，如果某主机挂了，在配置了备份的情况下，会由备份提供服务。
         /// </summary>
-        private HostServer hostServerBak;
-        public HostServer HostServerBak { get { return hostServerBak; } set { hostServerBak = value; } }
+        //private HostServer hostServerBak;
+        //public HostServer HostServerBak { get { return hostServerBak; } set { hostServerBak = value; } }
 
         //Expose the socket pools.
         //private HostInstance[] hostList;
@@ -140,7 +140,7 @@ namespace CYQ.Data.Cache
                 hashKeys = null;
                 return;
             }
-            lock (o)
+            lock (this)
             {
                 if (CreateHost(configValue))
                 {
@@ -151,6 +151,9 @@ namespace CYQ.Data.Cache
         }
 
         #region 主机管理
+        /// <summary>
+        /// 主机【仅有N个】
+        /// </summary>
         MDictionary<string, HostNode> hostList = new MDictionary<string, HostNode>();
         /// <summary>
         /// 主机列表。
@@ -220,40 +223,61 @@ namespace CYQ.Data.Cache
         /// If anything causes an error, the given defaultValue will be returned instead.
         /// This method takes care of disposing the socket properly once the delegate has executed.
         /// </summary>
-        internal T Execute<T>(uint hash, T defaultValue, UseSocket<T> use)
+        internal T Execute<T>(uint hash, T defaultValue, UseSocket<T> useSocket)
         {
-            HostNode node = GetHost(hash);
-            if (node.HostNodeBak == null && hostServerBak != null)
-            {
-                //为主Socket池挂接备份的Socket池
-                node.HostNodeBak = hostServerBak.GetHost(hash, node.Host);
-            }
-            return Execute(node, defaultValue, use);
+            return Execute<T>(hash, defaultValue, useSocket, true);
         }
-
-        internal T Execute<T>(HostNode host, T defaultValue, UseSocket<T> use)
+        internal T Execute<T>(uint hash, T defaultValue, UseSocket<T> useSocket, bool tryAgain)
         {
+            HostNode host = GetHost(hash);
+            if (host == null)
+            {
+                return defaultValue;
+            }
             MSocket sock = null;
             try
             {
                 //Acquire a socket
                 sock = host.Acquire();
+                if (sock == null && tryAgain)
+                {
+                    host.AddToDeadPool();
+                    return Execute<T>(hash, defaultValue, useSocket, false);
+                }
 
                 //Use the socket as a parameter to the delegate and return its result.
                 if (sock != null)
                 {
-                    return use(sock);
+                    bool isNoResponse = false;
+                    var result = useSocket(sock, out isNoResponse);
+                    if (isNoResponse)
+                    {
+                        host.AddToDeadPool();
+                        //Console.WriteLine("1---" + host.IsEndPointDead + " host :" + host.Host);
+                        return Execute<T>(hash, defaultValue, useSocket, false);
+                    }
+                    return result;
+
+
                 }
             }
             catch (Exception e)
             {
-                logger.Error("Error in Execute<T>: " + host.Host, e);
 
                 //Socket is probably broken
                 if (sock != null)
                 {
                     Interlocked.Increment(ref host.CloseSockets);
                     sock.Close();
+                }
+                if (tryAgain)
+                {
+                    host.AddToDeadPool();
+                    return Execute<T>(hash, defaultValue, useSocket, false);
+                }
+                else
+                {
+                    logger.Error("Error in Execute<T>: " + host.Host, e);
                 }
             }
             finally
@@ -266,14 +290,13 @@ namespace CYQ.Data.Cache
             return defaultValue;
         }
 
-        internal void Execute(HostNode host, UseSocket use)
+        internal void Execute(HostNode host, UseSocketVoid use)
         {
             MSocket sock = null;
             try
             {
                 //Acquire a socket
                 sock = host.Acquire();
-
                 //Use the socket as a parameter to the delegate and return its result.
                 if (sock != null)
                 {
@@ -303,7 +326,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// This method executes the given delegate on all servers.
         /// </summary>
-        internal void ExecuteAll(UseSocket use)
+        internal void ExecuteAll(UseSocketVoid use)
         {
             foreach (KeyValuePair<string, HostNode> item in hostList)
             {
@@ -329,7 +352,7 @@ namespace CYQ.Data.Cache
                 //服务节点>1，一致性hash才有意义
                 if (watch.HostList.Count > 1)
                 {
-                    return 50;
+                    return 160;//nginx 节点数 160
                 }
                 return 1;
             }
@@ -392,27 +415,33 @@ namespace CYQ.Data.Cache
             list.Sort();
             hashKeys = list.ToArray();
         }
-        private static object o = new object();
+
         /// <summary>
         /// Given an item key hash, this method returns the socketpool which is closest on the server key continuum.
         /// 获取一台用于服务的主机实例。
         /// </summary>
+        //internal HostNode GetHost(uint hash)
+        //{
+        //    HostNode node = GetHost(hash, null);
+        //    if (node != null && node.IsEndPointDead)
+        //    {
+        //        return GetHost(hash, node.Host);
+        //    }
+        //    return node;
+        //}
         internal HostNode GetHost(uint hash)
         {
-            return GetHost(hash, null);
-        }
-        internal HostNode GetHost(uint hash, string ignoreHost)
-        {
-            lock (o)
+            //Quick return if we only have one host.
+            if (hostList.Count == 1)
             {
-                //Quick return if we only have one host.
-                if (hostList.Count == 1)
-                {
-                    return hostList[0];
-                }
-
+                return hostList[0];
+            }
+            uint index = 0;
+            int i = 0;
+            lock (this)
+            {
                 //New "ketama" host selection.
-                int i = Array.BinarySearch(hashKeys, hash);
+                i = Array.BinarySearch(hashKeys, hash);
 
                 //If not exact match...
                 if (i < 0)
@@ -426,20 +455,31 @@ namespace CYQ.Data.Cache
                         i = 0;
                     }
                 }
-                HostNode node = hashHostDic[hashKeys[i]];
-                if (!string.IsNullOrEmpty(ignoreHost) && node.Host == ignoreHost)
+                index = hashKeys[i];
+            }
+            HostNode node = hashHostDic[index];
+            if (node.IsEndPointDead)
+            {
+                //往后循环
+                for (int j = i + 1; j < hashKeys.Length; j++)
                 {
-                    for (int j = 0; j < hostList.Count; j++)
+                    index = hashKeys[j];
+                    if (!hashHostDic[index].IsEndPointDead)
                     {
-                        if (hostList[j].Host == ignoreHost)
-                        {
-                            //取最后一个，或前一个。
-                            return j < hostList.Count - 1 ? hostList[j + 1] : hostList[j - 1];
-                        }
+                        return hashHostDic[index];
                     }
                 }
-                return node;
+                //从0开始循环
+                for (uint j = 0; j < i; j++)
+                {
+                    index = hashKeys[j];
+                    if (!hashHostDic[index].IsEndPointDead)
+                    {
+                        return hashHostDic[index];
+                    }
+                }
             }
+            return node;
         }
     }
 }
