@@ -491,6 +491,116 @@ namespace CYQ.Data.Cache
                 socket.SkipToEndOfLine();
             });
         }
+
+        public bool SetNXAll(string key, object value, int seconds) { return SetNXAll("setnx", key, true, value, hash(key), seconds); }
+        private bool SetNXAll(string command, string key, bool keyIsChecked, object value, uint hash, int expirySeconds)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+            List<HostNode> okNodeList = new List<HostNode>();
+            List<string> hosts = hostServer.HostList.GetKeys();
+            int exeCount = 0;
+            int okCount = 0;
+            foreach (string host in hosts)
+            {
+                HostNode hostNode = hostServer.HostList[host];
+                if (!hostNode.IsEndPointDead)
+                {
+                    exeCount++;
+                }
+                bool isOK = hostServer.Execute<bool>(hostNode, hash, false, delegate(MSocket socket, out bool isNoResponse)
+                {
+                    string result = string.Empty;
+                    SerializedType type;
+                    byte[] bytes;
+                    byte[] typeBit = new byte[1];
+
+                    bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                    typeBit[0] = (byte)type;
+
+                    // CheckDB(socket, hash);
+                    int db = GetDBIndex(socket, hash);
+                    // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
+                    int skipCmd = 0;
+                    using (RedisCommand cmd = new RedisCommand(socket))
+                    {
+                        if (db > -1)
+                        {
+                            cmd.Reset(2, "Select");
+                            cmd.AddKey(db.ToString());
+                            skipCmd++;
+                        }
+                        cmd.Reset(3, command);
+                        cmd.AddKey(key);
+                        cmd.AddValue(typeBit, bytes);
+
+                        cmd.Reset(2, "ttl");
+                        cmd.AddKey(key);//检测失效时间（是否返回-1，可能未设置过期时间，解决setNx和expire原子性问题）
+
+                        cmd.Send();
+                        socket.SkipToEndOfLine(skipCmd);
+                        result = socket.ReadResponse();
+                        string ttl = socket.ReadResponse();
+                        if (result == ":1" || ttl == ":-1")
+                        {
+                            if (expirySeconds > 0)
+                            {
+                                cmd.Reset(3, "EXPIRE");
+                                cmd.AddKey(key);
+                                cmd.AddKey(expirySeconds.ToString());
+                                cmd.Send();
+                                socket.SkipToEndOfLine(1);//跳过结果
+                            }
+                        }
+                        isNoResponse = string.IsNullOrEmpty(result);
+                        return result.StartsWith("+OK") || result.StartsWith(":1");
+                    }
+                }, false);
+                if (isOK)
+                {
+                    okCount++;
+                    okNodeList.Add(hostNode);
+                }
+            }
+            bool retResult = false;
+            if (exeCount < 3)
+            {
+                retResult = okCount > 0 && okCount == exeCount;//2个节点以下，要求全部成功。
+            }
+            else
+            {
+                retResult = okCount > exeCount / 2 + 1;//超过1半的成功。
+            }
+            if (!retResult && okCount > 0)
+            {
+                foreach (var node in okNodeList)
+                {
+                    hostServer.Execute(node, delegate(MSocket socket)
+                    {
+                        int db = GetDBIndex(socket, hash);
+                        using (RedisCommand cmd = new RedisCommand(socket))
+                        {
+                            if (db > -1)
+                            {
+                                cmd.Reset(2, "Select");
+                                cmd.AddKey(db.ToString());
+                            }
+                            cmd.Reset(2, "DEL");
+                            cmd.AddKey(key);
+                        }
+                        if (db > -1)
+                        {
+                            socket.SkipToEndOfLine();
+                        }
+                        socket.SkipToEndOfLine();
+                    });
+                }
+            }
+            return retResult;
+        }
+
         #endregion
 
     }

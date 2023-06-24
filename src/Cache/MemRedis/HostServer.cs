@@ -225,7 +225,12 @@ namespace CYQ.Data.Cache
         /// </summary>
         internal T Execute<T>(uint hash, T defaultValue, UseSocket<T> useSocket)
         {
-            return Execute<T>(hash, defaultValue, useSocket, true);
+            HostNode host = GetHost(hash);
+            if (host == null)
+            {
+                return defaultValue;
+            }
+            return Execute<T>(host, hash, defaultValue, useSocket, true);
         }
         internal T Execute<T>(uint hash, T defaultValue, UseSocket<T> useSocket, bool tryAgain)
         {
@@ -234,6 +239,11 @@ namespace CYQ.Data.Cache
             {
                 return defaultValue;
             }
+            return Execute<T>(host, hash, defaultValue, useSocket, tryAgain);
+        }
+        internal T Execute<T>(HostNode host, uint hash, T defaultValue, UseSocket<T> useSocket, bool tryAgain)
+        {
+
             MSocket sock = null;
             try
             {

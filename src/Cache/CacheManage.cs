@@ -254,10 +254,10 @@ namespace CYQ.Data.Cache
             int count = millisecondsTimeout;
             while (true)
             {
-                if (Add(key, flag, 0.1))
+                if (AddAll(key, flag, 0.1))
                 {
                     lockAgain.Add(flag, 0);
-                    //Console.WriteLine("Lock :" + flag);
+                    Console.WriteLine("Lock :" + flag);
                     AddToWork(key, flag);//循环检测超时时间，执行期间，服务挂了，然后重启了？
                     return true;
                 }
@@ -299,7 +299,7 @@ namespace CYQ.Data.Cache
             #endregion
 
 
-            //Console.WriteLine("Un Lock :" + flag);
+            Console.WriteLine("Un Lock :" + flag);
             RemoveFromWork(key);
 
             //--释放机制有些问题，需要调整。
@@ -307,7 +307,10 @@ namespace CYQ.Data.Cache
             //自身加的锁
             if (value == flag)
             {
-                RemoveAll(key);
+                lock (key)
+                {
+                    RemoveAll(key);
+                }
             }
         }
 
@@ -322,6 +325,11 @@ namespace CYQ.Data.Cache
         internal virtual void RemoveAll(string key)
         {
 
+        }
+
+        internal virtual bool AddAll(string key, string value, double cacheMinutes)
+        {
+            return false;
         }
 
         #region 内部定时日志工作
@@ -361,7 +369,10 @@ namespace CYQ.Data.Cache
                         //给 key 设置延时时间
                         if (keysDic.ContainsKey(key))
                         {
-                            SetAll(key, keysDic[key], 0.1);//延时锁：6秒
+                            lock (key)
+                            {
+                                SetAll(key, keysDic[key], 0.1);//延时锁：6秒
+                            }
                         }
                     }
                     list.Clear();

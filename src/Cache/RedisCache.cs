@@ -196,5 +196,9 @@ namespace CYQ.Data.Cache
         {
             client.DeleteAll(key);
         }
+        internal override bool AddAll(string key, string value, double cacheMinutes)
+        {
+            return client.SetNXAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+        }
     }
 }

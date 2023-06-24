@@ -174,5 +174,9 @@ namespace CYQ.Data.Cache
         {
             client.DeleteAll(key);
         }
+        internal override bool AddAll(string key, string value, double cacheMinutes)
+        {
+            return false;
+        }
     }
 }

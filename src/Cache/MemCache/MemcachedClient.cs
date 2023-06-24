@@ -498,6 +498,77 @@ namespace CYQ.Data.Cache
             });
         }
 
+        public bool AddAll(string key, object value, DateTime expiry) { return addAll("add", key, true, value, hash(key), getUnixTime(expiry)); }
+
+        private bool addAll(string command, string key, bool keyIsChecked, object value, uint hash, int expiry)
+        {
+            if (!keyIsChecked)
+            {
+                checkKey(key);
+            }
+            List<HostNode> okNodeList = new List<HostNode>();
+            List<string> hosts = hostServer.HostList.GetKeys();
+            int exeCount = 0;
+            int okCount = 0;
+            foreach (string host in hosts)
+            {
+                HostNode hostNode = hostServer.HostList[host];
+                if (!hostNode.IsEndPointDead)
+                {
+                    exeCount++;
+                }
+                bool isOK = hostServer.Execute<bool>(hostNode, hash, false, delegate(MSocket socket, out bool isNoResponse)
+                {
+                    SerializedType type;
+                    byte[] bytes;
+
+                    //Serialize object efficiently, store the datatype marker in the flags property.
+                    bytes = Serializer.Serialize(value, out type, compressionThreshold);
+
+                    //Create commandline
+                    string commandline = command + " " + key + " " + (ushort)type + " " + expiry + " " + bytes.Length + "\r\n";
+                    
+                    //Write commandline and serialized object.
+                    socket.Write(commandline);
+                    socket.Write(bytes);
+                    socket.Write("\r\n");
+                    string result = socket.ReadResponse();
+                    isNoResponse = string.IsNullOrEmpty(result);
+                    return result.StartsWith("STORED");
+                   
+
+                }, false);
+                if (isOK)
+                {
+                    okCount++;
+                    okNodeList.Add(hostNode);
+                }
+            }
+
+            bool retResult = false;
+            if (exeCount < 3)
+            {
+                retResult = okCount > 0 && okCount == exeCount;//2个节点以下，要求全部成功。
+            }
+            else
+            {
+                retResult = okCount > exeCount / 2 + 1;//超过1半的成功。
+            }
+            if (!retResult && okCount > 0)
+            {
+                foreach (var node in okNodeList)
+                {
+                    hostServer.Execute(node, delegate(MSocket socket)
+                    {
+                        string commandline = "delete " + key + "\r\n";
+                        socket.Write(commandline);
+                        socket.SkipToEndOfLine();
+                    });
+                }
+            }
+            return retResult;
+        }
+
         #endregion
     }
 }
