@@ -635,7 +635,7 @@ namespace CYQ.Data.Orm
                 foreach (MDataCell cell in d)
                 {
                     MDataCell valueCell = row[cell.ColumnName];
-                    if (valueCell.IsNull)
+                    if (valueCell == null || valueCell.IsNull)
                     {
                         continue;
                     }

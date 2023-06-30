@@ -183,6 +183,14 @@ namespace CYQ.Data.Tool
 
             try
             {
+                if (!isAppend)
+                {
+                    string folderPath = Path.GetDirectoryName(fileName);
+                    if (!Directory.Exists(folderPath))
+                    {
+                        Directory.CreateDirectory(folderPath);
+                    }
+                }
                 using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
                 {
                     //if (!isAppend && fileName.EndsWith(".txt"))
