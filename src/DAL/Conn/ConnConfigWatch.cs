@@ -76,7 +76,7 @@ namespace CYQ.Data
                     //ÒÆ³ýËùÓÐ»º´æµÄKey
                     AppConfig.SetConn(item.Key, null);
                     AppConfig.SetConn(item.Key + "_Bak", null);
-                    for (int i = 1; i < 10000; i++)
+                    for (int i = 1; i < 1000; i++)
                     {
                         if (!AppConfig.SetConn(item.Key + "_Slave" + i, null))
                         {

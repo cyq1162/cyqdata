@@ -287,7 +287,13 @@ namespace CYQ.Data
             }
             Dictionary<string, string> dic = null;
             string key = ConnBean.GetHashKey(ConnName) + "_" + DataBaseName + "_" + type + "_" + StaticTool.GetHashKey(sql);
-            #region 缓存检测
+
+            #region 内存短暂缓存检测
+            dic = Cache.CacheManage.LocalInstance.Get(key) as Dictionary<string, string>;//缓存3秒，避免后台线程和代码重复读取
+            if (dic != null) { return dic; }
+            #endregion
+
+            #region 硬盘长久缓存检测
             if (!isIgnoreCache)
             {
                 if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
@@ -308,24 +314,43 @@ namespace CYQ.Data
                 }
             }
             #endregion
-            dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
-            DbDataReader sdr = ExeDataReader(sql, false);
-            IsRecordDebugInfo = true;
-            if (sdr != null)
+
+            lock (sql)
             {
-                while (sdr.Read())
+                //锁住后，读取缓存，避免后台线程和代码重复读取
+                dic = Cache.CacheManage.LocalInstance.Get(key) as Dictionary<string, string>;
+                if (dic != null)
                 {
-                    string tableName = Convert.ToString(sdr["TableName"]);
-                    if (!dic.ContainsKey(tableName))
-                    {
-                        dic.Add(tableName, Convert.ToString(sdr["Description"]));
-                    }
+                    return dic; 
                 }
-                sdr.Close();
-                sdr = null;
+                dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
+                DbDataReader sdr = ExeDataReader(sql, false);
+                IsRecordDebugInfo = true;
+                if (sdr != null)
+                {
+                    while (sdr.Read())
+                    {
+                        string tableName = Convert.ToString(sdr["TableName"]);
+                        if (!dic.ContainsKey(tableName))
+                        {
+                            dic.Add(tableName, Convert.ToString(sdr["Description"]));
+                        }
+                    }
+                    sdr.Close();
+                    sdr = null;
+                }
+
+                #region 内存短暂缓存
+                if (dic != null)
+                {
+                    Cache.CacheManage.LocalInstance.Set(key, dic, 0.05);//缓存3秒，避免后台线程和代码重复读取
+                }
+                #endregion
+
             }
-            #region 缓存设置
+
+            #region 硬盘长久缓存
             if (dic != null && dic.Count > 0)
             {
                 if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
@@ -346,6 +371,7 @@ namespace CYQ.Data
                 }
             }
             #endregion
+
             return dic;
         }
 
