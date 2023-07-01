@@ -96,10 +96,11 @@ namespace System.Configuration
                         {
                             if (settings.ContainsKey("connectionStrings"))
                             {
-                                string settingValue = settings["connectionStrings"];
-                                if (!string.IsNullOrEmpty(settingValue))
+                                string connStrings = settings["connectionStrings"];
+                                if (!string.IsNullOrEmpty(connStrings))
                                 {
-                                    NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(settingValue);
+                                    Dictionary<string, string> nv = JsonHelper.Split(connStrings);
+                                    //NameValueCollection nv = JsonHelper.ToEntity<NameValueCollection>(connStrings);
                                     if (nv != null && nv.Count > 0)
                                     {
                                         foreach (string key in nv.Keys)
