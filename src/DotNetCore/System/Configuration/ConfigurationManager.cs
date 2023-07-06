@@ -63,7 +63,7 @@ namespace System.Configuration
                     {
                         if (_AppSettings.Count == 0)
                         {
-                            if (settings.ContainsKey("appsettings"))
+                            if (settings != null && settings.ContainsKey("appsettings"))
                             {
                                 //EscapeOp.Default 参数若不设置，会造成死循环
                                 string settingValue = settings["appsettings"];
@@ -94,7 +94,7 @@ namespace System.Configuration
                     {
                         if (_ConnectionStrings.Count == 0)
                         {
-                            if (settings.ContainsKey("connectionStrings"))
+                            if (settings != null && settings.ContainsKey("connectionStrings"))
                             {
                                 string connStrings = settings["connectionStrings"];
                                 if (!string.IsNullOrEmpty(connStrings))
@@ -170,31 +170,33 @@ namespace System.Configuration
         /// <returns></returns>
         public static object GetSection(string key)
         {
-            if (settings.ContainsKey(key))
+            if (settings != null)
             {
-                return settings[key];
-            }
-            if (key.IndexOf('.') > -1)
-            {
-                string[] items = key.Split('.');
-                string firstKey = items[0];
-                for (int i = 0; i < items.Length - 1; i++)
+                if (settings.ContainsKey(key))
                 {
-                    if (i > 0)
+                    return settings[key];
+                }
+                if (key.IndexOf('.') > -1)
+                {
+                    string[] items = key.Split('.');
+                    string firstKey = items[0];
+                    for (int i = 0; i < items.Length - 1; i++)
                     {
-                        firstKey += "." + items[i];
-                    }
-                    if (settings.ContainsKey(firstKey))
-                    {
-                        //性能优化，仅找到首个key的，才进行后续取值操作。
-                        string json = settings[firstKey];
-                        string leftKey = key.Substring(firstKey.Length + 1);
-                        //EscapeOp.Default 参数若不设置，会造成死循环
-                        return JsonHelper.GetValue(json, leftKey, EscapeOp.Default);
+                        if (i > 0)
+                        {
+                            firstKey += "." + items[i];
+                        }
+                        if (settings.ContainsKey(firstKey))
+                        {
+                            //性能优化，仅找到首个key的，才进行后续取值操作。
+                            string json = settings[firstKey];
+                            string leftKey = key.Substring(firstKey.Length + 1);
+                            //EscapeOp.Default 参数若不设置，会造成死循环
+                            return JsonHelper.GetValue(json, leftKey, EscapeOp.Default);
+                        }
                     }
                 }
             }
-
             return null;
         }
 
