@@ -275,7 +275,11 @@ namespace CYQ.Data.Tool
                     Dictionary<string, Type> kv = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
                     for (int i = 0; i < reader.FieldCount; i++)
                     {
-                        kv.Add(reader.GetName(i), reader.GetFieldType(i));
+                        string key = reader.GetName(i);
+                        if (!kv.ContainsKey(key))//ado.net 底层bug，特殊情况会读出多余重复字段结构，见：https://q.cnblogs.com/q/143699/
+                        {
+                            kv.Add(key, reader.GetFieldType(i));
+                        }
                     }
 
 
