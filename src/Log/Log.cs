@@ -137,7 +137,7 @@ namespace CYQ.Data
             try
             {
                 HttpContext context = HttpContext.Current;
-                if (AppConfig.IsWeb && context != null && context.Handler != null)
+                if (AppConfig.IsWeb && context != null)// && context.Handler != null (这里会导致非常规请求丢失下面内容)
                 {
                     HttpRequest request = context.Request;
                     log.HttpMethod = request.HttpMethod;
