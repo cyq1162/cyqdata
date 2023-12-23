@@ -43,6 +43,9 @@ namespace CYQ.Data.SQL
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
                         case DataBaseType.SQLite:
                             return "\"" + name + "\"";
+                        case DataBaseType.FireBird:
+                        case DataBaseType.DaMeng:
+                            return (pre == null ? "" : "\"" + pre.ToUpper() + "\".") + "\"" + name.ToUpper() + "\"";
                         case DataBaseType.PostgreSQL:
                             if (AppConfig.DB.IsPostgreLower) { return name; }
                             return "\"" + name + "\"";
@@ -231,7 +234,7 @@ namespace CYQ.Data.SQL
                         Regex reg = new Regex(pattern, RegexOptions.IgnoreCase);
                         if (reg.IsMatch(where))
                         {
-                            where = reg.Replace(where, delegate(Match match)
+                            where = reg.Replace(where, delegate (Match match)
                             {
                                 if (item.SqlType == SqlDbType.Timestamp)
                                 {
@@ -312,8 +315,7 @@ namespace CYQ.Data.SQL
         /// <summary>
         /// 将各数据库默认值格式化成标准值，将标准值还原成各数据库默认值
         /// </summary>
-        /// <param name="flag">[0:转成标准值],[1:转成各数据库值],[2:转成各数据库值并补充字符串前后缀]</param>
-        /// <param name="sqlDbType">该列的值</param>
+        /// <param name="flag">[0:转成标准值],[1:转成各数据库值]</param>
         /// <returns></returns>
         public static string FormatDefaultValue(DataBaseType dalType, object value, int flag, SqlDbType sqlDbType)
         {
@@ -329,9 +331,7 @@ namespace CYQ.Data.SQL
             DataGroupType group = DataType.GetGroup(sqlDbType);
             if (flag == 0)
             {
-                #region 转标准值
-
-
+                #region 转标准值 - 处理双单引号。
                 if (group == DataGroupType.Date)//日期的标准值
                 {
                     return SqlValue.GetDate;
@@ -394,7 +394,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "Now()").Replace("\"", "\"\"");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -417,7 +417,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "getdate()").Replace("'", "''");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = "(N'" + defaultValue + "')";
                         }
@@ -431,7 +431,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "sysdate").Replace("'", "''");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = "'" + defaultValue + "'";
                         }
@@ -445,7 +445,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("'", "\\'").Replace("\"", "\\\"");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -455,7 +455,7 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
-                        if (group > 0)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        if (group >(int)DataGroupType.Text)//兼容一些不规范的写法。像数字型的加了引号 '0'
                         {
                             defaultValue = defaultValue.Trim('\'');
                         }
@@ -463,7 +463,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_TIMESTAMP").Replace("\"", "\"\"");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = "\"" + defaultValue + "\"";
                         }
@@ -473,7 +473,7 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
                         }
@@ -485,7 +485,7 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "now()").Replace("\"", "\"\"");
-                        if (group == 0)
+                        if (group == DataGroupType.Text)
                         {
                             defaultValue = Regex.Split(defaultValue, "::", RegexOptions.IgnoreCase)[0];
                             defaultValue = "'" + defaultValue.Trim('\'') + "'";
@@ -500,14 +500,42 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim(' ', '\'');
-                        if (group == 0)
-                        {
-                            defaultValue = "'" + defaultValue.Trim('\'') + "'";
-                        }
                     }
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT TIMESTAMP");
+                        if (group == DataGroupType.Text)
+                        {
+                            defaultValue = "'" + defaultValue.Replace("'", "''") + "'";
+                        }
+                    }
+                    break;
+                case DataBaseType.FireBird:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Replace("DEFAULT ", "").Trim(' ', '\'');
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_DATE");
+                        if (group == DataGroupType.Text)
+                        {
+                            defaultValue = "'" + defaultValue.Replace("'", "''") + "'";
+                        }
+                    }
+                    break;
+                case DataBaseType.DaMeng:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim(' ', '\'');
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "GETDATE()");
+                        if (group == DataGroupType.Text)
+                        {
+                            defaultValue = "'" + defaultValue.Replace("'","''") + "'";
+                        }
                     }
                     break;
             }

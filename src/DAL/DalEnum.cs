@@ -20,10 +20,7 @@ namespace CYQ.Data
         Oracle,
         MySql,
         SQLite,
-        /// <summary>
-        /// No Support Now
-        /// </summary>
-        // FireBird,
+        FireBird,
         /// <summary>
         /// PostgreSQL 
         /// </summary>
@@ -37,7 +34,11 @@ namespace CYQ.Data
         /// </summary>
         Xml,
         Sybase,
-        DB2
+        DB2,
+        /// <summary>
+        /// 国产达梦数据库
+        /// </summary>
+        DaMeng
     }
     /// <summary>
     /// 特殊参数类型[MProc SetCustom方法所使用的参数]

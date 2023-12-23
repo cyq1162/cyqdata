@@ -89,6 +89,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DAL\DB2Dal.cs" />
+    <Compile Include="DAL\DaMengDal.cs" />
     <Compile Include="DAL\NoSql\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
     <Compile Include="Cache\AutoCache.cs" />
@@ -131,6 +132,7 @@
     <Compile Include="DAL\NoSql\NoSqlTransaction.cs" />
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
+    <Compile Include="DAL\FireBirdDal.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>

@@ -35,6 +35,11 @@ namespace CYQ.Data
         {
             Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             string[] files = Directory.GetFiles(Con.DataSource, "*.ts");
+            if (files.Length == 0)
+            {
+                string key = DataBaseType == Data.DataBaseType.Txt ? "*.txt" : "*.xml";
+                files = Directory.GetFiles(Con.DataSource, key);
+            }
             foreach (string file in files)
             {
                 MDataColumn mdc = MDataColumn.CreateFrom(file);

@@ -62,26 +62,6 @@ namespace CYQ.Data
                 {
                     return _con.Database;
                 }
-                else if (DataBaseType == DataBaseType.Oracle)
-                {
-                    // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = Aries)))
-                    int i = _con.DataSource.LastIndexOf('=') + 1;
-                    return _con.DataSource.Substring(i).Trim(' ', ')');
-                }
-                else if (DataBaseType == DataBaseType.DB2)
-                {
-                    string conn = _con.ConnectionString;
-                    int i = conn.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
-                    int end = conn.IndexOf(';', i);
-                    if (end == -1)
-                    {
-                        return conn.Substring(i + 9);
-                    }
-                    else
-                    {
-                        return conn.Substring(i + 9, end - i - 9);
-                    }
-                }
                 else
                 {
                     return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
@@ -220,6 +200,10 @@ namespace CYQ.Data
             try
             {
                 _con.ConnectionString = co.Master.ConnString;
+                //if (DataBaseName.Contains("dm"))
+                //{
+                    
+                //}
             }
             catch (Exception err)
             {
@@ -321,7 +305,7 @@ namespace CYQ.Data
                 dic = Cache.CacheManage.LocalInstance.Get(key) as Dictionary<string, string>;
                 if (dic != null)
                 {
-                    return dic; 
+                    return dic;
                 }
                 dic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
@@ -331,7 +315,7 @@ namespace CYQ.Data
                 {
                     while (sdr.Read())
                     {
-                        string tableName = Convert.ToString(sdr["TableName"]);
+                        string tableName = Convert.ToString(sdr["TableName"]).Trim();
                         if (!dic.ContainsKey(tableName))
                         {
                             dic.Add(tableName, Convert.ToString(sdr["Description"]));
@@ -689,14 +673,18 @@ namespace CYQ.Data
                 }
             }
             _com.CommandText = isProc ? commandText : SqlFormat.Compatible(commandText, DataBaseType, false);
-            if (!isProc && DataBaseType == DataBaseType.SQLite && _com.CommandText.Contains("charindex"))
+            if (!isProc)
             {
-                _com.CommandText += " COLLATE NOCASE";//忽略大小写
+                if (DataBaseType == DataBaseType.SQLite && _com.CommandText.Contains("charindex"))
+                {
+                    _com.CommandText += " COLLATE NOCASE";//忽略大小写
+                }
+                //else if (DataBaseType == DataBaseType.DaMeng && !string.IsNullOrEmpty(DataBaseName))
+                //{
+                //    _com.CommandText = "set schema " + DataBaseName + ";" + _com.CommandText;
+                //}
             }
-            //else if (isProc && dalType == DalType.MySql)
-            //{
-            //    _com.CommandText = "Call " + _com.CommandText;
-            //}
+
             _com.CommandType = isProc ? CommandType.StoredProcedure : CommandType.Text;
             //if (isProc)
             //{
@@ -1028,7 +1016,6 @@ namespace CYQ.Data
                 }
                 catch (DbException err)
                 {
-
                     string msg = "ExeNonQuery():" + err.Message;
                     DebugInfo.Append(msg + AppConst.BR);
                     //recordsAffected = -2;
@@ -1327,7 +1314,7 @@ namespace CYQ.Data
                         }
                     }
                 }
-                else if (!IsOpenTrans && cb != UsingConnBean  && ConnObj.IsAllowSlave())//&& isAllowResetConn
+                else if (!IsOpenTrans && cb != UsingConnBean && ConnObj.IsAllowSlave())//&& isAllowResetConn
                 {
                     ResetConn(cb);//,_IsAllowRecordSql只有读数据错误才切，表结构错误不切？
                 }
@@ -1352,6 +1339,7 @@ namespace CYQ.Data
                 return OpenCon(null, leve);
             }
         }
+        protected virtual void AfterOpen() { }
         private void Open()
         {
             if (_con.State == ConnectionState.Closed)
@@ -1361,6 +1349,7 @@ namespace CYQ.Data
                     _com.Connection = _con;//重新赋值（Sybase每次Close后命令的Con都丢失）
                 }
                 _con.Open();
+                AfterOpen();
                 //if (useConnBean.ConfigName == "Conn")
                 //{
                 //System.Console.WriteLine(useConnBean.ConfigName);

@@ -120,6 +120,15 @@ namespace CYQ.Data
             Com.Parameters.Add(para);
         }
 
+        public override string DataBaseName
+        {
+            get
+            {
+                // (DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = Aries)))
+                int i = _con.DataSource.LastIndexOf('=') + 1;
+                return _con.DataSource.Substring(i).Trim(' ', ')');
+            }
+        }
         public override char Pre
         {
             get

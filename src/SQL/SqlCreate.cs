@@ -208,9 +208,14 @@ namespace CYQ.Data.SQL
                         sql += string.Format("; select '{0}' as OutPutValue", SqlFormat.Keyword(primaryCell.StringValue, DataBaseType.PostgreSQL));
                     }
                     break;
+                case DataBaseType.DaMeng:
+                    if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && group == DataGroupType.Number)
+                    {
+                        sql = sql + " ;select @@IDENTITY as OutPutValue;";
+                    }
+                    break;
                 case DataBaseType.MsSql:
                 case DataBaseType.Sybase:
-
                     if (primaryCell.Struct.IsAutoIncrement && !_action.AllowInsertID && group == DataGroupType.Number)
                     {
                         if (_action.dalHelper.DataBaseType == DataBaseType.Sybase)
@@ -231,13 +236,13 @@ namespace CYQ.Data.SQL
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }
                     break;
-                //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
-                //{
-                //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
-                //}
-                //case DalType.Oracle:
-                //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
-                //    break;
+                    //if (!(Parent.AllowInsertID && !primaryCell.IsNull)) // 对于自行插入id的，跳过，主操作会自动返回id。
+                    //{
+                    //    sql += ((groupID == 1 && (primaryCell.IsNull || primaryCell.ToString() == "0")) ? " select cast(scope_identity() as int) as OutPutValue" : string.Format(" select '{0}' as OutPutValue", primaryCell.Value));
+                    //}
+                    //case DalType.Oracle:
+                    //    sql += string.Format("BEGIN;select {0}.currval from dual; END;", Autoid);
+                    //    break;
             }
             return sql;
         }
@@ -366,6 +371,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MsSql:
                 case DataBaseType.Access:
                 case DataBaseType.Excel:
+                case DataBaseType.DaMeng:
                     return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + FormatWhere(whereObj);
                 case DataBaseType.FoxPro://需要有order by 
                     return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + AddOrderByWithCheck(FormatWhere(whereObj), _action.Data.PrimaryCell.ColumnName);
@@ -375,6 +381,8 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MySql:
                 case DataBaseType.PostgreSQL:
                     return "select " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + FormatWhere(whereObj) + " limit 1";
+                case DataBaseType.FireBird:
+                    return "select first 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + FormatWhere(whereObj);
             }
             return (string)Error.Throw(string.Format("GetTopOneSql:{0} No Be Support Now!", _action.dalHelper.DataBaseType.ToString()));
         }

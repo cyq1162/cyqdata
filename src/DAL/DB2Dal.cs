@@ -90,6 +90,23 @@ namespace CYQ.Data
         {
             return DBTool.TestConn(GetConnString(dbName));
         }
+        public override string DataBaseName
+        {
+            get
+            {
+                string conn = _con.ConnectionString;
+                int i = conn.IndexOf("database=", StringComparison.OrdinalIgnoreCase);
+                int end = conn.IndexOf(';', i);
+                if (end == -1)
+                {
+                    return conn.Substring(i + 9);
+                }
+                else
+                {
+                    return conn.Substring(i + 9, end - i - 9);
+                }
+            }
+        }
         public override char Pre
         {
             get

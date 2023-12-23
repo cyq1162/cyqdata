@@ -46,7 +46,10 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Sybase:
                     case DataBaseType.Txt:
                     case DataBaseType.Xml:
+                    case DataBaseType.DaMeng:
                         return string.Format(top1Pager, "top " + pageSize + " " + columns, tableName, where);
+                    case DataBaseType.FireBird:
+                        return string.Format(top1Pager, "first " + pageSize + " " + columns, tableName, where);
                     //case DalType.Oracle:
                     //    return string.Format(top1Pager, columns, tableName, "rownum<=" + pageSize + " and " + where);
                     case DataBaseType.SQLite:
@@ -54,7 +57,7 @@ namespace CYQ.Data.SQL
                     case DataBaseType.PostgreSQL:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize);
                     case DataBaseType.DB2:
-                        return string.Format(top1Pager, columns, tableName, where + " fetch first "+ pageSize + " rows only");
+                        return string.Format(top1Pager, columns, tableName, where + " fetch first " + pageSize + " rows only");
                 }
             }
             else
@@ -87,6 +90,8 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Txt:
                     case DataBaseType.Xml:
                         return string.Format(top1Pager, columns, tableName, where + " limit " + pageSize + " offset " + pageIndex);
+                    case DataBaseType.FireBird:
+                        return string.Format(top1Pager, "first " + pageSize + " skip " + (pageIndex-1) * pageSize + " " + columns, tableName, where);
 
                 }
             }
@@ -158,6 +163,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.SQLite:
                 case DataBaseType.MySql:
                 case DataBaseType.PostgreSQL:
+                case DataBaseType.DaMeng:
                     if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
                     {
                         where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);

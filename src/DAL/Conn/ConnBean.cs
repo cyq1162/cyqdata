@@ -211,50 +211,98 @@ namespace CYQ.Data
         public static DataBaseType GetDataBaseType(string connString)
         {
             connString = connString.ToLower().Replace(" ", "");//去掉空格
-            #region 其它简单或端口识别
-            if (connString.Contains("port=1433") || connString.Contains("provider=mssql"))
+
+            #region provider识别
+            if (connString.Contains("provider"))
             {
-                return DataBaseType.MsSql;
-            }
-            if (connString.Contains("provider=ase") || connString.Contains("port=5000") || connString.Contains("provider=sybase"))
-            {
-                //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
-                return DataBaseType.Sybase;
-            }
-            if (connString.Contains("port=5432") || connString.Contains("provider=postgre") || connString.Contains("provider=npgsql"))
-            {
-                ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
-                return DataBaseType.PostgreSQL;
-            }
-            if (connString.Contains("port=3306") || connString.Contains("provider=mysql"))
-            {
-                //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
-                return DataBaseType.MySql;
-            }
-            if (connString.Contains("port=50000") || connString.Contains("provider=db2"))
-            {
-                return DataBaseType.DB2;
-            }
-            if (connString.Contains("port=1521") || connString.Contains("provider=oracle") || connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle"))
-            {
-                //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
-                return DataBaseType.Oracle;
+                if (connString.Contains("provider=mssql"))
+                {
+                    return DataBaseType.MsSql;
+                }
+                if (connString.Contains("provider=ase") || connString.Contains("provider=sybase"))
+                {
+                    //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
+                    return DataBaseType.Sybase;
+                }
+                if (connString.Contains("provider=pg") || connString.Contains("provider=postgre") || connString.Contains("provider=postgresql") || connString.Contains("provider=npgsql"))
+                {
+                    ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
+                    return DataBaseType.PostgreSQL;
+                }
+                if (connString.Contains("provider=mysql"))
+                {
+                    //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
+                    return DataBaseType.MySql;
+                }
+                if (connString.Contains("provider=db2"))
+                {
+                    return DataBaseType.DB2;
+                }
+                if (connString.Contains("provider=oracle") || connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle"))
+                {
+                    //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
+                    return DataBaseType.Oracle;
+                }
+                if (connString.Contains("provider=firebird"))
+                {
+                    //User=SYSDBA;Password=masterkey;Database=<database file path>;DataSource=<hostname or IP address>;Port=<port number>;Dialect=3;Charset=UTF8;ServerType=0;
+                    //user id = SYSDBA; password = 123456; database = d:\\test.fdb; server type = Default; data source = 127.0.0.1; port number = 3050
+                    return DataBaseType.FireBird;
+                }
+                if (connString.Contains("provider=dm") || connString.Contains("provider=dameng"))
+                {
+                    //user id = SYSDBA; password = 123456789; data source = 127.0.0.1; database = dmhr;
+                    return DataBaseType.DaMeng;
+                }
             }
             #endregion
 
-
-
-            #region 先处理容易判断规则的
-            if (connString.Contains("txtpath="))
+            #region 默认端口识别
+            if (connString.Contains("port"))
             {
-                // txt path={0}
-                return DataBaseType.Txt;
+                if (connString.Contains("=1433"))
+                {
+                    return DataBaseType.MsSql;
+                }
+                if (connString.Contains("=5000"))
+                {
+                    //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
+                    return DataBaseType.Sybase;
+                }
+                if (connString.Contains("=5432"))
+                {
+                    ////server=.;port=5432;database=xx;uid=xx;pwd=xx;
+                    return DataBaseType.PostgreSQL;
+                }
+                if (connString.Contains("=3306"))
+                {
+                    //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
+                    return DataBaseType.MySql;
+                }
+                if (connString.Contains("=50000"))
+                {
+                    return DataBaseType.DB2;
+                }
+                if (connString.Contains("=1521"))
+                {
+                    //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
+                    return DataBaseType.Oracle;
+                }
+                if (connString.Contains("=3050"))
+                {
+                    //User=SYSDBA;Password=masterkey;Database=<database file path>;DataSource=<hostname or IP address>;Port=<port number>;Dialect=3;Charset=UTF8;ServerType=0;
+                    //user id = SYSDBA; password = 123456; database = d:\\test.fdb; server type = Default; data source = 127.0.0.1; port number = 3050
+                    return DataBaseType.FireBird;
+                }
+                if (connString.Contains("=5236"))
+                {
+                    //user id = SYSDBA; password = 123456789; data source = 127.0.0.1; database = dmhr;
+                    return DataBaseType.DaMeng;
+                }
             }
-            if (connString.Contains("xmlpath="))
-            {
-                // xml path={0}
-                return DataBaseType.Xml;
-            }
+            #endregion
+
+            #region 文件后缀识别
             if (connString.Contains(".xls") || connString.Contains(".xlsx"))
             {
                 //"Provider=Microsoft.ACE.OLEDB.12.0; Data Source=D:\\xxx.xls;Extended Properties='Excel 12.0;HDR=Yes;'";
@@ -276,6 +324,24 @@ namespace CYQ.Data
                 //Data Source={0}App_Data/demo.db;failifmissing=false
                 return DataBaseType.SQLite;
             }
+            if (connString.Contains(".gdb;") || connString.Contains(".fdb;"))
+            {
+                return DataBaseType.FireBird;
+            }
+            #endregion
+
+
+            #region 关键字识别
+            if (connString.Contains("txtpath="))
+            {
+                // txt path={0}
+                return DataBaseType.Txt;
+            }
+            if (connString.Contains("xmlpath="))
+            {
+                // xml path={0}
+                return DataBaseType.Xml;
+            }
             if (connString.Contains("description=") || connString.Contains("fororacle"))
             {
                 //Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT = 1521)))(CONNECT_DATA =(Sid = orcl)));User id=sa;password=123456
@@ -293,10 +359,9 @@ namespace CYQ.Data
             }
             #endregion
 
+            #region dll文件识别
 
-
-            if (connString.Contains("datasource") &&
-                (Exists("Sybase.AdoNet2.AseClient.dll") || Exists("Sybase.AdoNet4.AseClient.dll")))
+            if (connString.Contains("datasource") && (Exists("Sybase.AdoNet2.AseClient.dll") || Exists("Sybase.AdoNet4.AseClient.dll")))
             {
                 return DataBaseType.Sybase;
             }
@@ -312,9 +377,14 @@ namespace CYQ.Data
             //postgre和mssql的链接语句一样，为postgre
             if (Exists("Npgsql.dll"))
             {
-                //host=xx;;port=xxx;database=xx;uid=xxx;pwd=xxx; || server=xx;port=xxx;database=xx;uid=xxx;pwd=xxx;
                 return DataBaseType.PostgreSQL;
             }
+            if (Exists("DmProvider.dll"))
+            {
+                return DataBaseType.DaMeng;
+            }
+            #endregion
+
             return DataBaseType.MsSql;
 
         }

@@ -110,6 +110,10 @@ namespace CYQ.Data
                 case DataBaseType.Txt:
                 case DataBaseType.Xml:
                     return new NoSqlDal(co);
+                case DataBaseType.FireBird:
+                    return new FireBirdDal(co);
+                case DataBaseType.DaMeng:
+                    return new DaMengDal(co);
             }
             return (DalBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", dalType.ToString()));
         }
@@ -136,6 +140,10 @@ namespace CYQ.Data
                     return DataBaseType.PostgreSQL;
                 case "db2":
                     return DataBaseType.DB2;
+                case "fb":
+                    return DataBaseType.FireBird;
+                case "dm":
+                    return DataBaseType.DaMeng;
                 default:
                     return DataBaseType.None;
 

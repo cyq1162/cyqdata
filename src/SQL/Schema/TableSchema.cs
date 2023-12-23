@@ -174,6 +174,8 @@ namespace CYQ.Data.SQL
                                 case DataBaseType.Sybase:
                                 case DataBaseType.PostgreSQL:
                                 case DataBaseType.DB2:
+                                case DataBaseType.FireBird:
+                                case DataBaseType.DaMeng:
                                     #region Sql
                                     string sql = string.Empty;
                                     if (dalType == DataBaseType.MsSql)
@@ -228,6 +230,16 @@ namespace CYQ.Data.SQL
                                         tableName = SqlFormat.NotKeyword(tableName).ToUpper();
                                         sql = GetDB2Columns();
                                     }
+                                    else if (dalType == DataBaseType.FireBird)
+                                    {
+                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        sql = GetFireBirdColumns();
+                                    }
+                                    else if (dalType == DataBaseType.DaMeng)
+                                    {
+                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        sql = GetDaMengColumns(helper.DataBaseName);
+                                    }
                                     helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
                                     DbDataReader sdr = helper.ExeDataReader(sql, false);
                                     if (sdr != null)
@@ -247,7 +259,7 @@ namespace CYQ.Data.SQL
                                             {
                                                 maxLength = int.MaxValue;
                                             }
-                                            sqlTypeName = Convert.ToString(sdr["SqlType"]);
+                                            sqlTypeName = Convert.ToString(sdr["SqlType"]).Trim();
                                             sqlType = DataType.GetSqlType(sqlTypeName);
                                             isAutoIncrement = Convert.ToBoolean(sdr["IsAutoIncrement"]);
                                             mStruct = new MCellStruct(mdcs.DataBaseType);
@@ -269,6 +281,10 @@ namespace CYQ.Data.SQL
                                                     mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
                                                     mStruct.IsForeignKey = Convert.ToString(sdr["IsForeignKey"]) == "1";
                                                     mStruct.FKTableName = Convert.ToString(sdr["FKTableName"]);
+                                                    break;
+                                                case DataBaseType.FireBird:
+                                                case DataBaseType.DaMeng:
+                                                    mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
                                                     break;
                                             }
 
@@ -1093,6 +1109,84 @@ where a.tabname=@TableName
 order by a.colno
 
 ";
+        }
+
+        internal static string GetFireBirdColumns()
+        {
+            return @"SELECT
+    RF.RDB$FIELD_NAME AS ColumnName,
+        CASE WHEN (FTY.RDB$TYPE_NAME='INT128' AND FLD.RDB$FIELD_SUB_TYPE>0) OR (FTY.RDB$TYPE_NAME IN('DECFLOAT(16)','DECFLOAT(34)')) THEN FLD.RDB$FIELD_PRECISION
+         WHEN FTY.RDB$TYPE_NAME IN('BLOB') THEN FLD.RDB$SEGMENT_LENGTH
+         ELSE FLD.RDB$FIELD_LENGTH END AS MaxSize,
+    CASE  when (FLD.RDB$FIELD_SUB_TYPE=1 AND FTY.RDB$TYPE_NAME='INT128') THEN 'NUMERIC'
+          when (FLD.RDB$FIELD_SUB_TYPE=2 AND FTY.RDB$TYPE_NAME='INT128') THEN 'DECIMAL'
+          when (FLD.RDB$FIELD_SUB_TYPE=0 AND FTY.RDB$TYPE_NAME='BLOB') then 'BINARY' 
+          when (FLD.RDB$FIELD_SUB_TYPE=1 AND FTY.RDB$TYPE_NAME='BLOB') then 'TEXT' 
+          when  FTY.RDB$TYPE_NAME='SHORT' then 'SMALLINT' 
+          when FTY.RDB$TYPE_NAME='LONG' then 'INTEGER' 
+          when FTY.RDB$TYPE_NAME='INT64' then 'BIGINT' 
+          when FTY.RDB$TYPE_NAME='TEXT' then 'CHAR' 
+          when FTY.RDB$TYPE_NAME='VARYING' then 'VARCHAR' 
+    else FTY.RDB$TYPE_NAME end AS SqlType,
+    ABS(FLD.RDB$FIELD_SCALE) AS Scale,
+   CASE RF.RDB$NULL_FLAG when 1 then 0 ELSE 1 END AS IsNullable,
+   RF.RDB$DEFAULT_SOURCE AS DefaultValue,
+    CASE
+        WHEN IIF(V.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY', 1, 0) = 1 THEN 1
+        ELSE 0
+    END AS IsPrimaryKey,
+   case RF.RDB$IDENTITY_TYPE when 1 then 1 ELSE 0 END as IsAutoIncrement,
+   case when (RF.RDB$IDENTITY_TYPE=1 OR V.RDB$UNIQUE_FLAG IS NULL) then 0 ELSE 1 END as IsUniqueKey,
+    RF.RDB$DESCRIPTION AS Description
+FROM
+    RDB$RELATION_FIELDS RF
+LEFT JOIN
+    RDB$FIELDS FLD ON RF.RDB$FIELD_SOURCE = FLD.RDB$FIELD_NAME
+LEFT JOIN 
+    rdb$types FTY ON FTY.RDB$FIELD_NAME='RDB$FIELD_TYPE' AND FTY.RDB$TYPE=FLD.RDB$FIELD_TYPE
+LEFT JOIN
+(
+SELECT RI.RDB$RELATION_NAME,RI.RDB$UNIQUE_FLAG,RS.RDB$FIELD_NAME,RC.RDB$CONSTRAINT_TYPE FROM  RDB$INDICES RI
+LEFT JOIN
+    RDB$RELATION_CONSTRAINTS RC ON RC.RDB$INDEX_NAME = RI.RDB$INDEX_NAME 
+LEFT JOIN
+    RDB$INDEX_SEGMENTS RS ON  RS.RDB$FIELD_POSITION=0  AND RI.RDB$INDEX_NAME = RS.RDB$INDEX_NAME
+) V ON RF.RDB$FIELD_NAME = V.RDB$FIELD_NAME AND RF.RDB$RELATION_NAME=V.RDB$RELATION_NAME
+WHERE
+    RF.RDB$RELATION_NAME =@TableName
+ORDER BY
+    RF.RDB$FIELD_POSITION";
+        }
+
+        internal static string GetDaMengColumns(string dbName)
+        {
+            return string.Format(@"SELECT 
+a.table_name As tableName,
+ a.column_name As ColumnName,
+ a.data_length As MaxSize,
+ a.data_type As SqlType, 
+ a.data_scale As Scale, 
+ b.comments As Description,
+ e.data_default as DefaultValue,
+ case when (a.nullable = 'Y') then 1 else 0 end as IsNullable,
+ case when (d.constraint_type = 'P') then 1 else 0 end As IsPrimaryKey,
+ case when (d.constraint_type= 'U') then 1 else 0 end As IsUniqueKey,
+ case when f.info2 = 1 then 1 else 0 end as  IsAutoIncrement
+FROM all_tab_cols a
+LEFT JOIN all_col_comments b ON b.table_name = a.table_name AND b.column_name = a.column_name AND a.owner = b.schema_name
+LEFT JOIN all_tab_columns e ON a.table_name = e.table_name AND a.owner = e.owner and a.column_name = e.column_name
+LEFT JOIN (SELECT f1.owner,f1.object_name As table_name,f0.name,f0.info2 FROM syscolumns f0
+INNER JOIN dba_objects f1 ON f1.object_type = 'TABLE' AND info2 =1 AND f1.object_id = f0.id
+) f ON f.name = a.column_name AND f.table_name = a.table_name AND f.owner = a.owner
+LEFT JOIN (select ai.table_owner,ai.column_name,ai.table_name,ac.constraint_type
+           from all_ind_columns ai
+           right join (select table_owner,index_name from all_ind_columns group by table_owner,index_name having count(*)=1) v
+           on ai.table_owner=v.table_owner and ai.index_name=v.index_name
+           left join all_constraints ac  on ac.owner=ai.table_owner and ac.index_name=ai.index_name
+)d on d.TABLE_OWNER=a.OWNER and d.TABLE_NAME=a.TABLE_NAME and d.COLUMN_NAME=a.COLUMN_NAME
+
+WHERE a.owner = UPPER('{0}') and a.TABLE_NAME=:TableName
+ORDER BY a.column_id", dbName);
         }
         #endregion
     }

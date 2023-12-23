@@ -534,8 +534,9 @@ namespace CYQ.Data
                         case DataBaseType.MsSql:
                         case DataBaseType.Sybase:
                         case DataBaseType.PostgreSQL:
-                        case CYQ.Data.DataBaseType.Txt:
-                        case CYQ.Data.DataBaseType.Xml:
+                        case DataBaseType.Txt:
+                        case DataBaseType.Xml:
+                        case DataBaseType.DaMeng:
                             id = dalHelper.ExeScalar(sqlCommandText, false);
                             if (id == null && AllowInsertID && dalHelper.RecordsAffected > -2)
                             {
