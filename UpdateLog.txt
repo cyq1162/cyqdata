@@ -1054,3 +1054,6 @@
 795：新增：DaMeng 达梦数据库支持：增删改查与分页。（2023-12-20）
 796：优化：FireBird 数据结构获取与转化的精准化。（2023-12-21）
 797：优化：DaMeng 数据结构获取与转化的精准化。（2023-12-22）
+798：新增：DaMeng ： AppConfig.DB.IsDaMengUpper 配置，默认表名字段转大写。（2023-12-23）
+799：新增：FireBird：AppConfig.DB.IsFireBirdUpper 配置，默认表名字段转大写。（2023-12-23）
+780：优化：Postgre： AppConfig.DB.IsPostgreLower 配置，默认表名字段转小写。（2023-12-23）

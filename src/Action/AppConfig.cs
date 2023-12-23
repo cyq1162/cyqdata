@@ -780,18 +780,48 @@ namespace CYQ.Data
                 }
             }
             /// <summary>
-            /// Postgre 是否小写模式(默认false)。
-            /// 配置项：DB.IsPostgreLower ：false
+            /// Postgre 是否小写模式(默认true)。
+            /// 配置项：DB.IsPostgreLower ：true
             /// </summary>
             public static bool IsPostgreLower
             {
                 get
                 {
-                    return GetAppBool("DB.IsPostgreLower", false);
+                    return GetAppBool("DB.IsPostgreLower", true);
                 }
                 set
                 {
                     SetApp("DB.IsPostgreLower", value.ToString());
+                }
+            }
+            /// <summary>
+            /// Firebird 是否大写模式(默认true)。
+            /// 配置项：DB.IsFireBirdUpper ：true
+            /// </summary>
+            public static bool IsFireBirdUpper
+            {
+                get
+                {
+                    return GetAppBool("DB.IsFireBirdUpper", true);
+                }
+                set
+                {
+                    SetApp("DB.IsFireBirdUpper", value.ToString());
+                }
+            }
+            /// <summary>
+            /// DaMeng 是否大写模式(默认true)。
+            /// 配置项：DB.IsDaMengUpper ：true
+            /// </summary>
+            public static bool IsDaMengUpper
+            {
+                get
+                {
+                    return GetAppBool("DB.IsDaMengUpper", true);
+                }
+                set
+                {
+                    SetApp("DB.IsDaMengUpper", value.ToString());
                 }
             }
             /// <summary>

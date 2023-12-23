@@ -44,10 +44,13 @@ namespace CYQ.Data.SQL
                         case DataBaseType.SQLite:
                             return "\"" + name + "\"";
                         case DataBaseType.FireBird:
+                            if (AppConfig.DB.IsFireBirdUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            return (pre == null ? "" : "\"" + pre + "\".") + "\"" + name + "\"";
                         case DataBaseType.DaMeng:
-                            return (pre == null ? "" : "\"" + pre.ToUpper() + "\".") + "\"" + name.ToUpper() + "\"";
+                             if (AppConfig.DB.IsDaMengUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            return (pre == null ? "" : "\"" + pre + "\".") + "\"" + name + "\"";
                         case DataBaseType.PostgreSQL:
-                            if (AppConfig.DB.IsPostgreLower) { return name; }
+                            if (AppConfig.DB.IsPostgreLower) { name = name.ToLower(); }
                             return "\"" + name + "\"";
                         case DataBaseType.Txt:
                         case DataBaseType.Xml:
@@ -234,7 +237,7 @@ namespace CYQ.Data.SQL
                         Regex reg = new Regex(pattern, RegexOptions.IgnoreCase);
                         if (reg.IsMatch(where))
                         {
-                            where = reg.Replace(where, delegate (Match match)
+                            where = reg.Replace(where, delegate(Match match)
                             {
                                 if (item.SqlType == SqlDbType.Timestamp)
                                 {
@@ -455,7 +458,7 @@ namespace CYQ.Data.SQL
                     if (flag == 0)
                     {
                         defaultValue = defaultValue.Trim('"');
-                        if (group >(int)DataGroupType.Text)//兼容一些不规范的写法。像数字型的加了引号 '0'
+                        if (group > (int)DataGroupType.Text)//兼容一些不规范的写法。像数字型的加了引号 '0'
                         {
                             defaultValue = defaultValue.Trim('\'');
                         }
@@ -534,7 +537,7 @@ namespace CYQ.Data.SQL
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "GETDATE()");
                         if (group == DataGroupType.Text)
                         {
-                            defaultValue = "'" + defaultValue.Replace("'","''") + "'";
+                            defaultValue = "'" + defaultValue.Replace("'", "''") + "'";
                         }
                     }
                     break;
