@@ -29,6 +29,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MySql:
                 case DataBaseType.FireBird:
                 case DataBaseType.DaMeng:
+                case DataBaseType.KingBaseES:
                     return string.Format("comment on column {0}.{1}  is '{2}'", SqlFormat.Keyword(tableName, dalType), SqlFormat.Keyword(mcs.ColumnName, dalType), mcs.Description);
             }
 
@@ -52,6 +53,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.DB2:
                 case DataBaseType.FireBird:
                 case DataBaseType.DaMeng:
+                case DataBaseType.KingBaseES:
                     StringBuilder sb = new StringBuilder();
                     foreach (MCellStruct mcs in columns)
                     {
@@ -68,7 +70,7 @@ namespace CYQ.Data.SQL
                             else// if (dalType == DataBaseType.PostgreSQL)
                             {
                                 sb.AppendFormat("comment on column {0}.{1}  is '{2}';\r\n",
-                                   SqlFormat.Keyword(tableName, DataBaseType.PostgreSQL).ToUpper(), SqlFormat.Keyword(mcs.ColumnName, DataBaseType.PostgreSQL), mcs.Description.Replace("'", "''"));
+                                   SqlFormat.Keyword(tableName, dalType), SqlFormat.Keyword(mcs.ColumnName, dalType), mcs.Description.Replace("'", "''"));
                             }
                         }
                     }
@@ -88,7 +90,7 @@ namespace CYQ.Data.SQL
                     else// if (dalType == DataBaseType.PostgreSQL)
                     {
                         sb.AppendFormat("comment on table {0}  is '{1}';\r\n",
-                                SqlFormat.Keyword(tableName, DataBaseType.PostgreSQL), tbDescription);
+                                SqlFormat.Keyword(tableName, dalType), tbDescription);
                     }
                     result = sb.ToString().TrimEnd(';');
                     break;
@@ -267,6 +269,12 @@ namespace CYQ.Data.SQL
                             key += " IDENTITY(1, 1)";
                         }
                         break;
+                    case DataBaseType.KingBaseES:
+                        if (column.IsAutoIncrement)
+                        {
+                            key += " AUTO_INCREMENT";
+                        }
+                        break;
                 }
                 key += " NOT NULL";
             }
@@ -303,7 +311,7 @@ namespace CYQ.Data.SQL
                     }
                     else
                     {
-                        if (column.IsCanNull && (dalType == DataBaseType.DB2 || dalType == DataBaseType.FireBird || dalType == DataBaseType.DaMeng)) { }//db2,firebird 不能用null,其它可以不需要null
+                        if (column.IsCanNull && (dalType == DataBaseType.DB2 || dalType == DataBaseType.FireBird || dalType == DataBaseType.DaMeng || dalType == DataBaseType.KingBaseES)) { }//db2,firebird 不能用null,其它可以不需要null
                         else
                         {
                             key += column.IsCanNull ? " NULL" : " NOT NULL";

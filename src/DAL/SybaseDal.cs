@@ -79,7 +79,7 @@ namespace CYQ.Data
     internal partial class SybaseDal
     {
 
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             return "SELECT name as TableName,'' as Description FROM sysobjects where type='" + type + "' order by name";
         }

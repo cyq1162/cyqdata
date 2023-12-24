@@ -83,7 +83,7 @@ namespace CYQ.Data
 
     internal partial class PostgreDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             switch (type)
             {

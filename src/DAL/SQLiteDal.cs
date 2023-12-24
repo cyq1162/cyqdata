@@ -141,7 +141,7 @@ namespace CYQ.Data
 
     internal partial class SQLiteDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             switch (type)
             {

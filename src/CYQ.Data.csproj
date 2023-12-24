@@ -133,6 +133,7 @@
     <Compile Include="DAL\SybaseDal.cs" />
     <Compile Include="DAL\PostgreDal.cs" />
     <Compile Include="DAL\FireBirdDal.cs" />
+    <Compile Include="DAL\KingBaseESDal.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>

@@ -779,6 +779,7 @@ namespace CYQ.Data
                     SetApp("DB.IsTxtReadOnly", value.ToString());
                 }
             }
+
             /// <summary>
             /// Postgre 是否小写模式(默认true)。
             /// 配置项：DB.IsPostgreLower ：true
@@ -792,6 +793,51 @@ namespace CYQ.Data
                 set
                 {
                     SetApp("DB.IsPostgreLower", value.ToString());
+                }
+            }
+            /// <summary>
+            /// KingBaseES 是否小写模式(默认true)。
+            /// 配置项：DB.IsKingBaseESLower ：true
+            /// </summary>
+            public static bool IsKingBaseESLower
+            {
+                get
+                {
+                    return GetAppBool("DB.IsKingBaseESLower", true);
+                }
+                set
+                {
+                    SetApp("DB.IsKingBaseESLower", value.ToString());
+                }
+            }
+            /// <summary>
+            /// Oracle 是否大写模式(默认true)。
+            /// 配置项：DB.IsOracleUpper ：true
+            /// </summary>
+            public static bool IsOracleUpper
+            {
+                get
+                {
+                    return GetAppBool("DB.IsOracleUpper", true);
+                }
+                set
+                {
+                    SetApp("DB.IsOracleUpper", value.ToString());
+                }
+            }
+            /// <summary>
+            /// DB2 是否大写模式(默认true)。
+            /// 配置项：DB.IsDB2Upper ：true
+            /// </summary>
+            public static bool IsDB2Upper
+            {
+                get
+                {
+                    return GetAppBool("DB.IsDB2Upper", true);
+                }
+                set
+                {
+                    SetApp("DB.IsDB2Upper", value.ToString());
                 }
             }
             /// <summary>

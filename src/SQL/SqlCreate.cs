@@ -372,6 +372,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.Access:
                 case DataBaseType.Excel:
                 case DataBaseType.DaMeng:
+                case DataBaseType.KingBaseES:
                     return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + FormatWhere(whereObj);
                 case DataBaseType.FoxPro://ÐèÒªÓÐorder by 
                     return "select top 1 " + columnNames + " from " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " where " + AddOrderByWithCheck(FormatWhere(whereObj), _action.Data.PrimaryCell.ColumnName);

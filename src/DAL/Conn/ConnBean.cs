@@ -42,6 +42,10 @@ namespace CYQ.Data
         /// </summary>
         public string ConnString = string.Empty;
         /// <summary>
+        /// 原始的数据库链接字符串
+        /// </summary>
+        public string ConnStringOrg = string.Empty;
+        /// <summary>
         /// 数据库类型
         /// </summary>
         public DataBaseType ConnDataBaseType;
@@ -163,6 +167,7 @@ namespace CYQ.Data
             ConnBean cb = new ConnBean();
             cb.ConnName = connNameOrString;
             cb.ConnDataBaseType = GetDataBaseType(connString);
+            cb.ConnStringOrg = connString;
             cb.ConnString = RemoveConnProvider(cb.ConnDataBaseType, connString);
             lock (o)
             {
@@ -190,10 +195,19 @@ namespace CYQ.Data
                 case DataBaseType.FoxPro:
                     return connString;
             }
-
+            connString = RemoveKey(connString, "provider");
+            if (dal == DataBaseType.KingBaseES)
+            {
+                connString = RemoveKey(connString, "schema");
+            }
+            return connString;
+        }
+        private static string RemoveKey(string connString, string key)
+        {
             string conn = connString.ToLower();
-            int index = conn.IndexOf("provider");
-            if (index > -1 && index < connString.Length - 5 && (connString[index + 8] == '=' || connString[index + 9] == '='))
+            int len = key.Length;
+            int index = conn.IndexOf(key);
+            if (index > -1 && index < connString.Length - 5 && (connString[index + len] == '=' || connString[index + len + 1] == '='))
             {
                 int end = conn.IndexOf(';', index);
                 if (end == -1)
@@ -205,7 +219,6 @@ namespace CYQ.Data
                     connString = connString.Remove(index, end - index + 1);
                 }
             }
-
             return connString;
         }
         public static DataBaseType GetDataBaseType(string connString)
@@ -254,6 +267,11 @@ namespace CYQ.Data
                     //user id = SYSDBA; password = 123456789; data source = 127.0.0.1; database = dmhr;
                     return DataBaseType.DaMeng;
                 }
+                if (connString.Contains("provider=kb") || connString.Contains("provider=kingbasees") || connString.Contains("provider=kdbndp"))
+                {
+                    //server=127.0.0.1;User Id=system;Password=123456;Database=test;Port=54321
+                    return DataBaseType.KingBaseES;
+                }
             }
             #endregion
 
@@ -298,6 +316,11 @@ namespace CYQ.Data
                 {
                     //user id = SYSDBA; password = 123456789; data source = 127.0.0.1; database = dmhr;
                     return DataBaseType.DaMeng;
+                }
+                if (connString.Contains("=54321"))
+                {
+                    //user id = SYSDBA; password = 123456789; data source = 127.0.0.1; database = dmhr;
+                    return DataBaseType.KingBaseES;
                 }
             }
             #endregion
@@ -382,6 +405,14 @@ namespace CYQ.Data
             if (Exists("DmProvider.dll"))
             {
                 return DataBaseType.DaMeng;
+            }
+            if (Exists("Kdbndp.dll"))
+            {
+                return DataBaseType.KingBaseES;
+            }
+            if (Exists("FirebirdSql.Data.FirebirdClient.dll"))
+            {
+                return DataBaseType.FireBird;
             }
             #endregion
 

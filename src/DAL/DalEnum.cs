@@ -38,7 +38,11 @@ namespace CYQ.Data
         /// <summary>
         /// 国产达梦数据库
         /// </summary>
-        DaMeng
+        DaMeng,
+        /// <summary>
+        /// 国产人大金仓数据库
+        /// </summary>
+        KingBaseES,
     }
     /// <summary>
     /// 特殊参数类型[MProc SetCustom方法所使用的参数]

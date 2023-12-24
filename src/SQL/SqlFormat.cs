@@ -41,13 +41,22 @@ namespace CYQ.Data.SQL
                             return (pre == null ? "" : pre + "..") + "[" + name + "]";
                         case DataBaseType.MySql:
                             return (pre == null ? "" : pre + ".") + "`" + name + "`";
+                        case DataBaseType.Oracle:
+                            if (AppConfig.DB.IsOracleUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            return (pre == null ? "" : pre) + name;
+                        case DataBaseType.DB2:
+                            if (AppConfig.DB.IsDB2Upper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            return (pre == null ? "" : pre) + name;
                         case DataBaseType.SQLite:
                             return "\"" + name + "\"";
                         case DataBaseType.FireBird:
                             if (AppConfig.DB.IsFireBirdUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
                             return (pre == null ? "" : "\"" + pre + "\".") + "\"" + name + "\"";
                         case DataBaseType.DaMeng:
-                             if (AppConfig.DB.IsDaMengUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            if (AppConfig.DB.IsDaMengUpper) { name = name.ToUpper(); if (pre != null) { pre = pre.ToUpper(); } }
+                            return (pre == null ? "" : "\"" + pre + "\".") + "\"" + name + "\"";
+                        case DataBaseType.KingBaseES:
+                            if (AppConfig.DB.IsKingBaseESLower) { name = name.ToLower(); if (pre != null) { pre = pre.ToLower(); } }
                             return (pre == null ? "" : "\"" + pre + "\".") + "\"" + name + "\"";
                         case DataBaseType.PostgreSQL:
                             if (AppConfig.DB.IsPostgreLower) { name = name.ToLower(); }
@@ -237,7 +246,7 @@ namespace CYQ.Data.SQL
                         Regex reg = new Regex(pattern, RegexOptions.IgnoreCase);
                         if (reg.IsMatch(where))
                         {
-                            where = reg.Replace(where, delegate(Match match)
+                            where = reg.Replace(where, delegate (Match match)
                             {
                                 if (item.SqlType == SqlDbType.Timestamp)
                                 {
@@ -535,6 +544,20 @@ namespace CYQ.Data.SQL
                     else
                     {
                         defaultValue = defaultValue.Replace(SqlValue.GetDate, "GETDATE()");
+                        if (group == DataGroupType.Text)
+                        {
+                            defaultValue = "'" + defaultValue.Replace("'", "''") + "'";
+                        }
+                    }
+                    break;
+                case DataBaseType.KingBaseES:
+                    if (flag == 0)
+                    {
+                        defaultValue = defaultValue.Trim(' ', '\'');
+                    }
+                    else
+                    {
+                        defaultValue = defaultValue.Replace(SqlValue.GetDate, "CURRENT_DATE");
                         if (group == DataGroupType.Text)
                         {
                             defaultValue = "'" + defaultValue.Replace("'", "''") + "'";

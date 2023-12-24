@@ -114,6 +114,8 @@ namespace CYQ.Data
                     return new FireBirdDal(co);
                 case DataBaseType.DaMeng:
                     return new DaMengDal(co);
+                case DataBaseType.KingBaseES:
+                    return new KingBaseESDal(co);
             }
             return (DalBase)Error.Throw(string.Format("GetHelper:{0} No Be Support Now!", dalType.ToString()));
         }
@@ -144,6 +146,8 @@ namespace CYQ.Data
                     return DataBaseType.FireBird;
                 case "dm":
                     return DataBaseType.DaMeng;
+                case "Kdbndp":
+                    return DataBaseType.KingBaseES;
                 default:
                     return DataBaseType.None;
 

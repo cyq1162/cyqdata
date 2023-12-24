@@ -47,6 +47,7 @@ namespace CYQ.Data.SQL
                     case DataBaseType.Txt:
                     case DataBaseType.Xml:
                     case DataBaseType.DaMeng:
+                    case DataBaseType.KingBaseES:
                         return string.Format(top1Pager, "top " + pageSize + " " + columns, tableName, where);
                     case DataBaseType.FireBird:
                         return string.Format(top1Pager, "first " + pageSize + " " + columns, tableName, where);
@@ -164,6 +165,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.MySql:
                 case DataBaseType.PostgreSQL:
                 case DataBaseType.DaMeng:
+                case DataBaseType.KingBaseES:
                     if (max > 500000 && primaryKeyIsIdentity && Convert.ToString(objWhere) == "" && !tableName.Contains(" "))//单表大数量时的优化成主键访问。
                     {
                         where = string.Format("{0}>=(select {0} from {1} limit {2}, 1) limit {3}", primaryKey, tableName, max, pageSize);

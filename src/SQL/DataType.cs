@@ -128,9 +128,55 @@ namespace CYQ.Data.SQL
                 string[] items = name.Split('.');
                 name = items[items.Length - 1];
             }
+            if (name.StartsWith("time "))
+            {
+                return SqlDbType.Time;
+            }
+            if (name.StartsWith("timestamp ") || name.StartsWith("datetime "))
+            {
+                return SqlDbType.DateTime;
+            }
+            if (name.StartsWith("interval "))
+            {
+                return SqlDbType.VarChar;
+            }
             switch (name)
             {
+                case "bit":
+                case "bit varying":
+                case "boolean":
+                    //case "tinyint(1)":
+                    return SqlDbType.Bit;
+                case "tinyint":
+                case "tinyint unsigned":
+                case "byte":
+                case "sbyte":
+                    return SqlDbType.TinyInt;
+                case "smallint":
+                case "int16":
+                case "uint16":
+                case "short"://firebird
+                    return SqlDbType.SmallInt;
+                case "int4range"://kingbasees
+                case "signtype"://kingbasees
+                case "simple_integer"://kingbasees
+                case "int":
+                case "int32":
+                case "uint32":
+                case "integer":
+                case "mediumint":
+                case "rowid"://dameng
+                    return SqlDbType.Int;
+                case "int8range"://kingbasees
+                case "bigint":
+                case "int64":
+                case "uint64":
+                case "varnumeric":
+                case "long":
+                case "int128"://firbird
+                    return SqlDbType.BigInt;
                 case "char":
+                case "bpchar"://kingbasees
                 case "character":
                 case "ansistringfixedlength":
                     return SqlDbType.Char;
@@ -138,6 +184,14 @@ namespace CYQ.Data.SQL
                 case "unichar"://Sybase
                 case "stringfixedlength":
                     return SqlDbType.NChar;
+                case "dsinterval"://kingbasees
+                case "yminterval"://kingbasees
+                case "dbms_id"://kingbasees
+                case "dbms_id_30"://kingbasees
+                case "dbms_quoted_id"://kingbasees
+                case "dbms_quoted_id_30"://kingbasees
+                case "hash16"://kingbasees
+                case "hash32"://kingbasees
                 case "set"://mysql类型 
                 case "enum"://mysql类型
                 case "varchar":
@@ -151,19 +205,6 @@ namespace CYQ.Data.SQL
                 case "vargraphic":
                 case "long vargraphic":
                 case "varying"://firebird
-                case "interval year"://dameng
-                case "interval year to month":
-                case "interval month":
-                case "interval day":
-                case "interval day to hour":
-                case "interval day to minute":
-                case "interval day to second":
-                case "interval hour":
-                case "interval hour to minute":
-                case "interval hour to second":
-                case "interval minute":
-                case "interval minute to second":
-                case "interval second":
                     return SqlDbType.VarChar;
                 case "nvarchar":
                 case "nvarchar2":
@@ -171,12 +212,76 @@ namespace CYQ.Data.SQL
                 case "univarchar":
                 case "cstring"://firebird
                     return SqlDbType.NVarChar;
-                case "timestamp":
-                    //case "timestamp(6)"://oracle
+                case "ntext":
+                case "nclob":
+                case "unitext":
+                    return SqlDbType.NText;
+                case "tinytext":
+                case "text":
+                case "mediumtext":
+                case "longtext":
+                case "clob":
+                case "json"://postgre
+                case "jsonb":
+                    return SqlDbType.Text;
+                case "uniqueidentifier":
+                case "guid":
+                case "uuid":
+                    return SqlDbType.UniqueIdentifier;
+                case "time":
+                case "timez"://kingbasees
+                case "time_tz_unconstrained"://kingbasees
+                case "time_unconstrained"://kingbasees
+                case "abstime"://postgresql
+                case "reltime":////postgresql
+                    return SqlDbType.Time;
+                case "date":
+                case "ora_date"://kingbasees
+                    return SqlDbType.Date;
+                case "b_timestamp"://mssql,sybase 为二进制。
                     return SqlDbType.Timestamp;
+                case "smalldatetime":
+                    return SqlDbType.SmallDateTime;
+                case "datetime2":
+                    return SqlDbType.DateTime2;
+                case "datetimeoffset":
+                    return SqlDbType.DateTimeOffset;
+                case "datetime":
+                case "timestamp":
+                case "timestamptz"://kingbasees
+                case "timestamp_ltz_unconstrained"://kingbasees
+                case "timestamp_unconstrained"://kingbasees
+                    return SqlDbType.DateTime;
+                case "money":
+                case "currency":
+                    return SqlDbType.Money;
+                case "smallmoney":
+                    return SqlDbType.SmallMoney;
+                case "numeric":
+                //return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
+                case "decimal":
+                case "dec"://dameng
+                case "number"://可以int，flat,double
+                    return SqlDbType.Decimal;
+                case "float":
+                case "float4"://kingbasees
+                case "simple_float"://kingbasees
+                case "binary_float"://oracle
+                case "single":
+                case "decfloat"://firebird
+                    return SqlDbType.Float;
+                case "real":
+                case "float8"://kingbasees
+                case "simple_double"://kingbasees
+                case "double":
+                case "double precision"://dameng,postgre
+                case "binary_double"://oracle
+                    return SqlDbType.Real;
+                case "xml":
+                case "xmltype":
+                    return SqlDbType.Xml;
                 case "raw":
                 case "bfile":
-
                 case "binary":
                 case "tinyblob":
                 case "blob":
@@ -193,98 +298,10 @@ namespace CYQ.Data.SQL
                     return SqlDbType.VarBinary;
                 case "image":
                     return SqlDbType.Image;
-                case "bit":
-                case "bit varying":
-                case "boolean":
-                    //case "tinyint(1)":
-                    return SqlDbType.Bit;
-                case "tinyint":
-                case "tinyint unsigned":
-                case "byte":
-                case "sbyte":
-                    return SqlDbType.TinyInt;
-                case "money":
-                case "currency":
-                    return SqlDbType.Money;
-                case "smallmoney":
-                    return SqlDbType.SmallMoney;
-                case "smalldatetime":
-                    return SqlDbType.SmallDateTime;
-                case "datetime2":
-                    return SqlDbType.DateTime2;
-                case "datetimeoffset":
-                    return SqlDbType.DateTimeOffset;
-                case "datetime":
-                case "datetime with time zone"://dameng
-                case "timestamp with time zone":
-                case "timestamp without time zone":
-                case "timestamp with local time zone"://dameng
-                    return SqlDbType.DateTime;
-                case "time":
-                case "abstime"://postgresql
-                case "reltime":////postgresql
-                case "time with time zone":
-                    return SqlDbType.Time;
-                case "date":
-                    return SqlDbType.Date;
-                case "numeric":
-                //return SqlDbType.Udt;//这个数据类型没有，用这个顶着用。
-                case "decimal":
-                case "dec"://dameng
-                case "number"://可以int，flat,double
-                    return SqlDbType.Decimal;
-                case "real":
-                case "double":
-                case "double precision"://dameng,postgre
-                case "binary_double"://oracle
-                    return SqlDbType.Real;
-                case "uniqueidentifier":
-                case "guid":
-                case "uuid":
-                    return SqlDbType.UniqueIdentifier;
-                case "smallint":
-                case "int16":
-                case "uint16":
-                case "short"://firebird
-                    return SqlDbType.SmallInt;
-                case "int":
-                case "int32":
-                case "uint32":
-                case "integer":
-                case "mediumint":
-                case "rowid"://dameng
-                    return SqlDbType.Int;
-                case "bigint":
-                case "int64":
-                case "uint64":
-                case "varnumeric":
-                case "long":
-                case "int128"://firbird
-                    return SqlDbType.BigInt;
                 case "variant":
                 case "sql_variant":
                 case "object":
                     return SqlDbType.Variant;
-                case "float":
-                case "binary_float"://oracle
-                case "single":
-                case "decfloat"://firebird
-                    return SqlDbType.Float;
-                case "xml":
-                case "xmltype":
-                    return SqlDbType.Xml;
-                case "ntext":
-                case "nclob":
-                case "unitext":
-                    return SqlDbType.NText;
-                case "tinytext":
-                case "text":
-                case "mediumtext":
-                case "longtext":
-                case "clob":
-                case "json"://postgre
-                case "jsonb":
-                    return SqlDbType.Text;
                 default:
                     if (name.EndsWith("[]"))
                     {
@@ -359,16 +376,18 @@ namespace CYQ.Data.SQL
                     return DbType.Time;
                 case "smalldatetime":
                 case "datetime":
-                    return DbType.DateTime;
                 case "timestamp":
-                    switch (dalType)
-                    {
-                        case DataBaseType.MsSql:
-                        case DataBaseType.Sybase:
-                            return DbType.Binary;
-                        default:
-                            return DbType.DateTime;
-                    }
+                    return DbType.DateTime;
+                case "b_timestamp":
+                    return DbType.Binary;
+                //switch (dalType)
+                //{
+                //    case DataBaseType.MsSql:
+                //    case DataBaseType.Sybase:
+                //        return DbType.Binary;
+                //    default:
+                //        return DbType.DateTime;
+                //}
                 case "udt":
                 case "numeric":
                 case "decimal":
@@ -502,6 +521,8 @@ namespace CYQ.Data.SQL
                     return GetDaMengType(ms);
                 case DataBaseType.FireBird:
                     return GetFireBirdType(ms);
+                case DataBaseType.KingBaseES:
+                    return GetKingBaseESType(ms);
             }
             DataBaseType dalFrom = DataBaseType.None;
             if (ms.MDataColumn != null)
@@ -1006,6 +1027,7 @@ namespace CYQ.Data.SQL
                     return typeString + "(" + (ms.MaxSize > 0 ? ms.MaxSize : 22) + "," + (ms.Scale > 0 ? ms.Scale : 6) + ")";
                 case SqlDbType.Variant:
                 case SqlDbType.Binary:
+                case SqlDbType.Timestamp:
                     if (!isSameDalType) { typeString = "BINARY"; }
                     if (typeString == "BINARY")
                     {
@@ -1068,6 +1090,7 @@ namespace CYQ.Data.SQL
                     return typeString;
                 case SqlDbType.Real:
                     return "DOUBLE PRECISION";
+                case SqlDbType.Timestamp:
                 case SqlDbType.Variant:
                 case SqlDbType.Binary:
                 case SqlDbType.Image:
@@ -1092,6 +1115,74 @@ namespace CYQ.Data.SQL
                     return typeString + "(" + (ms.MaxSize > 0 ? ms.MaxSize : 50) + ")";
                 case SqlDbType.UniqueIdentifier:
                     return "CHAR(36)";
+            }
+            return typeString;
+        }
+
+        private static string GetKingBaseESType(MCellStruct ms)
+        {
+            DataBaseType dalFrom = DataBaseType.None;
+            if (ms.MDataColumn != null)
+            {
+                dalFrom = ms.MDataColumn.DataBaseType;
+            }
+            bool isSameDalType = dalFrom == DataBaseType.KingBaseES;
+            string typeString = isSameDalType ? ms.SqlTypeName : ms.SqlType.ToString().ToLower();
+            switch (ms.SqlType)
+            {
+                case SqlDbType.Int:
+                    return "integer";
+                case SqlDbType.SmallDateTime:
+                case SqlDbType.DateTimeOffset:
+                case SqlDbType.DateTime2:
+                    return "datetime";
+                case SqlDbType.Bit:
+                    if (!isSameDalType) { typeString = "boolean"; }
+                    if (typeString != "boolean" && ms.MaxSize > 0)
+                    {
+                        return typeString + "(" + ms.MaxSize + ")";
+                    }
+                    return typeString;
+                case SqlDbType.Udt://当Numeric类型用。
+                case SqlDbType.Decimal:
+                case SqlDbType.SmallMoney:
+                    if (!isSameDalType) { typeString = "numeric"; }
+                    if (ms.MaxSize > 0)
+                    {
+                        return typeString + "(" + (ms.MaxSize > 0 ? ms.MaxSize : 20) + "," + (ms.Scale > 0 ? ms.Scale : 2) + ")";
+                    }
+                    break;
+                case SqlDbType.Real:
+                    return "double precision";
+                case SqlDbType.Timestamp:
+                case SqlDbType.Variant:
+                case SqlDbType.Binary:
+                case SqlDbType.Image:
+                case SqlDbType.VarBinary:
+                    if (!isSameDalType) { typeString = "bytea"; }
+                    return typeString;
+                case SqlDbType.NText:
+                case SqlDbType.Text:
+                    if (!isSameDalType) { typeString = "text"; }
+                    return typeString;
+                case SqlDbType.Char:
+                case SqlDbType.NChar:
+                    if (!isSameDalType) { typeString = "char"; }
+                    if (ms.MaxSize > 0)
+                    {
+                        return typeString + "(" + ms.MaxSize + ")";
+                    }
+                    break;
+                case SqlDbType.VarChar:
+                case SqlDbType.NVarChar:
+                    if (!isSameDalType) { typeString = "varchar"; }
+                    if (ms.MaxSize > 0)
+                    {
+                        return typeString + "(" + ms.MaxSize + ")";
+                    }
+                    break;
+                case SqlDbType.UniqueIdentifier:
+                    return "uuid";
             }
             return typeString;
         }

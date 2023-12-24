@@ -128,7 +128,7 @@ namespace CYQ.Data
 
     internal partial class FireBirdDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             switch (type)
             {

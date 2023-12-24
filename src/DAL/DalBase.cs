@@ -68,6 +68,13 @@ namespace CYQ.Data
                 }
             }
         }
+        /// <summary>
+        /// 获得链接的模式名称
+        /// </summary>
+        public virtual string SchemaName
+        {
+            get { return DataBaseName; }
+        }
         private static MDictionary<string, string> _VersionCache = new MDictionary<string, string>();
         private string _Version = string.Empty;
         /// <summary>
@@ -202,7 +209,7 @@ namespace CYQ.Data
                 _con.ConnectionString = co.Master.ConnString;
                 //if (DataBaseName.Contains("dm"))
                 //{
-                    
+
                 //}
             }
             catch (Exception err)
@@ -240,27 +247,27 @@ namespace CYQ.Data
         #region 拿表、视图、存储过程等元数据。
         public virtual Dictionary<string, string> GetTables()
         {
-            return GetSchemaDic(GetSchemaSql("U"), "U", false);
+            return GetSchemaDic(GetUVPSql("U"), "U", false);
         }
         public virtual Dictionary<string, string> GetTables(bool isIgnoreCache)
         {
-            return GetSchemaDic(GetSchemaSql("U"), "U", isIgnoreCache);
+            return GetSchemaDic(GetUVPSql("U"), "U", isIgnoreCache);
         }
         public virtual Dictionary<string, string> GetViews()
         {
-            return GetSchemaDic(GetSchemaSql("V"), "V", false);
+            return GetSchemaDic(GetUVPSql("V"), "V", false);
         }
         public virtual Dictionary<string, string> GetViews(bool isIgnoreCache)
         {
-            return GetSchemaDic(GetSchemaSql("V"), "V", isIgnoreCache);
+            return GetSchemaDic(GetUVPSql("V"), "V", isIgnoreCache);
         }
         public virtual Dictionary<string, string> GetProcs()
         {
-            return GetSchemaDic(GetSchemaSql("P"), "P", false);
+            return GetSchemaDic(GetUVPSql("P"), "P", false);
         }
         public virtual Dictionary<string, string> GetProcs(bool isIgnoreCache)
         {
-            return GetSchemaDic(GetSchemaSql("P"), "P", isIgnoreCache);
+            return GetSchemaDic(GetUVPSql("P"), "P", isIgnoreCache);
         }
 
         protected Dictionary<string, string> GetSchemaDic(string sql, string type, bool isIgnoreCache)
@@ -358,8 +365,12 @@ namespace CYQ.Data
 
             return dic;
         }
-
-        protected virtual string GetSchemaSql(string type)
+        /// <summary>
+        /// 读取表名、视图、存储过程列表
+        /// </summary>
+        /// <param name="type">U、V、P</param>
+        /// <returns></returns>
+        protected virtual string GetUVPSql(string type)
         {
             return "";
         }
@@ -1215,6 +1226,13 @@ namespace CYQ.Data
                     break;
                 }
                 Thread.Sleep(30);
+            }
+            if (openOKFlag == -1 && DebugInfo.Length == 0)
+            {
+                if (obj.Master != null && !string.IsNullOrEmpty(obj.Master.ErrorMsg))
+                {
+                    DebugInfo.Append(obj.Master.ErrorMsg);
+                }
             }
             return openOKFlag == 1;
         }

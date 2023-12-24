@@ -90,7 +90,7 @@ namespace CYQ.Data
     }
     internal partial class MySQLDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             if (type == "P")
             {

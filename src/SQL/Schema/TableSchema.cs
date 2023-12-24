@@ -98,7 +98,8 @@ namespace CYQ.Data.SQL
                     mdcs.DataBaseType = dalType;
                     mdcs.DataBaseVersion = dbHelper.Version;
 
-                    tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);//加上关键字：引号
+                    tableName = SqlFormat.Keyword(tableName, dbHelper.DataBaseType);//加上关键字：引号，并转大小写。
+                    string noKeywordTableName = SqlFormat.NotKeyword(tableName);//进行去关键字。
                     //如果table和helper不在同一个库
                     DalBase helper = dbHelper.ResetDalBase(tableName);
 
@@ -108,11 +109,11 @@ namespace CYQ.Data.SQL
                         bool isView = tableName.Contains(" ");//是否视图。
                         if (!isView)
                         {
-                            isView = CrossDB.Exists(tableName, "V", conn);
+                            isView = CrossDB.Exists(noKeywordTableName, "V", conn);
                         }
                         if (!isView)
                         {
-                            TableInfo info = CrossDB.GetTableInfoByName(mdcs.TableName, conn);//先查缓存
+                            TableInfo info = CrossDB.GetTableInfoByName(noKeywordTableName, conn);//先查缓存
                             if (info != null)
                             {
                                 mdcs.Description = info.Description;
@@ -120,9 +121,9 @@ namespace CYQ.Data.SQL
                             else
                             {
                                 Dictionary<string, string> tables = helper.GetTables();
-                                if (tables.ContainsKey(mdcs.TableName))
+                                if (tables.ContainsKey(noKeywordTableName))
                                 {
-                                    mdcs.Description = tables[mdcs.TableName];
+                                    mdcs.Description = tables[noKeywordTableName];
                                 }
                             }
                         }
@@ -141,7 +142,7 @@ namespace CYQ.Data.SQL
                                 for (int i = 0; i < mdcs.Count; i++)
                                 {
                                     MCellStruct cell = mdcs[i];
-                                    if (string.IsNullOrEmpty(cell.Description) && !string.IsNullOrEmpty(cell.TableName) && string.Compare(cell.TableName, SqlFormat.NotKeyword(tableName), true) != 0)
+                                    if (string.IsNullOrEmpty(cell.Description) && !string.IsNullOrEmpty(cell.TableName) && string.Compare(cell.TableName, noKeywordTableName, true) != 0)
                                     {
                                         if (!dic.ContainsKey(cell.TableName))
                                         {
@@ -165,7 +166,7 @@ namespace CYQ.Data.SQL
                         }
                         else
                         {
-                            mdcs.AddRelateionTableName(SqlFormat.NotKeyword(tableName));
+                            mdcs.AddRelateionTableName(noKeywordTableName);
                             switch (dalType)
                             {
                                 case DataBaseType.MsSql:
@@ -176,6 +177,7 @@ namespace CYQ.Data.SQL
                                 case DataBaseType.DB2:
                                 case DataBaseType.FireBird:
                                 case DataBaseType.DaMeng:
+                                case DataBaseType.KingBaseES:
                                     #region Sql
                                     string sql = string.Empty;
                                     if (dalType == DataBaseType.MsSql)
@@ -185,11 +187,11 @@ namespace CYQ.Data.SQL
                                         if (!helper.Version.StartsWith("08"))
                                         {
                                             //先获取同义词，检测是否跨库
-                                            string realTableName = Convert.ToString(helper.ExeScalar(string.Format(MSSQL_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                            string realTableName = Convert.ToString(helper.ExeScalar(string.Format(MSSQL_SynonymsName, noKeywordTableName), false));
                                             if (!string.IsNullOrEmpty(realTableName))
                                             {
                                                 string[] items = realTableName.Split('.');
-                                                tableName = realTableName;
+                                                noKeywordTableName = realTableName;
                                                 if (items.Length > 0)//跨库了
                                                 {
                                                     dbName = realTableName.Split('.')[0];
@@ -206,19 +208,17 @@ namespace CYQ.Data.SQL
                                     }
                                     else if (dalType == DataBaseType.Oracle)
                                     {
-                                        tableName = tableName.ToUpper();//Oracle转大写。
                                         //先获取同义词，不检测是否跨库
-                                        string realTableName = Convert.ToString(helper.ExeScalar(string.Format(Oracle_SynonymsName, SqlFormat.NotKeyword(tableName)), false));
+                                        string realTableName = Convert.ToString(helper.ExeScalar(string.Format(Oracle_SynonymsName, noKeywordTableName), false));
                                         if (!string.IsNullOrEmpty(realTableName))
                                         {
-                                            tableName = realTableName;
+                                            noKeywordTableName = realTableName;
                                         }
-
                                         sql = GetOracleColumns();
                                     }
                                     else if (dalType == DataBaseType.Sybase)
                                     {
-                                        tableName = SqlFormat.NotKeyword(tableName);
+                                       // tableName = SqlFormat.NotKeyword(tableName);
                                         sql = GetSybaseColumns();
                                     }
                                     else if (dalType == DataBaseType.PostgreSQL)
@@ -227,20 +227,25 @@ namespace CYQ.Data.SQL
                                     }
                                     else if (dalType == DataBaseType.DB2)
                                     {
-                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        //tableName = SqlFormat.NotKeyword(tableName).ToUpper();
                                         sql = GetDB2Columns();
                                     }
                                     else if (dalType == DataBaseType.FireBird)
                                     {
-                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        //tableName = SqlFormat.NotKeyword(tableName).ToUpper();
                                         sql = GetFireBirdColumns();
                                     }
                                     else if (dalType == DataBaseType.DaMeng)
                                     {
-                                        tableName = SqlFormat.NotKeyword(tableName).ToUpper();
-                                        sql = GetDaMengColumns(helper.DataBaseName);
+                                        //tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        sql = GetDaMengColumns(helper.SchemaName);
                                     }
-                                    helper.AddParameters("TableName", SqlFormat.NotKeyword(tableName), DbType.String, 150, ParameterDirection.Input);
+                                    else if (dalType == DataBaseType.KingBaseES)
+                                    {
+                                        //tableName = SqlFormat.NotKeyword(tableName).ToUpper();
+                                        sql = GetKingBaseESColumns(helper.SchemaName);
+                                    }
+                                    helper.AddParameters("TableName", noKeywordTableName, DbType.String, 150, ParameterDirection.Input);
                                     DbDataReader sdr = helper.ExeDataReader(sql, false);
                                     if (sdr != null)
                                     {
@@ -284,12 +289,13 @@ namespace CYQ.Data.SQL
                                                     break;
                                                 case DataBaseType.FireBird:
                                                 case DataBaseType.DaMeng:
+                                                case DataBaseType.KingBaseES:
                                                     mStruct.IsUniqueKey = Convert.ToString(sdr["IsUniqueKey"]) == "1";
                                                     break;
                                             }
 
                                             mStruct.SqlTypeName = sqlTypeName;
-                                            mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                            mStruct.TableName = noKeywordTableName;
                                             mdcs.Add(mStruct);
                                         }
                                         sdr.Close();
@@ -310,7 +316,7 @@ namespace CYQ.Data.SQL
                                     {
                                         helper.Con.Open();
                                     }
-                                    DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, SqlFormat.NotKeyword(tableName) });
+                                    DataTable sqliteDt = helper.Con.GetSchema("Columns", new string[] { null, null, noKeywordTableName });
                                     if (!helper.IsOpenTrans)
                                     {
                                         helper.Con.Close();
@@ -348,7 +354,7 @@ namespace CYQ.Data.SQL
                                         mStruct.DefaultValue = SqlFormat.FormatDefaultValue(dalType, row["COLUMN_DEFAULT"], 0, sqlType);//"COLUMN_DEFAULT"
                                         mStruct.IsPrimaryKey = Convert.ToBoolean(row["PRIMARY_KEY"]);
                                         mStruct.SqlTypeName = dataTypeName;
-                                        mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                        mStruct.TableName = noKeywordTableName;
                                         mdcs.Add(mStruct);
                                     }
                                     #endregion
@@ -363,7 +369,7 @@ namespace CYQ.Data.SQL
                                     OleDbCommand com = new OleDbCommand(sqlText, con);
                                     con.Open();
                                     keyDt = com.ExecuteReader(CommandBehavior.KeyInfo).GetSchemaTable();
-                                    valueDt = con.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] { null, null, SqlFormat.NotKeyword(tableName) });
+                                    valueDt = con.GetOleDbSchemaTable(OleDbSchemaGuid.Columns, new object[] { null, null, noKeywordTableName });
                                     con.Close();
                                     con.Dispose();
 
@@ -403,7 +409,7 @@ namespace CYQ.Data.SQL
                                             mStruct.Scale = maxSizeScale;
                                             mStruct.IsPrimaryKey = isKey;
                                             mStruct.SqlTypeName = sqlTypeName;
-                                            mStruct.TableName = SqlFormat.NotKeyword(tableName);
+                                            mStruct.TableName = noKeywordTableName;
                                             foreach (DataRow item in valueDt.Rows)
                                             {
                                                 if (columnName == item[3].ToString())//COLUMN_NAME
@@ -982,7 +988,8 @@ namespace CYQ.Data.SQL
             // 2005以上增加同义词支持。 case s2.name WHEN 'timestamp' THEN 'variant' ELSE s2.name END as [SqlType],
             return string.Format(@"select s1.name as ColumnName,case s2.name WHEN 'uniqueidentifier' THEN 36 
                      WHEN 'ntext' THEN -1 WHEN 'text' THEN -1 WHEN 'image' THEN -1 else s1.[prec] end  as [MaxSize],s1.scale as [Scale],
-                     isnullable as [IsNullable],colstat&1 as [IsAutoIncrement],s2.name as [SqlType],
+                     isnullable as [IsNullable],colstat&1 as [IsAutoIncrement],
+                     case s2.name when 'timestamp' then 'b_timestamp' else s2.name end as [SqlType],
                      case when exists(SELECT 1 FROM {0}..sysobjects where xtype='PK' and name in (SELECT name FROM {0}..sysindexes WHERE id=s1.id and 
                      indid in(SELECT indid FROM {0}..sysindexkeys WHERE id=s1.id AND colid=s1.colid))) then 1 else 0 end as [IsPrimaryKey],
                      case when exists(SELECT 1 FROM {0}..sysobjects where xtype='UQ' and name in (SELECT name FROM {0}..sysindexes WHERE id=s1.id and 
@@ -1054,7 +1061,7 @@ s1.length as MaxSize,
 s1.scale as Scale,
 case s1.status&8 when 8 then 1 ELSE 0 END AS IsNullable,
 case s1.status&128 when 128 then 1 ELSE 0 END as IsAutoIncrement,
-s2.name as SqlType,
+case s2.name when 'timestamp' then 'b_timestamp' else s2.name end as SqlType,
 case when exists(SELECT 1 FROM sysindexes WHERE id=s1.id AND s1.name=index_col(@TableName,indid,s1.colid)) then 1 else 0 end as IsPrimaryKey,
                str_replace(s3.text,'DEFAULT  ',null) as DefaultValue,
                null as Description
@@ -1158,7 +1165,7 @@ ORDER BY
     RF.RDB$FIELD_POSITION";
         }
 
-        internal static string GetDaMengColumns(string dbName)
+        internal static string GetDaMengColumns(string schemaName)
         {
             return string.Format(@"SELECT 
 a.table_name As tableName,
@@ -1186,7 +1193,36 @@ LEFT JOIN (select ai.table_owner,ai.column_name,ai.table_name,ac.constraint_type
 )d on d.TABLE_OWNER=a.OWNER and d.TABLE_NAME=a.TABLE_NAME and d.COLUMN_NAME=a.COLUMN_NAME
 
 WHERE a.owner = UPPER('{0}') and a.TABLE_NAME=:TableName
-ORDER BY a.column_id", dbName);
+ORDER BY a.column_id", schemaName);
+        }
+
+        internal static string GetKingBaseESColumns(string schemaName)
+        {
+            return String.Format(@"SELECT 
+a.column_name AS ColumnName,
+CASE WHEN a.CHARACTER_MAXIMUM_LENGTH IS NOT NULL THEN a.CHARACTER_MAXIMUM_LENGTH ELSE a.NUMERIC_PRECISION END as MaxSize,
+a.NUMERIC_SCALE as Scale,
+case a.IS_NULLABLE when 'YES' then 1 else 0 end as IsNullable,
+CASE d.typname WHEN 'int2' THEN 'smallint' WHEN 'int4' THEN 'integer' WHEN 'int8' THEN 'bigint' ELSE d.typname END AS SqlType,
+CASE WHEN LEFT(a.column_default,8)='nextval(' THEN 1 ELSE 0 END AS IsAutoIncrement,
+                    case c.CONSTRAINT_TYPE WHEN 'PRIMARY KEY' then 1 else 0 end as IsPrimaryKey,
+                    case c.CONSTRAINT_TYPE when 'UNIQUE' then 1 else 0 end as IsUniqueKey,
+					case c.CONSTRAINT_TYPE when 'FOREIGN KEY' then 1 else 0 end as IsForeignKey,
+                    a.COLUMN_DEFAULT AS DefaultValue,
+                    d.description AS Description
+
+ FROM information_schema.columns a
+LEFT JOIN information_schema.key_column_usage b
+on b.TABLE_SCHEMA = a.TABLE_SCHEMA and b.TABLE_NAME = a.TABLE_NAME and b.COLUMN_NAME = a.COLUMN_NAME
+LEFT JOIN information_schema.TABLE_CONSTRAINTS c on c.TABLE_SCHEMA = b.TABLE_SCHEMA and c.TABLE_NAME = b.TABLE_NAME and c.CONSTRAINT_NAME = b.CONSTRAINT_NAME
+LEFT JOIN(SELECT s2.nspname, s1.relname, s3.attname, s4.description,s5.typname
+FROM sys_class s1
+LEFT JOIN  sys_namespace s2 ON s2.oid = s1.relnamespace
+LEFT JOIN sys_attribute s3 ON s3.attrelid = s1.oid
+LEFT JOIN sys_description s4 ON s3.attrelid= s4.objoid AND s3.attnum = s4.objsubid
+LEFT JOIN sys_type s5 ON s5.oid=s3.atttypid
+) d ON d.nspname = a.table_schema AND d.relname = a.table_name AND d.attname = a.column_name
+WHERE a.table_schema = '{0}' AND a.table_name = :TableName", schemaName);
         }
         #endregion
     }

@@ -86,7 +86,7 @@ namespace CYQ.Data
 
     internal partial class MsSqlDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             bool for2000 = Version.StartsWith("08");
             return @"Select o.name as TableName, p.value as Description from sysobjects o " + (for2000 ? "left join sysproperties p on p.id = o.id and smallid = 0" : "left join sys.extended_properties p on p.major_id = o.id and minor_id = 0")

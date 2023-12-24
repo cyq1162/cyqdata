@@ -7,6 +7,9 @@ using System;
 using System.IO;
 namespace CYQ.Data
 {
+    /// <summary>
+    /// 单数据库 =》 多模式
+    /// </summary>
     internal partial class DaMengDal : DalBase
     {
         private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
@@ -67,7 +70,9 @@ namespace CYQ.Data
             try
             {
                 IsRecordDebugInfo = false || AppDebug.IsContainSysSql;
-                bool result = ExeScalar("show databases like '" + dbName + "'", false) != null;
+                if(AppConfig.DB.IsDaMengUpper){dbName=dbName.ToUpper();}
+                string sql = string.Format("select 1 from SYS.ALL_OBJECTS where OBJECT_NAME='{0}'", dbName);
+                bool result = ExeScalar(sql, false) != null;
                 IsRecordDebugInfo = true;
                 return result;
             }
@@ -77,6 +82,10 @@ namespace CYQ.Data
             }
         }
         string dbName = String.Empty;
+        /// <summary>
+        /// select * from v$database
+        /// 达梦以（端口号对应服务）一个服务对应一个数据库名称，因此数据库名称可以忽略。
+        /// </summary>
         public override string DataBaseName
         {
             get
@@ -84,13 +93,8 @@ namespace CYQ.Data
                 if (string.IsNullOrEmpty(dbName))
                 {
                     string conn = UsingConnBean.ConnString;
-                    int len = 7;
-                    int index = conn.ToLower().IndexOf("schema=");
-                    if (index == -1)
-                    {
-                        index = conn.ToLower().IndexOf("database=");
-                        len = 9;
-                    }
+                    int len = 9;
+                    int index = conn.ToLower().IndexOf("database=");
                     if (index > 0)
                     {
                         int end = conn.IndexOf(';', index);
@@ -107,7 +111,40 @@ namespace CYQ.Data
                 return dbName;
             }
         }
+        string schemaName = string.Empty;
+        /// <summary>
+        /// 模式 此数据库中提供约为 数据库名称等同
+        /// </summary>
+        public override string SchemaName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(schemaName))
+                {
+                    string conn = UsingConnBean.ConnString;
+                    int len = 7;
+                    int index = conn.ToLower().IndexOf("schema=");
+                    if (index > 0)
+                    {
+                        int end = conn.IndexOf(';', index);
+                        if (end > 0)
+                        {
+                            schemaName = conn.Substring(index + len, end - index - len).ToUpper();
+                        }
+                        else
+                        {
+                            schemaName = conn.Substring(index + len).ToUpper();
+                        }
+                    }
+                    if (string.IsNullOrEmpty(schemaName))
+                    {
+                        schemaName = DataBaseName;
+                    }
+                }
 
+                return schemaName;
+            }
+        }
         public override char Pre
         {
             get
@@ -120,7 +157,7 @@ namespace CYQ.Data
             if (!string.IsNullOrEmpty(DataBaseName) && _com.CommandType == CommandType.Text)
             {
                 string sql = _com.CommandText;
-                _com.CommandText = "set schema " + DataBaseName;
+                _com.CommandText = "set schema " + SchemaName;
                 _com.ExecuteNonQuery();//有异常直接抛，无效的数据库名称。
                 if (!string.IsNullOrEmpty(sql))
                 {
@@ -131,7 +168,7 @@ namespace CYQ.Data
     }
     internal partial class DaMengDal
     {
-        protected override string GetSchemaSql(string type)
+        protected override string GetUVPSql(string type)
         {
             if (type == "P")
             {
@@ -147,7 +184,7 @@ namespace CYQ.Data
                 {
                     type = "VIEW";
                 }
-                return string.Format("select table_name as TableName,comments as Description from all_tab_comments  where owner='{0}' and TABLE_TYPE='{1}' order by table_name", DataBaseName, type);
+                return string.Format("select table_name as TableName,comments as Description from all_tab_comments  where owner='{0}' and TABLE_TYPE='{1}' order by table_name", SchemaName, type);
             }
         }
     }
