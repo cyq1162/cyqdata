@@ -228,11 +228,11 @@ namespace CYQ.Data
             #region providerÊ¶±ð
             if (connString.Contains("provider"))
             {
-                if (connString.Contains("provider=mssql"))
+                if (connString.Contains("provider=ms"))
                 {
                     return DataBaseType.MsSql;
                 }
-                if (connString.Contains("provider=ase") || connString.Contains("provider=sybase"))
+                if (connString.Contains("provider=ase") || connString.Contains("provider=sb") || connString.Contains("provider=sybase"))
                 {
                     //data source=127.0.0.1;port=5000;database=cyqdata;uid=sa;pwd=123456
                     return DataBaseType.Sybase;
@@ -247,8 +247,9 @@ namespace CYQ.Data
                     //host=localhost;port=3306;database=mysql;uid=root;pwd=123456;Convert Zero Datetime=True;
                     return DataBaseType.MySql;
                 }
-                if (connString.Contains("provider=db2"))
+                if (connString.Contains("provider=db2") || connString.Contains("Provider=ibmdadb2"))
                 {
+                    //Provider=IBMDADB2.IBMDBCL1;Data Source=dbname;Persist Security Info=True;User ID=username;pwd=123456;Location=ip
                     return DataBaseType.DB2;
                 }
                 if (connString.Contains("provider=oracle") || connString.Contains("provider=msdaora") || connString.Contains("provider=oraoledb.oracle"))
