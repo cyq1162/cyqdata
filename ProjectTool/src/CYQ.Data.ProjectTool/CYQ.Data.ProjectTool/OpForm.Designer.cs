@@ -40,6 +40,8 @@
             this.lbSavePath = new System.Windows.Forms.Label();
             this.txtProjectPath = new System.Windows.Forms.TextBox();
             this.gbConn = new System.Windows.Forms.GroupBox();
+            this.txtTip = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.gbBuild = new System.Windows.Forms.GroupBox();
             this.txtEntitySuffix = new System.Windows.Forms.TextBox();
             this.lbEntityBean = new System.Windows.Forms.Label();
@@ -58,8 +60,6 @@
             this.lnkOpenFolder = new System.Windows.Forms.LinkLabel();
             this.lnkCopyPath = new System.Windows.Forms.LinkLabel();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.label1 = new System.Windows.Forms.Label();
-            this.txtTip = new System.Windows.Forms.Label();
             this.gbConn.SuspendLayout();
             this.gbBuild.SuspendLayout();
             this.SuspendLayout();
@@ -80,7 +80,10 @@
             "Xml",
             "FoxPro",
             "PostgreSQL",
-            "DB2"});
+            "DB2",
+            "FireBird",
+            "DaMeng",
+            "KingBaseES"});
             this.ddlDBType.Location = new System.Drawing.Point(104, 47);
             this.ddlDBType.Name = "ddlDBType";
             this.ddlDBType.Size = new System.Drawing.Size(199, 20);
@@ -187,6 +190,28 @@
             this.gbConn.TabIndex = 5;
             this.gbConn.TabStop = false;
             this.gbConn.Text = "Connection Config";
+            // 
+            // txtTip
+            // 
+            this.txtTip.AutoSize = true;
+            this.txtTip.ForeColor = System.Drawing.Color.Red;
+            this.txtTip.Location = new System.Drawing.Point(102, 109);
+            this.txtTip.Name = "txtTip";
+            this.txtTip.Size = new System.Drawing.Size(23, 12);
+            this.txtTip.TabIndex = 1;
+            this.txtTip.Text = "...";
+            this.txtTip.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.ForeColor = System.Drawing.Color.Red;
+            this.label1.Location = new System.Drawing.Point(31, 109);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(65, 12);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "信息提示：";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // gbBuild
             // 
@@ -390,28 +415,6 @@
             this.lnkCopyPath.Text = "复制完整路径";
             this.lnkCopyPath.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkCopyPath_LinkClicked);
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.ForeColor = System.Drawing.Color.Red;
-            this.label1.Location = new System.Drawing.Point(31, 109);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(65, 12);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "信息提示：";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // txtTip
-            // 
-            this.txtTip.AutoSize = true;
-            this.txtTip.ForeColor = System.Drawing.Color.Red;
-            this.txtTip.Location = new System.Drawing.Point(102, 109);
-            this.txtTip.Name = "txtTip";
-            this.txtTip.Size = new System.Drawing.Size(23, 12);
-            this.txtTip.TabIndex = 1;
-            this.txtTip.Text = "...";
-            this.txtTip.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
             // OpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -427,7 +430,7 @@
             this.Name = "OpForm";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "CYQ.Data 配置工具 V2.2";
+            this.Text = "CYQ.Data 配置工具 V2.3";
             this.Load += new System.EventHandler(this.OpForm_Load);
             this.gbConn.ResumeLayout(false);
             this.gbConn.PerformLayout();

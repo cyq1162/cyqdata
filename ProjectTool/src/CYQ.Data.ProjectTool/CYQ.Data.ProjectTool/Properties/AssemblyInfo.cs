@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 项目配置工具")]
 [assembly: AssemblyDescription("论坛：http://www.cyqdata.com/cyqdata")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("秋式软件 （2022-09-26）")]
+[assembly: AssemblyCompany("秋式软件 （2023-12-25）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 项目配置工具")]
 [assembly: AssemblyCopyright("版权所有 (C) 秋式软件 2010-2020")]
 [assembly: AssemblyTrademark("CYQ.Data.ProjectTool")]
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      内部版本号
 //      修订号
 //
-[assembly: AssemblyVersion("2.2.0.0")]
-[assembly: AssemblyFileVersion("2.2.0.0")]
+[assembly: AssemblyVersion("2.3.0.0")]
+[assembly: AssemblyFileVersion("2.3.0.0")]

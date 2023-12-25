@@ -163,7 +163,7 @@ namespace CYQ.Data.ProjectTool
             switch (index)
             {
                 case 0:
-                    txtConn.Text = "server=.;database=demo;uid=sa;pwd=123456";
+                    txtConn.Text = "provider=ms;server=.;database=demo;uid=sa;pwd=123456";
                     txtTip.Text = "";
                     break;
                 case 1:
@@ -171,7 +171,7 @@ namespace CYQ.Data.ProjectTool
                     txtTip.Text = "";
                     break;
                 case 2:
-                    txtConn.Text = "host=127.0.0.1;Port=3306;Database=demo;uid=sa;pwd=123456";
+                    txtConn.Text = "provider=mysql;host=127.0.0.1;Port=3306;Database=demo;uid=sa;pwd=123456";
                     txtTip.Text = "该功能引用：MySql.Data.dll";
                     break;
                 case 3:
@@ -179,7 +179,7 @@ namespace CYQ.Data.ProjectTool
                     txtTip.Text = "该功能引用：System.Data.SQLite.dll（注意x86或x64的区别）";
                     break;
                 case 4:
-                    txtConn.Text = "Data Source=127.0.0.1;Port=5000;UID=sa;PWD='123456';Database='Demo'";
+                    txtConn.Text = "provider=sybase;Data Source=127.0.0.1;Port=5000;UID=sa;PWD='123456';Database='Demo'";
                     txtTip.Text = "该功能引用：Sybase.AdoNet2.AseClient.dll（Sybase软件安装目录下有）";
                     break;
                 case 5:
@@ -203,12 +203,24 @@ namespace CYQ.Data.ProjectTool
                     txtTip.Text = "";
                     break;
                 case 10:
-                    txtConn.Text = "server=.;port=5432;database=xx;uid=xx;pwd=xx";
+                    txtConn.Text = "provider=postgre;server=.;port=5432;database=xx;uid=xx;pwd=xx";
                     txtTip.Text = "该功能引用：Npgsql.dll";
                     break;
-                case 11:
+                case 11://db2
                     txtConn.Text = "Provider=IBMDADB2.IBMDBCL1;Data Source=dbname;Persist Security Info=True;User ID=username;pwd=123456;Location=ip";
                     txtTip.Text = "该功能引用：IBM.Data.DB2.dll（DB2软件安装目录下有）";
+                    break;
+                case 12://firebird
+                    txtConn.Text = "provider=firebird;user id=SYSDBA;password=123456;database={0}test.dbf;server type=Default;data source=127.0.0.1;port number=3050";
+                    txtTip.Text = "该功能引用：FirebirdSql.Data.FirebirdClient.dll";
+                    break;
+                case 13://dameng
+                    txtConn.Text = "provider=dameng;user id=SYSDBA;password=123456789;data source=127.0.0.1;port number=3050;schema=test;";
+                    txtTip.Text = "该功能引用：DmProvider.dll";
+                    break;
+                case 14://kingbasees
+                    txtConn.Text = "provider=kingbasees;server=127.0.0.1;User Id=system;Password=123456;Database=test;Port=54321;schema=public;";
+                    txtTip.Text = "该功能引用：Kdbndp.dll";
                     break;
 
             }
@@ -250,13 +262,13 @@ namespace CYQ.Data.ProjectTool
                         {
                             System.IO.Directory.CreateDirectory(path);
                         }
-                        catch(Exception err)
+                        catch (Exception err)
                         {
                             MessageBox.Show(err.Message, "Tip");
                             return;
                         }
                     }
-                    
+
                     string name = SaveConfig();
                     btnBuild.Enabled = false;
                     Thread thread = new Thread(new ParameterizedThreadStart(BuildCSCode.Create));
@@ -327,12 +339,12 @@ namespace CYQ.Data.ProjectTool
 
         private void btnOpenProjectFolder_Click(object sender, EventArgs e)
         {
-            string path=txtProjectPath.Text.Trim();
+            string path = txtProjectPath.Text.Trim();
             if (!string.IsNullOrEmpty(path))
             {
                 if (!System.IO.Directory.Exists(path))
                 {
-                    MessageBox.Show("Directory not Exists :" + path,"Tip");
+                    MessageBox.Show("Directory not Exists :" + path, "Tip");
                     return;
                 }
                 System.Diagnostics.Process.Start(path);
