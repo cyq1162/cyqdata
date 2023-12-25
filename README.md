@@ -1,5 +1,5 @@
 # cyq.data is a high-performance and the most powerful orm. ormit's very special and different from others,who use who love it.
-<br/>Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、Redis、MemCache。
+<br/>Support：Mssql、Mysql、Oracle、Sybase、Postgres、DB2、FireBird、Sqlite、DaMeng（达梦）、KingBaseES（人大金仓）、Txt、Xml、Access、Excel、FoxPro、Redis、MemCache。
 <hr />
 
 开篇介绍：http://www.cnblogs.com/cyq1162/p/5634414.html <br />
