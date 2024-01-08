@@ -110,12 +110,14 @@ namespace CYQ.Data.SQL
                 primaryCell.Value = Guid.NewGuid();
             }
             MDataCell cell = null;
+            bool insertAutoIncrement = false;
             for (int i = 0; i < _action.Data.Count; i++)
             {
                 cell = _action.Data[i];
-                if (cell.Struct.IsAutoIncrement && !_action.AllowInsertID)
+                if (cell.Struct.IsAutoIncrement)
                 {
-                    continue;//跳过自增列。
+                    if (!_action.AllowInsertID) continue;//跳过自增列。
+                    else insertAutoIncrement = true;
                 }
                 if (cell.IsNull && !cell.Struct.IsCanNull && cell.Struct.DefaultValue == null)
                 {
@@ -231,7 +233,7 @@ namespace CYQ.Data.SQL
                     {
                         sql += string.Format(" select '{0}' as OutPutValue", primaryCell.Value);
                     }
-                    if (_action.AllowInsertID && !_action.dalHelper.IsOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
+                    if (insertAutoIncrement)//_action.AllowInsertID && !_action.dalHelper.IsOpenTrans && primaryCell.Struct.IsAutoIncrement)//非批量操作时
                     {
                         sql = "set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " on " + sql + " set identity_insert " + SqlFormat.Keyword(TableName, _action.dalHelper.DataBaseType) + " off";
                     }

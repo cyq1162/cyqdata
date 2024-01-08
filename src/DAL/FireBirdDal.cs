@@ -9,7 +9,7 @@ namespace CYQ.Data
 {
     internal partial class FireBirdDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public FireBirdDal(ConnObject co)
             : base(co)
         {
@@ -48,7 +48,7 @@ namespace CYQ.Data
                     Error.Throw(name);
                 }
                 ass = Assembly.Load(name);
-                CacheManage.LocalInstance.Set("Firebird_Assembly", ass, 10080);
+                DistributedCache.Local.Set("Firebird_Assembly", ass, 10080);
             }
             return ass as Assembly;
         }

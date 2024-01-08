@@ -1,7 +1,4 @@
 ﻿using CYQ.Data.Table;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace CYQ.Data.Orm
 {
@@ -36,7 +33,11 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                return _Action.IsTransation;
+                if (_Action != null)
+                {
+                    return _Action.IsTransation;
+                }
+                return false;
             }
         }
         /// <summary>

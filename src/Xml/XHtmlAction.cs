@@ -7,6 +7,7 @@ using CYQ.Data.Tool;
 using System.Text;
 using System.Web;
 using System.Threading;
+using CYQ.Data.Json;
 
 namespace CYQ.Data.Xml
 {

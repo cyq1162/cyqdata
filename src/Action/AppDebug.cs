@@ -10,7 +10,7 @@ namespace CYQ.Data
     /// </summary>
     public static class AppDebug
     {
-        private static CacheManage _Cache = CacheManage.LocalInstance;
+        private static DistributedCache _Cache = DistributedCache.Local;
         /// <summary>
         /// is recoreding sql ?
         /// <para>正在记录中</para>

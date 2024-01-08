@@ -86,14 +86,14 @@ namespace CYQ.Data
             if (Slave.Count > 0)
             {
                 string id = StaticTool.GetMasterSlaveKey();//获取当前的标识
-                Cache.CacheManage.LocalInstance.Set(id, 1, AppConfig.DB.MasterSlaveTime / 60.0);
+                Cache.DistributedCache.Local.Set(id, 1, AppConfig.DB.MasterSlaveTime / 60.0);
             }
         }
         public bool IsAllowSlave()
         {
             if (Slave.Count == 0) { return false; }
             string id = StaticTool.GetMasterSlaveKey();//获取当前的标识
-            return !Cache.CacheManage.LocalInstance.Contains(id);
+            return !Cache.DistributedCache.Local.Contains(id);
         }
 
     }

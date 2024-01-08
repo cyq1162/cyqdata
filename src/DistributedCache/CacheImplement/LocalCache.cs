@@ -6,7 +6,7 @@ using CYQ.Data.Tool;
 using CYQ.Data.Table;
 using CYQ.Data.SQL;
 using System.IO;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data.Cache
 {
@@ -14,7 +14,7 @@ namespace CYQ.Data.Cache
     /// 单机缓存类
     /// 为兼容.NET Core 去掉Web.Caching，重写
     /// </summary>
-    internal partial class LocalCache : CacheManage
+    internal partial class LocalCache : DistributedCache
     {
         private MDictionary<string, object> theCache = new MDictionary<string, object>(2048, StringComparer.OrdinalIgnoreCase);//key,cache
         private MDictionary<string, DateTime> theKeyTime = new MDictionary<string, DateTime>(2048, StringComparer.OrdinalIgnoreCase);//key,time
@@ -522,11 +522,11 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal partial class LocalCache
     {
-        public override bool Lock(string key, int millisecondsTimeout)
+        internal override bool Lock(string key, int millisecondsTimeout)
         {
             return MutexWaitOne(key, millisecondsTimeout);
         }
-        public override void UnLock(string key)
+        internal override void UnLock(string key)
         {
             MutexRelease(key);
         }

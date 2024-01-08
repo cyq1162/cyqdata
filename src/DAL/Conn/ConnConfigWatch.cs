@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using CYQ.Data.Tool;
+using CYQ.Data.Json;
 
 namespace CYQ.Data
 {

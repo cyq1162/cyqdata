@@ -102,7 +102,15 @@ namespace CYQ.Data.SQL
             {
                 if (type.Name.StartsWith("Nullable"))
                 {
-                    name = Nullable.GetUnderlyingType(type).Name;
+                    Type nullType = Nullable.GetUnderlyingType(type);
+                    if (nullType.IsEnum)
+                    {
+                        name = "int";
+                    }
+                    else
+                    {
+                        name = nullType.Name;
+                    }
                 }
                 else
                 {

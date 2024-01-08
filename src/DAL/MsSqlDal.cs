@@ -12,7 +12,7 @@ namespace CYQ.Data
 {
     internal partial class MsSqlDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public MsSqlDal(ConnObject co)
             : base(co)
         { }

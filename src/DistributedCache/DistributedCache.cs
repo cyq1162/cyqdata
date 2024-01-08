@@ -6,6 +6,7 @@ using System;
 using CYQ.Data.SQL;
 using System.Configuration;
 using System.Threading;
+
 namespace CYQ.Data.Cache
 {
     /// <summary>
@@ -20,25 +21,23 @@ namespace CYQ.Data.Cache
     /// 获取：       MDataTable table=cache.Get("路过秋天") as MDataTable;
     ///          }
     /// </code></example>
-    public abstract partial class CacheManage
+    public abstract partial class DistributedCache
     {
-
-
         #region 对外实例
         /// <summary>
-        /// 返回唯一实例(根据配置(AppConfig.Cache.XXXCacheServers)决定启用顺序：Redis、MemCache、本地缓存）
+        /// 返回唯一实例(根据配置(Redis、MemCache是否配置启用)决定启用顺序：Redis、MemCache、本地缓存）
         /// </summary>
-        public static CacheManage Instance
+        public static DistributedCache Instance
         {
             get
             {
                 if (!string.IsNullOrEmpty(AppConfig.Redis.Servers))
                 {
-                    return RedisInstance;
+                    return Redis;
                 }
                 else if (!string.IsNullOrEmpty(AppConfig.MemCache.Servers))
                 {
-                    return MemCacheInstance;
+                    return MemCache;
                 }
                 else
                 {
@@ -50,7 +49,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 单机本地缓存
         /// </summary>
-        public static CacheManage LocalInstance
+        public static DistributedCache Local
         {
             get
             {
@@ -58,12 +57,12 @@ namespace CYQ.Data.Cache
                 return LocalShell.instance;
             }
         }
-        private static CacheManage _MemCacheInstance;
+        private static DistributedCache _MemCacheInstance;
         private static readonly object lockMemCache = new object();
         /// <summary>
-        /// MemCache缓存（需要配置AppConfig.Cache.MemCacheServers）
+        /// MemCache缓存（需要配置AppConfig.MemCache.Servers）
         /// </summary>
-        public static CacheManage MemCacheInstance
+        public static DistributedCache MemCache
         {
             get
             {
@@ -80,12 +79,12 @@ namespace CYQ.Data.Cache
                 return _MemCacheInstance;
             }
         }
-        private static CacheManage _RedisInstance;
+        private static DistributedCache _RedisInstance;
         private static readonly object lockRedisCache = new object();
         /// <summary>
-        /// Redis缓存（需要配置AppConfig.Cache.RedisServers）
+        /// Redis缓存（需要配置AppConfig.Redis.Servers）
         /// </summary>
-        public static CacheManage RedisInstance
+        public static DistributedCache Redis
         {
             get
             {
@@ -226,20 +225,20 @@ namespace CYQ.Data.Cache
     /// <summary>
     /// 处理分布式锁
     /// </summary>
-    public abstract partial class CacheManage
+    public abstract partial class DistributedCache
     {
-        private Dictionary<string, int> lockAgain = new Dictionary<string, int>();
+        private MDictionary<string, int> lockAgain = new MDictionary<string, int>();
         /// <summary>
         /// 分布式锁（分布式锁需要启用Redis或Memcached）
         /// </summary>
         /// <param name="key">key</param>
         /// <param name="millisecondsTimeout">尝试获取锁的最大等待时间（ms毫秒），超过这个值，则认为获取锁失败</param>
         /// <returns></returns>
-        public virtual bool Lock(string key, int millisecondsTimeout)
+        internal virtual bool Lock(string key, int millisecondsTimeout)
         {
             #region 可重入锁
 
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId + "," + key;
             //已存在锁，锁重入。
             if (lockAgain.ContainsKey(flag))
             {
@@ -257,7 +256,7 @@ namespace CYQ.Data.Cache
                 if (AddAll(key, flag, 0.1))
                 {
                     lockAgain.Add(flag, 0);
-                    Console.WriteLine("Lock :" + flag);
+                    //Console.WriteLine("Lock :" + flag);
                     AddToWork(key, flag);//循环检测超时时间，执行期间，服务挂了，然后重启了？
                     return true;
                 }
@@ -277,11 +276,11 @@ namespace CYQ.Data.Cache
         /// 释放（分布式锁）
         /// </summary>
         /// <returns></returns>
-        public virtual void UnLock(string key)
+        internal virtual void UnLock(string key)
         {
             #region 可重入锁检测
 
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId;
+            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId + "," + key;
             if (lockAgain.ContainsKey(flag))
             {
 
@@ -299,7 +298,7 @@ namespace CYQ.Data.Cache
             #endregion
 
 
-            Console.WriteLine("Un Lock :" + flag);
+            //Console.WriteLine("Un Lock :" + flag);
             RemoveFromWork(key);
 
             //--释放机制有些问题，需要调整。
@@ -376,15 +375,21 @@ namespace CYQ.Data.Cache
                         }
                     }
                     list.Clear();
+                    Thread.Sleep(3000);//循环。
                 }
-                Thread.Sleep(3000);//循环。
+                else
+                {
+                    threadIsWorking = false;
+                    break;
+                }
+                
             }
         }
         #endregion
 
     }
 
-    public abstract partial class CacheManage
+    public abstract partial class DistributedCache
     {
         /// <summary>
         /// 获取系统内部缓存Key
@@ -408,24 +413,7 @@ namespace CYQ.Data.Cache
             return string.Empty;
         }
     }
-    /// <summary>
-    /// 支持的Cache类型
-    /// </summary>
-    public enum CacheType
-    {
-        /// <summary>
-        /// 本地缓存
-        /// </summary>
-        LocalCache,
-        /// <summary>
-        /// MemCached分布式缓存
-        /// </summary>
-        MemCache,
-        /// <summary>
-        /// Redis分布式缓存
-        /// </summary>
-        Redis
-    }
+
     /// <summary>
     /// Cache的Key类型
     /// </summary>

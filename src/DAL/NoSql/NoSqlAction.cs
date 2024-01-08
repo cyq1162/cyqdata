@@ -6,7 +6,7 @@ using CYQ.Data.SQL;
 
 using System.IO;
 using CYQ.Data.Tool;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data
 {
@@ -170,29 +170,44 @@ namespace CYQ.Data
                     {
                         try
                         {
-                            if (Table.Rows.Count > 0)
+                            int rowsCount = Table.Rows.Count;
+                            if (rowsCount > 0)
                             {
                                 #region ¶ÁÈ¡Ë÷Òý
-                                int lastIndex = _Table.Rows.Count - 1;
-                                do
+                                int maxRowID = 0;
+                                for (int i = 0; i < 50; i++)
                                 {
-                                    if (lastIndex >= 0)
+                                    int index = rowsCount - 1 - i;
+                                    if (index >= 0)
                                     {
-                                        if (_Table.Rows[lastIndex][0].IsNull)
-                                        {
-                                            lastIndex--;
-                                        }
-                                        else
-                                        {
-                                            maxID = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
-                                        }
+                                        int value = Table.Rows[index][0].Get<int>();
+                                        maxRowID = Math.Max(maxRowID, value);
                                     }
                                     else
                                     {
-                                        maxID = 1;
+                                        break;
                                     }
                                 }
-                                while (maxID == 0);
+                                maxID = maxRowID + 1;
+                                //do
+                                //{
+                                //    if (lastIndex >= 0)
+                                //    {
+                                //        if (_Table.Rows[lastIndex][0].IsNull)
+                                //        {
+                                //            lastIndex--;
+                                //        }
+                                //        else
+                                //        {
+                                //            maxID = Convert.ToInt32(_Table.Rows[lastIndex][0].Value) + 1;
+                                //        }
+                                //    }
+                                //    else
+                                //    {
+                                //        maxID = 1;
+                                //    }
+                                //}
+                                //while (maxID == 0);
                                 #endregion
 
                             }

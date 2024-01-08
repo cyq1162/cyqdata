@@ -105,6 +105,7 @@ namespace CYQ.Data.SQL
                 case DataBaseType.Oracle:
                 case DataBaseType.PostgreSQL:
                 case DataBaseType.DB2:
+                case DataBaseType.KingBaseES:
                     return Replace(text, SqlValue.Contact, "||");
                 default:
                     return Replace(text, SqlValue.Contact, "+");
@@ -135,6 +136,7 @@ namespace CYQ.Data.SQL
                     break;
                 case DataBaseType.SQLite:
                 case DataBaseType.MySql:
+                case DataBaseType.KingBaseES:
                     return Replace(text, SqlValue.IsNull, "IfNull");
                 case DataBaseType.Oracle:
                 case DataBaseType.DB2:
@@ -162,13 +164,14 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.Guid, "newid()");
                 case DataBaseType.Oracle:
                     return Replace(text, SqlValue.Guid, "SYS_GUID()");
-                case DataBaseType.SQLite:
-                case DataBaseType.DB2:
-                    return Replace(text, SqlValue.Guid, Guid.NewGuid().ToString());
                 case DataBaseType.PostgreSQL:
                     return Replace(text, SqlValue.Guid, "uuid_generate_v4()");
+                case DataBaseType.SQLite:
+                case DataBaseType.DB2:
+                case DataBaseType.KingBaseES:
+                default:
+                    return Replace(text, SqlValue.Guid, Guid.NewGuid().ToString());
             }
-            return text;
         }
 
         private static string FormatPara(string text, DataBaseType dalType)
@@ -179,6 +182,8 @@ namespace CYQ.Data.SQL
                     return text.Replace("=:?", "=?");
                 case DataBaseType.Oracle:
                 case DataBaseType.PostgreSQL:
+                case DataBaseType.DaMeng:
+                case DataBaseType.KingBaseES:
                     return text.Replace("=:?", "=:");
                 default:
                     return text.Replace("=:?", "=@");
@@ -222,6 +227,7 @@ namespace CYQ.Data.SQL
                     text = Replace(text, SqlValue.Len, "datalength");
                     return Replace(text, SqlValue.Substring, "substring");
                 case DataBaseType.PostgreSQL:
+                case DataBaseType.KingBaseES:
                     text = Replace(text, SqlValue.Len, "length");
                     return Replace(text, SqlValue.Substring, "substring");
             }
@@ -326,8 +332,11 @@ namespace CYQ.Data.SQL
                     return Replace(text, SqlValue.GetDate, "now()");
                 case DataBaseType.MsSql:
                 case DataBaseType.Sybase:
+                case DataBaseType.DaMeng:
                     return Replace(text, SqlValue.GetDate, "getdate()");
                 case DataBaseType.Oracle:
+                case DataBaseType.FireBird:
+                case DataBaseType.KingBaseES:
                     return Replace(text, SqlValue.GetDate, "current_date");
                 case DataBaseType.DB2:
                     return Replace(text, SqlValue.GetDate, "CURRENT TIMESTAMP");

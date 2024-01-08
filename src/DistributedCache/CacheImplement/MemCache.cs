@@ -8,25 +8,24 @@ using CYQ.Data.Tool;
 namespace CYQ.Data.Cache
 {
     /// <summary>
-    /// Redis分布式缓存类
+    /// MemCache分布式缓存类
     /// </summary>
-    internal partial class RedisCache : CacheManage
+    internal partial class MemCache : DistributedCache
     {
-        private RedisClient client;
+        private MemcachedClient client;
         /// <summary>
-        /// 读取客户端
+        /// 返回客户端
         /// </summary>
-        public RedisClient Client { get { return client; } }
-        internal RedisCache()
+        public MemcachedClient Client { get { return client; } }
+        internal MemCache()
         {
-            client = RedisClient.Create(AppConfig.Redis.Servers);
-            //if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
+            client = MemcachedClient.Create(AppConfig.MemCache.Servers);
+            //if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
             //{
-            //    RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
+            //    MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
             //    client.HostServer.HostServerBak = clientBak.HostServer;
             //}
         }
-
         public override void RefleshConfig(string newConfigValue)
         {
             client.HostServer.RefleshHostServer(newConfigValue);
@@ -36,18 +35,17 @@ namespace CYQ.Data.Cache
         {
             return Set(key, value, 60 * 24 * 30);
         }
-
         public override bool Set(string key, object value, double cacheMinutes)
         {
             return Set(key, value, cacheMinutes, null);
         }
-
         public override bool Set(string key, object value, double cacheMinutes, string fileName)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             if (value == null) { return Remove(key); }
-            return client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
+            return client.Set(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
+
         public override bool Add(string key, object value)
         {
             return Add(key, value, AppConfig.DefaultCacheTime, null);
@@ -60,9 +58,8 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             if (value == null) { return Remove(key); }
-            return client.SetNX(key, value, Convert.ToInt32(cacheMinutes * 60));
+            return client.Add(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
-
 
         DateTime allowCacheTableTime = DateTime.Now;
         private MDataTable cacheInfoTable = null;
@@ -70,16 +67,14 @@ namespace CYQ.Data.Cache
         {
             get
             {
-
-                if (cacheInfoTable == null || cacheInfoTable.Columns.Count == 0 || DateTime.Now > allowCacheTableTime)
+                if (cacheInfoTable == null || DateTime.Now > allowCacheTableTime)
                 {
-
-                    MDataTable cacheTable = new MDataTable();
-
                     #region Create Table
+                    MDataTable cacheTable = new MDataTable();
                     Dictionary<string, Dictionary<string, string>> status = client.Stats();
                     if (status != null)
                     {
+
                         foreach (KeyValuePair<string, Dictionary<string, string>> item in status)
                         {
                             if (item.Value.Count > 0)
@@ -98,12 +93,11 @@ namespace CYQ.Data.Cache
                             }
                         }
                     }
-                    cacheTable.TableName = "Redis";
+                    cacheTable.TableName = "MemCache";
                     allowCacheTableTime = DateTime.Now.AddSeconds(1);
                     #endregion
 
                     cacheInfoTable = cacheTable;
-
                 }
                 return cacheInfoTable;
             }
@@ -117,38 +111,22 @@ namespace CYQ.Data.Cache
         public override bool Contains(string key)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
-            return client.ContainsKey(key);
+            return Get(key) != null;
         }
 
         //int count = -1;
         //DateTime allowGetCountTime = DateTime.Now;
-        private static object o = new object();
         public override int Count
         {
             get
             {
-
                 int count = 0;
-                if (CacheInfo != null && CacheInfo.Columns.Count > 0)
+                MDataRow row = CacheInfo.FindRow("Key='curr_items'");
+                if (row != null)
                 {
-                    lock (o)
+                    for (int i = 1; i < row.Columns.Count; i++)
                     {
-                        if (CacheInfo.Columns.Contains("Key"))
-                        {
-                            IList<MDataRow> rows = CacheInfo.FindAll("Key like 'db%'");
-                            if (rows != null && rows.Count > 0)
-                            {
-                                foreach (MDataRow row in rows)
-                                {
-                                    for (int i = 1; i < row.Columns.Count; i++)
-                                    {
-                                        if (row[i].IsNullOrEmpty) { continue; }
-                                        count += int.Parse(row[i].StringValue.Split(',')[0].Split('=')[1]);
-                                    }
-                                }
-
-                            }
-                        }
+                        count += int.Parse(row[i].StringValue);
                     }
                 }
                 return count;
@@ -168,29 +146,29 @@ namespace CYQ.Data.Cache
             return client.Delete(key);
         }
 
-
         public override string WorkInfo
         {
             get
             {
                 return client.WorkInfo;
+
             }
         }
 
         public override CacheType CacheType
         {
-            get { return CacheType.Redis; }
+            get { return CacheType.MemCache; }
         }
     }
 
     /// <summary>
     /// 分布式锁
     /// </summary>
-    internal partial class RedisCache
+    internal partial class MemCache
     {
         internal override void SetAll(string key, string value, double cacheMinutes)
         {
-            client.SetAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+            client.SetAll(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
         internal override void RemoveAll(string key)
         {
@@ -198,7 +176,7 @@ namespace CYQ.Data.Cache
         }
         internal override bool AddAll(string key, string value, double cacheMinutes)
         {
-            return client.SetNXAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+            return false;
         }
     }
 }

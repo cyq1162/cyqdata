@@ -5,6 +5,7 @@ using System.Data;
 using CYQ.Data.SQL;
 using CYQ.Data.Orm;
 using CYQ.Data.Tool;
+using CYQ.Data.Json;
 
 namespace CYQ.Data.Table
 {

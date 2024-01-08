@@ -11,14 +11,14 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class IOHelper
     {
-        private static CacheManage _cache = null;
-        private static CacheManage cache
+        private static DistributedCache _cache = null;
+        private static DistributedCache cache
         {
             get
             {
                 if (_cache == null)
                 {
-                    _cache = CacheManage.LocalInstance;
+                    _cache = DistributedCache.Local;
                 }
                 return _cache;
             }
@@ -215,10 +215,24 @@ namespace CYQ.Data.Tool
                 // 释放互斥锁
                 mutex.ReleaseMutex();
             }
-
-
             return true;
+        }
+        /// <summary>
+        /// 检测文件是否存在
+        /// </summary>
+        public static bool Exists(string fileName)
+        {
+            var mutex = GetMutex(fileName);
 
+            try
+            {
+                return File.Exists(fileName);
+            }
+            finally
+            {
+                // 释放互斥锁
+                mutex.ReleaseMutex();
+            }
         }
         /// <summary>
         /// 删除文件
@@ -320,6 +334,81 @@ namespace CYQ.Data.Tool
         {
             TextEncodingDetect detect = new TextEncodingDetect();
             return detect.GetEncoding(bytes);
+        }
+    }
+    /// <summary>
+    /// 文件夹操作
+    /// </summary>
+    public static partial class IOHelper
+    {
+        /// <summary>
+        /// 检测文件夹是否存在
+        /// </summary>
+        public static bool ExistsDirectory(string path)
+        {
+            var mutex = GetMutex(path);
+
+            try
+            {
+                return Directory.Exists(path);
+            }
+            finally
+            {
+                // 释放互斥锁
+                mutex.ReleaseMutex();
+            }
+        }
+        /// <summary>
+        /// 删除文件夹
+        /// </summary>
+        public static bool DeleteDirectory(string path, bool recursive)
+        {
+            var mutex = GetMutex(path);
+
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, recursive);
+                    return true;
+                }
+            }
+            finally
+            {
+                // 释放互斥锁
+                mutex.ReleaseMutex();
+            }
+
+            return false;
+        }
+        /// <summary>
+        /// 获取文件夹文件
+        /// </summary>
+        public static string[] GetFiles(string path)
+        {
+            return GetFiles(path, "*.*", SearchOption.TopDirectoryOnly);
+        }
+        /// <summary>
+        /// 获取文件夹文件
+        /// </summary>
+        public static string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
+        {
+            var mutex = GetMutex(path);
+
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    return Directory.GetFiles(path, searchPattern, searchOption);
+                }
+            }
+            finally
+            {
+                // 释放互斥锁
+                mutex.ReleaseMutex();
+            }
+
+            return null;
         }
     }
 }

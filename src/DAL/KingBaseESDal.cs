@@ -12,7 +12,7 @@ namespace CYQ.Data
     /// </summary>
     internal partial class KingBaseESDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public KingBaseESDal(ConnObject co)
             : base(co)
         {
@@ -51,7 +51,7 @@ namespace CYQ.Data
                     Error.Throw(name);
                 }
                 ass = Assembly.Load(name);
-                CacheManage.LocalInstance.Set("KingBaseESClient_Assembly", ass, 10080);
+                DistributedCache.Local.Set("KingBaseESClient_Assembly", ass, 10080);
             }
             return ass as Assembly;
         }

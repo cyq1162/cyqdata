@@ -11,7 +11,7 @@ namespace CYQ.Data
 {
     internal partial class DB2Dal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public DB2Dal(ConnObject co)
               : base(co)
         { }
@@ -36,13 +36,13 @@ namespace CYQ.Data
         internal static Assembly GetAssembly()
         {
             string key = "DB2Client_Assembly";
-            object ass = CacheManage.LocalInstance.Get(key);
+            object ass = DistributedCache.Local.Get(key);
             if (ass == null)
             {
                 try
                 {
                     ass = Assembly.Load(DllName);
-                    CacheManage.LocalInstance.Set(key, ass, 10080);
+                    DistributedCache.Local.Set(key, ass, 10080);
                 }
                 catch (Exception err)
                 {

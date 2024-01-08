@@ -68,7 +68,7 @@ namespace CYQ.Data.SQL
             using (DalBase dal = DalCreate.CreateDal(conn))
             {
                 info.ConnName = dal.ConnObj.Master.ConnName;
-                info.ConnString = dal.ConnObj.Master.ConnString;
+                info.ConnString = dal.ConnObj.Master.ConnStringOrg;
                 info.DataBaseName = dal.DataBaseName;
                 info.DataBaseType = dal.DataBaseType;
 

@@ -810,6 +810,7 @@ namespace CYQ.Data
                     SetApp("DB.IsKingBaseESLower", value.ToString());
                 }
             }
+
             /// <summary>
             /// Oracle 是否大写模式(默认true)。
             /// 配置项：DB.IsOracleUpper ：true
@@ -825,6 +826,7 @@ namespace CYQ.Data
                     SetApp("DB.IsOracleUpper", value.ToString());
                 }
             }
+
             /// <summary>
             /// DB2 是否大写模式(默认true)。
             /// 配置项：DB.IsDB2Upper ：true
@@ -840,6 +842,7 @@ namespace CYQ.Data
                     SetApp("DB.IsDB2Upper", value.ToString());
                 }
             }
+
             /// <summary>
             /// Firebird 是否大写模式(默认true)。
             /// 配置项：DB.IsFireBirdUpper ：true

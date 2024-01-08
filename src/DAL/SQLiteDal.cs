@@ -9,7 +9,7 @@ namespace CYQ.Data
 {
     internal partial class SQLiteDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public SQLiteDal(ConnObject co)
             : base(co)
         {

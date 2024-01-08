@@ -32,7 +32,7 @@ namespace System.Web
         /// </summary>
         public int Timeout { get; set; }
         List<string> keys = new List<string>();
-        CacheManage cache = CacheManage.LocalInstance;
+        DistributedCache cache = DistributedCache.Local;
         public string SessionID
         {
             get

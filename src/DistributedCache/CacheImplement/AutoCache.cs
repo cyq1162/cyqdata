@@ -1,4 +1,5 @@
 ﻿using CYQ.Data.Aop;
+using CYQ.Data.Json;
 using CYQ.Data.SQL;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
@@ -17,7 +18,7 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal static partial class AutoCache
     {
-        private static CacheManage _AutoCache = CacheManage.Instance;//有可能使用MemCache操作
+        private static DistributedCache _AutoCache = DistributedCache.Instance;//有可能使用MemCache操作
 
         internal static bool GetCache(AopEnum action, AopInfo aopInfo)//Begin
         {
@@ -614,7 +615,7 @@ namespace CYQ.Data.Cache
                         }
                     }
                     string baseKey = GetBaseKey(para, tableName);
-                    string delKey = "DeleteAutoCache:" + baseKey;
+                    string delKey = "AutoCache.Delete:" + baseKey;
                     if (_AutoCache.Contains(delKey))
                     {
                         return false;
@@ -701,7 +702,7 @@ namespace CYQ.Data.Cache
                 foreach (string tableName in tables)
                 {
                     string baseKey = GetBaseKey(para, tableName);
-                    string delKey = "DeleteAutoCache:" + baseKey;
+                    string delKey = "AutoCache.Delete:" + baseKey;
                     if (_AutoCache.Contains(delKey))
                     {
                         //说明此项不可缓存
@@ -950,7 +951,7 @@ namespace CYQ.Data.Cache
         private static Queue<string> removeListForKeyTask = new Queue<string>();
         public static void ReadyForRemove(string baseKey)
         {
-            string delKey = "DeleteAutoCache:" + baseKey;
+            string delKey = "AutoCache.Delete:" + baseKey;
             if (!_AutoCache.Contains(delKey))
             {
                 if (!removeList.Contains(baseKey))

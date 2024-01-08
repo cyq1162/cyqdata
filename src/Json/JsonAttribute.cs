@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CYQ.Data.Tool
+namespace CYQ.Data.Json
 {
     /// <summary>
     /// Json ×ª»»ºöÂÔµÄ×Ö¶Î

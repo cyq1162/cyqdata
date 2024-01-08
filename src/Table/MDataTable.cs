@@ -15,6 +15,8 @@ using CYQ.Data.SQL;
 using CYQ.Data.Tool;
 using System.Collections.Specialized;
 using System.Web;
+using CYQ.Data.Json;
+
 namespace CYQ.Data.Table
 {
 

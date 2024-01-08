@@ -92,27 +92,9 @@
     <Compile Include="DAL\DaMengDal.cs" />
     <Compile Include="DAL\NoSql\NoSqlAction.cs" />
     <Compile Include="Aop\AopPara.cs" />
-    <Compile Include="Cache\AutoCache.cs" />
-    <Compile Include="Cache\CacheManage.cs" />
     <Compile Include="Aop\InterAop.cs" />
     <Compile Include="Aop\AopEnum.cs" />
     <Compile Include="Aop\IAop.cs" />
-    <Compile Include="Cache\LocalCache.cs" />
-    <Compile Include="Cache\MemCache.cs" />
-    <Compile Include="Cache\MemRedis\ClientBase.cs" />
-    <Compile Include="Cache\MemRedis\HostConfigWatch.cs" />
-    <Compile Include="Cache\MemRedis\LogAdapter.cs" />
-    <Compile Include="Cache\MemCache\MemcachedClient.cs" />
-    <Compile Include="Cache\MemRedis\MSocket.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Cache\MemRedis\Serializer.cs" />
-    <Compile Include="Cache\MemRedis\HostServer.cs" />
-    <Compile Include="Cache\MemRedis\HostNode.cs" />
-    <Compile Include="Cache\MemRedis\SocketCreate.cs" />
-    <Compile Include="Cache\RedisCache.cs" />
-    <Compile Include="Cache\Redis\RedisClient.cs" />
-    <Compile Include="Cache\Redis\RedisCommand.cs" />
     <Compile Include="DAL\Conn\ConnBean.cs" />
     <Compile Include="DAL\Conn\ConnConfigWatch.cs" />
     <Compile Include="DAL\Conn\ConnObject.cs" />
@@ -134,11 +116,39 @@
     <Compile Include="DAL\PostgreDal.cs" />
     <Compile Include="DAL\FireBirdDal.cs" />
     <Compile Include="DAL\KingBaseESDal.cs" />
+    <Compile Include="DistributedCache\CacheImplement\AutoCache.cs" />
+    <Compile Include="DistributedCache\CacheImplement\LocalCache.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemCache.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemCache\MemcachedClient.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\ClientBase.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\HostConfigWatch.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\HostNode.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\HostServer.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\LogAdapter.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\MSocket.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\Serializer.cs" />
+    <Compile Include="DistributedCache\CacheImplement\MemRedis\SocketCreate.cs" />
+    <Compile Include="DistributedCache\CacheImplement\RedisCache.cs" />
+    <Compile Include="DistributedCache\CacheImplement\Redis\RedisClient.cs" />
+    <Compile Include="DistributedCache\CacheImplement\Redis\RedisCommand.cs" />
+    <Compile Include="DistributedCache\CacheType.cs" />
+    <Compile Include="DistributedCache\DistributedCache.cs" />
+    <Compile Include="DistributedLock\DistributedLock.cs" />
+    <Compile Include="DistributedLock\LockImplement\FileLock.cs" />
+    <Compile Include="DistributedLock\LockImplement\LocalLock.cs" />
+    <Compile Include="DistributedLock\LockImplement\MemCacheLock.cs" />
+    <Compile Include="DistributedLock\LockImplement\RedisLock.cs" />
+    <Compile Include="DistributedLock\LockType.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
+    <Compile Include="Json\JsonImplement\CharState.cs" />
+    <Compile Include="Json\JsonImplement\EscapeOp.cs" />
+    <Compile Include="Json\JsonAttribute.cs" />
+    <Compile Include="Json\JsonHelper.cs" />
+    <Compile Include="Json\JsonImplement\JsonSplit.cs" />
     <Compile Include="Log\LocalEnvironment.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -186,7 +196,6 @@
     <Compile Include="Tool\IO\IOInfo.cs" />
     <Compile Include="Tool\IO\IOWatch.cs" />
     <Compile Include="Tool\IO\TextEncodingDetect.cs" />
-    <Compile Include="Tool\Json\JsonAttribute.cs" />
     <Compile Include="Tool\MList.cs" />
     <Compile Include="Tool\ReflectTool.cs" />
     <Compile Include="Tool\SysTypeEnum.cs" />
@@ -246,11 +255,7 @@
     <Compile Include="Table\MDataTableFilter.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tool\Json\JsonHelper.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Tool\DB\DBTool.cs" />
-    <Compile Include="Tool\Json\JsonSplit.cs" />
     <Compile Include="Tool\MDictionary.cs" />
     <Compile Include="Tool\StaticTool.cs" />
     <Compile Include="Tool\ThreadBreak.cs" />

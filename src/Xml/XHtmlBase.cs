@@ -54,7 +54,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 缓存对象
         /// </summary>
-        protected CacheManage theCache;
+        protected DistributedCache theCache;
         /// <summary>
         /// Html名称空间
         /// </summary>
@@ -150,7 +150,7 @@ namespace CYQ.Data.Xml
         public XHtmlBase()
         {
             _XmlDocument = new XmlDocument();
-            theCache = CacheManage.LocalInstance;
+            theCache = DistributedCache.Local;
         }
         protected void LoadNameSpace(string nameSpace)
         {

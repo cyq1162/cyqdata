@@ -17,7 +17,7 @@ namespace CYQ.Data
         }
         internal static Assembly GetAssembly()
         {
-            object ass = CacheManage.LocalInstance.Get("Sybase_Assembly");
+            object ass = DistributedCache.Local.Get("Sybase_Assembly");
             if (ass == null)
             {
                 string name = string.Empty;
@@ -35,13 +35,13 @@ namespace CYQ.Data
                     Error.Throw(name);
                 }
                 ass = Assembly.Load(name);
-                CacheManage.LocalInstance.Set("Sybase_Assembly", ass, 10080);
+                DistributedCache.Local.Set("Sybase_Assembly", ass, 10080);
             }
             return ass as Assembly;
         }
         protected override DbProviderFactory GetFactory()
         {
-            object factory = CacheManage.LocalInstance.Get("Sybase_Factory");
+            object factory = DistributedCache.Local.Get("Sybase_Factory");
             if (factory == null)
             {
                 Assembly ass = GetAssembly();
@@ -52,7 +52,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    CacheManage.LocalInstance.Set("Sybase_Factory", factory, 10080);
+                    DistributedCache.Local.Set("Sybase_Factory", factory, 10080);
                 }
 
             }

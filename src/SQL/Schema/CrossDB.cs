@@ -232,7 +232,13 @@ namespace CYQ.Data.SQL
                     string dbHash = ConnBean.GetHashKey(conn);
                     if (dbScheams.ContainsKey(dbHash))
                     {
-                        TableInfo info = dbScheams[dbHash].GetTableInfoByHash(tableHash, type);
+                        var db = dbScheams[dbHash];
+                        TableInfo info = db.GetTableInfoByHash(tableHash, type);
+                        if (info == null && type == "U")
+                        {
+                            db.Reflesh(type);//刷新缓存，重新获取
+                            info = db.GetTableInfoByHash(tableHash, type);
+                        }
                         if (info != null)
                         {
                             return true;
@@ -286,7 +292,11 @@ namespace CYQ.Data.SQL
                     string dbHash = ConnBean.GetHashKey(conn);
                     if (dbScheams.ContainsKey(dbHash))
                     {
-                        return dbScheams[dbHash].Remove(tableHash, type);
+                        if (dbScheams[dbHash].Remove(tableHash, type))
+                        {
+                            dbScheams[dbHash].Reflesh(type);
+                            return true;
+                        }
                     }
                 }
                 else
@@ -296,6 +306,7 @@ namespace CYQ.Data.SQL
                     {
                         if (dbScheams[key].Remove(tableHash, type))
                         {
+                            dbScheams[key].Reflesh(type);
                             return true;
                         }
                     }
@@ -318,6 +329,7 @@ namespace CYQ.Data.SQL
                 string dbHash = ConnBean.GetHashKey(conn);
                 if (dbScheams.ContainsKey(dbHash))
                 {
+                    dbScheams[dbHash].Reflesh(type);
                     return dbScheams[dbHash].Add(tableHash, type, newName);
                 }
 

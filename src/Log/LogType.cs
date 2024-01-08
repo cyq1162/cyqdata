@@ -13,7 +13,7 @@ namespace CYQ.Data
         internal static object Throw(string msg)
         {
 #if DEBUG
-            //return msg;
+           // return msg;
             //#else
 #endif
             throw new Exception("V" + AppConfig.Version + " " + msg);

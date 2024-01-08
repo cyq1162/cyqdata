@@ -8,7 +8,7 @@ using CYQ.Data.SQL;
 using System.Data;
 using CYQ.Data.Aop;
 using CYQ.Data.UI;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data.Orm
 {
@@ -135,7 +135,7 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                if (_Action == null)
+                if (_Action == null && !string.IsNullOrEmpty(_conn))
                 {
                     SetDelayInit(_entityInstance, _tableName, _conn);//延迟加载
                     if (_Action != null && _Action.dalHelper != null)
@@ -144,6 +144,30 @@ namespace CYQ.Data.Orm
                     }
                 }
                 return _Action;
+            }
+        }
+
+        /// <summary>
+        /// Whether to allow manual insertion of ids for self-incrementing primary key identification
+        ///<para>自增主键标识的，是否允许手动插入id</para> 
+        /// </summary>
+        [JsonIgnore]
+        public bool AllowInsertID
+        {
+            get
+            {
+                if (Action != null)
+                {
+                    return Action.AllowInsertID;
+                }
+                return false;
+            }
+            set
+            {
+                if (Action != null)
+                {
+                    Action.AllowInsertID = value;
+                }
             }
         }
         /// <summary>
@@ -158,22 +182,48 @@ namespace CYQ.Data.Orm
         /// </summary>
         public SimpleOrmBase SetPara(object paraName, object value)
         {
-            Action.SetPara(paraName, value);
+            if (Action != null)
+            {
+                Action.SetPara(paraName, value);
+            }
+            return this;
+        }
+        /// <summary>
+        /// 设置参数化
+        /// </summary>
+        public SimpleOrmBase SetPara(object paraName, object value, DbType dbType)
+        {
+            if (Action != null)
+            {
+                Action.SetPara(paraName, value, dbType);
+            }
             return this;
         }
 
-        public SimpleOrmBase SetPara(object paraName, object value, DbType dbType)
+        /// <summary>
+        /// Sets a custom expression for the Update operation.
+        /// <para>为Update操作设置自定义表达式。</para>
+        /// </summary>
+        /// <param name="updateExpression">as："a=a+1"<para>如："a=a+1"</para></param>
+        public SimpleOrmBase SetExpression(string updateExpression)
         {
-            Action.SetPara(paraName, value, dbType);
+            if (Action != null)
+            {
+                Action.SetExpression(updateExpression);
+            }
             return this;
         }
+
         /// <summary>
         /// 设置Aop状态
         /// </summary>
         /// <param name="op"></param>
         public SimpleOrmBase SetAopState(AopOp op)
         {
-            Action.SetAopState(op);
+            if (Action != null)
+            {
+                Action.SetAopState(op);
+            }
             return this;
         }
         /// <summary>
@@ -228,12 +278,12 @@ namespace CYQ.Data.Orm
             typeInfo = entity.GetType();
             try
             {
-                if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(conn))
+                if (string.IsNullOrEmpty(tableName))
                 {
                     string tName, tConn;
                     tName = DBFast.GetTableName(typeInfo, out tConn);
                     if (string.IsNullOrEmpty(tableName)) { tableName = tName; }
-                    if (string.IsNullOrEmpty(conn)) { conn = tConn; }
+                    //if (string.IsNullOrEmpty(conn)) { conn = tConn; }
                 }
                 string errMsg = string.Empty;
                 Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
@@ -251,14 +301,20 @@ namespace CYQ.Data.Orm
                         Log.Write(err, LogType.DataBase);
                         Error.Throw(err);
                     }
-                    if (!DBTool.Exists(tableName, "U", connBean.ConnString))
+                    if (!DBTool.Exists(tableName, "U", connBean.ConnStringOrg))
                     {
-                        DBTool.ErrorMsg = null;
-                        if (!DBTool.CreateTable(tableName, Columns, connBean.ConnString))
+                        lock (tableName)
                         {
-                            string err = "SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg;
-                            Log.Write(err, LogType.DataBase);
-                            Error.Throw(err);
+                            if (!DBTool.Exists(tableName, "U", connBean.ConnStringOrg))
+                            {
+                                DBTool.ErrorMsg = null;
+                                if (!DBTool.CreateTable(tableName, Columns, connBean.ConnStringOrg))
+                                {
+                                    string err = "SimpleOrmBase ：Create Table " + tableName + " Error:" + DBTool.ErrorMsg;
+                                    Log.Write(err, LogType.DataBase);
+                                    Error.Throw(err);
+                                }
+                            }
                         }
                     }
                 }
@@ -338,6 +394,10 @@ namespace CYQ.Data.Orm
         /// <param name="insertID">插入主键</param>
         public bool Insert(bool autoSetValue, InsertOp option, bool insertID)
         {
+            if (Action == null)
+            {
+                return false;
+            }
             if (autoSetValue)
             {
                 Action.UI.GetAll(!insertID);
@@ -378,6 +438,10 @@ namespace CYQ.Data.Orm
         /// <param name="autoSetValue">是否自动获取值[自动从控件获取值,需要先调用this.UI.SetAutoPrefix或this.UI.SetAutoParentControl方法设置控件前缀]</param>
         public bool Update(object where, bool autoSetValue, params string[] updateColumns)
         {
+            if (Action == null)
+            {
+                return false;
+            }
             if (autoSetValue)
             {
                 Action.UI.GetAll(false);
@@ -433,6 +497,10 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public bool Delete(object where, bool isIgnoreDeleteField)
         {
+            if (Action == null)
+            {
+                return false;
+            }
             GetValueFromEntity();
             return Action.Delete(where, isIgnoreDeleteField) && Action.RecordsAffected > 0;
         }
@@ -452,6 +520,10 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Fill(object where)
         {
+            if (Action == null)
+            {
+                return false;
+            }
             bool result = Action.Fill(where);
             if (result)
             {
@@ -466,10 +538,13 @@ namespace CYQ.Data.Orm
         /// <returns></returns>
         public virtual T Get<T>(object where) where T : class
         {
-            bool result = Action.Fill(where);
-            if (result)
+            if (Action != null)
             {
-                return Action.Data.ToEntity<T>();
+                bool result = Action.Fill(where);
+                if (result)
+                {
+                    return Action.Data.ToEntity<T>();
+                }
             }
             return default(T);
         }
@@ -522,17 +597,30 @@ namespace CYQ.Data.Orm
         /// <param name="selectColumns">指定返回的列</param>
         public virtual List<T> Select<T>(int pageIndex, int pageSize, string where, out int count) where T : class
         {
-            // return Action.Select(pageIndex, pageSize, where, out count).ToList<T>();
+            if (Action == null)
+            {
+                count = 0;
+                return null;
+            }
             return Action.SelectList<T>(pageIndex, pageSize, where, out count);
         }
 
         internal MDataTable Select(int pageIndex, int pageSize, string where, out int count)
         {
+            if (Action == null)
+            {
+                count = 0;
+                return null;
+            }
             return Action.Select(pageIndex, pageSize, where, out count);
+
         }
         public SimpleOrmBase SetSelectColumns(params object[] columnNames)
         {
-            Action.SetSelectColumns(columnNames);
+            if (Action != null)
+            {
+                Action.SetSelectColumns(columnNames);
+            }
             return this;
         }
         /// <summary>
@@ -540,6 +628,10 @@ namespace CYQ.Data.Orm
         /// </summary>
         public int GetCount()
         {
+            if (Action == null)
+            {
+                return 0;
+            }
             return Action.GetCount();
         }
         /// <summary>
@@ -547,6 +639,10 @@ namespace CYQ.Data.Orm
         /// </summary>
         public int GetCount(object where)
         {
+            if (Action == null)
+            {
+                return 0;
+            }
             return Action.GetCount(where);
         }
         /// <summary>
@@ -554,6 +650,10 @@ namespace CYQ.Data.Orm
         /// </summary>
         public bool Exists(object where)
         {
+            if (Action == null)
+            {
+                return false;
+            }
             return Action.Exists(where);
         }
 
@@ -569,7 +669,10 @@ namespace CYQ.Data.Orm
         public void LoadFrom(object jsonOrEntity, BreakOp op)
         {
             MDataRow newValueRow = MDataRow.CreateFrom(jsonOrEntity, null, op);
-            Action.Data.LoadFrom(newValueRow);
+            if (Action != null)
+            {
+                Action.Data.LoadFrom(newValueRow);
+            }
             List<PropertyInfo> piList = ReflectTool.GetPropertyList(typeInfo);
             foreach (PropertyInfo item in piList)
             {
@@ -623,7 +726,10 @@ namespace CYQ.Data.Orm
             }
             else
             {
-                Action.Data.SetToEntity(entity, op);
+                if (Action != null)
+                {
+                    Action.Data.SetToEntity(entity, op);
+                }
             }
         }
         private void GetValueFromEntity()
@@ -676,6 +782,7 @@ namespace CYQ.Data.Orm
         {
             get
             {
+                if (Action == null) { return null; }
                 if (Action.UI.IsOnAfterGetFromEventNull)
                 {
                     Action.UI.OnAfterGetFromEvent += new CYQ.Data.UI.MActionUI.OnAfterGetFrom(UI_OnAfterGetFromEvent);

@@ -138,13 +138,13 @@ namespace CYQ.Data
         }
         internal static Assembly GetAssembly()
         {
-            object ass = CacheManage.LocalInstance.Get("OracleClient_Assembly");
+            object ass = DistributedCache.Local.Get("OracleClient_Assembly");
             if (ass == null)
             {
                 //try
                 //{
                 ass = Assembly.Load("Oracle." + ManagedName + "DataAccess");
-                CacheManage.LocalInstance.Set("OracleClient_Assembly", ass, 10080);
+                DistributedCache.Local.Set("OracleClient_Assembly", ass, 10080);
                 //}
                 //catch(Exception err)
                 //{
@@ -160,7 +160,7 @@ namespace CYQ.Data
         {
             if (IsUseOdpNet)
             {
-                object factory = CacheManage.LocalInstance.Get("OracleClient_Factory");
+                object factory = DistributedCache.Local.Get("OracleClient_Factory");
                 if (factory == null)
                 {
 
@@ -172,7 +172,7 @@ namespace CYQ.Data
                     }
                     else
                     {
-                        CacheManage.LocalInstance.Set("OracleClient_Factory", factory, 10080);
+                        DistributedCache.Local.Set("OracleClient_Factory", factory, 10080);
                     }
 
                 }

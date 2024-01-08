@@ -12,7 +12,7 @@ using CYQ.Data.Table;
 using CYQ.Data.Aop;
 using CYQ.Data.Tool;
 using CYQ.Data.UI;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data
 {
@@ -88,7 +88,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.UsingConnBean.ConnString;
+                    return dalHelper.UsingConnBean.ConnStringOrg;
                 }
                 return string.Empty;
             }
@@ -239,24 +239,29 @@ namespace CYQ.Data
                 {
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
-                        if (_Data.Columns.FirstPrimary.IsAutoIncrement)//数字型
+                        foreach (var item in _Data.Columns)
                         {
-                            try
+                            if (item.IsAutoIncrement)
                             {
-                                string lastTable = Convert.ToString(CacheManage.LocalInstance.Get("MAction_identityInsertForSql"));
-                                if (!string.IsNullOrEmpty(lastTable))
+                                try
                                 {
-                                    lastTable = "set identity_insert " + SqlFormat.Keyword(lastTable, dalHelper.DataBaseType) + " off";
-                                    dalHelper.ExeNonQuery(lastTable, false);
+                                    string lastTable = Convert.ToString(DistributedCache.Local.Get("MAction_identityInsertForSql"));
+                                    if (!string.IsNullOrEmpty(lastTable))
+                                    {
+                                        lastTable = "set identity_insert " + SqlFormat.Keyword(lastTable, dalHelper.DataBaseType) + " off";
+                                        dalHelper.ExeNonQuery(lastTable, false);
+                                    }
+                                    _setIdentityResult = dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, dalHelper.DataBaseType) + " on", false) > -2;
+                                    if (_setIdentityResult)
+                                    {
+                                        DistributedCache.Local.Set("MAction_identityInsertForSql", _TableName, 30);
+                                    }
                                 }
-                                _setIdentityResult = dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, dalHelper.DataBaseType) + " on", false) > -2;
-                                if (_setIdentityResult)
+                                catch
                                 {
-                                    CacheManage.LocalInstance.Set("MAction_identityInsertForSql", _TableName, 30);
+
                                 }
-                            }
-                            catch
-                            {
+                                break;
                             }
                         }
                         break;
@@ -276,18 +281,21 @@ namespace CYQ.Data
                 {
                     case DataBaseType.MsSql:
                     case DataBaseType.Sybase:
-                        if (_Data.Columns.FirstPrimary.IsAutoIncrement)//数字型
+                        foreach (var item in _Data.Columns)
                         {
-                            try
+                            if (item.IsAutoIncrement)
                             {
-                                if (dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, DataBaseType.MsSql) + " off", false) > -2)
+                                try
                                 {
-                                    _setIdentityResult = false;
-                                    CacheManage.LocalInstance.Remove("MAction_identityInsertForSql");
+                                    if (dalHelper.ExeNonQuery("set identity_insert " + SqlFormat.Keyword(_TableName, DataBaseType.MsSql) + " off", false) > -2)
+                                    {
+                                        _setIdentityResult = false;
+                                        DistributedCache.Local.Remove("MAction_identityInsertForSql");
+                                    }
                                 }
-                            }
-                            catch
-                            {
+                                catch
+                                {
+                                }
                             }
                         }
                         break;

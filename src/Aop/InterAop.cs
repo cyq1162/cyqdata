@@ -9,7 +9,7 @@ namespace CYQ.Data.Aop
     /// </summary>
     internal class InterAop
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache²Ù×÷
+        private DistributedCache _Cache = DistributedCache.Local;//Cache²Ù×÷
         // private AutoCache cacheAop = new AutoCache();
         private static readonly object lockObj = new object();
         internal bool isHasCache = false;

@@ -12,7 +12,7 @@ namespace CYQ.Data
     /// </summary>
     internal partial class DaMengDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public DaMengDal(ConnObject co)
             : base(co)
         {
@@ -20,7 +20,7 @@ namespace CYQ.Data
         }
         internal static Assembly GetAssembly()
         {
-            object ass = CacheManage.LocalInstance.Get("DaMengClient_Assembly");
+            object ass = DistributedCache.Local.Get("DaMengClient_Assembly");
             if (ass == null)
             {
                 string name = string.Empty;
@@ -34,7 +34,7 @@ namespace CYQ.Data
                     Error.Throw(name);
                 }
                 ass = ass = Assembly.LoadFrom("DmProvider.dll");// Assembly.Load(name);
-                CacheManage.LocalInstance.Set("DaMengClient_Assembly", ass, 10080);
+                DistributedCache.Local.Set("DaMengClient_Assembly", ass, 10080);
 
             }
             return ass as Assembly;

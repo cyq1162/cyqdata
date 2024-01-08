@@ -8,7 +8,7 @@ using CYQ.Data.Aop;
 using System.Collections.Generic;
 using CYQ.Data.Tool;
 using System.Data.Common;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data
 {
@@ -146,7 +146,7 @@ namespace CYQ.Data
             {
                 if (dalHelper != null && dalHelper.Con != null)
                 {
-                    return dalHelper.UsingConnBean.ConnString;
+                    return dalHelper.UsingConnBean.ConnStringOrg;
                 }
                 return string.Empty;
             }

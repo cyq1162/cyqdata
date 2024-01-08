@@ -9,7 +9,7 @@ namespace CYQ.Data
 {
     internal partial class MySQLDal : DalBase
     {
-        private CacheManage _Cache = CacheManage.LocalInstance;//Cache操作
+        private DistributedCache _Cache = DistributedCache.Local;//Cache操作
         public MySQLDal(ConnObject co)
             : base(co)
         {
@@ -17,7 +17,7 @@ namespace CYQ.Data
         }
         internal static Assembly GetAssembly()
         {
-            object ass = CacheManage.LocalInstance.Get("MySqlClient_Assembly");
+            object ass = DistributedCache.Local.Get("MySqlClient_Assembly");
             if (ass == null)
             {
                 if (!File.Exists(AppConst.AssemblyPath + "MySql.Data.dll"))
@@ -41,7 +41,7 @@ namespace CYQ.Data
                 }
                 if (ass != null)
                 {
-                    CacheManage.LocalInstance.Set("MySqlClient_Assembly", ass, 10080);
+                    DistributedCache.Local.Set("MySqlClient_Assembly", ass, 10080);
                 }
                 
             }

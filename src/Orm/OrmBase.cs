@@ -4,7 +4,7 @@ using CYQ.Data.Tool;
 using System.Data;
 using CYQ.Data.UI;
 using CYQ.Data.Aop;
-
+using CYQ.Data.Json;
 
 namespace CYQ.Data.Orm
 {
@@ -362,7 +362,6 @@ namespace CYQ.Data.Orm
         {
             sob.SetPara(paraName, value);
         }
-
         /// <summary>
         /// 清除(SetPara设置的)自定义参数
         /// </summary>
@@ -383,7 +382,7 @@ namespace CYQ.Data.Orm
         /// <param name="updateExpression">例如a字段值自加1："a=a+1"</param>
         public void SetExpression(string updateExpression)
         {
-            Action.SetExpression(updateExpression);
+            sob.SetExpression(updateExpression);
         }
         /// <summary>
         /// UI 操作【WebForm、Winform、WPF等自动取值或赋值】【Orm内部属性】

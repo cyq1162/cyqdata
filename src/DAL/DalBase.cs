@@ -9,6 +9,7 @@ using System.Data.SqlTypes;
 using System.Threading;
 using CYQ.Data.Orm;
 using System.IO;
+using CYQ.Data.Json;
 
 namespace CYQ.Data
 {
@@ -280,7 +281,7 @@ namespace CYQ.Data
             string key = ConnBean.GetHashKey(ConnName) + "_" + DataBaseName + "_" + type + "_" + StaticTool.GetHashKey(sql);
 
             #region 内存短暂缓存检测
-            dic = Cache.CacheManage.LocalInstance.Get(key) as Dictionary<string, string>;//缓存3秒，避免后台线程和代码重复读取
+            dic = Cache.DistributedCache.Local.Get(key) as Dictionary<string, string>;//缓存3秒，避免后台线程和代码重复读取
             if (dic != null) { return dic; }
             #endregion
 
@@ -309,7 +310,7 @@ namespace CYQ.Data
             lock (sql)
             {
                 //锁住后，读取缓存，避免后台线程和代码重复读取
-                dic = Cache.CacheManage.LocalInstance.Get(key) as Dictionary<string, string>;
+                dic = Cache.DistributedCache.Local.Get(key) as Dictionary<string, string>;
                 if (dic != null)
                 {
                     return dic;
@@ -335,7 +336,7 @@ namespace CYQ.Data
                 #region 内存短暂缓存
                 if (dic != null)
                 {
-                    Cache.CacheManage.LocalInstance.Set(key, dic, 0.05);//缓存3秒，避免后台线程和代码重复读取
+                    Cache.DistributedCache.Local.Set(key, dic, 0.05);//缓存3秒，避免后台线程和代码重复读取
                 }
                 #endregion
 
@@ -930,6 +931,7 @@ namespace CYQ.Data
     {
         private DbDataReader ExeDataReaderSQL(string cmdText, bool isProc)
         {
+            RecordsAffected = -2;
             DbDataReader sdr = null;
             ConnBean coSlave = null;
             if (!IsOpenTrans)// && _IsAllowRecordSql
@@ -1051,6 +1053,7 @@ namespace CYQ.Data
         }
         private object ExeScalarSQL(string cmdText, bool isProc)
         {
+            RecordsAffected = -2;
             object returnValue = null;
             ConnBean coSlave = null;
             //mssql 有 insert into ...select 操作。

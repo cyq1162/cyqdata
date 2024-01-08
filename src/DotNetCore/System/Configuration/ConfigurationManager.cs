@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
+using CYQ.Data.Json;
 
 namespace System.Configuration
 {
