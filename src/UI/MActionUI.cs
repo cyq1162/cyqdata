@@ -859,20 +859,21 @@ namespace CYQ.Data.UI
         {
             autoPrefixList.Clear();
             autoPrefixList.Add("");//无前缀（加强easyui交互）
+            autoPrefixList.Add("txt");
+            autoPrefixList.Add("ddl");
+            autoPrefixList.Add("chb");
             string[] items = AppConfig.UI.AutoPrefixs.Split(',');
             if (items != null && items.Length > 0)
             {
                 foreach (string item in items)
                 {
-                    if (!string.IsNullOrEmpty(item))
+                    if (!autoPrefixList.Contains(item))
                     {
                         autoPrefixList.Add(item);
                     }
                 }
             }
-            autoPrefixList.Add("txt");
-            autoPrefixList.Add("ddl");
-            autoPrefixList.Add("chb");
+
             if (_Data != null && !string.IsNullOrEmpty(_Data.TableName) && !_Data.TableName.Contains(" "))
             {
                 autoPrefixList.Add(_Data.TableName + "_");
