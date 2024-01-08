@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using System.Web.UI.WebControls;
 using System.Web.UI;
 using Win = System.Windows.Forms;
@@ -7,12 +6,9 @@ using CYQ.Data.Table;
 using System.Collections.Generic;
 using CYQ.Data.SQL;
 using System.Data;
-using System.ComponentModel;
-using CYQ.Data.Extension;
 using System.Reflection;
 using CYQ.Data.Tool;
 using CYQ.Data.Xml;
-using System.Xml;
 namespace CYQ.Data.UI
 {
     /// <summary>
@@ -868,12 +864,15 @@ namespace CYQ.Data.UI
             {
                 foreach (string item in items)
                 {
-                    autoPrefixList.Add(item);
+                    if (!string.IsNullOrEmpty(item))
+                    {
+                        autoPrefixList.Add(item);
+                    }
                 }
             }
-            //autoPrefixList.Add("txt");
-            //autoPrefixList.Add("ddl");
-            //autoPrefixList.Add("chb");
+            autoPrefixList.Add("txt");
+            autoPrefixList.Add("ddl");
+            autoPrefixList.Add("chb");
             if (_Data != null && !string.IsNullOrEmpty(_Data.TableName) && !_Data.TableName.Contains(" "))
             {
                 autoPrefixList.Add(_Data.TableName + "_");
