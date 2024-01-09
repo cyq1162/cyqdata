@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Diagnostics;
 using CYQ.Data.Cache;
-using Newtonsoft.Json.Linq;
 
 namespace CYQ.Data
 {
