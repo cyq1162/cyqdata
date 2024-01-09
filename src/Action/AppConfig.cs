@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Diagnostics;
 using CYQ.Data.Cache;
+using Newtonsoft.Json.Linq;
 
 namespace CYQ.Data
 {
@@ -143,6 +144,13 @@ namespace CYQ.Data
                 return connConfigs[name];
             }
             ConnectionStringSettings conn = ConfigurationManager.ConnectionStrings[name];
+            if (conn == null)
+            {
+                if (name.IndexOf('.') > 0)
+                {
+                    conn = ConfigurationManager.ConnectionStrings[name.Replace(".", "")];
+                }
+            }
             if (conn != null)
             {
                 string connString = conn.ConnectionString;
