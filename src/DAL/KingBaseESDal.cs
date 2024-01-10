@@ -41,7 +41,7 @@ namespace CYQ.Data
             if (ass == null)
             {
                 string name = string.Empty;
-                if (File.Exists(AppConst.AssemblyPath + "FirebirdSql.Data.FirebirdClient.dll"))
+                if (File.Exists(AppConst.AssemblyPath + "Kdbndp.dll"))
                 {
                     name = "Kdbndp";
                 }
