@@ -16,6 +16,7 @@ using CYQ.Data.Tool;
 using System.Collections.Specialized;
 using System.Web;
 using CYQ.Data.Json;
+using CYQ.Data.Orm;
 
 namespace CYQ.Data.Table
 {
@@ -657,24 +658,26 @@ namespace CYQ.Data.Table
             List<T> list = new List<T>();
             if (Rows != null && Rows.Count > 0)
             {
-                Type t = typeof(T);
-                bool isOrmBase = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
-                if (((Rows.Count > 10 && useEmit.Length == 0) || (useEmit.Length > 0 && useEmit[0])) && !isOrmBase)//远程代理实体的属性会变，无法用Emit
+                foreach (MDataRow row in Rows)
                 {
-                    FastToT<T>.EmitHandle emit = FastToT<T>.Create(this.Columns);
-                    foreach (MDataRow row in Rows)
-                    {
-                        list.Add(emit(row));
-                    }
+                    list.Add(row.ToEntity<T>());
                 }
-                else
-                {
-                    foreach (MDataRow row in Rows)
-                    {
-                        list.Add(row.ToEntity<T>(isOrmBase));
-                    }
 
-                }
+                //Type t = typeof(T);
+
+                //if (((Rows.Count > 10 && useEmit.Length == 0) || (useEmit.Length > 0 && useEmit[0])) && !isOrmBase)//远程代理实体的属性会变，无法用Emit
+                //{
+                //    FastToT.EmitHandle emit = FastToT.Create(typeof(T), this.Columns);
+                //    foreach (MDataRow row in Rows)
+                //    {
+                //        list.Add((T)emit(row));
+                //    }
+                //}
+                //else
+                //{
+                   
+
+                //}
             }
             return list;
         }

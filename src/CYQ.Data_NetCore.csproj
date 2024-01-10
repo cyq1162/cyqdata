@@ -1,39 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>CYQ.Data</AssemblyName>
     <RootNamespace>CYQ.Data</RootNamespace>
-    <PackageId>cyqdatacore</PackageId>
-    <Version>5.8.5.0</Version>
     <Authors>路过秋天</Authors>
     <Description>cyq.data is a high-performance and the most powerful orm.（.Net 最好用的ORM数据层框架，木有之一，低调持续更新15年！支持.Net Framework 2.0+，支持.Net Core 2.1+，自带数据库读写分离，分布式缓存，分布式锁等）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。【开源：https://github.com/cyq1162/cyqdata】</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2024-01-08）</Company>
+    <Company>路过秋天 （2024-01-10）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageReleaseNotes>646：修正：AppConfig.GetConn 方法【解决NetCore下提示找不到Conn项的问题】。(2021-04-20)【V5.8.3.9】【性能提升版本】
-647：修正：MDataTable.AcceptChange 跨库批量事务的问题。(2021-05-31)
-648：优化：MDataRow ToTable(true)方法新增State值状态列。(2021-06-01)
-649：修正：CrossDB.Exists 修正判断问题。(2021-06-08)
-650：优化：AppConfig.DB.DefaultConn 赋值后，忽略（复盖)默认配置的“Conn"数据库链接项。(2021-06-16、2021-06-23)
-651：优化：CrossDB.Remove、CrossDB.Add判断问题。(2021-06-16、2021-06-30)
-652：优化：Orm相关（DBFast、SimpleOrmBase的Select&lt;T&gt;提升性能（原DataReader=&gt;MDataTable=&gt;List&lt;T&gt; 调整为：DataReader=&gt;List&lt;T&gt;，节省中间过程）(2021-06-16)
-653：优化：DBSchema 首次初始结构缓存时，对未配置架构缓存外围时，将【视图、存储过程、版本号】部分调整为延迟加载。(2021-06-17)
-654：优化：AutoCache 自动缓存机制，提升单机（LocalCache状态）时的性能。(2021-06-17)
-655：优化：JsonHelper Split、GetValue 两个方法，提升性能。(2021-06-17)
-656：优化：DataType.GetGroup 返回类型由int调整为DataGroupType枚举类型。(2021-06-18)
-657：优化：JsonSplit 优化GetValueLength方法，提升：IsJson、Split 两个方法性能。(2021-06-18)
-658：优化：Table 系在Json的显示字段上小调整、【JsonIgnoreAttribute、JsonEnumToStringAttribute、JsonEnumToDescriptionAttribute】名称空间提升到根节点。(2021-06-18)
-659：优化：JsonHelper.ToJson方法：对实体List&lt;T&gt;时，提升性能，去掉中间转换环节。(2021-06-23、2021-06-24)
-660：优化：JsonHelper.ToList&lt;T&gt;方法：去掉中间转换环节。(2021-06-28)
-661：优化：JsonHelper.ToList&lt;T&gt;(string json)方法：增加处理对成员变量（FiledInfo）赋值。(2021-06-30)【V5.8.4.0】
-662：优化：实体转MDataRow、MDataTable、Json时：成员变量也加入列头、或Json值的输出。(2021-06-30、2021-07-01)</PackageReleaseNotes>
-    <PackageTags>CYQ.Data ORM ADO.NET</PackageTags>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.9.0.0</AssemblyVersion>
-    <FileVersion>5.9.0.0</FileVersion>
+    <AssemblyVersion>5.9.0.2</AssemblyVersion>
+    <FileVersion>5.9.0.2</FileVersion>
+	 <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

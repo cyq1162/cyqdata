@@ -968,46 +968,45 @@ namespace CYQ.Data.Table
             return IOHelper.Write(fileName, ToJson(op));
         }
         */
+        /// <summary>
+        /// 转实体类
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <returns></returns>
         public T ToEntity<T>()
         {
             Type t = typeof(T);
-            SysType sysType = ReflectTool.GetSystemType(ref t);
-            bool isOrmBase = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
-            return ToEntity<T>(isOrmBase || sysType != SysType.Custom);
+            return (T)ToEntity(t);
         }
-        /// <summary>
-        /// 转成实体
-        /// </summary>
-        /// <typeparam name="T">实体名称</typeparam>
-        internal T ToEntity<T>(bool tIsOrmBase)
-        {
-            if (tIsOrmBase)
-            {
-                return (T)ToEntity(typeof(T));
-            }
-            else
-            {
-                FastToT<T>.EmitHandle emit = FastToT<T>.Create();
-                return emit(this);
-            }
-        }
+
         internal object ToEntity(Type t)
         {
             if (t.Name == "MDataRow")
             {
                 return this;
             }
-            return GetObj(t, this);
-            //switch (ReflectTool.GetSystemType(ref t))
-            //{
-            //    case SysType.Base:
-            //        return ConvertTool.ChangeType(this[0].Value, t);
 
-            //}
-            ////return FastToT.Create(t)(this);
-            //object obj = Activator.CreateInstance(t);
-            //SetToEntity(ref obj, this);
-            //return obj;
+#if NETSTANDARD1_0_OR_GREATER
+
+            return GetObj(t, this);//标准库无法用Emit
+#else
+           
+            bool isOrmBaseOrNotCustom = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
+           
+            if (!isOrmBaseOrNotCustom)
+            {
+                isOrmBaseOrNotCustom = ReflectTool.GetSystemType(ref t) != SysType.Custom;
+            }
+            if (isOrmBaseOrNotCustom)
+            {
+                return GetObj(t, this);//远程代理实体的属性会变，无法用Emit，如果不是实体类，也无法用Emit
+            }
+            else
+            {
+                return FastToT.Create(t, this.Columns)(this);
+            }
+#endif
+
         }
 
         private object GetValue(MDataRow row, Type type)

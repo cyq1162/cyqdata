@@ -7,44 +7,69 @@ using CYQ.Data.Table;
 
 namespace CYQ.Data.Tool
 {
-    internal class FastToT<T>
-    {
-        public delegate T EmitHandle(MDataRow row);
-        private static EmitHandle emit;
-        public static EmitHandle Create()
-        {
-            if (emit == null)
-            {
-                emit = Create(null);
-            }
-            return emit;
-        }
-        public static EmitHandle Create(MDataColumn schema)
-        {
-            DynamicMethod method = FastToT.CreateMethod(typeof(T), schema);
-            return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
-        }
-    }
+    //internal class FastToT<T> : FastToT
+    //{
+    //    private static MDictionary<string, EmitTHandle> emitTHandleDic = new MDictionary<string, EmitTHandle>();
+    //    public delegate T EmitTHandle(MDataRow row);
+    //    public static EmitTHandle Create()
+    //    {
+    //        return Create(null);
+    //    }
+    //    public static EmitTHandle Create(MDataColumn schema)
+    //    {
+    //        Type t = typeof(T);
+    //        string key = t.FullName + (schema == null ? "" : schema.GetHashCode().ToString());
+    //        if (emitTHandleDic.ContainsKey(key))
+    //        {
+    //            return emitTHandleDic[key];
+    //        }
+    //        else
+    //        {
+    //            DynamicMethod method = CreateMethod(t, schema);
+    //            EmitTHandle handle = method.CreateDelegate(typeof(EmitTHandle)) as EmitTHandle;
+    //            emitTHandleDic.Add(key, handle);
+    //            return handle;
+    //        }
+
+    //    }
+    //}
     /// <summary>
     /// 快速转换类[数据量越大[500条起],性能越高]
     /// </summary>
     internal class FastToT
     {
+       
+        private static MDictionary<string, EmitHandle> emitHandleDic = new MDictionary<string, EmitHandle>();
         public delegate object EmitHandle(MDataRow row);
-        private static EmitHandle emit;
-        public static EmitHandle Create(Type tType)
+        public static EmitHandle Create(Type t)
         {
-            if (emit == null)
+            return Create(t, null);
+        }
+        public static EmitHandle Create(Type t, MDataColumn schema)
+        {
+            string key = t.FullName + (schema == null ? "" : schema.GetHashCode().ToString());
+            if (emitHandleDic.ContainsKey(key))
             {
-                emit = Create(tType, null);
+                return emitHandleDic[key];
             }
-            return emit;
+            else
+            {
+                DynamicMethod method = CreateMethod(t, schema);
+                EmitHandle handle = method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
+                emitHandleDic.Add(key, handle);
+                return handle;
+            }
+
+            //DynamicMethod method = CreateMethod(t, schema);
+            //return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
         }
-        public static EmitHandle Create(Type tType, MDataColumn schema)
-        {
-            DynamicMethod method = CreateMethod(tType, schema);
-            return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
-        }
+
+
+
+        /// <summary>
+        /// 存储动态方法
+        /// </summary>
+        private static MDictionary<string, DynamicMethod> dynamicMethodDic = new MDictionary<string, DynamicMethod>();
         /// <summary>
         /// 构建一个ORM实体转换器（第1次构建有一定开销时间）
         /// </summary>
@@ -52,7 +77,14 @@ namespace CYQ.Data.Tool
         /// <param name="schema">表数据架构</param>
         internal static DynamicMethod CreateMethod(Type tType, MDataColumn schema)
         {
-            //Type tType = typeof(T);
+            string key = tType.FullName + (schema == null ? "" : schema.GetHashCode().ToString());
+            if (dynamicMethodDic.ContainsKey(key))
+            {
+                return dynamicMethodDic[key];
+            }
+
+            #region 创建动态方法
+
             Type rowType = typeof(MDataRow);
             Type toolType = typeof(ConvertTool);
             DynamicMethod method = new DynamicMethod("RowToT", tType, new Type[] { rowType }, tType);
@@ -161,6 +193,9 @@ namespace CYQ.Data.Tool
 
             gen.Emit(OpCodes.Ldloc_0);
             gen.Emit(OpCodes.Ret);
+            #endregion
+
+            dynamicMethodDic.Add(key, method);
             return method;
             //return method.CreateDelegate(typeof(EmitHandle)) as EmitHandle;
         }

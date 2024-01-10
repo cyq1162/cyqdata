@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyDescription("cyq.data is a high-performance and the most powerful orm.（.Net 最好用的ORM数据层框架，木有之一，低调持续更新15年！支持.Net Framework 2.0+，支持.Net Core 2.1+，自带数据库读写分离，分布式缓存，分布式锁等）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。【开源：https://github.com/cyq1162/cyqdata】")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("路过秋天 （2024-01-08）")]
+[assembly: AssemblyCompany("路过秋天 （2024-01-10）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2110")]
 [assembly: AssemblyTrademark("CYQ.Data")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有这些值，也可以使用“修订号”和“内部版本号”的默认值，
 // 方法是按如下所示使用“*”:
-[assembly: AssemblyVersion("5.9.0.0")]
-[assembly: AssemblyFileVersion("5.9.0.0")]
+[assembly: AssemblyVersion("5.9.0.2")]
+[assembly: AssemblyFileVersion("5.9.0.2")]
