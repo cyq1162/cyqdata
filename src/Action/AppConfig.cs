@@ -350,12 +350,73 @@ namespace CYQ.Data
     public static partial class AppConfig
     {
         #region Web相关
+        private static object lockObj = new object();
+        private static bool? _IsDebugMode;
+        /// <summary>
+        /// 检查当前正在运行的主程序是否是在 Debug 配置下编译生成的。
+        /// </summary>
+        public static bool IsDebugMode
+        {
+            get
+            {
+                if (_IsDebugMode == null)
+                {
+                    lock (lockObj)
+                    {
+                        if (_IsDebugMode == null)
+                        {
+                            var assembly = Assembly.GetEntryAssembly();
+                            if (assembly == null)
+                            {
+                                Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
+                                foreach (Assembly ass in assList)
+                                {
+                                    if (ass.GlobalAssemblyCache || ass.GetName().GetPublicKeyToken().Length > 0)
+                                    {
+                                        //去掉系统dll
+                                        continue;
+                                    }
+                                    object[] das = assembly.GetCustomAttributes(typeof(DebuggableAttribute), true);
+                                    if (das.Length > 0)
+                                    {
+                                        DebuggableAttribute da = das[0] as DebuggableAttribute;
+                                        if ((da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue)
+                                        {
+                                            _IsDebugMode = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                object[] das = assembly.GetCustomAttributes(typeof(DebuggableAttribute), true);
+                                if (das.Length > 0)
+                                {
+                                    DebuggableAttribute da = das[0] as DebuggableAttribute;
+                                    _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
+                                }
+                            }
+                            if (_IsDebugMode == null) { _IsDebugMode = false; }
+                        }
+                    }
 
-        [Conditional("DEBUG")]
+                }
+
+                return _IsDebugMode.Value;
+            }
+        }
+
+
+        //[Conditional("DEBUG")]
         private static void SetDebugRootPath(ref string path)
         {
-            path = Environment.CurrentDirectory;
-            path = path + (path[0] == '/' ? '/' : '\\');
+            if (IsDebugMode)
+            {
+                bool isdebug = IsDebugMode;
+                path = Environment.CurrentDirectory;
+                path = path + (path[0] == '/' ? '/' : '\\');
+            }
         }
         private static string _WebRootPath;
         //内部变量
