@@ -380,7 +380,7 @@ namespace CYQ.Data
                                     if (das.Length > 0)
                                     {
                                         DebuggableAttribute da = das[0] as DebuggableAttribute;
-                                        if ((da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue)
+                                        if (da.IsJITTrackingEnabled)
                                         {
                                             _IsDebugMode = true;
                                             break;
@@ -394,7 +394,8 @@ namespace CYQ.Data
                                 if (das.Length > 0)
                                 {
                                     DebuggableAttribute da = das[0] as DebuggableAttribute;
-                                    _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
+                                    _IsDebugMode = da.IsJITTrackingEnabled;
+                                   // _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
                                 }
                             }
                             if (_IsDebugMode == null) { _IsDebugMode = false; }

@@ -70,7 +70,7 @@ namespace CYQ.Data
                         var ips = item.GetIPProperties().UnicastAddresses;
                         foreach (var ip in ips)
                         {
-                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip.Address))
+                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip.Address) && ip.DuplicateAddressDetectionState == DuplicateAddressDetectionState.Preferred)
                             {
                                 string ipAddr = ip.Address.ToString();
                                 if (ipAddr.EndsWith(".1") || ipAddr.Contains(":")) // 忽略路由和网卡地址。

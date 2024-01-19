@@ -73,7 +73,7 @@ namespace CYQ.Data.Orm
         /// <param name="entityInstance">实体对象,一般写:this</param>
         protected void SetInit(Object entityInstance)
         {
-            sob.SetInit2(entityInstance, null, AppConfig.DB.DefaultConn);
+            sob.SetInit2(entityInstance, null, null);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -82,7 +82,7 @@ namespace CYQ.Data.Orm
         /// <param name="tableName">表名,如:Users</param>
         protected void SetInit(Object entityInstance, string tableName)
         {
-            sob.SetInit2(entityInstance, tableName, AppConfig.DB.DefaultConn);
+            sob.SetInit2(entityInstance, tableName, null);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]

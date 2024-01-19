@@ -135,7 +135,8 @@ namespace CYQ.Data.Orm
         {
             get
             {
-                if (_Action == null && !string.IsNullOrEmpty(_conn))
+                //conn 为 null，则自动取值，为空则人为传空，不处理。
+                if (_Action == null && _conn != "")
                 {
                     SetDelayInit(_entityInstance, _tableName, _conn);//延迟加载
                     if (_Action != null && _Action.dalHelper != null)
@@ -232,7 +233,7 @@ namespace CYQ.Data.Orm
         /// <param name="entityInstance">实体对象,一般写:this</param>
         protected void SetInit(Object entityInstance)
         {
-            SetInit(entityInstance, null, AppConfig.DB.DefaultConn);
+            SetInit(entityInstance, null, null);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -241,7 +242,7 @@ namespace CYQ.Data.Orm
         /// <param name="tableName">表名,如:Users</param>
         protected void SetInit(Object entityInstance, string tableName)
         {
-            SetInit(entityInstance, tableName, AppConfig.DB.DefaultConn);
+            SetInit(entityInstance, tableName, null);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -256,8 +257,8 @@ namespace CYQ.Data.Orm
             _conn = conn;
         }
         private object _entityInstance;
-        private string _tableName = string.Empty;
-        private string _conn = string.Empty;
+        private string _tableName = null;
+        private string _conn = null;
 
         /// <summary>
         /// 将原有的初始化改造成延时加载。
@@ -278,12 +279,12 @@ namespace CYQ.Data.Orm
             typeInfo = entity.GetType();
             try
             {
-                if (string.IsNullOrEmpty(tableName))
+                if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(conn))
                 {
                     string tName, tConn;
                     tName = DBFast.GetTableName(typeInfo, out tConn);
                     if (string.IsNullOrEmpty(tableName)) { tableName = tName; }
-                    //if (string.IsNullOrEmpty(conn)) { conn = tConn; }
+                    if (string.IsNullOrEmpty(conn)) { conn = tConn; }
                 }
                 string errMsg = string.Empty;
                 Columns = DBTool.GetColumns(tableName, conn, out errMsg);//内部链接错误时抛异常。
@@ -809,6 +810,7 @@ namespace CYQ.Data.Orm
             if (_Action != null && !_Action.IsTransation)//ORM的事务，由全局控制，不在这里释放链接。
             {
                 _Action.Dispose();
+                _Action = null;
             }
         }
 
