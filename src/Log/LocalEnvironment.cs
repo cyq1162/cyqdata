@@ -64,14 +64,31 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HostIP))
                 {
+                    bool isSupportDADS = true;
                     var nets = NetworkInterface.GetAllNetworkInterfaces();
                     foreach (var item in nets)
                     {
                         var ips = item.GetIPProperties().UnicastAddresses;
                         foreach (var ip in ips)
                         {
-                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip.Address) && ip.DuplicateAddressDetectionState == DuplicateAddressDetectionState.Preferred)
+                            if (ip.Address.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip.Address))
                             {
+                                try
+                                {
+                                    if (isSupportDADS)
+                                    {
+                                        if (ip.DuplicateAddressDetectionState != DuplicateAddressDetectionState.Preferred)
+                                        {
+                                            continue;
+                                        }
+                                        
+                                    }
+                                }
+                                catch (PlatformNotSupportedException err)
+                                {
+                                    isSupportDADS = false;
+                                }
+
                                 string ipAddr = ip.Address.ToString();
                                 if (ipAddr.EndsWith(".1") || ipAddr.Contains(":")) // 忽略路由和网卡地址。
                                 {
@@ -83,7 +100,7 @@ namespace CYQ.Data
                         }
                     }
                 }
-                return _HostIP ?? HostName;
+                return _HostIP ?? "127.0.0.1";
             }
         }
 
