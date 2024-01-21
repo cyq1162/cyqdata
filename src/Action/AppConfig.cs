@@ -19,6 +19,17 @@ namespace CYQ.Data
     /// </summary>
     public static partial class AppConfig
     {
+        //public delegate void OnAppChange(string key, string value);
+        //public delegate void OnConnChange(string name, string connectionString);
+        ///// <summary>
+        ///// SetApp 方法事件监听
+        ///// </summary>
+        //public static event OnAppChange OnAppChangeEvent;
+        ///// <summary>
+        ///// SetConn 方法事件监听
+        ///// </summary>
+        //public static event OnConnChange OnConnChangeEvent;
+
         static AppConfig()
         {
             //这个比较常用，只好把这里当成应用程序入口最早的调用处
@@ -38,6 +49,7 @@ namespace CYQ.Data
         public static bool SetApp(string key, string value)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
+            //if (OnAppChangeEvent != null) { OnAppChangeEvent(key, value); }
             if (value == null)
             {
                 return appConfigs.Remove(key);
@@ -50,7 +62,7 @@ namespace CYQ.Data
             {
                 appConfigs.Add(key, value);
             }
-
+            
             return true;
         }
         /// <summary>
@@ -199,6 +211,7 @@ namespace CYQ.Data
         public static bool SetConn(string name, string connectionString)
         {
             if (string.IsNullOrEmpty(name)) { return false; }
+            //if (OnConnChangeEvent != null) { OnConnChangeEvent(name, connectionString); }
             if (connectionString == null)
             {
                 return connConfigs.Remove(name);
@@ -376,7 +389,7 @@ namespace CYQ.Data
                                         //去掉系统dll
                                         continue;
                                     }
-                                    object[] das = assembly.GetCustomAttributes(typeof(DebuggableAttribute), true);
+                                    object[] das = ass.GetCustomAttributes(typeof(DebuggableAttribute), true);
                                     if (das.Length > 0)
                                     {
                                         DebuggableAttribute da = das[0] as DebuggableAttribute;
@@ -1617,9 +1630,7 @@ namespace CYQ.Data
                     string value = GetApp("Debug.IsEnable");
                     if (!string.IsNullOrEmpty(value))
                     {
-                        bool result;
-                        bool.TryParse(value, out result);
-                        return result;
+                        return ConvertTool.ChangeType<bool>(value);
                     }
                     return GetAppBool("OpenDebugInfo", false);//兼容旧配置
                 }

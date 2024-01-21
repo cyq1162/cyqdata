@@ -5,7 +5,7 @@ using System.Text;
 
 namespace CYQ.Data.Lock
 {
-   
+
     /// <summary>
     /// 分布式锁
     /// </summary>
@@ -25,7 +25,7 @@ namespace CYQ.Data.Lock
                         return RedisLock.Instance;
                     case CacheType.MemCache:
                         return MemCacheLock.Instance;
-                        default:
+                    default:
                         return RedisLock.Local;
                 }
             }
@@ -107,9 +107,23 @@ namespace CYQ.Data.Lock
         /// </summary>
         /// <param name="key">key</param>
         public abstract void UnLock(string key);
+
+        /// <summary>
+        /// 幂等性
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <returns></returns>
+        public abstract bool Idempotent(string key);
+        /// <summary>
+        /// 幂等性
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="keepMinutes">数据保留时间，单位分钟，0 则永久。</param>
+        /// <returns></returns>
+        public abstract bool Idempotent(string key,double keepMinutes);
     }
 
-    
+
 
 
 

@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace CYQ.Data.Lock
 {
-    internal class FileLock : DistributedLock
+    internal partial class FileLock : DistributedLock
     {
         private static readonly FileLock _instance = new FileLock();
         string folder = string.Empty;
@@ -199,6 +199,21 @@ namespace CYQ.Data.Lock
             return false;
 
         }
+
+
+
+
         #endregion
+    }
+    internal partial class FileLock
+    {
+        public override bool Idempotent(string key)
+        {
+            return Idempotent("Idempotent_" + key, 0);
+        }
+        public override bool Idempotent(string key, double keepMinutes)
+        {
+            return IsLockOK("Idempotent_" + key);
+        }
     }
 }

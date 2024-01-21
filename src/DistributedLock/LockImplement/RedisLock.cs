@@ -23,6 +23,7 @@ namespace CYQ.Data.Lock
             }
         }
 
+
         public override bool Lock(string key, int millisecondsTimeout)
         {
             return DistributedCache.Redis.Lock(key, millisecondsTimeout);
@@ -31,6 +32,16 @@ namespace CYQ.Data.Lock
         public override void UnLock(string key)
         {
             DistributedCache.Redis.UnLock(key);
+        }
+
+        public override bool Idempotent(string key)
+        {
+            return Idempotent(key, 0);
+        }
+
+        public override bool Idempotent(string key, double keepMinutes)
+        {
+            return DistributedCache.Redis.AddAll("Idempotent_" + key, "1", keepMinutes);
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using CYQ.Data.Cache;
 
-
-
 namespace CYQ.Data.Lock
 {
     internal class LocalLock : DistributedLock
@@ -31,6 +29,16 @@ namespace CYQ.Data.Lock
         public override void UnLock(string key)
         {
             DistributedCache.Local.UnLock(key);
+        }
+
+        public override bool Idempotent(string key)
+        {
+            return Idempotent(key, 0);
+        }
+
+        public override bool Idempotent(string key, double keepMinutes)
+        {
+            return DistributedLock.File.Idempotent(key);
         }
     }
 }
