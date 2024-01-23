@@ -62,7 +62,7 @@ namespace CYQ.Data
             {
                 appConfigs.Add(key, value);
             }
-            
+
             return true;
         }
         /// <summary>
@@ -408,7 +408,7 @@ namespace CYQ.Data
                                 {
                                     DebuggableAttribute da = das[0] as DebuggableAttribute;
                                     _IsDebugMode = da.IsJITTrackingEnabled;
-                                   // _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
+                                    // _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
                                 }
                             }
                             if (_IsDebugMode == null) { _IsDebugMode = false; }
@@ -432,6 +432,7 @@ namespace CYQ.Data
                 path = path + (path[0] == '/' ? '/' : '\\');
             }
         }
+        private static readonly object lockPathObj = new object();
         private static string _WebRootPath;
         //内部变量
         /// <summary>
@@ -446,20 +447,26 @@ namespace CYQ.Data
                 {
                     if (IsNetCore)
                     {
-                        string path = AppDomain.CurrentDomain.BaseDirectory;
-                        SetDebugRootPath(ref path);
-                        path = path + "wwwroot";
-                        if (path[0] == '/')
+                        lock (lockPathObj)
                         {
-                            path = path + "/";
-                        }
-                        else
-                        {
-                            path = path + "\\";
-                        }
-                        if (Directory.Exists(path))
-                        {
-                            _WebRootPath = path;
+                            if (string.IsNullOrEmpty(_WebRootPath))
+                            {
+                                string path = AppDomain.CurrentDomain.BaseDirectory;
+                                SetDebugRootPath(ref path);
+                                path = path + "wwwroot";
+                                if (path[0] == '/')
+                                {
+                                    path = path + "/";
+                                }
+                                else
+                                {
+                                    path = path + "\\";
+                                }
+                                if (Directory.Exists(path) || IsWeb)
+                                {
+                                    _WebRootPath = path;
+                                }
+                            }
                         }
                     }
                     if (string.IsNullOrEmpty(_WebRootPath))
@@ -479,6 +486,7 @@ namespace CYQ.Data
                 }
             }
         }
+        private static readonly object lockWebObj = new object();
         private static int webState = -1;
         /// <summary>
         /// 当前运行环境是否Web应用。
@@ -489,13 +497,35 @@ namespace CYQ.Data
             {
                 if (webState == -1)
                 {
-                    if (HttpContext.Current != null || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "web.config")
-                       || (WebRootPath.Contains("wwwroot"))
-                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Taurus.Core.dll")
-                       || File.Exists(AppDomain.CurrentDomain.BaseDirectory + "Aries.Core.dll"))
+                    lock (lockWebObj)
                     {
-                        webState = 1;
+                        if (webState == -1)
+                        {
+                            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+                            bool isWeb = File.Exists(basePath + "web.config");
+                            if (!isWeb && IsNetCore)
+                            {
+                                isWeb = File.Exists(basePath + "Taurus.Core.dll") || File.Exists(basePath + "Aries.Core.dll") || Directory.Exists("wwwroot");
+                                if (!isWeb)
+                                {
+                                    Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
+                                    foreach (Assembly ass in assList)
+                                    {
+                                        if (isWeb) { break; }
+                                        switch (ass.GetName().Name)
+                                        {
+                                            case "Microsoft.AspNetCore.Server.Kestrel":
+                                            case "Microsoft.AspNetCore.Server.IIS":
+                                                isWeb = true;
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                            webState = isWeb ? 1 : 0;
+                        }
                     }
+
                 }
                 return webState == 1;
             }
@@ -525,35 +555,7 @@ namespace CYQ.Data
                 return null;
             }
         }
-        //读配置文件时会修改此值。
-        private static int _NetCoreState = -1;
-        /// <summary>
-        /// 当前是否.NET Core环境。
-        /// </summary>
-        public static bool IsNetCore
-        {
-            get
-            {
-                if (_NetCoreState == -1)
-                {
-                    Assembly ass = Assembly.GetExecutingAssembly();
-                    foreach (var item in ass.GetCustomAttributes(typeof(AssemblyTitleAttribute), false))
-                    {
-                        if (((AssemblyTitleAttribute)item).Title.Contains("Core"))
-                        {
-                            _NetCoreState = 1;
-                            break;
-                        }
-                    }
-                    if (_NetCoreState != 1)
-                    {
-                        _NetCoreState = 0;
-                    }
 
-                }
-                return _NetCoreState == 1;
-            }
-        }
         #endregion
     }
     public static partial class AppConfig
@@ -1018,7 +1020,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    return GetApp("DB.SchemaMapPath", IsWeb ? "/App_Data/schema" : "");
+                    return GetApp("DB.SchemaMapPath", (IsWeb && !IsDebugMode) ? "/App_Data/schema" : "");
                 }
                 set
                 {

@@ -67,7 +67,11 @@ namespace CYQ.Data
                     bool isSupportDADS = true;
                     var nets = NetworkInterface.GetAllNetworkInterfaces();
                     foreach (var item in nets)
-                    {
+                    { // Ìø¹ýÐéÄâ»úÍø¿¨
+                        if (item.Description.StartsWith("VirtualBox ") || item.Description.StartsWith("Hyper-V") || item.Description.StartsWith("VMware ") || item.Description.StartsWith("Bluetooth "))
+                        {
+                            continue;
+                        }
                         var ips = item.GetIPProperties().UnicastAddresses;
                         foreach (var ip in ips)
                         {

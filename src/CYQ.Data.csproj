@@ -11,7 +11,7 @@
     <RootNamespace>CYQ.Data</RootNamespace>
     <AssemblyName>CYQ.Data</AssemblyName>
     <SignAssembly>false</SignAssembly>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -139,6 +139,7 @@
     <Compile Include="DistributedLock\LockImplement\MemCacheLock.cs" />
     <Compile Include="DistributedLock\LockImplement\RedisLock.cs" />
     <Compile Include="DistributedLock\LockType.cs" />
+    <Compile Include="DotNet\Action\AppConfig.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>
