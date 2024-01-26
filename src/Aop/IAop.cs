@@ -13,16 +13,12 @@ namespace CYQ.Data.Aop
         /// 方法调用之前被调用
         /// </summary>
         /// <param name="action">方法名称</param>
-        /// <param name="objName">表名/存储过程名/视图名/sql语句</param>
-        /// <param name="result">方法中可能返回的参数</param>
         /// <param name="aopInfo">附带分支参数</param>
         AopResult Begin(AopEnum action, AopInfo aopInfo);
         /// <summary>
         /// 方法调用之后被调用
         /// </summary>
         /// <param name="action">方法名称</param>
-        /// <param name="success">调用是否成功</param>
-        /// <param name="result">一般调用后的id[或MDataRow/MDataTable]</param>
         /// <param name="aopInfo">附带分支参数</param>
         void End(AopEnum action, AopInfo aopInfo);
         /// <summary>

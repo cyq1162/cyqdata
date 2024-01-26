@@ -1091,9 +1091,9 @@ namespace CYQ.Data
                 }
                 catch (DbException err)
                 {
+                    RecordsAffected = -2;
                     string msg = "ExeScalar():" + err.Message;
                     DebugInfo.Append(msg + AppConst.BR);
-                    RecordsAffected = -2;
                     WriteError(msg + (isProc ? "" : AppConst.BR + GetParaInfo(cmdText)));
                 }
                 finally

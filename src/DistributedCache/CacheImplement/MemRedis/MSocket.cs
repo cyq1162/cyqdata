@@ -11,8 +11,6 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal class MSocket
     {
-        private static LogAdapter logger = LogAdapter.GetLogger(typeof(MSocket));
-
         private HostNode hostNode;
         /// <summary>
         /// ¹ÒÔØµÄSocket³Ø¡£
@@ -67,7 +65,7 @@ namespace CYQ.Data.Cache
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Error closing stream: " + hostNode.Host, e);
+                    Log.Write(e, LogType.Cache);
                 }
                 stream = null;
             }
@@ -87,7 +85,7 @@ namespace CYQ.Data.Cache
                 }
                 catch (Exception e)
                 {
-                    logger.Error("Error closing socket: " + hostNode.Host, e);
+                    Log.Write(e, LogType.Cache);
                 }
                 socket = null;
             }

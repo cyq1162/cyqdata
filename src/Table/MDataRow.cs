@@ -164,7 +164,7 @@ namespace CYQ.Data.Table
             get
             {
                 if (field == null) { return null; }
-                if (field is int || (field is Enum && AppConfig.IsEnumToInt))
+                if (field is int || (field is Enum && AppConfig.DB.IsEnumToInt))
                 {
                     int index = (int)field;
                     if (Count > index)

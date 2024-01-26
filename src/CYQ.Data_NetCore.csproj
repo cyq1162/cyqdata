@@ -5,15 +5,15 @@
     <AssemblyName>CYQ.Data</AssemblyName>
     <RootNamespace>CYQ.Data</RootNamespace>
     <Authors>路过秋天</Authors>
-    <Description>cyq.data is a high-performance and the most powerful orm.（.Net 最好用的ORM数据层框架，木有之一，低调持续更新15年！支持.Net Framework 2.0+，支持.Net Core 2.1+，自带数据库读写分离，分布式缓存，分布式锁等）Support：Txt、Xml、Access、Sqlite、Mssql、Mysql、Oracle、Sybase、Postgres、DB2、Redis、MemCache。【开源：https://github.com/cyq1162/cyqdata】</Description>
+    <Description>CYQ.Data is a orm for .net or .net core.【附：自动缓存、读写分离，分布式缓存（带一致性hash）等功能】Support：Mssql、Mysql、Oracle、Sqlite、Sybase、Postgres、DB2、DaMeng、KingBaseES、Access、Excel、FoxPro、Txt、Xml。【开源：https://github.com/cyq1162/cyqdata】</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2024-01-21）</Company>
+    <Company>路过秋天 （2024-01-27）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.9.0.5</AssemblyVersion>
-    <FileVersion>5.9.0.5</FileVersion>
+    <AssemblyVersion>5.9.0.6</AssemblyVersion>
+    <FileVersion>5.9.0.6</FileVersion>
 	 <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
 
@@ -28,16 +28,19 @@
 		
 	</PropertyGroup>
   <ItemGroup>
+    <Compile Remove="DistributedLock\**" />
     <Compile Remove="DotNetCore\CYQ.Data.Core\**" />
     <Compile Remove="DotNetCore\System\Data\Common\**" />
     <Compile Remove="DotNet\**" />
     <Compile Remove="单元测试\**" />
     <Compile Remove="文档\**" />
+    <EmbeddedResource Remove="DistributedLock\**" />
     <EmbeddedResource Remove="DotNetCore\CYQ.Data.Core\**" />
     <EmbeddedResource Remove="DotNetCore\System\Data\Common\**" />
     <EmbeddedResource Remove="DotNet\**" />
     <EmbeddedResource Remove="单元测试\**" />
     <EmbeddedResource Remove="文档\**" />
+    <None Remove="DistributedLock\**" />
     <None Remove="DotNetCore\CYQ.Data.Core\**" />
     <None Remove="DotNetCore\System\Data\Common\**" />
     <None Remove="DotNet\**" />

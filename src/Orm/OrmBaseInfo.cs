@@ -3,7 +3,7 @@
 namespace CYQ.Data.Orm
 {
     /// <summary>
-    /// 基类的基础信息
+    /// 数据库 - 元数据基础信息
     /// </summary>
     public class OrmBaseInfo
     {
@@ -13,7 +13,7 @@ namespace CYQ.Data.Orm
             _Action = action;
         }
         /// <summary>
-        /// 获取 更新、删除、插入，查询操作后，受影响的行数
+        /// Get 数据库 - 更新、删除、插入，查询操作后，受影响的行数
         /// </summary>
         public int RecordsAffected
         {
@@ -27,7 +27,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 是否事务进行中
+        /// Get 数据库 - 是否事务进行中
         /// </summary>
         public bool IsTransation
         {
@@ -41,7 +41,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库的 表名
+        /// Get 数据库 - 表名
         /// </summary>
         public string TableName
         {
@@ -55,7 +55,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库名
+        /// Get 数据库 - 名称
         /// </summary>
         public string DataBaseName
         {
@@ -69,7 +69,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 版本信息
+        /// Get 数据库 - 版本信息
         /// </summary>
         public string DataBaseVersion
         {
@@ -83,7 +83,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 的列结构
+        /// Get 数据库 - 的列结构
         /// </summary>
         public MDataColumn MDataColumn
         {
@@ -97,7 +97,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 的列结构
+        /// Get 数据库 - 链接配置名称
         /// </summary>
         public string ConnName
         {
@@ -111,7 +111,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 的列结构
+        /// Get 数据库 - 链接完整字符串
         /// </summary>
         public string ConnString
         {
@@ -125,7 +125,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 操作后的调试信息
+        /// Get 数据库 - 操作的调试信息
         /// </summary>
         public string DebugInfo
         {
@@ -139,7 +139,7 @@ namespace CYQ.Data.Orm
             }
         }
         /// <summary>
-        /// 获取 数据库 类型
+        /// Get 数据库 - 类型
         /// </summary>
         public DataBaseType DataBaseType
         {

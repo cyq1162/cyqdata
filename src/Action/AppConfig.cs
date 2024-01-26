@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Diagnostics;
 using CYQ.Data.Cache;
+using CYQ.Data.Aop;
 
 namespace CYQ.Data
 {
@@ -35,6 +36,7 @@ namespace CYQ.Data
             //这个比较常用，只好把这里当成应用程序入口最早的调用处
             DBSchema.InitDBSchemasOnStart();
         }
+
         #region 基方法
         private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -229,36 +231,7 @@ namespace CYQ.Data
         #endregion
 
 
-        /// <summary>
-        /// 是否使用表字段枚举转Int方式（默认为false）。
-        /// 设置为true时，可以加快一点性能，但生成的表字段枚举必须和数据库一致。
-        /// </summary>
-        public static bool IsEnumToInt
-        {
-            get
-            {
-                return GetAppBool("IsEnumToInt", false);
-            }
-            set
-            {
-                SetApp("IsEnumToInt", value.ToString());
-            }
-        }
-        /// <summary>
-        /// 是否ToJson输出时自动转义特殊符号("\ \r \t等)
-        /// 可配置项为（Default、Yes、No)
-        /// </summary>
-        public static string JsonEscape
-        {
-            get
-            {
-                return GetApp("JsonEscape", "Default");
-            }
-            set
-            {
-                SetApp("JsonEscape", value);
-            }
-        }
+
         /// <summary>
         /// Aop 插件配置项 示例配置：[ 完整类名,程序集(dll)名称]&lt;add key="Aop" value="Web.Aop.AopAction,Aop"/>
         /// </summary>
@@ -273,293 +246,75 @@ namespace CYQ.Data
                 SetApp("Aop", value);
             }
         }
-        /// <summary>
-        /// Tool.ThreadBreak 使用时，外置的文件配置相对路径（默认在环境变量Temp对应文件中）
-        /// </summary>
-        public static string ThreadBreakPath
-        {
-            get
-            {
-                return GetApp("ThreadBreakPath", Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User));
-            }
-            set
-            {
-                SetApp("ThreadBreakPath", value);
-            }
-        }
 
-        /// <summary>
-        /// 获取当前Dll的版本号
-        /// </summary>
-        public static string Version
-        {
-            get
-            {
-                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            }
-        }
-        /// <summary>
-        /// 框架的运行路径(最外层的目录），以"\\" 或"/"结尾
-        /// Win项目：是dll和exe所在的目录；
-        /// Asp.net项目：是指根目录；
-        /// Asp.net core 项目：是指运行的路径（dll所在的路径，同Win项目）。
-        /// </summary>
-        public static string RunPath
-        {
-            get
-            {
-                if (AppConfig.IsWeb)
-                {
-                    string path = AppDomain.CurrentDomain.BaseDirectory;
-                    if (IsNetCore)
-                    {
-                        SetDebugRootPath(ref path);
-                    }
-                    return path;
-                }
-                return AppConst.AssemblyPath;
-            }
-        }
-        /// <summary>
-        /// 框架的程序集(dll)所在的运行路径，以"\\" 或"/"结尾
-        /// </summary>
-        public static string AssemblyPath
-        {
-            get
-            {
-                return AppConst.AssemblyPath;
-            }
-        }
-        /// <summary>
-        /// EncryptHelper加密的Key。
-        /// </summary>
-        public static string EncryptKey
-        {
-            get
-            {
-                return GetApp("EncryptKey", "");
-            }
-            set
-            {
-                SetApp("EncryptKey", value);
-            }
-        }
 
-        /// <summary>
-        /// Cache.CacheManage 默认缓存项的时间[分钟(默认60)]
-        /// </summary>
-        public static int DefaultCacheTime
-        {
-            get
-            {
-                return GetAppInt("DefaultCacheTime", 60);
-            }
-            set
-            {
-                SetApp("DefaultCacheTime", value.ToString());
-            }
-        }
     }
+
     public static partial class AppConfig
     {
-        #region Web相关
-        private static object lockObj = new object();
-        private static bool? _IsDebugMode;
+        #region 工具类配置
         /// <summary>
-        /// 检查当前正在运行的主程序是否是在 Debug 配置下编译生成的。
+        /// 工具类相关配置
         /// </summary>
-        public static bool IsDebugMode
+        public static class Tool
         {
-            get
+            /// <summary>
+            /// EncryptHelper加密的Key。
+            /// </summary>
+            public static string EncryptKey
             {
-                if (_IsDebugMode == null)
+                get
                 {
-                    lock (lockObj)
-                    {
-                        if (_IsDebugMode == null)
-                        {
-                            var assembly = Assembly.GetEntryAssembly();
-                            if (assembly == null)
-                            {
-                                Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
-                                foreach (Assembly ass in assList)
-                                {
-                                    if (ass.GlobalAssemblyCache || ass.GetName().GetPublicKeyToken().Length > 0)
-                                    {
-                                        //去掉系统dll
-                                        continue;
-                                    }
-                                    object[] das = ass.GetCustomAttributes(typeof(DebuggableAttribute), true);
-                                    if (das.Length > 0)
-                                    {
-                                        DebuggableAttribute da = das[0] as DebuggableAttribute;
-                                        if (da.IsJITTrackingEnabled)
-                                        {
-                                            _IsDebugMode = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                object[] das = assembly.GetCustomAttributes(typeof(DebuggableAttribute), true);
-                                if (das.Length > 0)
-                                {
-                                    DebuggableAttribute da = das[0] as DebuggableAttribute;
-                                    _IsDebugMode = da.IsJITTrackingEnabled;
-                                    // _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
-                                }
-                            }
-                            if (_IsDebugMode == null) { _IsDebugMode = false; }
-                        }
-                    }
-
+                    return GetApp("Tool.EncryptKey", "");
                 }
-
-                return _IsDebugMode.Value;
-            }
-        }
-
-
-        //[Conditional("DEBUG")]
-        private static void SetDebugRootPath(ref string path)
-        {
-            if (IsDebugMode)
-            {
-                bool isdebug = IsDebugMode;
-                path = Environment.CurrentDirectory;
-                path = path + (path[0] == '/' ? '/' : '\\');
-            }
-        }
-        private static readonly object lockPathObj = new object();
-        private static string _WebRootPath;
-        //内部变量
-        /// <summary>
-        /// Web根目录，以"/"或"\"结尾。
-        /// (ASP.NET Core 项目时，由于机制不同，指向的路径需要调整，所以该值可以修改)
-        /// </summary>
-        public static string WebRootPath
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_WebRootPath))
+                set
                 {
-                    if (IsNetCore)
-                    {
-                        lock (lockPathObj)
-                        {
-                            if (string.IsNullOrEmpty(_WebRootPath))
-                            {
-                                string path = AppDomain.CurrentDomain.BaseDirectory;
-                                SetDebugRootPath(ref path);
-                                path = path + "wwwroot";
-                                if (path[0] == '/')
-                                {
-                                    path = path + "/";
-                                }
-                                else
-                                {
-                                    path = path + "\\";
-                                }
-                                if (Directory.Exists(path) || IsWeb)
-                                {
-                                    _WebRootPath = path;
-                                }
-                            }
-                        }
-                    }
-                    if (string.IsNullOrEmpty(_WebRootPath))
-                    {
-                        _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
-                    }
-
+                    SetApp("Tool.EncryptKey", value);
                 }
-                return _WebRootPath;
             }
-            set
+
+            /// <summary>
+            /// Tool.ThreadBreak 使用时，外置的文件配置相对路径（默认在环境变量Temp对应文件中）
+            /// </summary>
+            public static string ThreadBreakPath
             {
-                _WebRootPath = value;
-                if (value.Contains("wwwroot"))
+                get
                 {
-                    webState = 1;
+                    return GetApp("Tool.ThreadBreakPath", Environment.GetEnvironmentVariable("TEMP", EnvironmentVariableTarget.User));
+                }
+                set
+                {
+                    SetApp("Tool.ThreadBreakPath", value);
                 }
             }
         }
-        private static readonly object lockWebObj = new object();
-        private static int webState = -1;
-        /// <summary>
-        /// 当前运行环境是否Web应用。
-        /// </summary>
-        public static bool IsWeb
-        {
-            get
-            {
-                if (webState == -1)
-                {
-                    lock (lockWebObj)
-                    {
-                        if (webState == -1)
-                        {
-                            string basePath = AppDomain.CurrentDomain.BaseDirectory;
-                            bool isWeb = File.Exists(basePath + "web.config");
-                            if (!isWeb && IsNetCore)
-                            {
-                                isWeb = File.Exists(basePath + "Taurus.Core.dll") || File.Exists(basePath + "Aries.Core.dll") || Directory.Exists("wwwroot");
-                                if (!isWeb)
-                                {
-                                    Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
-                                    foreach (Assembly ass in assList)
-                                    {
-                                        if (isWeb) { break; }
-                                        switch (ass.GetName().Name)
-                                        {
-                                            case "Microsoft.AspNetCore.Server.Kestrel":
-                                            case "Microsoft.AspNetCore.Server.IIS":
-                                                isWeb = true;
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
-                            webState = isWeb ? 1 : 0;
-                        }
-                    }
-
-                }
-                return webState == 1;
-            }
-            set
-            {
-                if (webState != 1)
-                {
-                    webState = value ? 1 : 0;
-                }
-            }
-        }
-        internal static Uri WebUri
-        {
-            get
-            {
-                if (HttpContext.Current != null)// && HttpContext.Current.Handler != null //AppConfig.XHtml.Domain 可能需要在Begin事件中获取，因此只能冒险一取。
-                {
-                    try
-                    {
-                        return HttpContext.Current.Request.Url;
-                    }
-                    catch
-                    {
-                        return null;
-                    }
-                }
-                return null;
-            }
-        }
-
         #endregion
-    }
-    public static partial class AppConfig
-    {
+
+        #region 缓存配置
+
+        /// <summary>
+        /// 通用缓存配置
+        /// </summary>
+        public static class Cache
+        {
+            /// <summary>
+            /// 默认缓存的时间[分钟(默认60)]
+            /// 配置：Cache.DefaultMinutes = 60
+            /// </summary>
+            public static int DefaultMinutes
+            {
+                get
+                {
+                    return GetAppInt("Cache.DefaultMinutes", 60);
+                }
+                set
+                {
+                    SetApp("Cache.DefaultMinutes", value.ToString());
+                }
+            }
+        }
+        #endregion
+
         #region Xml相关配置
         /// <summary>
         /// XHtml 相关的配置
@@ -1142,6 +897,22 @@ namespace CYQ.Data
                     SetApp("DB.EntitySuffix", value);
                 }
             }
+            /// <summary>
+            /// 是否使用表字段枚举转Int方式（默认为false）。
+            /// 设置为true时，可以加快一点性能，但生成的表字段枚举必须和数据库一致。
+            /// 配置项：DB.IsEnumToInt ：false
+            /// </summary>
+            public static bool IsEnumToInt
+            {
+                get
+                {
+                    return GetAppBool("DB.IsEnumToInt", false);
+                }
+                set
+                {
+                    SetApp("DB.IsEnumToInt", value.ToString());
+                }
+            }
         }
         #endregion
 
@@ -1357,7 +1128,7 @@ namespace CYQ.Data
         #region 自动缓存相关配置
 
         /// <summary>
-        /// 自动缓存相关的配置
+        /// 自动缓存【即：AopCache】相关的配置
         /// </summary>
         public static class AutoCache
         {
@@ -1442,7 +1213,7 @@ namespace CYQ.Data
                 set
                 {
                     SetApp("AutoCache.IngoreColumns", value);
-                    CYQ.Data.Cache.AutoCache.IngoreCacheColumns = null;
+                    AopCache.IngoreCacheColumns = null;
                 }
             }
             private static string _AutoCacheConn = null;
@@ -1629,12 +1400,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    string value = GetApp("Debug.IsEnable");
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        return ConvertTool.ChangeType<bool>(value);
-                    }
-                    return GetAppBool("OpenDebugInfo", false);//兼容旧配置
+                    return GetAppBool("Debug.IsEnable", IsDebugMode);
                 }
                 set
                 {
@@ -1669,5 +1435,259 @@ namespace CYQ.Data
         }
         #endregion
 
+        #region Json 相关配置
+
+        /// <summary>
+        /// JsonHelper 相关配置
+        /// </summary>
+        public static class Json
+        {
+            /// <summary>
+            /// ToJson 输出时是否自动转义特殊符号("\ \r \t等)
+            /// 配置：Json.Escape = Default （可选：Default、Yes、No）
+            /// </summary>
+            public static string Escape
+            {
+                get
+                {
+                    return GetApp("Json.Escape", "Default");
+                }
+                set
+                {
+                    SetApp("Json.Escape", value);
+                }
+            }
+        }
+
+        #endregion
+
+    }
+
+    /// <summary>
+    /// 只读属性
+    /// </summary>
+    public static partial class AppConfig
+    {
+        #region Web相关
+        private static object lockObj = new object();
+        private static bool? _IsDebugMode;
+        /// <summary>
+        /// Get 是否在 Debug 模式下运行。
+        /// </summary>
+        public static bool IsDebugMode
+        {
+            get
+            {
+                if (_IsDebugMode == null)
+                {
+                    lock (lockObj)
+                    {
+                        if (_IsDebugMode == null)
+                        {
+                            var assembly = Assembly.GetEntryAssembly();
+                            if (assembly == null)
+                            {
+                                Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
+                                foreach (Assembly ass in assList)
+                                {
+                                    if (ass.GlobalAssemblyCache || ass.GetName().GetPublicKeyToken().Length > 0)
+                                    {
+                                        //去掉系统dll
+                                        continue;
+                                    }
+                                    object[] das = ass.GetCustomAttributes(typeof(DebuggableAttribute), true);
+                                    if (das.Length > 0)
+                                    {
+                                        DebuggableAttribute da = das[0] as DebuggableAttribute;
+                                        if (da.IsJITTrackingEnabled)
+                                        {
+                                            _IsDebugMode = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                object[] das = assembly.GetCustomAttributes(typeof(DebuggableAttribute), true);
+                                if (das.Length > 0)
+                                {
+                                    DebuggableAttribute da = das[0] as DebuggableAttribute;
+                                    _IsDebugMode = da.IsJITTrackingEnabled;
+                                    // _IsDebugMode = (da.DebuggingFlags & DebuggableAttribute.DebuggingModes.EnableEditAndContinue) == DebuggableAttribute.DebuggingModes.EnableEditAndContinue;
+                                }
+                            }
+                            if (_IsDebugMode == null) { _IsDebugMode = false; }
+                        }
+                    }
+
+                }
+
+                return _IsDebugMode.Value;
+            }
+        }
+
+
+        //[Conditional("DEBUG")]
+        private static void SetDebugRootPath(ref string path)
+        {
+            if (IsDebugMode)
+            {
+                bool isdebug = IsDebugMode;
+                path = Environment.CurrentDirectory;
+                path = path + (path[0] == '/' ? '/' : '\\');
+            }
+        }
+        private static readonly object lockPathObj = new object();
+        private static string _WebRootPath;
+
+        /// <summary>
+        /// Get 运行根目录，以"/"或"\"结尾。
+        /// </summary>
+        public static string WebRootPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_WebRootPath))
+                {
+                    if (IsNetCore)
+                    {
+                        lock (lockPathObj)
+                        {
+                            if (string.IsNullOrEmpty(_WebRootPath))
+                            {
+                                string path = AppDomain.CurrentDomain.BaseDirectory;
+                                SetDebugRootPath(ref path);
+                                path = path + "wwwroot";
+                                if (path[0] == '/')
+                                {
+                                    path = path + "/";
+                                }
+                                else
+                                {
+                                    path = path + "\\";
+                                }
+                                if (Directory.Exists(path) || IsWeb)
+                                {
+                                    _WebRootPath = path;
+                                }
+                            }
+                        }
+                    }
+                    if (string.IsNullOrEmpty(_WebRootPath))
+                    {
+                        _WebRootPath = AppDomain.CurrentDomain.BaseDirectory;
+                    }
+
+                }
+                return _WebRootPath;
+            }
+        }
+        private static readonly object lockWebObj = new object();
+        private static int webState = -1;
+        /// <summary>
+        /// Get 当前运行环境是否 Web 应用。
+        /// </summary>
+        public static bool IsWeb
+        {
+            get
+            {
+                if (webState == -1)
+                {
+                    lock (lockWebObj)
+                    {
+                        if (webState == -1)
+                        {
+                            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+                            bool isWeb = File.Exists(basePath + "web.config");
+                            if (!isWeb && IsNetCore)
+                            {
+                                isWeb = File.Exists(basePath + "Taurus.Core.dll") || File.Exists(basePath + "Aries.Core.dll") || Directory.Exists("wwwroot");
+                                if (!isWeb)
+                                {
+                                    Assembly[] assList = AppDomain.CurrentDomain.GetAssemblies();
+                                    foreach (Assembly ass in assList)
+                                    {
+                                        if (isWeb) { break; }
+                                        switch (ass.GetName().Name)
+                                        {
+                                            case "Microsoft.AspNetCore.Server.Kestrel":
+                                            case "Microsoft.AspNetCore.Server.IIS":
+                                                isWeb = true;
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                            webState = isWeb ? 1 : 0;
+                        }
+                    }
+
+                }
+                return webState == 1;
+            }
+        }
+        internal static Uri WebUri
+        {
+            get
+            {
+                if (HttpContext.Current != null)// && HttpContext.Current.Handler != null //AppConfig.XHtml.Domain 可能需要在Begin事件中获取，因此只能冒险一取。
+                {
+                    try
+                    {
+                        return HttpContext.Current.Request.Url;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                return null;
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 获取 CYQ.Data.dll 的版本号
+        /// </summary>
+        public static string Version
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            }
+        }
+        /// <summary>
+        /// Get 框架的运行路径(最外层的目录），以"\\" 或"/"结尾
+        /// Win、 .NetCore 项目：是dll和exe所在的目录；
+        /// ASPNET 项目：是指根目录；
+        /// </summary>
+        public static string RunPath
+        {
+            get
+            {
+                if (AppConfig.IsWeb)
+                {
+                    string path = AppDomain.CurrentDomain.BaseDirectory;
+                    if (IsNetCore)
+                    {
+                        SetDebugRootPath(ref path);
+                    }
+                    return path;
+                }
+                return AppConst.AssemblyPath;
+            }
+        }
+        /// <summary>
+        /// Get 程序集(dll) 所在的运行路径，以"\\" 或"/"结尾
+        /// </summary>
+        public static string AssemblyPath
+        {
+            get
+            {
+                return AppConst.AssemblyPath;
+            }
+        }
     }
 }

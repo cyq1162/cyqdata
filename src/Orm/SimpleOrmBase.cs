@@ -233,7 +233,7 @@ namespace CYQ.Data.Orm
         /// <param name="entityInstance">实体对象,一般写:this</param>
         protected void SetInit(Object entityInstance)
         {
-            SetInit(entityInstance, null, null);
+            SetInit(entityInstance, null, null, true);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -242,7 +242,7 @@ namespace CYQ.Data.Orm
         /// <param name="tableName">表名,如:Users</param>
         protected void SetInit(Object entityInstance, string tableName)
         {
-            SetInit(entityInstance, tableName, null);
+            SetInit(entityInstance, tableName, null, true);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -252,9 +252,21 @@ namespace CYQ.Data.Orm
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
         {
+            SetInit(entityInstance, tableName, null, true);
+        }
+        /// <summary>
+        /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
+        /// </summary>
+        /// <param name="entityInstance">实体对象,一般写:this</param>
+        /// <param name="tableName">表名,如:Users</param>
+        /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
+        /// <param name="isWriteLogOnError">当执行发生异常时，是否输出日志</param>
+        protected void SetInit(Object entityInstance, string tableName, string conn, bool isWriteLogOnError)
+        {
             _entityInstance = entityInstance;
             _tableName = tableName;
             _conn = conn;
+            _IsWriteLogOnError = isWriteLogOnError;
         }
         private object _entityInstance;
         private string _tableName = null;
@@ -334,9 +346,9 @@ namespace CYQ.Data.Orm
                 Error.Throw(err.Message);
             }
         }
-        internal void SetInit2(Object entityInstance, string tableName, string conn)
+        internal void SetInit2(Object entityInstance, string tableName, string conn, bool isWriteLogOnError)
         {
-            SetInit(entityInstance, tableName, conn);
+            SetInit(entityInstance, tableName, conn, isWriteLogOnError);
         }
         internal void Set(object key, object value)
         {

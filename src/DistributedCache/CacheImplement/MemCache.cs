@@ -48,7 +48,7 @@ namespace CYQ.Data.Cache
 
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.Cache.DefaultMinutes, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {
@@ -103,9 +103,9 @@ namespace CYQ.Data.Cache
             }
         }
 
-        public override void Clear()
+        public override bool Clear()
         {
-            client.FlushAll();
+           return client.FlushAll();
         }
 
         public override bool Contains(string key)
@@ -166,17 +166,28 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal partial class MemCache
     {
-        internal override void SetAll(string key, string value, double cacheMinutes)
+        public override int ServerCount
         {
-            client.SetAll(key, value, DateTime.Now.AddMinutes(cacheMinutes));
+            get
+            {
+                return client.HostServer.HostList.Count;
+            }
         }
-        internal override void RemoveAll(string key)
+        public override int SetAll(string key, string value, double cacheMinutes)
         {
-            client.DeleteAll(key);
+            return client.SetAll(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
-        internal override bool AddAll(string key, string value, double cacheMinutes)
+        public override int RemoveAll(string key)
         {
-            return false;
+            return client.DeleteAll(key);
+        }
+        public override int AddAll(string key, string value, double cacheMinutes)
+        {
+            return client.AddAll(key, value, DateTime.Now.AddMinutes(cacheMinutes)); 
+        }
+        public override bool SetNXAll(string key, string value, double cacheMinutes)
+        {
+            return client.SetNXAll(key, value, DateTime.Now.AddMinutes(cacheMinutes));
         }
     }
 }

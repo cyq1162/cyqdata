@@ -70,13 +70,17 @@ namespace CYQ.Data.Tool
         {
             return Encrypt(text, "");
         }
+        /// <summary>
+        /// 加密
+        /// </summary>
+        /// <param name="text">加密的内容</param>
         /// <param name="key">指定加密的key</param>
         public static string Encrypt(string text, string key)
         {
             string result = Encrypt(text, DefaultHashKey);
             if (string.IsNullOrEmpty(key))
             {
-                key = AppConfig.GetApp("EncryptKey", "");
+                key = AppConfig.Tool.EncryptKey;
             }
             if (!string.IsNullOrEmpty(key))
             {

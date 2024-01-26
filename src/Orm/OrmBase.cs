@@ -73,7 +73,7 @@ namespace CYQ.Data.Orm
         /// <param name="entityInstance">实体对象,一般写:this</param>
         protected void SetInit(Object entityInstance)
         {
-            sob.SetInit2(entityInstance, null, null);
+            sob.SetInit2(entityInstance, null, null, true);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -82,7 +82,7 @@ namespace CYQ.Data.Orm
         /// <param name="tableName">表名,如:Users</param>
         protected void SetInit(Object entityInstance, string tableName)
         {
-            sob.SetInit2(entityInstance, tableName, null);
+            sob.SetInit2(entityInstance, tableName, null, true);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
@@ -92,8 +92,21 @@ namespace CYQ.Data.Orm
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
         {
-            sob.SetInit2(entityInstance, tableName, conn);
+            sob.SetInit2(entityInstance, tableName, conn, true);
         }
+
+        /// <summary>
+        /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]
+        /// </summary>
+        /// <param name="entityInstance">实体对象,一般写:this</param>
+        /// <param name="tableName">表名,如:Users</param>
+        /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
+        /// <param name="isWriteLogOnError">当执行发生异常时，是否输出日志</param>
+        protected void SetInit(Object entityInstance, string tableName, string conn, bool isWriteLogOnError)
+        {
+            sob.SetInit2(entityInstance, tableName, conn, isWriteLogOnError);
+        }
+
         /// <summary>
         /// 设置值,例如:[action.Set(TableName.id,10);]
         /// </summary>

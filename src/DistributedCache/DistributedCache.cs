@@ -6,6 +6,7 @@ using System;
 using CYQ.Data.SQL;
 using System.Configuration;
 using System.Threading;
+using CYQ.Data.Aop;
 
 namespace CYQ.Data.Cache
 {
@@ -174,7 +175,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 清除所有缓存
         /// </summary>
-        public abstract void Clear();
+        public abstract bool Clear();
         /// <summary>
         /// 是否存在缓存
         /// </summary>
@@ -221,173 +222,37 @@ namespace CYQ.Data.Cache
         public abstract string WorkInfo { get; }
 
     }
-
-    /// <summary>
-    /// 处理分布式锁
-    /// </summary>
     public abstract partial class DistributedCache
     {
-        private MDictionary<string, int> lockAgain = new MDictionary<string, int>();
+        #region 新增三个接口，用于分布式锁
+
         /// <summary>
-        /// 分布式锁（分布式锁需要启用Redis或Memcached）
+        /// 服务器数量
         /// </summary>
-        /// <param name="key">key</param>
-        /// <param name="millisecondsTimeout">尝试获取锁的最大等待时间（ms毫秒），超过这个值，则认为获取锁失败</param>
-        /// <returns></returns>
-        internal virtual bool Lock(string key, int millisecondsTimeout)
-        {
-            #region 可重入锁
-
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId + "," + key;
-            //已存在锁，锁重入。
-            if (lockAgain.ContainsKey(flag))
-            {
-                lockAgain[flag]++;
-                //Console.WriteLine("Lock Again:" + flag);
-                return true;
-            }
-
-            #endregion
-
-            int sleep = 5;
-            int count = millisecondsTimeout;
-            while (true)
-            {
-                if (AddAll(key, flag, 0.1))
-                {
-                    lockAgain.Add(flag, 0);
-                    //Console.WriteLine("Lock :" + flag);
-                    AddToWork(key, flag);//循环检测超时时间，执行期间，服务挂了，然后重启了？
-                    return true;
-                }
-                Thread.Sleep(sleep);
-                count -= sleep;
-                if (sleep < 1000)
-                {
-                    sleep += 5;
-                }
-                if (count <= 0)
-                {
-                    return false;
-                }
-            }
-        }
-        /// <summary>
-        /// 释放（分布式锁）
-        /// </summary>
-        /// <returns></returns>
-        internal virtual void UnLock(string key)
-        {
-            #region 可重入锁检测
-
-            string flag = LocalEnvironment.ProcessID + "," + Thread.CurrentThread.ManagedThreadId + "," + key;
-            if (lockAgain.ContainsKey(flag))
-            {
-
-                if (lockAgain[flag] > 0)
-                {
-                    lockAgain[flag]--;
-                    //Console.WriteLine("Un Lock Again:" + flag + " - " + lockAgain[flag]);
-                    return;
-                }
-                else
-                {
-                    lockAgain.Remove(flag);
-                }
-            }
-            #endregion
-
-
-            //Console.WriteLine("Un Lock :" + flag);
-            RemoveFromWork(key);
-
-            //--释放机制有些问题，需要调整。
-            string value = Get<string>(key);
-            //自身加的锁
-            if (value == flag)
-            {
-                lock (key)
-                {
-                    RemoveAll(key);
-                }
-            }
-        }
+        public virtual int ServerCount { get { return 1; } }
 
         /// <summary>
         /// 往所有节点写入数据【用于分布式锁的超时机制】
         /// </summary>
-        internal virtual void SetAll(string key, string value, double cacheMinutes)
-        {
+        public virtual int SetAll(string key, string value, double cacheMinutes) { return 0; }
 
-        }
+        /// <summary>
+        /// 往所有节点都发起移除数据。
+        /// </summary>
+        public virtual int RemoveAll(string key) { return 0; }
 
-        internal virtual void RemoveAll(string key)
-        {
+        /// <summary>
+        /// 往所有节点添加数据，不存在则添加成功，存在则添加失败。
+        /// </summary>
+        public virtual int AddAll(string key, string value, double cacheMinutes) { return 0; }
 
-        }
-
-        internal virtual bool AddAll(string key, string value, double cacheMinutes)
-        {
-            return false;
-        }
-
-        #region 内部定时日志工作
-
-        MDictionary<string, string> keysDic = new MDictionary<string, string>();
-        bool threadIsWorking = false;
-        private void AddToWork(string key, string value)
-        {
-            keysDic.Remove(key);
-            keysDic.Add(key, value);
-            if (!threadIsWorking)
-            {
-                lock (this)
-                {
-                    if (!threadIsWorking)
-                    {
-                        threadIsWorking = true;
-                        ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(DoLockWork));
-                    }
-                }
-            }
-        }
-        private void RemoveFromWork(string key)
-        {
-            keysDic.Remove(key);
-        }
-        private void DoLockWork(object p)
-        {
-            while (true)
-            {
-                // Console.WriteLine("DoWork :--------------------------Count : " + keysDic.Count);
-                if (keysDic.Count > 0)
-                {
-                    List<string> list = keysDic.GetKeys();
-                    foreach (string key in list)
-                    {
-                        //给 key 设置延时时间
-                        if (keysDic.ContainsKey(key))
-                        {
-                            lock (key)
-                            {
-                                SetAll(key, keysDic[key], 0.1);//延时锁：6秒
-                            }
-                        }
-                    }
-                    list.Clear();
-                    Thread.Sleep(3000);//循环。
-                }
-                else
-                {
-                    threadIsWorking = false;
-                    break;
-                }
-                
-            }
-        }
+        /// <summary>
+        /// 分布式锁专用，往节点写入数据，超过一半成功，则返回true，否则移除已插入数据。
+        /// </summary>
+        public virtual bool SetNXAll(string key, string value, double cacheMinutes) { return false; }
         #endregion
-
     }
+
 
     public abstract partial class DistributedCache
     {
@@ -408,12 +273,11 @@ namespace CYQ.Data.Cache
                 case CacheKeyType.Schema:
                     return TableSchema.GetSchemaKey(tableName, conn);
                 case CacheKeyType.AutoCache:
-                    return AutoCache.GetBaseKey(tableName, conn);
+                    return AopCache.GetBaseKey(tableName, conn);
             }
             return string.Empty;
         }
     }
-
     /// <summary>
     /// Cache的Key类型
     /// </summary>

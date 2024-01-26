@@ -213,7 +213,7 @@ namespace CYQ.Data.Cache
         /// <param name="value">对象值</param>
         public override bool Set(string key, object value)
         {
-            return Set(key, value, AppConfig.DefaultCacheTime);
+            return Set(key, value, AppConfig.Cache.DefaultMinutes);
         }
         /// <param name="cacheMinutes">缓存时间(单位分钟)</param>
         public override bool Set(string key, object value, double cacheMinutes)
@@ -241,7 +241,7 @@ namespace CYQ.Data.Cache
                     double cacheTime = cacheMinutes;
                     if (cacheMinutes <= 0)
                     {
-                        cacheTime = AppConfig.DefaultCacheTime;
+                        cacheTime = AppConfig.Cache.DefaultMinutes;
                     }
                     DateTime cTime = DateTime.Now.AddMinutes(cacheTime);
                     int workCount = GetWorkCount(cTime);
@@ -320,7 +320,7 @@ namespace CYQ.Data.Cache
 
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.Cache.DefaultMinutes, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {
@@ -423,7 +423,7 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 清除所有缓存
         /// </summary>
-        public override void Clear()
+        public override bool Clear()
         {
             try
             {
@@ -442,10 +442,12 @@ namespace CYQ.Data.Cache
                     theFolderKeys.Clear();
                 }
                 ClearDB();
+                return true;
             }
             catch
             {
                 errorCount++;
+                return false;
             }
         }
 
@@ -517,58 +519,5 @@ namespace CYQ.Data.Cache
         #endregion
     }
 
-    /// <summary>
-    /// 处理分布式锁【单机】
-    /// </summary>
-    internal partial class LocalCache
-    {
-        internal override bool Lock(string key, int millisecondsTimeout)
-        {
-            return MutexWaitOne(key, millisecondsTimeout);
-        }
-        internal override void UnLock(string key)
-        {
-            MutexRelease(key);
-        }
-        private static bool MutexWaitOne(string key, int millisecondsTimeout)
-        {
-            key = "LocalCache-" + key;
-            var mutex = new Mutex(false, key);
-
-            try
-            {
-                //其它进程直接关闭，未释放即退出时，引发此异常。
-                return mutex.WaitOne(millisecondsTimeout);
-            }
-            catch
-            {
-                //释放其它进程直接关闭导致的锁。
-                mutex.ReleaseMutex();
-                try
-                {
-                    //如果存在重入锁【锁多次进入，未释放】，会引发此异常。
-                    return mutex.WaitOne(millisecondsTimeout);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-        }
-        private static bool MutexRelease(string key)
-        {
-            key = "LocalCache-" + key;
-            var mutex = new Mutex(false, key);
-            try
-            {
-                mutex.ReleaseMutex();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-
-        }
-    }
+    
 }

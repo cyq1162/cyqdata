@@ -25,7 +25,7 @@ namespace CYQ.Data.Json
         {
             get
             {
-                return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.JsonEscape);
+                return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.Json.Escape);
             }
         }
 

@@ -17,7 +17,6 @@ namespace CYQ.Data.Cache
         internal delegate bool OnAfterSocketCreateDelegate(MSocket socket);
         internal event OnAfterSocketCreateDelegate OnAfterSocketCreateEvent;
 
-        private static LogAdapter logger = LogAdapter.GetLogger(typeof(HostNode));
         #region 可对外的属性
         //Public variables and properties
         public readonly string Host;
@@ -189,8 +188,6 @@ namespace CYQ.Data.Cache
                 //Try to create a new socket. On failure, mark endpoint as dead and return null.
                 socket = GetFromQueue(MaxWait);
                 if (socket != null) { return socket; }
-                string timeout = "The timeout period elapsed prior to obtaining a connection from the socket pool.";
-                logger.Error(timeout);
                 Interlocked.Increment(ref TimeoutFromSocketPool);
                 return null;
             }
@@ -221,8 +218,6 @@ namespace CYQ.Data.Cache
                     //Try to create a new socket. On failure, mark endpoint as dead and return null.
                     socket = GetFromQueue(MaxWait);
                     if (socket != null) { return socket; }
-                    string timeout = "The timeout period elapsed prior to obtaining a connection from the socket pool.";
-                    logger.Error(timeout);
                     Interlocked.Increment(ref TimeoutFromSocketPool);
                 }
                 return null;
@@ -238,12 +233,7 @@ namespace CYQ.Data.Cache
             }
             else
             {
-                logger.Error("Error connecting to: " + Host);
-                //返回备份的池
-                //if (HostNodeBak != null)
-                //{
-                //    return HostNodeBak.Acquire();
-                //}
+                Log.Write("Error connecting to: " + Host, LogType.Cache);
                 return null;
             }
         }

@@ -74,7 +74,7 @@ namespace CYQ.Data.Aop
             {
                 if (!IsTxtDataBase) // 只要不是直接返回，------调整机制，由Aop参数控制。
                 {
-                    isHasCache = AutoCache.GetCache(action, Para); //找看有没有Cache，有即取出预备。
+                    isHasCache = AopCache.GetCache(action, Para); //找看有没有Cache，有即取出预备。
                 }
                 if (isHasCache)  //找到Cache
                 {
@@ -98,7 +98,7 @@ namespace CYQ.Data.Aop
             {
                 if (!isHasCache  && Para.IsSuccess)//Select内部调用了GetCount，GetCount的内部isHasCache为true影响了
                 {
-                    AutoCache.SetCache(action, Para); //找看有没有Cache
+                    AopCache.SetCache(action, Para); //找看有没有Cache
                 }
             }
         }

@@ -17,6 +17,7 @@ using System.Collections.Specialized;
 using System.Web;
 using CYQ.Data.Json;
 using CYQ.Data.Orm;
+using CYQ.Data.Aop;
 
 namespace CYQ.Data.Table
 {
@@ -792,7 +793,7 @@ namespace CYQ.Data.Table
             if (result && AppConfig.AutoCache.IsEnable)
             {
                 //È¡ÏûAOP»º´æ¡£
-                AutoCache.ReadyForRemove(AutoCache.GetBaseKey(TableName, newConn));
+                AopCache.ReadyForRemove(AopCache.GetBaseKey(TableName, newConn));
             }
             return result;
         }

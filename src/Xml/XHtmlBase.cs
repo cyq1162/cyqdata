@@ -185,11 +185,14 @@ namespace CYQ.Data.Xml
                 {
                     if (xml.StartsWith("<!DOCTYPE html"))
                     {
-                        if (string.IsNullOrEmpty(docTypeHtml))
+                        if (xml.Contains("&"))
                         {
-                            docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
+                            if (string.IsNullOrEmpty(docTypeHtml))
+                            {
+                                docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
+                            }
+                            xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
                         }
-                        xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
                     }
 
                     if (xml.IndexOf(AppConfig.XHtml.CDataLeft) == -1)

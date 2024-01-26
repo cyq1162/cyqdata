@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
+using System.Security.Policy;
 
 namespace CYQ.Data.Cache
 {
@@ -21,8 +22,6 @@ namespace CYQ.Data.Cache
         //用于验证权限的委托事件。
         internal delegate bool AuthDelegate(MSocket socket);
         internal event AuthDelegate OnAuthEvent;
-
-        private static LogAdapter logger = LogAdapter.GetLogger(typeof(HostServer));
 
         private CacheType serverType = CacheType.MemCache;
         /// <summary>
@@ -287,7 +286,7 @@ namespace CYQ.Data.Cache
                 }
                 else
                 {
-                    logger.Error("Error in Execute<T>: " + host.Host, e);
+                    Log.Write(e, LogType.Cache);
                 }
             }
             finally
@@ -315,14 +314,13 @@ namespace CYQ.Data.Cache
             }
             catch (Exception e)
             {
-                logger.Error("Error in Execute: " + host.Host, e);
-
                 //Socket is probably broken
                 if (sock != null)
                 {
                     Interlocked.Increment(ref host.CloseSockets);
                     sock.Close();
                 }
+                Log.Write(e, LogType.Cache);
             }
             finally
             {
@@ -336,12 +334,17 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// This method executes the given delegate on all servers.
         /// </summary>
-        internal void ExecuteAll(UseSocketVoid use)
+        internal int ExecuteAll(UseSocket<bool> useSocket, uint hash)
         {
+            int okCount = 0;
             foreach (KeyValuePair<string, HostNode> item in hostList)
             {
-                Execute(item.Value, use);
+                if (Execute<bool>(item.Value, hash, false, useSocket, false))
+                {
+                    okCount++;
+                }
             }
+            return okCount;
         }
 
         #endregion

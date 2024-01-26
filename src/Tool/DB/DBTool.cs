@@ -6,6 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Cache;
+using CYQ.Data.Aop;
 
 namespace CYQ.Data.Tool
 {
@@ -619,8 +620,8 @@ namespace CYQ.Data.Tool
         private static void RemoveAutoCache(string tableName, string conn)
         {
             //清除自动缓存
-            string key = Cache.AutoCache.GetBaseKey(tableName, conn);
-            Cache.AutoCache.ReadyForRemove(key);
+            string key = AopCache.GetBaseKey(tableName, conn);
+            AopCache.ReadyForRemove(key);
         }
     }
     public static partial class DBTool

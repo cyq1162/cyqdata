@@ -50,7 +50,7 @@ namespace CYQ.Data.Cache
         }
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.DefaultCacheTime, null);
+            return Add(key, value, AppConfig.Cache.DefaultMinutes, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {
@@ -60,7 +60,7 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             if (value == null) { return Remove(key); }
-            return client.SetNX(key, value, Convert.ToInt32(cacheMinutes * 60));
+            return client.Add(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
 
 
@@ -109,9 +109,9 @@ namespace CYQ.Data.Cache
             }
         }
 
-        public override void Clear()
+        public override bool Clear()
         {
-            client.FlushAll();
+            return client.FlushAll();
         }
 
         public override bool Contains(string key)
@@ -188,15 +188,26 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal partial class RedisCache
     {
-        internal override void SetAll(string key, string value, double cacheMinutes)
+        public override int ServerCount
         {
-            client.SetAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+            get
+            {
+                return client.HostServer.HostList.Count;
+            }
         }
-        internal override void RemoveAll(string key)
+        public override int SetAll(string key, string value, double cacheMinutes)
         {
-            client.DeleteAll(key);
+            return client.SetAll(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
-        internal override bool AddAll(string key, string value, double cacheMinutes)
+        public override int RemoveAll(string key)
+        {
+            return client.DeleteAll(key);
+        }
+        public override int AddAll(string key, string value, double cacheMinutes)
+        {
+            return client.AddAll(key, value, Convert.ToInt32(cacheMinutes * 60));
+        }
+        public override bool SetNXAll(string key, string value, double cacheMinutes)
         {
             return client.SetNXAll(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
