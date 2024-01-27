@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
-using System.Security.Policy;
 
 namespace CYQ.Data.Cache
 {
