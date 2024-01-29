@@ -252,7 +252,7 @@ namespace CYQ.Data.Orm
         /// <param name="conn">数据链接,单数据库时可写Null,或写默认链接配置项:"Conn",或直接数据库链接字符串</param>
         protected void SetInit(Object entityInstance, string tableName, string conn)
         {
-            SetInit(entityInstance, tableName, null, true);
+            SetInit(entityInstance, tableName, conn, true);
         }
         /// <summary>
         /// 初始化状态[继承此基类的实体在构造函数中需调用此方法]

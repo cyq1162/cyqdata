@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 // 有关程序集的常规信息通过下列属性集
 // 控制。更改这些属性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 V5 版本")]
+[assembly: AssemblyTitle("CYQ.Data 数据层(ORM)框架 V5 .Net 版本")]
 [assembly: AssemblyDescription("CYQ.Data is a orm for .net or .net core.【附：自动缓存、读写分离，分布式缓存（带一致性hash）等功能】Support：Mssql、Mysql、Oracle、Sqlite、Sybase、Postgres、DB2、DaMeng、KingBaseES、Access、Excel、FoxPro、Txt、Xml。【开源：https://github.com/cyq1162/cyqdata】")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("路过秋天 （2024-01-27）")]
+[assembly: AssemblyCompany("路过秋天 （2024-01-29）")]
 [assembly: AssemblyProduct("CYQ.Data 数据层(ORM)框架 V5 版本")]
 [assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2010-2110")]
 [assembly: AssemblyTrademark("CYQ.Data")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有这些值，也可以使用“修订号”和“内部版本号”的默认值，
 // 方法是按如下所示使用“*”:
-[assembly: AssemblyVersion("5.9.0.6")]
-[assembly: AssemblyFileVersion("5.9.0.6")]
+[assembly: AssemblyVersion("5.9.0.7")]
+[assembly: AssemblyFileVersion("5.9.0.7")]
