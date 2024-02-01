@@ -6,7 +6,22 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
-
+using System.Windows.Forms;
+/*
+ * 性能优化说明：
+ * 1、DTD：如果界面没有实体&xxx;则不加载，否则修改DTD路径到本地。
+ * 2、XmlDocument：LoadXml 性能优化：加载后缓存，后续从缓存转化：这里要转化也没那么简单，需要解决以下问题：
+ * ---------------------------------------------------------------------------------------
+ * A、从缓存拿到，从缓存Doc拿出InnerXml，再重新LoadXml(xml)，兼容性最好，但可优化。
+ * B、从缓存拿到，从缓存Doc调用：Clone、CloneNode(true)、两个性能差不多，节点多时，后面那个更优。
+ * C、从缓存拿到，从缓存Doc发现：XmlDocument ImportNode 方法比CloneNode(true) 更优，准备采用这个。
+ * D、上面B、C两种方式，产生新的问题：.NET 下标签自闭合、.NET Core下正常，改动见：GetCloneFrom 方法。
+ * E、解决标签自闭合问题：继承XmlDocument，改写CreateElement，根据W3C标准找出需要自闭合的，其余条件设置XmlElement的IsEmpty=false，见：XhtmlDocument
+ * F、解决上述问题后，为了性能，从缓存中不加载DTD、引发样式问题：
+ * G、解决F的问题是，输出的时候检测没有DTD头，则追加：<!DOCTYPE html>头，见：XHtmlAction OutXml输出。
+ * ----------------------------------------------------------------------------------------
+ * 4、避免使用 InnerXml 属性，用其它方式替代：InnerText、节点引用等，但引发另一个问题，赋值text，则后续无法通过节点操作，这在循环绑定时会拿不到节点。
+ */
 namespace CYQ.Data.Xml
 {
     /// <summary>
@@ -143,7 +158,8 @@ namespace CYQ.Data.Xml
         //private bool clearCommentOnLoad = false;
         static XHtmlBase()
         {
-            XHtmlUrlResolver.Instance.InitDTD();
+            //不再需要DTD，加载xhtml时转&进行转义。
+           // XHtmlUrlResolver.Instance.InitDTD();
         }
 
 
@@ -172,7 +188,8 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// docTypeHtml是一样的。
         /// </summary>
-        protected static string docTypeHtml = string.Empty;
+        //protected static string docTypeHtml = string.Empty;
+        //private const string docType = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
         /// <summary>
         /// 从xml字符串加载
         /// </summary>
@@ -185,14 +202,20 @@ namespace CYQ.Data.Xml
                 {
                     if (xml.StartsWith("<!DOCTYPE html"))
                     {
-                        if (xml.Contains("&"))
-                        {
-                            if (string.IsNullOrEmpty(docTypeHtml))
-                            {
-                                docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
-                            }
-                            xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
-                        }
+                        //去除DTD头。
+                        xml = xml.Substring(xml.IndexOf('>') + 1).Trim();
+                        //if (xml.Contains("&"))
+                        //{
+                        //    if (string.IsNullOrEmpty(docTypeHtml))
+                        //    {
+                        //        docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
+                        //    }
+                        //    xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
+                        //}
+                        //else if (xml.StartsWith(docType))
+                        //{
+                        //    xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), "<!DOCTYPE html>");
+                        //}
                     }
 
                     if (xml.IndexOf(AppConfig.XHtml.CDataLeft) == -1)
@@ -272,13 +295,16 @@ namespace CYQ.Data.Xml
         {
             if (theCache.Contains(key))//缓存中存在对应值是key的对象
             {
+                _XmlDocument = null;
+                var cacheObj = theCache.Get(key) as XmlDocument;
                 if (_IsReadOnly)
                 {
-                    _XmlDocument = theCache.Get(key) as XmlDocument;
+                    _XmlDocument = cacheObj;
                 }
                 else
                 {
-                    _XmlDocument = GetCloneFrom(theCache.Get(key) as XmlDocument);
+                    var cloneDoc = GetCloneFrom(cacheObj);
+                    _XmlDocument = cloneDoc;
                 }
                 _IsLoadFromCache = true;
                 return true;
@@ -369,7 +395,8 @@ namespace CYQ.Data.Xml
                 }
                 else
                 {
-                    theCache.Set(key, GetCloneFrom(_XmlDocument), cacheTimeMinutes, _FileName);//添加Cache缓存Clone
+                    var cloneDoc = GetCloneFrom(_XmlDocument);
+                    theCache.Set(key, cloneDoc, cacheTimeMinutes, _FileName);//添加Cache缓存Clone
                 }
             }
         }
@@ -388,60 +415,102 @@ namespace CYQ.Data.Xml
                 Log.Write("XHtmlBase.Save : InvalidPath : " + fileName, LogType.Error);
                 return false;
             }
-            string xHtml = string.Empty;
-            if (_XmlDocument != null && _XmlDocument.InnerXml.Length > 0)
-            {
-                xHtml = _XmlDocument.InnerXml.Replace(AppConfig.XHtml.DtdUri, "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd");
+            if (_XmlDocument == null) { return false; }
 
-            }
-            if (!string.IsNullOrEmpty(xHtml))
+            string html = _XmlDocument.InnerXml;
+
+            if (!string.IsNullOrEmpty(html))
             {
-                if (Directory.Exists(Path.GetDirectoryName(fileName)))
+                if (html.Contains(AppConfig.XHtml.DtdUri))
                 {
-                    try
-                    {
-                        File.WriteAllText(fileName, xHtml, _Encoding);
-                        return true;
-                    }
-                    catch
-                    {
-                        Thread.Sleep(20);
-                        try
-                        {
-                            File.WriteAllText(fileName, xHtml, _Encoding);
-                            return true;
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Write(err, LogType.Error);
-                        }
-                    }
-                    //}
+                    html = _XmlDocument.InnerXml.Replace(AppConfig.XHtml.DtdUri, "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd");
                 }
-                else
-                {
-                    Log.Write("No exist path folder:" + fileName, LogType.Error);
-                }
+                return IOHelper.Write(fileName, html, _Encoding);
+                //if (Directory.Exists(Path.GetDirectoryName(fileName)))
+                //{
+                //    try
+                //    {
+                //        File.WriteAllText(fileName, xHtml, _Encoding);
+                //        return true;
+                //    }
+                //    catch
+                //    {
+                //        Thread.Sleep(20);
+                //        try
+                //        {
+                //            File.WriteAllText(fileName, xHtml, _Encoding);
+                //            return true;
+                //        }
+                //        catch (Exception err)
+                //        {
+                //            Log.Write(err, LogType.Error);
+                //        }
+                //    }
+                //}
+                //}
+                //else
+                //{
+                //    Log.Write("No exist path folder:" + fileName, LogType.Error);
+                //}
             }
             return false;
         }
         private XmlDocument GetCloneFrom(XmlDocument xDoc)
         {
-            XmlDocument newDoc = new XmlDocument();
-            //if (xnm != null)// && !AppConfig.XHtml.UseFileLoadXml
+            //if (true || AppConfig.IsNetCore)
             //{
-            //    ResolverDtd.Resolver(ref newDoc); //不需要指定了，因为第一次已经生成了DTD文件到本地，另外路径已被替换指向本地。
+                //各种高效方法，都逃不开引用，后面的修改，直接修改了缓存节点。
+                XHtmlDocument document = new XHtmlDocument();
+
+                ////document.CreateNode( XmlNodeType.Element,"aaa"
+
+
+                //XmlElement ele = document.CreateElement("div");
+                //ele.IsEmpty = false;
+
+                //document.AppendChild(ele);
+
+                //if (xDoc.DocumentType != null && !AppConfig.IsNetCore)
+                //{
+                //    XmlNode docType = document.ImportNode(xDoc.DocumentType, false);
+                //    document.AppendChild(docType);
+                //}
+                //不加载DTD，加速处理速度。
+                XmlNode node = document.ImportNode(xDoc.DocumentElement, true);
+                document.AppendChild(node);
+
+
+                return document as XmlDocument;
             //}
-            try
-            {
-                newDoc.LoadXml(xDoc.InnerXml);
-            }
-            catch (Exception err)
-            {
-                Log.Write(err, LogType.Error);
-                newDoc.InnerXml = xDoc.InnerXml;
-            }
-            return newDoc;
+            //else
+            //{
+            //    //ASP.NET 有 bug，用clone节点方法，会产生意外，节点丢失，连基础加载都丢失。
+            //    XmlDocument newDoc = new XmlDocument();
+            //    try
+            //    {
+            //        newDoc.LoadXml(xDoc.InnerXml);
+            //    }
+            //    catch (Exception err)
+            //    {
+            //        Log.Write(err, LogType.Error);
+            //        newDoc.InnerXml = xDoc.InnerXml;
+            //    }
+            //    return newDoc;
+
+            //}
+            //    int length = xDoc.InnerXml.Length;
+            //    XmlDocument doc = xDoc.CloneNode(true) as XmlDocument;
+            //    if (doc.InnerXml.Length != length)
+            //    {
+
+            //    }
+            //    if (this.FileName == "D:\\Code\\taurus.git\\Taurus.MVC\\demo\\default\\Taurus.View\\Views\\Admin\\metric.html")
+            //    {
+
+            //    }
+            //    //克隆速度快。
+            //    return xDoc.Clone() as XmlDocument;
+
         }
         protected XmlNode Fill(string xPath, XmlNode parent)
         {
@@ -503,38 +572,44 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 给指定的字符加上CDATA
         /// </summary>
-        /// <param name="text">对象字符</param>
+        /// <param name="html">对象字符</param>
         /// <returns></returns>
-        public string SetCDATA(string text)
+        public string SetCDATA(string html)
         {
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(html))
             {
-                return text;
+                return html;
             }
-            text = text.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
-            text = text.Replace("<![CDATA[", "&lt;![CDATA[").Replace("]]>", "]]&gt;");
+            html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+            html = html.Replace("<![CDATA[", "&lt;![CDATA[").Replace("]]>", "]]&gt;");
             //text = text.Replace(((char)10).ToString(), "<BR>");
             //text = text.Replace(((char)13).ToString(), "<BR>");
             //text = text.Replace(((char)34).ToString(), "&quot;");
             //text = text.Replace(((char)39).ToString(), "&#39;");
-            text = text.Replace("\\", "#!!#").Replace("\0", "#!0!#");
-            text = Filter(text);
-            return AppConfig.XHtml.CDataLeft + text + AppConfig.XHtml.CDataRight;
+            html = html.Replace("\\", "#!!#").Replace("\0", "#!0!#");
+            html = Filter(html);
+            return AppConfig.XHtml.CDataLeft + html + AppConfig.XHtml.CDataRight;
         }
         /// <summary>
         /// 清除CDATA
         /// </summary>
-        /// <param name="text">对象字符</param>
+        /// <param name="html">对象字符</param>
         /// <returns></returns>
-        public string ClearCDATA(string text)
+        public string ClearCDATA(string html)
         {
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(html))
             {
-                return text;
+                return html;
             }
-            text = text.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
-            text = text.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
-            return text;
+            if (html.Contains("#!"))
+            {
+                html = html.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
+            }
+            if (html.Contains(AppConfig.XHtml.CDataLeft))
+            {
+                html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+            }
+            return html;
         }
         /// <summary>
         /// 过滤XML(十六进制值 0x1D)无效的字符（同时替换&gt;符号）

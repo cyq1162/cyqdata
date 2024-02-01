@@ -163,11 +163,6 @@
     <Compile Include="Orm\SimpleOrmBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="SQL\Schema\TableSchema.cs" />
     <Compile Include="SQL\Schema\CrossDB.cs" />
     <Compile Include="SQL\Schema\DBSchema.cs" />
@@ -274,18 +269,10 @@
     <Compile Include="Xml\XHtmlBase.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Xml\XHtmlUrlResolver.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Xml\XHtmlDocument.cs" />
     <Compile Include="Xml\XmlEnum.cs">
       <SubType>Code</SubType>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\xhtml-lat1.ent" />
-    <None Include="Resources\xhtml-special.ent" />
-    <None Include="Resources\xhtml-symbol.ent" />
-    <None Include="Resources\xhtml1-transitional.ent" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -298,13 +285,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

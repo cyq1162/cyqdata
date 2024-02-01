@@ -162,11 +162,22 @@ namespace CYQ.Data.Xml
             XmlElement xElement = Create(tag);
             try
             {
-                xElement.InnerXml = text;
+                if (!string.IsNullOrEmpty(text))
+                {
+                    if (text.Contains("<") && text.Contains(">"))
+                    {
+                        xElement.InnerXml = text;
+                    }
+                    else
+                    {
+                        xElement.InnerText = text;
+                    }
+                }
+
             }
             catch
             {
-                xElement.InnerXml = SetCDATA(text);
+                xElement.InnerText = SetCDATA(text);
             }
             if (attrAndValue != null && attrAndValue.Length % 2 == 0)
             {
@@ -351,8 +362,8 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 两个节点交换位置
         /// </summary>
-        /// <param name="XNodeFirst">第一个节点</param>
-        /// <param name="XNodeLast">第二个节点</param>
+        /// <param name="xNodeFirst">第一个节点</param>
+        /// <param name="xNodeLast">第二个节点</param>
         public void InterChange(XmlNode xNodeFirst, XmlNode xNodeLast)
         {
             if (xNodeFirst != null && xNodeLast != null)
@@ -376,12 +387,13 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 节点替换[支持两个的文档间替换]
         /// </summary>
-        /// <param name="NewXNode"></param>
-        /// <param name="OldXNode"></param>
+        /// <param name="newNode">新的数据节点</param>
+        /// <param name="oldNode">旧的节点</param>
         public void ReplaceNode(XmlNode newNode, XmlNode oldNode)
         {
             if (newNode != null && oldNode != null)
             {
+                //oldNode = newNode.Clone();
                 if (newNode.Name == oldNode.Name) // 节点名相同。
                 {
                     oldNode.RemoveAll();//清空旧节点
@@ -391,6 +403,7 @@ namespace CYQ.Data.Xml
                     {
                         for (int i = 0; i < attrs.Count; i++)
                         {
+                            if (attrs[i].Name == "xml:space") { continue; }
                             ((XmlElement)oldNode).SetAttribute(attrs[i].Name, attrs[i].Value);
                         }
                     }
@@ -415,8 +428,8 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 节点之后插入[支持两文档之间的插入]
         /// </summary>
-        /// <param name="NewNode">要被插入的新节点</param>
-        /// <param name="RefNode">在此节点后插入NewNode节点</param>
+        /// <param name="newNode">要被插入的新节点</param>
+        /// <param name="refNode">在此节点后插入NewNode节点</param>
         public void InsertAfter(XmlNode newNode, XmlNode refNode)
         {
             XmlNode xDocNode = CreateNode(newNode.Name, "");
@@ -426,8 +439,8 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 节点之前插入[支持两文档之间的插入]
         /// </summary>
-        /// <param name="NewNode">要被插入的新节点</param>
-        /// <param name="RefNode">在此节点前插入NewNode节点</param>
+        /// <param name="newNode">要被插入的新节点</param>
+        /// <param name="refNode">在此节点前插入NewNode节点</param>
         public void InsertBefore(XmlNode newNode, XmlNode refNode)
         {
             XmlNode xDocNode = CreateNode(newNode.Name, "");
@@ -657,12 +670,13 @@ namespace CYQ.Data.Xml
                         }
                         break;
                     case SetType.Select:
-                        if (node.InnerXml.Contains(AppConfig.XHtml.CDataLeft))//带特殊字符
+                        if (!node.InnerXml.StartsWith("<"))//带特殊字符
                         {
                             string innerHtml = node.InnerXml.Replace(string.Format("value=\"{0}\"", values[0]), string.Format("selected=\"selected\" value=\"{0}\"", values[0]));
                             try
                             {
-                                node.InnerXml = innerHtml;
+                                node.InnerText = innerHtml;
+                                //node.InnerXml = innerHtml;
                             }
                             catch
                             {
@@ -795,6 +809,9 @@ namespace CYQ.Data.Xml
         #endregion
 
         #region 重写最终输出OutXml
+        /// <summary>
+        /// 输出的Xml内容。
+        /// </summary>
         public override string OutXml
         {
             get
@@ -827,17 +844,24 @@ namespace CYQ.Data.Xml
 
                     #region 处理XHtml 头前缀、清空CData
 
-                    string xml = _XmlDocument.InnerXml.Replace(".dtd\"[]>", ".dtd\">");
-                    if (xml.IndexOf(" xmlns=") > -1)
+                    string html = _XmlDocument.InnerXml;
+                    if (html.Contains(".dtd\"[]>"))
                     {
-                        xml = xml.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                        html = html.Replace(".dtd\"[]>", ".dtd\">");
                     }
-                    string html = ClearCDATA(xml);
-                    if (!string.IsNullOrEmpty(docTypeHtml))
+                    if (html.Contains(" xmlns="))
                     {
-                        html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
+                        html = html.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
                     }
-                    html = html.Replace("&gt;", ">").Replace("&lt;", "<").Replace("&amp;", "&");//html标签符号。
+                    if (html.Contains("&"))
+                    {
+                        //先把&符号替换回来，再替换后面的。
+                        html = html.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
+                    }
+                    //if (!string.IsNullOrEmpty(docTypeHtml))
+                    //{
+                    //    html = html.Replace(docTypeHtml, "<!DOCTYPE html>");
+                    //}
                     #endregion
 
                     #region 处理剩余的占位符替换
@@ -846,6 +870,16 @@ namespace CYQ.Data.Xml
                         html = FormatHtml(html, null);
                     }
                     #endregion
+
+                    #region 清除CData标签
+                    html = ClearCDATA(html);
+                    #endregion
+
+                    if (html.StartsWith("<html"))
+                    {
+                        //从缓存节点读XmlDocument时，不加载dtd，输出需要补充
+                        html = "<!DOCTYPE html>" + html;
+                    }
 
                     return html;
                 }
@@ -1115,7 +1149,7 @@ namespace CYQ.Data.Xml
                 {
                     if (node.Attributes["clearflag"] == null)
                     {
-                        node.InnerXml = "";
+                        node.InnerText = string.Empty;
                     }
                     return;
                 }
@@ -1149,8 +1183,11 @@ namespace CYQ.Data.Xml
                         values.Clear();
                     }
                 }
+                ////用InnerText性能好，但循环后的内容无法通过节点操作。
+                //node.InnerText = innerXml.ToString();
                 try
                 {
+
                     node.InnerXml = innerXml.ToString();
                 }
                 catch

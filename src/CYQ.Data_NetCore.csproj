@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>CYQ.Data</AssemblyName>
     <RootNamespace>CYQ.Data</RootNamespace>
     <Authors>路过秋天</Authors>
     <Description>CYQ.Data is a orm for .net or .net core.【附：自动缓存、读写分离，分布式缓存（带一致性hash）等功能】Support：Mssql、Mysql、Oracle、Sqlite、Sybase、Postgres、DB2、DaMeng、KingBaseES、Access、Excel、FoxPro、Txt、Xml。【开源：https://github.com/cyq1162/cyqdata】</Description>
     <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</Product>
-    <Company>路过秋天 （2024-01-27）</Company>
+    <Company>路过秋天 （2024-02-01）</Company>
     <Copyright>版权所有 (C) 路过秋天 2010-2030</Copyright>
     <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Core 版本</AssemblyTitle>
-    <AssemblyVersion>5.9.0.6</AssemblyVersion>
-    <FileVersion>5.9.0.6</FileVersion>
+    <AssemblyVersion>5.9.1</AssemblyVersion>
+    <FileVersion>5.9.1</FileVersion>
 	 <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
   </PropertyGroup>
 
@@ -32,24 +32,33 @@
     <Compile Remove="DotNetCore\CYQ.Data.Core\**" />
     <Compile Remove="DotNetCore\System\Data\Common\**" />
     <Compile Remove="DotNet\**" />
+    <Compile Remove="Resources\**" />
     <Compile Remove="单元测试\**" />
     <Compile Remove="文档\**" />
     <EmbeddedResource Remove="DistributedLock\**" />
     <EmbeddedResource Remove="DotNetCore\CYQ.Data.Core\**" />
     <EmbeddedResource Remove="DotNetCore\System\Data\Common\**" />
     <EmbeddedResource Remove="DotNet\**" />
+    <EmbeddedResource Remove="Resources\**" />
     <EmbeddedResource Remove="单元测试\**" />
     <EmbeddedResource Remove="文档\**" />
     <None Remove="DistributedLock\**" />
     <None Remove="DotNetCore\CYQ.Data.Core\**" />
     <None Remove="DotNetCore\System\Data\Common\**" />
     <None Remove="DotNet\**" />
+    <None Remove="Resources\**" />
     <None Remove="单元测试\**" />
     <None Remove="文档\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="Properties\Resources.Designer.cs" />
+    <Compile Remove="Xml\XHtmlUrlResolver.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Properties\Resources.resx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -68,6 +77,9 @@
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
     
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
