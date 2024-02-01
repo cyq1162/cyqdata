@@ -74,7 +74,7 @@
   <ItemGroup>
     <PackageReference Include="DynamicExpresso.Core" Version="2.13.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.1.1" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
     
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.1" />
   </ItemGroup>
