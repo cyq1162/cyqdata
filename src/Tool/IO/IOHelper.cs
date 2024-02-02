@@ -163,7 +163,8 @@ namespace CYQ.Data.Tool
             else if (File.Exists(fileName))
             {
                 TextEncodingDetect detect = new TextEncodingDetect();
-                Encoding detectEncode = detect.GetEncoding(File.ReadAllBytes(fileName), defaultEncoding);
+                byte[] bytes = ReadAllBytes(fileName);
+                Encoding detectEncode = detect.GetEncoding(bytes, defaultEncoding);
                 if (detectEncode != Encoding.ASCII)
                 {
                     defaultEncoding = detectEncode;
@@ -179,8 +180,6 @@ namespace CYQ.Data.Tool
             {
                 encode = GetEncoding(fileName, encode);
             }
-            var mutex = GetMutex(fileName);
-
             try
             {
                 if (!isAppend)
@@ -191,6 +190,20 @@ namespace CYQ.Data.Tool
                         Directory.CreateDirectory(folderPath);
                     }
                 }
+            }
+            catch (Exception err)
+            {
+                if (writeLogOnError)
+                {
+                    Log.Write(err, LogType.Error);
+                }
+                return false;
+            }
+
+            var mutex = GetMutex(fileName);
+
+            try
+            {
                 using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
                 {
                     //if (!isAppend && fileName.EndsWith(".txt"))
@@ -222,17 +235,7 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static bool Exists(string fileName)
         {
-            var mutex = GetMutex(fileName);
-
-            try
-            {
-                return File.Exists(fileName);
-            }
-            finally
-            {
-                // ÊÍ·Å»¥³âËø
-                mutex.ReleaseMutex();
-            }
+            return File.Exists(fileName);
         }
         /// <summary>
         /// É¾³ýÎÄ¼þ
