@@ -11,7 +11,7 @@
     <RootNamespace>CYQ.Data</RootNamespace>
     <AssemblyName>CYQ.Data</AssemblyName>
     <SignAssembly>false</SignAssembly>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -176,7 +176,14 @@
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
     <Compile Include="Table\TableEnum.cs" />
-    <Compile Include="Tool\ConvertTool.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.ChangeReaderToList.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.Boolean.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.Guid.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.Enum.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.DateTime.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.String.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.Number.cs" />
+    <Compile Include="Tool\Convert\ConvertTool.cs" />
     <Compile Include="Tool\DB\TableInfo.cs" />
     <Compile Include="Tool\DB\DBInfo.cs" />
     <Compile Include="Tool\EncryptHelper.cs" />
@@ -194,7 +201,6 @@
     <Compile Include="SQL\SqlFormat.cs" />
     <Compile Include="SQL\SqlInjection.cs" />
     <Compile Include="SQL\SqlValue.cs" />
-    <Compile Include="Extension\IField.cs" />
     <Compile Include="DAL\DalCreate.cs">
       <SubType>Code</SubType>
     </Compile>

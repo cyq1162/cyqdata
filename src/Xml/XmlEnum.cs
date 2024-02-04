@@ -118,7 +118,7 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 1∑÷÷”
         /// </summary>
-        Minute,
+        Minute = 1,
         /// <summary>
         /// 1–° ±
         /// </summary>

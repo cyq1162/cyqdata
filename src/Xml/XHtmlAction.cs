@@ -150,6 +150,16 @@ namespace CYQ.Data.Xml
         #endregion
 
         #region ´´½¨
+
+        protected XmlElement Create(string tag)
+        {
+            if (xnm == null)
+            {
+                return _XmlDocument.CreateElement(tag);
+            }
+            return _XmlDocument.CreateElement(tag, xnm.LookupNamespace(PreXml));
+        }
+
         public void CreateNodeTo(XmlNode parentNode, string tag, string text, params string[] attrAndValue)
         {
             if (parentNode != null)

@@ -1,5 +1,3 @@
-
-using CYQ.Data.Extension;
 using CYQ.Data.Table;
 using System;
 using System.Text.RegularExpressions;
@@ -313,13 +311,13 @@ namespace CYQ.Data.SQL
         /// </summary>
         public static string GetIFieldSql(object whereObj)
         {
-            if (whereObj is IField)
-            {
-                IField filed = whereObj as IField;
-                string where = filed.Sql;
-                filed.Sql = "";
-                return where;
-            }
+            //if (whereObj is IField)
+            //{
+            //    IField filed = whereObj as IField;
+            //    string where = filed.Sql;
+            //    filed.Sql = "";
+            //    return where;
+            //}
             return Convert.ToString(whereObj);
         }
         #endregion

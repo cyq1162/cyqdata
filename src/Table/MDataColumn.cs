@@ -27,13 +27,10 @@ namespace CYQ.Data.Table
             structList = new List<MCellStruct>();
         }
         /// <summary>
-        /// 列名是否变更
+        /// 是否需要刷新索引
         /// </summary>
-        internal bool IsColumnNameChanged = false;
-        /// <summary>
-        /// 存储列名的索引
-        /// </summary>
-        private MDictionary<string, int> columnIndex = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        internal bool IsNeedRefleshIndex = false;
+       
         private int _CheckDuplicateState = -1;
         /// <summary>
         /// 添加列时，检测名称是否重复(默认为true)。
@@ -166,46 +163,64 @@ namespace CYQ.Data.Table
             return GetIndex(columnName) > -1;
         }
 
+        #region 索引获取与更新
+        /// <summary>
+        /// 存储列名的索引
+        /// </summary>
+        private Dictionary<string, int> columnIndex = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// 更新索引
+        /// </summary>
+        internal void RefleshIndex()
+        {
+            IsNeedRefleshIndex = false;
+            if (Count == 0) { return; }
+            MDictionary<string, int> newIndexs = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            string[] items = AppConfig.UI.AutoPrefixs.Split(',');
+            for (int i = 0; i < Count; i++)
+            {
+                string name = this[i].ColumnName;
+                if (name.IndexOf('_') > -1)
+                {
+                    name = name.Replace("_", "");
+                }
+                newIndexs.Add(name, i);
+                foreach (string item in items)
+                {
+                    newIndexs.Add(item + name, i);//事先存好，加快速度。
+                }
+            }
+            this.columnIndex = newIndexs;
+        }
+
         /// <summary>
         /// 获取列所在的索引位置(若不存在返回-1）
         /// </summary>
         public int GetIndex(string columnName)
         {
-            if (Count == 0) { return -1; }
-            columnName = columnName.Trim();
-            if (columnIndex.Count == 0 || IsColumnNameChanged || columnIndex.Count % Count != 0)//columnIndex.Count != Count
+            if (IsNeedRefleshIndex)
             {
-                columnIndex.Clear();
-                string[] items = AppConfig.UI.AutoPrefixs.Split(',');
-                for (int i = 0; i < Count; i++)
-                {
-                    string name = this[i].ColumnName;
-                    if (name.IndexOf('_') > -1)
-                    {
-                        name = name.Replace("_", "");
-                    }
-                    columnIndex.Add(name, i);
-                    foreach (string item in items)
-                    {
-                        columnIndex.Add(item + name, i);//事先存好，加快速度。
-                    }
-                }
-                IsColumnNameChanged = false;
+                RefleshIndex();
             }
-
             if (!string.IsNullOrEmpty(columnName))
             {
-                if (columnName.IndexOf('_') > -1)
-                {
-                    columnName = columnName.Replace("_", "");//兼容映射处理
-                }
                 if (columnIndex.ContainsKey(columnName))
                 {
                     return columnIndex[columnName];
                 }
+                if (columnName.Contains("_"))
+                {
+                    columnName = columnName.Replace("_", "");//兼容映射处理
+                    if (columnIndex.ContainsKey(columnName))
+                    {
+                        return columnIndex[columnName];
+                    }
+                }
             }
             return -1;
         }
+        #endregion
         /// <summary>
         /// 将 列 的序号或位置更改为指定的序号或位置。
         /// </summary>
@@ -238,7 +253,7 @@ namespace CYQ.Data.Table
                     structList.Insert(ordinal, mstruct);
                 }
             }
-            columnIndex.Clear();
+            IsNeedRefleshIndex = true;
         }
         /// <summary>
         /// 给列批量赋相同的值。
@@ -519,7 +534,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                columnIndex.Clear();
+                IsNeedRefleshIndex = true;
             }
         }
 
@@ -539,7 +554,7 @@ namespace CYQ.Data.Table
                         Add(item);
                     }
                 }
-                columnIndex.Clear();
+                IsNeedRefleshIndex = true;
             }
         }
 
@@ -558,7 +573,7 @@ namespace CYQ.Data.Table
                 if (index > -1)
                 {
                     RemoveAt(index);
-                    columnIndex.Clear();
+                    IsNeedRefleshIndex = true;
                 }
             }
         }
@@ -583,8 +598,7 @@ namespace CYQ.Data.Table
                     }
                 }
             }
-            columnIndex.Clear();
-
+            IsNeedRefleshIndex = true;
         }
 
 
@@ -604,7 +618,7 @@ namespace CYQ.Data.Table
                         }
                     }
                 }
-                columnIndex.Clear();
+                IsNeedRefleshIndex = true;
             }
 
         }

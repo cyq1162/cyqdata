@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Table;
-
-using CYQ.Data.Extension;
 using System.Data;
 using CYQ.Data.Tool;
 using System.Data.Common;
@@ -533,10 +531,10 @@ namespace CYQ.Data.SQL
             {
                 return Convert.ToString(whereObj);
             }
-            else if (whereObj is IField)
-            {
-                return SqlFormat.GetIFieldSql(whereObj);
-            }
+            //else if (whereObj is IField)
+            //{
+            //    return SqlFormat.GetIFieldSql(whereObj);
+            //}
             MDataCell cell = null;
             if (whereObj is Enum)
             {

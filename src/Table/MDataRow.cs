@@ -6,7 +6,6 @@ using System.Collections;
 using System.ComponentModel;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
-using CYQ.Data.Extension;
 using System.Reflection;
 using System.Collections.Specialized;
 using CYQ.Data.UI;
@@ -176,15 +175,15 @@ namespace CYQ.Data.Table
                 {
                     return this[field as string];
                 }
-                else if (field is IField)
-                {
-                    IField iFiled = field as IField;
-                    if (iFiled.ColID > -1)
-                    {
-                        return this[iFiled.ColID];
-                    }
-                    return this[iFiled.Name];
-                }
+                //else if (field is IField)
+                //{
+                //    IField iFiled = field as IField;
+                //    if (iFiled.ColID > -1)
+                //    {
+                //        return this[iFiled.ColID];
+                //    }
+                //    return this[iFiled.Name];
+                //}
                 return this[field.ToString()];
             }
         }
@@ -192,24 +191,38 @@ namespace CYQ.Data.Table
         {
             get
             {
-                int index = -1;
-                if (key.Length <= Count.ToString().Length) //2<=20
-                {
-                    //判断是否为数字。
-                    if (!int.TryParse(key, out index))
-                    {
-                        index = -1;
-                    }
-                }
+                int index = Columns.GetIndex(key);//重新检测列是否一致。;
                 if (index == -1)
                 {
-                    index = Columns.GetIndex(key);//重新检测列是否一致。
+                    if (key.Length < 3) //2<=20
+                    {
+                        //判断是否为数字。
+                        if (!int.TryParse(key, out index))
+                        {
+                            index = -1;
+                        }
+                    }
                 }
                 if (index > -1)
                 {
                     return this[index];
                 }
                 return null;
+            }
+        }
+        public MDataCell this[int index]
+        {
+            get
+            {
+                if (index > -1 && index < Count)
+                {
+                    return CellList[index];
+                }
+                return null;
+            }
+            set
+            {
+                Error.Throw(AppConst.Global_NotImplemented);
             }
         }
         private MDataTable _Table;
@@ -744,21 +757,7 @@ namespace CYQ.Data.Table
         {
             get { return CellList.Count; }
         }
-        public MDataCell this[int index]
-        {
-            get
-            {
-                if (index > -1 && index < Count)
-                {
-                    return CellList[index];
-                }
-                return null;
-            }
-            set
-            {
-                Error.Throw(AppConst.Global_NotImplemented);
-            }
-        }
+
         public void Add(string columnName, object value)
         {
             Add(columnName, SqlDbType.NVarChar, value);
@@ -990,9 +989,9 @@ namespace CYQ.Data.Table
 
             return GetObj(t, this);//标准库无法用Emit
 #else
-           
+
             bool isOrmBaseOrNotCustom = t.BaseType.Name == "OrmBase" || (t.BaseType.BaseType != null && t.BaseType.BaseType.Name == "OrmBase");
-           
+
             if (!isOrmBaseOrNotCustom)
             {
                 isOrmBaseOrNotCustom = ReflectTool.GetSystemType(ref t) != SysType.Custom;

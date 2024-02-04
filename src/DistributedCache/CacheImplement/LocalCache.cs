@@ -16,15 +16,34 @@ namespace CYQ.Data.Cache
     /// </summary>
     internal partial class LocalCache : DistributedCache
     {
+        /// <summary>
+        /// 保存 key=》缓存对象
+        /// </summary>
         private MDictionary<string, object> theCache = new MDictionary<string, object>(2048, StringComparer.OrdinalIgnoreCase);//key,cache
+        /// <summary>
+        /// 保存 key=> 超时时间
+        /// </summary>
         private MDictionary<string, DateTime> theKeyTime = new MDictionary<string, DateTime>(2048, StringComparer.OrdinalIgnoreCase);//key,time
+        /// <summary>
+        /// 保存 key=> 文件依赖【路径】
+        /// </summary>
         private MDictionary<string, string> theFileName = new MDictionary<string, string>();//key,filename
 
+        /// <summary>
+        /// 保存 时间点 => keys , 将任务过期时间分布%任务间隔
+        /// </summary>
         private SortedDictionary<int, MList<string>> theTime = new SortedDictionary<int, MList<string>>();//worktime,keylist
+        /// <summary>
+        /// 保存 folderPath =》文件夹监控
+        /// </summary>
         private MDictionary<string, FileSystemWatcher> theFolderWatcher = new MDictionary<string, FileSystemWatcher>();//folderPath,watch
+        /// <summary>
+        /// 保存 folderPath =》 keys
+        /// </summary>
         private MDictionary<string, MList<string>> theFolderKeys = new MDictionary<string, MList<string>>();//folderPath,keylist
 
-        private static object lockObj = new object();
+        private static object lockAdd = new object();
+        private static object lockObj= new object();
         private DateTime workTime, startTime;
 
         DateTime allowCacheTableTime = DateTime.Now;
@@ -213,7 +232,7 @@ namespace CYQ.Data.Cache
         /// <param name="value">对象值</param>
         public override bool Set(string key, object value)
         {
-            return Set(key, value, AppConfig.Cache.DefaultMinutes);
+            return Set(key, value, 0);
         }
         /// <param name="cacheMinutes">缓存时间(单位分钟)</param>
         public override bool Set(string key, object value, double cacheMinutes)
@@ -228,6 +247,7 @@ namespace CYQ.Data.Cache
             {
                 if (string.IsNullOrEmpty(key)) { return false; }
                 if (value == null) { return Remove(key); }
+                
                 lock (lockObj)
                 {
                     if (theCache.ContainsKey(key))
@@ -320,7 +340,7 @@ namespace CYQ.Data.Cache
 
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.Cache.DefaultMinutes, null);
+            return Add(key, value, 0, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {
@@ -328,7 +348,11 @@ namespace CYQ.Data.Cache
         }
         public override bool Add(string key, object value, double cacheMinutes, string fileName)
         {
-            lock (key)
+            if (Contains(key))
+            {
+                return false;
+            }
+            lock (lockAdd)
             {
                 if (Contains(key))
                 {
@@ -352,25 +376,6 @@ namespace CYQ.Data.Cache
         public override bool Remove(string key)
         {
             if (string.IsNullOrEmpty(key)) { return false; }
-            //DBSchema.Remove(key);
-            //TableSchema.Remove(key);
-            //if (key.StartsWith("CCache_"))
-            //{
-            //    if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
-            //    {
-            //        IOHelper.Delete(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath + "/" + key + ".ts");
-            //        //顺带移除数据库表、视图、存储过程 名称列表缓存。
-            //        string[] files = Directory.GetFiles(AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath, "*.json");
-            //        if (files != null && files.Length > 0)
-            //        {
-            //            foreach (string file in files)
-            //            {
-            //                IOHelper.Delete(file);
-            //            }
-            //        }
-
-            //    }
-            //}
             return theCache.Remove(key);//清除Cache，其它数据在定义线程中移除
         }
         /// <summary>

@@ -34,7 +34,7 @@ namespace CYQ.Data.Cache
 
         public override bool Set(string key, object value)
         {
-            return Set(key, value, 60 * 24 * 30);
+            return Set(key, value, 0);
         }
 
         public override bool Set(string key, object value, double cacheMinutes)
@@ -46,11 +46,12 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             if (value == null) { return Remove(key); }
+            if (cacheMinutes == 0) { cacheMinutes = AppConfig.Cache.DefaultMinutes; }
             return client.Set(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
         public override bool Add(string key, object value)
         {
-            return Add(key, value, AppConfig.Cache.DefaultMinutes, null);
+            return Add(key, value, 0, null);
         }
         public override bool Add(string key, object value, double cacheMinutes)
         {
@@ -60,6 +61,7 @@ namespace CYQ.Data.Cache
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             if (value == null) { return Remove(key); }
+            if (cacheMinutes == 0) { cacheMinutes = AppConfig.Cache.DefaultMinutes; }
             return client.Add(key, value, Convert.ToInt32(cacheMinutes * 60));
         }
 

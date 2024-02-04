@@ -6,7 +6,6 @@ using System.Collections;
 using System.ComponentModel;
 using CYQ.Data.SQL;
 using CYQ.Data.Tool;
-using CYQ.Data.Extension;
 using System.Reflection;
 using System.Collections.Specialized;
 using CYQ.Data.UI;

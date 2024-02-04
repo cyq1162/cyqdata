@@ -103,7 +103,7 @@ namespace CYQ.Data.Table
                 _ColumnName = value;
                 if (_MDataColumn != null)
                 {
-                    _MDataColumn.IsColumnNameChanged = true;//列名已变更，存储索引也需要变更
+                    _MDataColumn.IsNeedRefleshIndex = true;//列名已变更，存储索引也需要变更
                 }
             }
         }
