@@ -7,6 +7,9 @@ using System.Text;
 
 namespace CacheManage_Demo
 {
+    /// <summary>
+    /// 说明：V5.9.X.Y 版本后 CacheManage 更名为：DistributedCache
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
@@ -24,7 +27,7 @@ namespace CacheManage_Demo
         /// </summary>
         static void LocalCache()
         {
-            CacheManage cache = CacheManage.Instance;//自动获取缓存类型（默认本地缓存）。
+            DistributedCache cache = DistributedCache.Instance;//自动获取缓存类型（默认本地缓存）。
             //CacheManage cache = CacheManage.LocalInstance;//指定本地缓存
             if (!cache.Contains("a1"))
             {
@@ -61,7 +64,7 @@ namespace CacheManage_Demo
         static void MemCache()
         {
             //使用
-            AppConfig.Cache.MemCacheServers = "127.0.0.1:11211";//配置启用MemCache,127.0.0.1:11212
+            AppConfig.MemCache.Servers = "127.0.0.1:11211";//配置启用MemCache,127.0.0.1:11212
             LocalCache();
         }
 
@@ -71,7 +74,7 @@ namespace CacheManage_Demo
         static void RedisCache()
         {
             //使用分布式缓存：Redis
-            AppConfig.Cache.RedisServers = "127.0.0.1:6379";//配置启用Redis,127.0.0.1:6379
+            AppConfig.Redis.Servers = "127.0.0.1:6379";//配置启用Redis,127.0.0.1:6379
            // AppConfig.Cache.RedisServers = "127.0.0.1:6379 - 123456";//配置启用Redis,127.0.0.1:6379，带密码：123456
             LocalCache();
         }
