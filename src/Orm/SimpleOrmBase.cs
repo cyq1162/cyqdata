@@ -138,6 +138,10 @@ namespace CYQ.Data.Orm
                 //conn 为 null，则自动取值，为空则人为传空，不处理。
                 if (_Action == null && _conn != "")
                 {
+                    if (_conn == null && string.IsNullOrEmpty(AppConfig.DB.DefaultConn))
+                    {
+                        return null;
+                    }
                     SetDelayInit(_entityInstance, _tableName, _conn);//延迟加载
                     if (_Action != null && _Action.dalHelper != null)
                     {
@@ -681,41 +685,45 @@ namespace CYQ.Data.Orm
         }
         public void LoadFrom(object jsonOrEntity, BreakOp op)
         {
-            MDataRow newValueRow = MDataRow.CreateFrom(jsonOrEntity, null, op);
             if (Action != null)
             {
-                Action.Data.LoadFrom(newValueRow);
+                Action.Data.LoadFrom(jsonOrEntity, op);
+                Action.Data.SetToEntity(entity);
             }
-            List<PropertyInfo> piList = ReflectTool.GetPropertyList(typeInfo);
-            foreach (PropertyInfo item in piList)
+            else
             {
-                if (item.CanWrite)
-                {
-                    MDataCell cell = newValueRow[item.Name];
-                    if (cell != null && !cell.IsNull)
-                    {
-                        try
-                        {
-                            item.SetValue(entity, ConvertTool.ChangeType(cell.Value, item.PropertyType), null);
-                        }
-                        catch (Exception err)
-                        {
-                            Log.Write(err, LogType.Error);
-                        }
-                    }
-                }
+                MDataRow.CreateFrom(jsonOrEntity, null, op).SetToEntity(entity);
             }
+            //List<PropertyInfo> piList = ReflectTool.GetPropertyList(typeInfo);
+            //foreach (PropertyInfo item in piList)
+            //{
+            //    if (item.CanWrite)
+            //    {
+            //        MDataCell cell = newValueRow[item.Name];
+            //        if (cell != null && !cell.IsNull)
+            //        {
+            //            try
+            //            {
+            //                item.SetValue(entity, ConvertTool.ChangeType(cell.Value, item.PropertyType), null);
+            //            }
+            //            catch (Exception err)
+            //            {
+            //                Log.Write(err, LogType.Error);
+            //            }
+            //        }
+            //    }
+            //}
         }
         #endregion
         internal void SetValueToEntity()
         {
-            SetValueToEntity(null, RowOp.IgnoreNull);
+            SetValueToEntity(null);
         }
-        internal void SetValueToEntity(RowOp op)
-        {
-            SetValueToEntity(null, op);
-        }
-        internal void SetValueToEntity(string propName, RowOp op)
+        //internal void SetValueToEntity(RowOp op)
+        //{
+        //    SetValueToEntity(null, op);
+        //}
+        internal void SetValueToEntity(string propName)
         {
             if (!string.IsNullOrEmpty(propName))
             {
@@ -741,7 +749,7 @@ namespace CYQ.Data.Orm
             {
                 if (Action != null)
                 {
-                    Action.Data.SetToEntity(entity, op);
+                    Action.Data.SetToEntity(entity);
                 }
             }
         }
@@ -808,7 +816,7 @@ namespace CYQ.Data.Orm
         {
             if (!string.IsNullOrEmpty(propValue))
             {
-                SetValueToEntity(propValue, RowOp.IgnoreNull);
+                SetValueToEntity(propValue);
             }
         }
 

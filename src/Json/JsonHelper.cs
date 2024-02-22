@@ -31,79 +31,60 @@ namespace CYQ.Data.Json
 
         #region 实例属性
 
+        private JsonOp _jsonOp;
+        public JsonOp JsonOp
+        {
+            get
+            {
+                if (_jsonOp == null) { _jsonOp = new JsonOp() { }; }
+                return _jsonOp;
+            }
+            set
+            {
+                _jsonOp = value;
+            }
+        }
+
         public JsonHelper()
         {
-
+            OnInit(false, false, null);
+        }
+        public JsonHelper(JsonOp jsonOp)
+        {
+            OnInit(false, false, jsonOp);
         }
         /// <param name="addHead">with easyui header ?<para>是否带输出头</para></param>
         public JsonHelper(bool addHead)
         {
-            _AddHead = addHead;
+            OnInit(addHead, false, null);
         }
 
         /// <param name="addSchema">first row with table schema ?
         /// <para>是否首行带表结构[MDataTable.LoadFromJson可以还原表的数据类型]</para></param>
         public JsonHelper(bool addHead, bool addSchema)
         {
+            OnInit(addHead, addSchema, null);
+        }
+        public JsonHelper(bool addHead, bool addSchema, JsonOp jsonOp)
+        {
+            OnInit(addHead, addSchema, jsonOp);
+        }
+
+        private void OnInit(bool addHead, bool addSchema, JsonOp jsonOp)
+        {
             _AddHead = addHead;
             _AddSchema = addSchema;
+            if (JsonOp != null)
+            {
+                this.JsonOp = jsonOp;
+            }
+            this.JsonOp.Level++;
         }
+
+
         #region 属性
-        /// <summary>
-        /// Escape options
-        /// <para>转义符号</para>
-        /// </summary>
-        public EscapeOp Escape = JsonHelper.DefaultEscape;
-        /// <summary>
-        /// convert filed to lower
-        /// <para>是否将名称转为小写</para>
-        /// </summary>
-        public bool IsConvertNameToLower = false;
-        /// <summary>
-        /// convert enum to string
-        /// <para>是否将枚举转字符串</para>
-        /// </summary>
-        public bool IsConvertEnumToString = false;
-        /// <summary>
-        /// convert enum to DescriptionAttribute
-        /// <para>是否将枚举转属性描述</para>
-        /// </summary>
-        public bool IsConvertEnumToDescription = false;
-        /// <summary>
-        /// formate datetime
-        /// <para>日期的格式化（默认：yyyy-MM-dd HH:mm:ss）</para>
-        /// </summary>
-        public string DateTimeFormatter = "yyyy-MM-dd HH:mm:ss";
         private const string brFlag = "[#<br>]";
-        RowOp _RowOp = RowOp.IgnoreNull;
-        /// <summary>
-        ///  filter json data
-        /// <para>Json输出行数据的过滤选项</para>
-        /// </summary>
-        public RowOp RowOp
-        {
-            get
-            {
-                return _RowOp;
-            }
-            set
-            {
-                _RowOp = value;
-            }
-        }
-        //internal BreakOp BreakOp
-        //{
-        //    get
-        //    {
-        //        switch (_RowOp)
-        //        {
-        //            case Table.RowOp.IgnoreNull:
-        //                return Table.BreakOp.Null;
-        //            default:
-        //                return Table.BreakOp.None;
-        //        }
-        //    }
-        //}
+
         private bool _AddHead = false;
         private bool _AddSchema = false;
         /// <summary>
@@ -171,7 +152,7 @@ namespace CYQ.Data.Json
         }
         #endregion
 
-        private List<string> bodyItems = new List<string>(128);
+        private List<string> bodyItems = new List<string>(64);
         private StringBuilder headText = new StringBuilder();
         private StringBuilder footText = new StringBuilder();
 
@@ -235,67 +216,114 @@ namespace CYQ.Data.Json
         {
             bodyItems.Add(Format(name, value, noQuotes));
         }
+        public void Add(string name, int value)
+        {
+            string item = "\"" + name + "\":" + value;
+            bodyItems.Add(item);
+        }
+        public void Add(string name, bool value)
+        {
+            string item = "\"" + name + "\":" + (value ? "true" : "false");
+            bodyItems.Add(item);
+        }
+        public void Add(string name, DateTime value)
+        {
+            string item = "\"" + name + "\":\"" + value.ToString(this.JsonOp.DateTimeFormatter) + "\"";
+            bodyItems.Add(item);
+        }
+        public void Add(string name, Guid value)
+        {
+            string item = "\"" + name + "\":\"" + value + "\"";
+            bodyItems.Add(item);
+        }
         public void Add(string name, object value)
         {
             if (value != null)
             {
-                string v = null;
-                Type t = value.GetType();
-                if (t.IsEnum)
+                if (value is ValueType)
                 {
-                    bool descriptionNoValue = true;
-                    if (IsConvertEnumToDescription)
-                    {
-                        FieldInfo field = t.GetField(value.ToString());
-                        if (field != null)
-                        {
-                            DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
-                            if (da != null)
-                            {
-                                Add(name, da.Description, false);
-                                descriptionNoValue = false;
-                            }
-                        }
+                    if (value is int) { Add(name, (int)value); return; }
+                    if (value is bool) { Add(name, (bool)value); return; }
+                    if (value is DateTime) { Add(name, (DateTime)value); return; }
+                    if (value is Guid) { Add(name, (Guid)value); return; }
+                    if (value is Enum) { AddEnum(name, value); return; }
 
-                    }
-                    if (descriptionNoValue)
-                    {
-                        if (IsConvertEnumToString)
-                        {
-                            Add(name, value.ToString(), false);
-                        }
-                        else
-                        {
-                            Add(name, ((int)value).ToString(), true);
-                        }
-                    }
-
+                    string item = "\"" + name + "\":" + value;
+                    bodyItems.Add(item);
+                }
+                else if (value is string)
+                {
+                    Add(name, (string)value);
                 }
                 else
                 {
-                    DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
-                    bool noQuotes = group == DataGroupType.Number || group == DataGroupType.Bool;
-                    if (group == DataGroupType.Object)
-                    {
-                        v = ToJson(value);
-                    }
-                    else
-                    {
-                        v = Convert.ToString(value);
-                        if (group == DataGroupType.Bool)
-                        {
-                            v = v.ToLower();
-                        }
-                    }
-
-                    Add(name, v, noQuotes);
+                    Add(name, ToJson(value, this.JsonOp.Clone()));
                 }
+                //string v = null;
+                //Type t = value.GetType();
+                //if (t.IsEnum)
+                //{
+
+
+                //}
+                //else
+                //{
+                //    DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
+                //    bool noQuotes = group == DataGroupType.Number || group == DataGroupType.Bool;
+                //    if (group == DataGroupType.Object)
+                //    {
+                //        v = ToJson(value);
+                //    }
+                //    else
+                //    {
+                //        v = Convert.ToString(value);
+                //        if (group == DataGroupType.Bool)
+                //        {
+                //            v = v.ToLower();
+                //        }
+                //    }
+
+                //    Add(name, v, noQuotes);
+                //}
             }
             else
             {
                 Add(name, "null", true);
             }
         }
+
+        #region AddValueType
+        private void AddEnum(string name, object value)
+        {
+            bool descriptionNoValue = true;
+            if (this.JsonOp.IsConvertEnumToDescription)
+            {
+                FieldInfo field = value.GetType().GetField(value.ToString());
+                if (field != null)
+                {
+                    DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    if (da != null)
+                    {
+                        Add(name, da.Description, false);
+                        descriptionNoValue = false;
+                    }
+                }
+
+            }
+            if (descriptionNoValue)
+            {
+                if (this.JsonOp.IsConvertEnumToString)
+                {
+                    Add(name, value.ToString(), false);
+                }
+                else
+                {
+                    Add(name, (int)value);
+                }
+            }
+        }
+        #endregion
+
         private string Format(string name, string value, bool children)
         {
             value = value ?? "";
@@ -373,7 +401,7 @@ namespace CYQ.Data.Json
                 {
                     AddBr();
                 }
-                if (_AddHead || rowCount > 1)
+                if (_AddHead || (isArrayEnd && rowCount > 1))
                 {
                     sb.Append("[");
                 }
@@ -417,7 +445,7 @@ namespace CYQ.Data.Json
                 }
                 //sb = sb.Replace(",", "", sb.Length - 1, 1);//去除最后一个,号。
                 //sb.Append("}");
-                if (_AddHead || rowCount > 1)
+                if (_AddHead || (isArrayEnd && rowCount > 1))
                 {
                     sb.Append("]");
                 }
@@ -428,19 +456,9 @@ namespace CYQ.Data.Json
                 sb.Append("}");
             }
             return sb.ToString();
-            //string json = sb.ToString();
-            //if (AppConfig.IsWeb && Escape == EscapeOp.Yes)
-            //{
-            //    json = json.Replace("\n", "<br/>");
-            //}
-            //if (Escape != EscapeOp.No) // Web应用
-            //{
-            //    json = json.Replace("\t", " ").Replace("\r", " ");
-            //}
-            //return json;
-
         }
 
+        internal bool isArrayEnd = true;
         /// <param name="arrayEnd">end with [] ?</param>
         /// <returns></returns>
         public string ToString(bool arrayEnd)
@@ -449,6 +467,10 @@ namespace CYQ.Data.Json
             if (arrayEnd && !result.StartsWith("["))
             {
                 result = '[' + result + ']';
+            }
+            else if (result.Length == 0)
+            {
+                return "{}";
             }
             return result;
         }
@@ -523,7 +545,7 @@ namespace CYQ.Data.Json
                 int fi = key.IndexOf('.');
                 if (int.TryParse(fKey, out i))//数字
                 {
-                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(json, i + 1);
+                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(json, i + 1, EscapeOp.No);
                     if (i < jsonList.Count)
                     {
                         Dictionary<string, string> numJson = jsonList[i];
@@ -645,7 +667,7 @@ namespace CYQ.Data.Json
                 {
                     json = ToJson(json);
                 }
-                List<Dictionary<string, string>> result = JsonSplit.Split(json, 1);
+                List<Dictionary<string, string>> result = JsonSplit.Split(json, 1, EscapeOp.No);
                 if (result != null && result.Count > 0)
                 {
                     return result[0];
@@ -672,14 +694,15 @@ namespace CYQ.Data.Json
         }
         private void SetEscape(ref string value)
         {
-            if (Escape == EscapeOp.No) { return; }
+            var escapeOp = JsonOp.EscapeOp;
+            if (escapeOp == EscapeOp.No) { return; }
             bool isInsert = false;
             int len = value.Length;
             StringBuilder sb = new StringBuilder(len + 10);
             for (int i = 0; i < len; i++)
             {
                 char c = value[i];
-                if (Escape == EscapeOp.Encode)
+                if (escapeOp == EscapeOp.Encode)
                 {
                     if (c < 32 || c == '"' || c == '\\')
                     {
@@ -700,13 +723,13 @@ namespace CYQ.Data.Json
                             sb.Append("\\n");//直接替换追加。
                             break;
                         case '\t':
-                            if (Escape == EscapeOp.Yes)
+                            if (escapeOp == EscapeOp.Yes)
                             {
                                 sb.Append("\\t");//直接替换追加
                             }
                             break;
                         case '\r':
-                            if (Escape == EscapeOp.Yes)
+                            if (escapeOp == EscapeOp.Yes)
                             {
                                 sb.Append("\\r");//直接替换追加
                             }
@@ -748,8 +771,8 @@ namespace CYQ.Data.Json
                         //            break;
                         //    }
                         //}
-                        bool isOK = Escape == EscapeOp.Yes;// || (i != 0 && i == len - 1 && value[i - 1] != '\\');// 如果是以\结尾,（非\\结尾时, 这部分是强制转，不会然影响整体格式）
-                        if (!isOK && Escape == EscapeOp.Default && len > 1 && i < len - 1)//中间
+                        bool isOK = escapeOp == EscapeOp.Yes;// || (i != 0 && i == len - 1 && value[i - 1] != '\\');// 如果是以\结尾,（非\\结尾时, 这部分是强制转，不会然影响整体格式）
+                        if (!isOK && escapeOp == EscapeOp.Default && len > 1 && i < len - 1)//中间
                         {
                             switch (value[i + 1])
                             {
@@ -786,7 +809,7 @@ namespace CYQ.Data.Json
         /// </summary>
         public static string UnEscape(string result, EscapeOp op)
         {
-            if (op == EscapeOp.No) { return result; }
+            if (op == EscapeOp.No || string.IsNullOrEmpty(result)) { return result; }
             if (op == EscapeOp.Encode)
             {
                 if (result.IndexOf("@#") > -1 && result.IndexOf("#@") > -1) // 先解系统编码
@@ -826,1300 +849,6 @@ namespace CYQ.Data.Json
                 }
             }
             return result;
-        }
-    }
-
-    // 扩展交互部分
-    public partial class JsonHelper
-    {
-        /// <summary>
-        /// 用于控制自循环的层级判断。
-        /// </summary>
-        internal int Level = 1;
-        /// <summary>
-        /// 用于自循环检测列表。
-        /// </summary>
-        internal MDictionary<int, int> LoopCheckList = new MDictionary<int, int>();
-        /// <summary>
-        /// Fill obj and get json from  ToString() method
-        /// <para>从数据表中取数据填充,最终可输出json字符串</para>
-        /// </summary>
-        public void Fill(MDataTable table)
-        {
-            if (table == null)
-            {
-                ErrorMsg = "MDataTable object is null";
-                return;
-            }
-            if (_AddSchema)
-            {
-                Fill(table.Columns, false);
-            }
-            //RowCount = table.Rows.Count;
-            Total = table.RecordsAffected;
-
-            if (table.Rows.Count > 0)
-            {
-                for (int i = 0; i < table.Rows.Count; i++)
-                {
-                    Fill(table.Rows[i]);
-                }
-            }
-        }
-        /// <summary>
-        /// Fill obj and get json from  ToString() method
-        /// <para>从数据行中取数据填充,最终可输出json字符串</para>
-        /// </summary>
-        public void Fill(MDataRow row)
-        {
-            if (row == null)
-            {
-                ErrorMsg = "MDataRow object is null";
-                return;
-            }
-
-            for (int i = 0; i < row.Count; i++)
-            {
-                MDataCell cell = row[i];
-                if (cell.IsJsonIgnore)
-                {
-                    continue;
-                }
-                if (_RowOp == RowOp.None || (!cell.IsNull && (cell.Struct.IsPrimaryKey || cell.State >= (int)_RowOp)))
-                {
-                    #region MyRegion
-                    string name = row[i].ColumnName;
-                    if (IsConvertNameToLower)
-                    {
-                        name = name.ToLower();
-                    }
-
-                    string value = cell.ToString();
-                    DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
-                    bool noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
-                    if (cell.IsNull)
-                    {
-                        value = "null";
-                        noQuot = true;
-                    }
-                    else
-                    {
-
-                        if (group == DataGroupType.Bool || (cell.Struct.MaxSize == 1 && group == DataGroupType.Number)) // oracle 下的number 1会处理成bool类型
-                        {
-                            value = value.ToLower();
-                        }
-                        else if (group == DataGroupType.Date)
-                        {
-                            DateTime dt;
-                            if (DateTime.TryParse(value, out dt))
-                            {
-                                value = dt.ToString(DateTimeFormatter);
-                            }
-                        }
-                        else if (group == DataGroupType.Object)
-                        {
-                            int hash = cell.Value.GetHashCode();
-                            //检测是否循环引用
-                            if (LoopCheckList.ContainsKey(hash))
-                            {
-                                //continue;
-                                int level = LoopCheckList[hash];
-                                if (level < Level)
-                                {
-                                    continue;
-                                }
-                                else
-                                {
-                                    LoopCheckList[hash] = Level;//更新级别
-                                }
-                            }
-                            else
-                            {
-                                LoopCheckList.Add(hash, Level);
-                            }
-                            Type t = cell.Struct.ValueType;
-                            if (t.FullName == "System.Object")
-                            {
-                                t = cell.Value.GetType();
-                            }
-                            if (t.Name == "Byte[]")
-                            {
-                                value = Convert.ToBase64String(cell.Value as byte[]);
-                            }
-                            else if (t.Name == "String")
-                            {
-                                value = cell.StringValue;
-                            }
-                            else
-                            {
-                                if (cell.Value is IEnumerable)
-                                {
-                                    int len = ReflectTool.GetArgumentLength(ref t);
-                                    if (len <= 1)//List<T>
-                                    {
-                                        JsonHelper js = new JsonHelper(false, false);
-                                        js.Level = Level + 1;
-                                        js.LoopCheckList = LoopCheckList;
-                                        js.Escape = Escape;
-                                        js._RowOp = _RowOp;
-                                        js.DateTimeFormatter = DateTimeFormatter;
-                                        js.IsConvertNameToLower = IsConvertNameToLower;
-                                        if (cell.Value is MDataRowCollection)
-                                        {
-                                            MDataTable dtx = (MDataRowCollection)cell.Value;
-                                            js.Fill(dtx);
-                                        }
-                                        else
-                                        {
-                                            js.Fill(cell.Value);
-                                        }
-                                        value = js.ToString(true);
-                                        noQuot = true;
-                                    }
-                                    else if (len == 2)//Dictionary<T,K>
-                                    {
-                                        MDataRow dicRow = MDataRow.CreateFrom(cell.Value);
-                                        dicRow.DynamicData = LoopCheckList;
-                                        value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                                        noQuot = true;
-                                    }
-                                }
-                                else
-                                {
-                                    if (!t.FullName.StartsWith("System."))//普通对象。
-                                    {
-                                        MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(t));
-                                        oRow.DynamicData = LoopCheckList;
-                                        oRow.LoadFrom(cell.Value);
-                                        value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                                        noQuot = true;
-                                    }
-                                    else if (t.FullName == "System.Data.DataTable")
-                                    {
-                                        MDataTable dt = cell.Value as DataTable;
-                                        dt.DynamicData = LoopCheckList;
-                                        value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
-                                        noQuot = true;
-                                    }
-                                }
-
-                            }
-
-                        }
-                    }
-                    Add(name, value, noQuot);
-
-                    #endregion
-                }
-
-            }
-            AddBr();
-        }
-        /// <summary>
-        /// 从数据结构填充，最终可输出json字符串。
-        /// </summary>
-        /// <param name="column">数据结构</param>
-        /// <param name="isFullSchema">false：输出单行的[列名：数据类型]；true：输出多行的完整的数据结构</param>
-        public void Fill(MDataColumn column, bool isFullSchema)
-        {
-            if (column == null)
-            {
-                ErrorMsg = "MDataColumn object is null";
-                return;
-            }
-
-            if (isFullSchema)
-            {
-                if (!string.IsNullOrEmpty(column.TableName))
-                {
-                    _AddHead = true;
-                    headText.Append("{");
-                    headText.Append("\"TableName\":\"" + column.TableName + "\",");
-                    headText.Append("\"Description\":\"" + column.Description + "\",");
-                    headText.Append("\"RelationTables\":\"" + string.Join(",", column.RelationTables.ToArray()) + "\",");
-                    headText.Append("\"Columns\":");
-                }
-                foreach (MCellStruct item in column)
-                {
-                    Add("ColumnName", item.ColumnName);
-                    Add("SqlType", item.ValueType.FullName);
-                    Add("SqlTypeName", item.SqlTypeName);
-                    Add("IsAutoIncrement", item.IsAutoIncrement.ToString().ToLower(), true);
-                    Add("IsCanNull", item.IsCanNull.ToString().ToLower(), true);
-                    Add("MaxSize", item.MaxSize.ToString(), true);
-                    Add("Scale", item.Scale.ToString().ToLower(), true);
-                    Add("IsPrimaryKey", item.IsPrimaryKey.ToString().ToLower(), true);
-                    Add("DefaultValue", Convert.ToString(item.DefaultValue));
-                    Add("Description", item.Description);
-                    //新增属性
-                    Add("TableName", item.TableName);
-                    Add("IsUniqueKey", item.IsUniqueKey.ToString().ToLower(), true);
-                    Add("IsForeignKey", item.IsForeignKey.ToString().ToLower(), true);
-                    Add("FKTableName", item.FKTableName);
-
-                    AddBr();
-                }
-            }
-            else
-            {
-                for (int i = 0; i < column.Count; i++)
-                {
-                    Add(column[i].ColumnName, column[i].ValueType.FullName);
-                }
-                AddBr();
-            }
-            rowCount = 0;//重置为0
-        }
-        /// <summary>
-        ///  Fill obj and get json from  ToString() method
-        /// <para>可从类(对象,泛型List、泛型Dictionary）中填充，最终可输出json字符串。</para>
-        /// </summary>
-        /// <param name="obj">实体类对象</param>
-        public void Fill(object obj)
-        {
-            if (obj != null)
-            {
-                if (obj is String || obj is ValueType)
-                {
-                    Fill(Convert.ToString(obj));
-                }
-                else if (obj is DataTable)
-                {
-                    MDataTable dt = obj as DataTable;
-                    Fill(dt);
-                }
-                else if (obj is DataRow)
-                {
-                    MDataRow row = obj as DataRow;
-                    Fill(row);
-                }
-                else if (obj is MDataTable)
-                {
-                    Fill(obj as MDataTable);
-                }
-                else if (obj is MDataRow)
-                {
-                    Fill(obj as MDataRow);
-                }
-                else if (obj is DataRowCollection)
-                {
-                    MDataTable dt = (MDataRowCollection)obj;
-                    Fill(dt);
-                }
-                else if (obj is MDataRowCollection)
-                {
-                    MDataTable dt = (MDataRowCollection)obj;
-                    Fill(dt);
-                }
-                else if (obj is DataColumnCollection)
-                {
-                    MDataColumn mdc = obj as DataColumnCollection;
-                    Fill(mdc, true);
-                }
-                else if (obj is Dictionary<string, string>)
-                {
-                    Fill(obj as Dictionary<string, string>);//避开转Row，提升性能
-                }
-                else if (obj is MDictionary<string, string>)
-                {
-                    Fill(obj as MDictionary<string, string>);//避开转Row，提升性能
-                }
-                else if (obj is Dictionary<string, object>)
-                {
-                    Fill(obj as Dictionary<string, object>);//避开转Row，提升性能
-                }
-                else if (obj is MDictionary<string, object>)
-                {
-                    Fill(obj as MDictionary<string, object>);//避开转Row，提升性能
-                }
-                else if (obj is IEnumerable)
-                {
-                    #region IEnumerable
-                    Type t = obj.GetType();
-                    Type[] argTypes;
-                    int len = ReflectTool.GetArgumentLength(ref t, out argTypes);
-                    if (len == 1)
-                    {
-                        foreach (object o in obj as IEnumerable)
-                        {
-                            if (o is MDataTable)
-                            {
-                                Fill(o as MDataTable);
-                            }
-                            else if (o is DataTable)
-                            {
-                                MDataTable dt = o as DataTable;
-                                Fill(dt);
-                            }
-                            else if (o is String || o is DateTime || o is Enum || o is Guid)
-                            {
-                                string str = o.ToString();
-                                if (str.Length > 0 && (str[0] == '{' || str[0] == '[') && JsonSplit.IsJson(str))
-                                {
-                                    Fill(MDataRow.CreateFrom(o));
-                                }
-                                else
-                                {
-                                    if (o is String) { SetEscape(ref str); }
-                                    bodyItems.Add("\"" + str + "\"");
-                                }
-                            }
-                            else if (o is ValueType)
-                            {
-                                bodyItems.Add(o.ToString());
-                            }
-                            else if (o is MDataRow)
-                            {
-                                Fill(o as MDataRow);
-                            }
-                            else
-                            {
-                                Type listType = argTypes[0];
-                                if (ReflectTool.GetSystemType(ref listType) == SysType.Custom)
-                                {
-                                    FillEntity(o);
-                                }
-                                else
-                                {
-                                    Fill(MDataRow.CreateFrom(o));//直接优化成实体。
-                                }
-                            }
-                        }
-                    }
-                    else if (len == 2)
-                    {
-                        if (t.Name.StartsWith("MDictionary") && argTypes[0].Name == "String")
-                        {
-                            List<string> items = t.GetMethod("GetKeys").Invoke(obj, new object[0]) as List<string>;
-                            IEnumerable values = t.GetMethod("GetValues").Invoke(obj, new object[0]) as IEnumerable;
-                            int i = 0;
-                            foreach (object value in values)
-                            {
-                                Add(items[i], value);
-                                i++;
-                            }
-
-                            //MethodInfo methodGet = t.GetMethod("Get");
-                            //foreach (var item in items)
-                            //{
-                            //    Add(item, methodGet.Invoke(obj, new object[] { item }));
-                            //}
-                        }
-                        else if (t.Name.StartsWith("Dictionary") && argTypes[0].Name == "String")
-                        {
-                            IEnumerable keys = t.GetProperty("Keys").GetValue(obj, null) as IEnumerable;
-                            IEnumerable values = t.GetProperty("Values").GetValue(obj, null) as IEnumerable;
-
-                            List<string> items = new List<string>();
-                            foreach (string key in keys)
-                            {
-                                items.Add(key);
-                            }
-                            int i = 0;
-                            foreach (object value in values)
-                            {
-                                Add(items[i], value);
-                                i++;
-                            }
-                        }
-                        else
-                        {
-                            Fill(MDataRow.CreateFrom(obj, t));
-                        }
-                    }
-                    #endregion
-                }
-                else
-                {
-                    FillEntity(obj);
-                }
-            }
-        }
-
-        public void Fill(string query)
-        {
-            if (!string.IsNullOrEmpty(query))
-            {
-                query = query.Trim('?');
-                string[] items = query.Split('&');
-                foreach (string item in items)
-                {
-                    if (!string.IsNullOrEmpty(item))
-                    {
-                        int index = item.IndexOf('=');
-                        if (index > -1)
-                        {
-                            Add(item.Substring(0, index), item.Substring(index + 1, item.Length - index - 1));
-                        }
-                        else
-                        {
-                            Add(item, "");
-                        }
-                    }
-                }
-            }
-        }
-
-        public void Fill(Dictionary<string, string> dic)
-        {
-            foreach (var item in dic)
-            {
-                Add(item.Key, item.Value);
-            }
-        }
-
-        public void Fill(MDictionary<string, string> dic)
-        {
-            List<string> items = dic.GetKeys();
-            foreach (var item in items)
-            {
-                Add(item, dic[item]);
-            }
-        }
-        public void Fill(Dictionary<string, object> dic)
-        {
-            foreach (var item in dic)
-            {
-                Add(item.Key, item.Value);
-            }
-        }
-
-        public void Fill(MDictionary<string, object> dic)
-        {
-            List<string> items = dic.GetKeys();
-            foreach (var item in items)
-            {
-                Add(item, dic[item]);
-            }
-        }
-
-
-
-        /// <summary>
-        /// 加载实体
-        /// </summary>
-        /// <param name="entity"></param>
-        private void FillEntity(object entity)
-        {
-            Type t = entity.GetType();
-            List<PropertyInfo> pList = ReflectTool.GetPropertyList(t);
-            if (pList.Count > 0)
-            {
-                foreach (PropertyInfo item in pList)
-                {
-                    SetJson(entity, item, null);
-                }
-            }
-            List<FieldInfo> fList = ReflectTool.GetFieldList(t);
-            if (fList.Count > 0)
-            {
-                foreach (FieldInfo item in fList)
-                {
-                    SetJson(entity, null, item);
-                }
-            }
-            AddBr();
-        }
-        private void SetJson(object entity, PropertyInfo pi, FieldInfo fi)
-        {
-            if (ReflectTool.ExistsAttr(AppConst.JsonIgnoreType, pi, fi))//获取Json忽略标识
-            {
-                return;//被Json忽略的列，不在返回列结构中。
-            }
-            string name = pi != null ? pi.Name : fi.Name;
-            object objValue = pi != null ? pi.GetValue(entity, null) : fi.GetValue(entity);
-            Type type = pi != null ? pi.PropertyType : fi.FieldType;
-            string dateFormat = DateTimeFormatter;
-            if (type.IsEnum)
-            {
-                if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi))
-                {
-                    objValue = objValue.ToString();
-                    type = typeof(String);
-                }
-                else if (ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, pi, fi))
-                {
-                    FieldInfo field = type.GetField(objValue.ToString());
-                    if (field != null)
-                    {
-                        DescriptionAttribute da = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
-                        if (da != null)
-                        {
-                            objValue = da.Description;
-                            type = typeof(String);
-                        }
-                    }
-                }
-                else
-                {
-                    objValue = (int)objValue;
-                }
-            }
-            else if (type.FullName.Contains("System.DateTime") && ReflectTool.ExistsAttr(AppConst.JsonFormatType, pi, fi))
-            {
-                JsonFormatAttribute jf = ReflectTool.GetAttr<JsonFormatAttribute>(pi, fi);
-                if (jf != null)
-                {
-                    dateFormat = jf.DatetimeFormat;
-                }
-            }
-
-            SetNameValue(name, objValue, type, dateFormat);
-        }
-        private void SetNameValue(string name, object objValue, Type valueType, string dateFormat)
-        {
-            if (IsConvertNameToLower)
-            {
-                name = name.ToLower();
-            }
-            string value = null;
-            bool noQuot = false;
-            if (objValue == null || objValue == DBNull.Value)
-            {
-                if (_RowOp == Table.RowOp.IgnoreNull)
-                {
-                    return;
-                }
-                value = "null";
-                noQuot = true;
-            }
-            else
-            {
-                if (valueType.FullName == "System.Object")
-                {
-                    valueType = objValue.GetType();//定位到指定类型。
-                }
-
-                value = Convert.ToString(objValue);
-                DataGroupType group = DataType.GetGroup(DataType.GetSqlType(valueType));
-                noQuot = group == DataGroupType.Number || group == DataGroupType.Bool;
-                #region 处理非Null的情况
-
-                if (group == DataGroupType.Bool) // oracle 下的number 1会处理成bool类型
-                {
-                    value = value.ToLower();
-                }
-                else if (group == DataGroupType.Date)
-                {
-                    DateTime dt;
-                    if (DateTime.TryParse(value, out dt))
-                    {
-                        value = dt.ToString(dateFormat);
-                    }
-                }
-                else if (group == DataGroupType.Object)
-                {
-                    #region 处理对象及循环引用。
-
-                    int hash = objValue.GetHashCode();
-                    //检测是否循环引用
-                    if (LoopCheckList.ContainsKey(hash))
-                    {
-                        //continue;
-                        int level = LoopCheckList[hash];
-                        if (level < Level)
-                        {
-                            return;
-                        }
-                        else
-                        {
-                            LoopCheckList[hash] = Level;//更新级别
-                        }
-                    }
-                    else
-                    {
-                        LoopCheckList.Add(hash, Level);
-                    }
-                    if (valueType.Name == "Byte[]")
-                    {
-                        value = Convert.ToBase64String(objValue as byte[]);
-                    }
-                    else
-                    {
-                        JsonHelper js = new JsonHelper(false, false);
-                        js.Level = Level + 1;
-                        js.LoopCheckList = LoopCheckList;
-                        js.Escape = Escape;
-                        js._RowOp = _RowOp;
-                        js.DateTimeFormatter = dateFormat;
-                        js.IsConvertNameToLower = IsConvertNameToLower;
-                        js.Fill(objValue);
-                        value = js.ToString(objValue is IList || objValue is MDataTable || objValue is DataTable);
-                        noQuot = true;
-
-
-                        //if (objValue is IEnumerable)
-                        //{
-                        //    int len = ReflectTool.GetArgumentLength(ref valueType);
-                        //    if (len <= 1)//List<T>
-                        //    {
-                        //        JsonHelper js = new JsonHelper(false, false);
-                        //        js.Level = Level + 1;
-                        //        js.LoopCheckList = LoopCheckList;
-                        //        js.Escape = Escape;
-                        //        js._RowOp = _RowOp;
-                        //        js.DateTimeFormatter = dateFormat;
-                        //        js.IsConvertNameToLower = IsConvertNameToLower;
-                        //        if (objValue is MDataRowCollection)
-                        //        {
-                        //            MDataTable dtx = (MDataRowCollection)objValue;
-                        //            js.Fill(dtx);
-                        //        }
-                        //        else
-                        //        {
-                        //            js.Fill(objValue);
-                        //        }
-                        //        value = js.ToString(true);
-                        //        noQuot = true;
-                        //    }
-                        //    else if (len == 2)//Dictionary<T,K>
-                        //    {
-                        //        MDataRow dicRow = MDataRow.CreateFrom(objValue);
-                        //        dicRow.DynamicData = LoopCheckList;
-                        //        value = dicRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                        //        noQuot = true;
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    if (!valueType.FullName.StartsWith("System."))//普通对象。
-                        //    {
-                        //        MDataRow oRow = new MDataRow(TableSchema.GetColumnByType(valueType));
-                        //        oRow.DynamicData = LoopCheckList;
-                        //        oRow.LoadFrom(objValue);
-                        //        value = oRow.ToJson(RowOp, IsConvertNameToLower, Escape);
-                        //        noQuot = true;
-                        //    }
-                        //    else if (valueType.FullName == "System.Data.DataTable")
-                        //    {
-                        //        MDataTable dt = objValue as DataTable;
-                        //        dt.DynamicData = LoopCheckList;
-                        //        value = dt.ToJson(false, false, RowOp, IsConvertNameToLower, Escape);
-                        //        noQuot = true;
-                        //    }
-                        //}
-
-                    }
-                    #endregion
-                }
-                #endregion
-            }
-            Add(name, value, noQuot);
-
-
-        }
-
-        private static Dictionary<string, object> lockList = new Dictionary<string, object>();
-        /// <summary>
-        /// 从Json字符串中反加载成数据表
-        /// </summary>
-        internal static MDataTable ToMDataTable(string jsonOrFileName, MDataColumn mdc, EscapeOp op)
-        {
-
-            MDataTable table = new MDataTable();
-            if (mdc != null)
-            {
-                table.Columns = mdc;
-            }
-            if (string.IsNullOrEmpty(jsonOrFileName))
-            {
-                return table;
-            }
-            else
-            {
-                jsonOrFileName = jsonOrFileName.Trim();
-            }
-            try
-            {
-                #region 读取Json
-
-
-                string json = string.Empty;
-                #region 获取Json字符串
-                if (!jsonOrFileName.StartsWith("{") && !jsonOrFileName.StartsWith("["))//读取文件。
-                {
-                    if (System.IO.File.Exists(jsonOrFileName))
-                    {
-                        table.TableName = Path.GetFileNameWithoutExtension(jsonOrFileName);
-                        if (table.Columns.Count == 0)
-                        {
-                            table.Columns = MDataColumn.CreateFrom(jsonOrFileName, false);
-                        }
-                        json = IOHelper.ReadAllText(jsonOrFileName).Trim(',', ' ', '\r', '\n');
-                    }
-                }
-                else
-                {
-                    json = jsonOrFileName;
-                }
-                if (json.StartsWith("{"))
-                {
-                    json = '[' + json + ']';
-                }
-                #endregion
-                List<Dictionary<string, string>> result = SplitArray(json);
-                if (result != null && result.Count > 0)
-                {
-                    #region 加载数据
-                    if (result.Count == 1)
-                    {
-                        #region 自定义输出头判断
-                        Dictionary<string, string> dic = result[0];
-                        if (dic.ContainsKey("total") && dic.ContainsKey("rows"))
-                        {
-                            int count = 0;
-                            if (int.TryParse(dic["total"], out count))
-                            {
-                                table.RecordsAffected = count;//还原记录总数。
-                            }
-                            result = SplitArray(dic["rows"]);
-                        }
-                        else if (dic.ContainsKey("TableName") && dic.ContainsKey("Columns"))
-                        {
-                            table.TableName = dic["TableName"];
-                            if (dic.ContainsKey("Description"))
-                            {
-                                table.Description = dic["Description"];
-                            }
-                            if (dic.ContainsKey("RelationTables"))
-                            {
-                                table.Columns.AddRelateionTableName(dic["RelationTables"]);
-                            }
-                            result = SplitArray(dic["Columns"]);
-                        }
-                        #endregion
-                    }
-                    if (result != null && result.Count > 0)
-                    {
-                        Dictionary<string, string> keyValueDic = null;
-                        for (int i = 0; i < result.Count; i++)
-                        {
-                            keyValueDic = result[i];
-                            if (i == 0)
-                            {
-                                #region 首行列头检测
-                                bool addColumn = table.Columns.Count == 0;
-                                bool isContinue = false;
-                                int k = 0;
-                                foreach (KeyValuePair<string, string> item in keyValueDic)
-                                {
-                                    if (k == 0 && item.Value.StartsWith("System."))
-                                    {
-                                        isContinue = true;
-                                    }
-                                    if (!addColumn)
-                                    {
-                                        break;
-                                    }
-                                    if (!table.Columns.Contains(item.Key))
-                                    {
-                                        SqlDbType type = SqlDbType.NVarChar;
-                                        if (isContinue && item.Value.StartsWith("System."))//首行是表结构
-                                        {
-                                            type = DataType.GetSqlType(item.Value.Replace("System.", string.Empty));
-                                        }
-                                        table.Columns.Add(item.Key, type, (k == 0 && type == SqlDbType.Int));
-                                        if (k > keyValueDic.Count - 3 && type == SqlDbType.DateTime)
-                                        {
-                                            table.Columns[k].DefaultValue = SqlValue.GetDate;
-                                        }
-                                    }
-                                    k++;
-                                }
-                                if (isContinue)
-                                {
-                                    continue;
-                                }
-                                #endregion
-                            }
-
-
-                            bool isKeyValue = table.Columns.Count == 2 && table.Columns[1].ColumnName == "Value" && (table.Columns[0].ColumnName == "Key" || table.Columns[0].ColumnName == "Name");
-
-                            if (isKeyValue)
-                            {
-                                foreach (KeyValuePair<string, string> item in keyValueDic)
-                                {
-                                    MDataRow row = table.NewRow(true);
-                                    row.Set(0, item.Key);
-                                    row.Set(1, item.Value);
-                                }
-                            }
-                            else
-                            {
-                                MDataRow row = table.NewRow(true);
-                                MDataCell cell = null;
-                                foreach (KeyValuePair<string, string> item in keyValueDic)
-                                {
-
-                                    cell = row[item.Key];
-                                    if (cell == null && mdc == null)
-                                    {
-                                        table.Columns.Add(item.Key, SqlDbType.NVarChar);
-                                        cell = row[item.Key];
-                                    }
-                                    if (cell != null)
-                                    {
-                                        string val = UnEscape(item.Value, op);
-                                        cell.Value = val;
-                                        cell.State = 1;
-                                    }
-
-                                }
-                            }
-
-                        }
-                    }
-                    #endregion
-                }
-                else
-                {
-                    List<string> items = JsonSplit.SplitEscapeArray(json);
-                    if (items != null && items.Count > 0)
-                    {
-                        if (mdc == null)
-                        {
-                            table.Columns.Add("Key");
-                        }
-                        foreach (string item in items)
-                        {
-                            table.NewRow(true).Set(0, item.Trim('"', '\''));
-                        }
-                    }
-                }
-                #endregion
-            }
-            catch (Exception err)
-            {
-                Log.Write(err, LogType.Error);
-            }
-
-            return table;
-        }
-        /// <summary>
-        /// 将Json转换成集合
-        /// </summary>
-        /// <typeparam name="T">集合类型</typeparam>
-        /// <param name="json">json数据</param>
-        /// <returns></returns>
-        /// 
-        private static T ToIEnumerator<T>(string json, EscapeOp op)
-            where T : class
-        {
-            return ToIEnumerator(typeof(T), json, op) as T;
-        }
-        private static object ToIEnumerator(Type t, string json, EscapeOp op)
-        {
-            if (t.FullName.StartsWith("System.Collections.") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
-            {
-                Type[] ts;
-                int argLength = ReflectTool.GetArgumentLength(ref t, out ts);
-                if (argLength == 1)
-                {
-                    return JsonSplit.ToEntityOrList(t, json, op);
-                }
-                else
-                {
-                    #region Dictionary
-                    if (t.Name.StartsWith("Dictionary") && ts[0].Name == "String" && ts[1].Name == "String")
-                    {
-                        //忽略MDictionary
-                        return Split(json);
-                    }
-
-                    object objT = t.Name.Contains("Dictionary") ? Activator.CreateInstance(t, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(t);
-                    Type oT = objT.GetType();
-                    MethodInfo mi = null;
-                    try
-                    {
-                        if (t.Name == "NameValueCollection")
-                        {
-                            mi = oT.GetMethod("Add", new Type[] { typeof(string), typeof(string) });
-                        }
-                        else
-                        {
-                            mi = oT.GetMethod("Add");
-                        }
-                    }
-                    catch
-                    {
-
-                    }
-                    if (mi == null)
-                    {
-                        mi = oT.GetMethod("Add", new Type[] { typeof(string), typeof(string) });
-                    }
-                    if (mi != null)
-                    {
-                        Dictionary<string, string> dic = Split(json);
-                        if (dic != null && dic.Count > 0)
-                        {
-                            foreach (KeyValuePair<string, string> kv in dic)
-                            {
-                                mi.Invoke(objT, new object[] { ConvertTool.ChangeType(kv.Key, ts[0]), ConvertTool.ChangeType(UnEscape(kv.Value, op), ts[1]) });
-                            }
-                        }
-                        return objT;
-                    }
-                    #endregion
-                }
-
-
-            }
-            else if (t.FullName.EndsWith("[]"))
-            {
-                return new MDataRow().GetObj(t, json);
-            }
-            return null;
-        }
-        public static T ToEntity<T>(string json) where T : class
-        {
-            return ToEntity<T>(json, DefaultEscape);
-        }
-        internal static object ToEntity(Type t, string json, EscapeOp op)
-        {
-            if (t.FullName == "System.Data.DataTable")
-            {
-                return MDataTable.CreateFrom(json, null, op).ToDataTable();
-            }
-            if (t.Name == "MDataTable")
-            {
-                return MDataTable.CreateFrom(json, null, op);
-            }
-            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
-            {
-                return ToIEnumerator(t, json, op);
-            }
-            else
-            {
-                return JsonSplit.ToEntityOrList(t, json, op);
-            }
-        }
-        /// <summary>
-        /// Convert json to Entity
-        /// <para>将Json转换为实体</para>
-        /// </summary>
-        /// <typeparam name="T">Type<para>类型</para></typeparam>
-        public static T ToEntity<T>(string json, EscapeOp op) where T : class
-        {
-            Type t = typeof(T);
-            if (t.FullName == "System.Data.DataTable")
-            {
-                object dt = MDataTable.CreateFrom(json, null, op).ToDataTable();
-                return (T)dt;
-            }
-            if (t.Name == "MDataTable")
-            {
-                object mdt = MDataTable.CreateFrom(json, null, op);
-                return (T)mdt;
-            }
-            if (t.FullName.StartsWith("System.Collections.") || t.FullName.EndsWith("[]") || t.FullName.Contains("MDictionary") || t.FullName.Contains("MList"))
-            {
-                return ToIEnumerator<T>(json, op);
-            }
-            else
-            {
-                return JsonSplit.ToEntity<T>(json, op);
-            }
-        }
-        public static List<T> ToList<T>(string json)// where T : class
-        {
-            return ToList<T>(json, DefaultEscape);
-        }
-        /// <summary>
-        ///  Convert json to Entity List
-        ///  <para>将Json转换为实体列表</para>
-        /// </summary>
-        /// <typeparam name="T">Type<para>类型</para></typeparam>
-        public static List<T> ToList<T>(string json, EscapeOp op)// where T : class
-        {
-            return JsonSplit.ToList<T>(json, 0, op);//减少中间转换环节。
-        }
-        /// <summary>
-        /// Convert object to json
-        /// <para>将一个对象（实体，泛型List，字典Dictionary）转成Json</para>
-        /// </summary>
-        public static string ToJson(object obj)
-        {
-            return ToJson(obj, false, RowOp.IgnoreNull);
-        }
-
-
-        public static string ToJson(object obj, bool isConvertNameToLower)
-        {
-            return ToJson(obj, isConvertNameToLower, RowOp.IgnoreNull);
-        }
-        public static string ToJson(object obj, bool isConvertNameToLower, RowOp rowOp)
-        {
-            return ToJson(obj, isConvertNameToLower, rowOp, DefaultEscape);
-        }
-
-        /// <param name="op">default value is RowOp.All
-        /// <para>默认值为RowOp.All</para></param>
-        public static string ToJson(object obj, bool isConvertNameToLower, RowOp rowOp, EscapeOp escapeOp)
-        {
-            string text = Convert.ToString(obj);
-            if (text == "")
-            {
-                return "{}";
-            }
-            else if (text[0] == '{' || text[0] == '[')
-            {
-                if (IsJson(text))
-                {
-                    return text;
-                }
-            }
-            else if (text[0] == '<' && text[text.Length - 1] == '>')
-            {
-                return XmlToJson(text, true);
-            }
-
-            JsonHelper js = new JsonHelper();
-            js.LoopCheckList.Add(obj.GetHashCode(), 0);
-            js.Escape = escapeOp;
-            js.IsConvertNameToLower = isConvertNameToLower;
-            js.RowOp = rowOp;
-            js.Fill(obj);
-            return js.ToString(obj is IList || obj is DataTable || obj is MDataTable);
-        }
-
-
-
-
-    }
-
-    public partial class JsonHelper
-    {
-        #region Xml 转 Json
-
-        /// <summary>
-        /// 转Json
-        /// <param name="xml">xml字符串</param>
-        /// <param name="isWithAttr">是否将属性值也输出</param>
-        /// </summary>
-        private static string XmlToJson(string xml, bool isWithAttr)
-        {
-            using (XHtmlAction action = new XHtmlAction(false, true))
-            {
-                try
-                {
-                    action.LoadXml(xml);
-                    return action.ToJson(action.XmlDoc.DocumentElement, isWithAttr);
-                }
-                catch (Exception err)
-                {
-                    Log.WriteLogToTxt(err, LogType.Error);
-                    return string.Empty;
-                }
-
-            }
-        }
-
-        #endregion
-
-
-        #region Json 转 Xml
-        /// <summary>
-        /// Convert json to Xml
-        /// <para>将一个Json转成Xml</para>
-        /// </summary>
-        public static string ToXml(string json)
-        {
-            return ToXml(json, true);
-        }
-
-        public static string ToXml(string json, bool isWithAttr)
-        {
-            return ToXml(json, isWithAttr, DefaultEscape);
-        }
-        public static string ToXml(string json, bool isWithAttr, EscapeOp op)
-        {
-            return ToXml(json, isWithAttr, op, null);
-        }
-        /// <param name="isWithAttr">default value is true
-        /// <para>是否转成属性，默认true</para></param>
-        public static string ToXml(string json, bool isWithAttr, EscapeOp op, string rootName)
-        {
-            if (!string.IsNullOrEmpty(rootName))
-            {
-                json = string.Format("{{\"{0}\":{1}}}", rootName, json);
-            }
-            StringBuilder xml = new StringBuilder();
-            xml.Append("<?xml version=\"1.0\"  standalone=\"yes\"?>");
-            List<Dictionary<string, string>> dicList = JsonSplit.Split(json);
-            if (dicList != null && dicList.Count > 0)
-            {
-                bool addRoot = dicList.Count > 1 || dicList[0].Count > 1;
-                if (addRoot)
-                {
-                    xml.Append(string.Format("<{0}>", rootName ?? "root"));//</root>";
-                }
-
-                xml.Append(GetXmlList(dicList, isWithAttr, op));
-
-                if (addRoot)
-                {
-                    xml.Append(string.Format("</{0}>", rootName ?? "root"));//</root>";
-                }
-
-            }
-            return xml.ToString();
-        }
-
-        private static string GetXmlList(List<Dictionary<string, string>> dicList, bool isWithAttr, EscapeOp op)
-        {
-            if (dicList == null || dicList.Count == 0)
-            {
-                return string.Empty;
-            }
-            StringBuilder xml = new StringBuilder();
-            for (int i = 0; i < dicList.Count; i++)
-            {
-                xml.Append(GetXml(dicList[i], isWithAttr, op));
-            }
-            return xml.ToString();
-        }
-
-        private static string GetXml(Dictionary<string, string> dic, bool isWithAttr, EscapeOp op)
-        {
-            StringBuilder xml = new StringBuilder();
-            bool isJson = false;
-            foreach (KeyValuePair<string, string> item in dic)
-            {
-                isJson = IsJson(item.Value);
-                if (!isJson)
-                {
-                    xml.AppendFormat("<{0}>{1}</{0}>", item.Key, FormatCDATA(UnEscape(item.Value, op)));
-                }
-                else
-                {
-                    string key = item.Key;
-                    if (key.EndsWith("List") && isWithAttr)
-                    {
-                        xml.AppendFormat("<{0}>", key);
-                        key = key.Substring(0, key.Length - 4);
-                    }
-                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(item.Value);
-                    if (jsonList != null && jsonList.Count > 0)
-                    {
-                        if (!isWithAttr)
-                        {
-                            xml.AppendFormat("<{0}>", item.Key);
-                        }
-                        for (int j = 0; j < jsonList.Count; j++)
-                        {
-                            if (isWithAttr)
-                            {
-                                xml.Append(GetXmlElement(key, jsonList[j], op));
-                            }
-                            else
-                            {
-                                xml.Append(GetXml(jsonList[j], isWithAttr, op));
-                            }
-                        }
-                        if (!isWithAttr)
-                        {
-                            xml.AppendFormat("</{0}>", key);
-                        }
-                    }
-                    else // 空Json {}
-                    {
-                        xml.AppendFormat("<{0}></{0}>", key);
-                    }
-
-                    if (item.Key.EndsWith("List") && isWithAttr)
-                    {
-                        xml.AppendFormat("</{0}>", item.Key);
-                    }
-                }
-            }
-            return xml.ToString();
-        }
-
-        private static string GetXmlElement(string parentName, Dictionary<string, string> dic, EscapeOp op)
-        {
-            StringBuilder xml = new StringBuilder();
-            Dictionary<string, string> jsonDic = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            xml.Append("<" + parentName);
-            foreach (KeyValuePair<string, string> kv in dic)
-            {
-                if (kv.Value.IndexOf('"') > -1 || kv.Value.Length > 50
-                    || kv.Key.Contains("Remark") || kv.Key.Contains("Description") || kv.Key.Contains("Rule")
-                    || IsJson(kv.Value)) // 属性不能带双引号，所以转到元素处理。
-                {
-                    jsonDic.Add(kv.Key, kv.Value);
-                }
-            }
-            //InnerText 节点存在=》（如果有元素节点，则当属性处理；若无，则当InnerText）
-            bool useForInnerText = dic.ContainsKey(parentName) && jsonDic.Count == 0;
-            foreach (KeyValuePair<string, string> kv in dic)
-            {
-                if (!jsonDic.ContainsKey(kv.Key) && (kv.Key != parentName || !useForInnerText))
-                {
-                    xml.AppendFormat(" {0}=\"{1}\"", kv.Key, kv.Value);//先忽略同名属性，内部InnerText节点，
-                }
-            }
-            xml.Append(">");
-            if (useForInnerText)
-            {
-                xml.Append(FormatCDATA(UnEscape(dic[parentName], op)));//InnerText。
-            }
-            else if (jsonDic.Count > 0)
-            {
-                xml.Append(GetXml(jsonDic, true, op));//数组，当元素处理。
-            }
-            xml.Append("</" + parentName + ">");
-
-            return xml.ToString();
-        }
-        private static string FormatCDATA(string text)
-        {
-            if (text.LastIndexOfAny(new char[] { '<', '>', '&' }) > -1 && !text.StartsWith("<![CDATA["))
-            {
-                text = "<![CDATA[" + text.Trim() + "]]>";
-            }
-            return text;
-        }
-        #endregion
-    }
-    public partial class JsonHelper
-    {
-        /// <summary>
-        /// 读取文本中的Json（并去掉注释）
-        /// </summary>
-        /// <returns></returns>
-        internal static string ReadJson(string filePath)
-        {
-            string json = IOHelper.ReadAllText(filePath);
-            if (!string.IsNullOrEmpty(json))
-            {
-                int index = json.LastIndexOf("/*");
-                if (index > -1)//去掉注释
-                {
-                    json = Regex.Replace(json, @"/\*[^:][.\s\S]*?\*/", string.Empty, RegexOptions.IgnoreCase);
-                }
-                char splitChar = '\n';
-                if (json.IndexOf(splitChar) > -1)
-                {
-                    string[] items = json.Split(splitChar);
-                    StringBuilder sb = new StringBuilder();
-                    foreach (string item in items)
-                    {
-                        if (!item.TrimStart(' ', '\r', '\t').StartsWith("//"))
-                        {
-                            sb.Append(item.Trim(' ', '\r', '\t'));
-                        }
-                    }
-                    json = sb.ToString();
-                }
-                if (json.IndexOf("\\\\") > -1)
-                {
-                    json = json.Replace("\\\\", "\\");
-                }
-            }
-            return json;
         }
     }
 }

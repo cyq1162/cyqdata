@@ -134,7 +134,15 @@ namespace CYQ.Data.Aop
             get { return _IsTransaction; }
             set { _IsTransaction = value; }
         }
-
+        private Type _ListT;
+        /// <summary>
+        /// SelectT 和 ExeListT 的T类型。
+        /// </summary>
+        public Type ListT
+        {
+            get { return _ListT; }
+            set { _ListT = value; }
+        }
     }
     public partial class AopInfo
     {

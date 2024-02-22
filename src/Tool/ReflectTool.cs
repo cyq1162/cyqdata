@@ -10,6 +10,14 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static class ReflectTool
     {
+        static readonly object[] lockObjs = new object[5];
+        static ReflectTool()
+        {
+            for (int i = 0; i < lockObjs.Length; i++)
+            {
+                lockObjs[i] = new object();
+            }
+        }
         /// <summary>
         /// 将PropertyInfo[] 改成PropertyInfo List，是因为.NET的CLR会引发内存读写异常（启用IntelliTrace时）
         /// </summary>
@@ -18,6 +26,9 @@ namespace CYQ.Data.Tool
         static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
         static MDictionary<string, Type[]> argumentCache = new MDictionary<string, Type[]>();
         static MDictionary<int, bool> attrExistsCache = new MDictionary<int, bool>();
+
+
+
         /// <summary>
         /// 获取属性列表
         /// </summary>
@@ -31,26 +42,25 @@ namespace CYQ.Data.Tool
             {
                 return propCache[key];
             }
-            else
-            {
-                bool isInheritOrm = t.BaseType != null && (t.BaseType.Name.StartsWith("OrmBase") || t.BaseType.Name.StartsWith("SimpleOrmBase"));
-                PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
-                List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
-                try
-                {
 
-                    list.AddRange(pInfo);
-                    if (!isAnonymousType)
-                    {
-                        propCache.Set(key, list);
-                    }
-                }
-                catch (Exception err)
+            bool isInheritOrm = t.BaseType != null && t.BaseType.FullName.StartsWith("CYQ.Data.Orm");
+            PropertyInfo[] pInfo = isInheritOrm ? t.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetProperties();
+            List<PropertyInfo> list = new List<PropertyInfo>(pInfo.Length);
+            try
+            {
+
+                list.AddRange(pInfo);
+                if (!isAnonymousType)
                 {
-                    Log.Write(err, LogType.Error);
+                    propCache.Add(key, list);
                 }
-                return list;
             }
+            catch (Exception err)
+            {
+                Log.Write(err, LogType.Error);
+            }
+            return list;
+
         }
         /// <summary>
         /// 获取Field列表
@@ -64,7 +74,7 @@ namespace CYQ.Data.Tool
             }
             else
             {
-                bool isInheritOrm = t.BaseType != null && (t.BaseType.Name == "OrmBase" || t.BaseType.Name == "SimpleOrmBase");
+                bool isInheritOrm = t.BaseType != null && t.BaseType.FullName.StartsWith("CYQ.Data.Orm");
                 FieldInfo[] pInfo = isInheritOrm ? t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetFields();
                 List<FieldInfo> list = new List<FieldInfo>(pInfo.Length);
                 try

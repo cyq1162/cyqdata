@@ -138,18 +138,37 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
+    <Compile Include="Emit\Delegate\Action.cs" />
+    <Compile Include="Emit\Delegate\Func.cs" />
+    <Compile Include="Emit\DictionaryToEntity.cs" />
+    <Compile Include="Emit\EntitySetter.cs" />
+    <Compile Include="Emit\EntityToDictionary.cs" />
+    <Compile Include="Emit\MDataRowLoadEntity.cs" />
+    <Compile Include="Emit\MDataRowSetToEntity.cs" />
+    <Compile Include="Emit\MDataRowToEntity.cs" />
+    <Compile Include="Json\JsonHelper.From.cs" />
+    <Compile Include="Json\JsonHelper.From.File.cs" />
+    <Compile Include="Json\JsonHelper.Xml.cs" />
+    <Compile Include="Json\JsonHelper.To.cs" />
     <Compile Include="Json\JsonImplement\CharState.cs" />
     <Compile Include="Json\JsonImplement\EscapeOp.cs" />
     <Compile Include="Json\JsonAttribute.cs" />
     <Compile Include="Json\JsonHelper.cs" />
     <Compile Include="Json\JsonImplement\JsonSplit.cs" />
+    <Compile Include="Json\Options\JsonOp.cs" />
+    <Compile Include="Json\Options\NameCaseOp.cs" />
     <Compile Include="Log\LocalEnvironment.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Log\LogType.cs" />
     <Compile Include="Log\LogWorker.cs" />
     <Compile Include="Log\SysLogs.cs" />
-    <Compile Include="Orm\Attribute\ColumnAttribute.cs" />
+    <Compile Include="Orm\Attribute\ColumnNameAttribute.cs" />
+    <Compile Include="Orm\Attribute\LengthAttribute.cs" />
+    <Compile Include="Orm\Attribute\KeyAttribute.cs" />
+    <Compile Include="Orm\Attribute\DefaultValueAttribute.cs" />
+    <Compile Include="Orm\Attribute\DescriptionAttribute.cs" />
+    <Compile Include="Orm\Attribute\TableNameAttribute.cs" />
     <Compile Include="Orm\DBFast.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -168,10 +187,14 @@
     <Compile Include="SQL\Schema\DBSchema.cs" />
     <Compile Include="SQL\SqlCreateForSchema.cs" />
     <Compile Include="SQL\SqlSyntax.cs" />
-    <Compile Include="Table\Extension\MDataRow.cs" />
-    <Compile Include="Table\Extension\MDataRowCollection.cs" />
+    <Compile Include="Table\Extension\MDataRowCollection.IBindingList.cs" />
+    <Compile Include="Table\Extension\MDataRow\MDataRow.FromTo.cs" />
+    <Compile Include="Table\Extension\MDataRow\MDataRow.ICustomTypeDescriptor.cs" />
+    <Compile Include="Table\Extension\MDataRow\MDataRow.IDataRecord.cs" />
+    <Compile Include="Table\Extension\MDataRow\MDataRow.Emit.cs" />
+    <Compile Include="Table\Extension\MDataRow\MDataRow.ThisIndex.cs" />
+    <Compile Include="Table\MDataRow.cs" />
     <Compile Include="Table\Extension\Serializable.cs" />
-    <Compile Include="Table\FastToT.cs" />
     <Compile Include="Table\MCellStruct.cs" />
     <Compile Include="Table\MDataTableJoin.cs" />
     <Compile Include="Table\Extension\MDataView.cs" />
@@ -240,7 +263,7 @@
     <Compile Include="Table\Extension\MDataProperty.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Table\MDataRow.cs">
+    <Compile Include="Table\Extension\MDataRow\MDataRow.IList.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Table\MDataRowCollection.cs" />

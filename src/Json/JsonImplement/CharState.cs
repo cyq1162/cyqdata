@@ -401,7 +401,10 @@ namespace CYQ.Data.Json
             }
             if (!isKeyword)
             {
-                CheckIsError(c);
+                if (isStrictMode)
+                {
+                    CheckIsError(c);
+                }
             }
             else
             {

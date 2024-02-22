@@ -784,7 +784,7 @@ namespace CYQ.Data.SQL
 
             if (type.IsEnum)
             {
-                if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi) || ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, pi, fi))//获取Json忽略标识
+                if (ReflectTool.ExistsAttr(AppConst.JsonEnumToStringType, pi, fi))//获取Json忽略标识 || ReflectTool.ExistsAttr(AppConst.JsonEnumToDescriptionType, pi, fi)
                 {
                     sqlType = SqlDbType.NVarChar;
                 }

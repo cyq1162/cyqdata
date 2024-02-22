@@ -554,30 +554,15 @@ namespace CYQ.Data.Table
         /// <param name="addSchema">首行输出表架构信息,反接收时可还原架构(默认false)</param>
         public string ToJson(bool addHead, bool addSchema)
         {
-            return ToJson(addHead, addSchema, RowOp.None);
-        }
-        /// <param name="rowOp">过滤选项</param>
-        public string ToJson(bool addHead, bool addSchema, RowOp rowOp)
-        {
-            return ToJson(addHead, addSchema, rowOp, false);
+            var jsonOp = new JsonOp();
+            jsonOp.RowOp = RowOp.None;
+            return ToJson(addHead, addSchema, jsonOp);
         }
 
-        public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower)
-        {
-            return ToJson(addHead, addSchema, rowOp, isConvertNameToLower, JsonHelper.DefaultEscape);
-        }
         /// <param name="op">符号转义选项</param>
-        public string ToJson(bool addHead, bool addSchema, RowOp rowOp, bool isConvertNameToLower, EscapeOp escapeOp)
+        public string ToJson(bool addHead, bool addSchema, JsonOp jsonOp)
         {
-            JsonHelper helper = new JsonHelper(addHead, addSchema);
-            if (DynamicData != null && DynamicData is MDictionary<int, int>)
-            {
-                helper.LoopCheckList = DynamicData as MDictionary<int, int>;//继承父的数据，避免循环引用父
-                helper.Level = helper.LoopCheckList[helper.LoopCheckList.Count - 1] + 1;
-            }
-            helper.Escape = escapeOp;
-            helper.IsConvertNameToLower = isConvertNameToLower;
-            helper.RowOp = rowOp;
+            JsonHelper helper = new JsonHelper(addHead, addSchema, jsonOp);
             helper.Fill(this);
             bool checkArrayEnd = !addHead && !addSchema;
             return helper.ToString(checkArrayEnd);
@@ -676,7 +661,7 @@ namespace CYQ.Data.Table
                 //}
                 //else
                 //{
-                   
+
 
                 //}
             }

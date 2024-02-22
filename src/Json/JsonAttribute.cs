@@ -14,6 +14,18 @@ namespace CYQ.Data.Json
     }
 
     /// <summary>
+    /// Json 枚举字段转字符串
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class JsonEnumToStringAttribute : Attribute
+    {
+
+    }
+
+
+    /*
+    
+    /// <summary>
     /// Json 格式化【时间】
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
@@ -33,14 +45,6 @@ namespace CYQ.Data.Json
     }
 
     /// <summary>
-    /// Json 枚举字段转字符串
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public class JsonEnumToStringAttribute : Attribute
-    {
-
-    }
-    /// <summary>
     /// Json 枚举字段转属性描述
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
@@ -48,4 +52,6 @@ namespace CYQ.Data.Json
     {
 
     }
+
+    */
 }

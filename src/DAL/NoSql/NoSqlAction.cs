@@ -504,9 +504,11 @@ namespace CYQ.Data
                 else//文本仅有插入
                 {
                     StringBuilder sb = new StringBuilder();
+                    var jsonOp = new JsonOp();
+                    jsonOp.RowOp = RowOp.None;
                     for (int i = 0; i < _insertRows.Count; i++)
                     {
-                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson(RowOp.None, false, EscapeOp.Encode));
+                        sb.Append("," + AppConst.NewLine + _insertRows[i].ToJson(jsonOp));
                     }
                     _insertRows.Clear();//重置
                     if (!Tool.IOHelper.Append(_FileFullName, sb.ToString()))
@@ -559,7 +561,10 @@ namespace CYQ.Data
                 string text = string.Empty;
                 if (string.IsNullOrEmpty(text))
                 {
-                    text = _DalType == DataBaseType.Txt ? Table.ToJson(false, true, RowOp.None, false, EscapeOp.Encode).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
+                    var jsonOp=new JsonOp();
+                    jsonOp.RowOp = RowOp.None;
+                    jsonOp.EscapeOp = EscapeOp.Encode;
+                    text = _DalType == DataBaseType.Txt ? Table.ToJson(false, true, jsonOp).Replace("},{", "},\r\n{").Trim('[', ']') : Table.ToXml();
                 }
                 int tryAgainCount = 3;
                 bool isError = false;

@@ -18,6 +18,21 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
+        internal static object ToSByte(object value)
+        {
+            if (value is sbyte) { return value; }
+            if (value is Enum) { return (sbyte)(int)value; }
+            if (value != null)
+            {
+                sbyte result = 0;
+                string strValue = Convert.ToString(value).Split('.')[0];
+                if (sbyte.TryParse(strValue, out result))
+                {
+                    return result;
+                }
+            }
+            return 0;
+        }
         internal static object ToByte(object value)
         {
             if (value is byte) { return value; }
@@ -25,8 +40,24 @@ namespace CYQ.Data.Tool
             if (value != null)
             {
                 byte result = 0;
-                string strValue = Convert.ToString(value);
+                string strValue = Convert.ToString(value).Split('.')[0];
                 if (byte.TryParse(strValue, out result))
+                {
+                    return result;
+                }
+            }
+            return 0;
+        }
+
+        internal static object ToUInt16(object value)
+        {
+            if (value is ushort) { return value; }
+            if (value is Enum) { return (ushort)(int)value; }
+            if (value != null)
+            {
+                ushort result = 0;
+                string strValue = Convert.ToString(value).Split('.')[0];
+                if (ushort.TryParse(strValue, out result))
                 {
                     return result;
                 }
@@ -48,6 +79,23 @@ namespace CYQ.Data.Tool
             }
             return 0;
         }
+
+        internal static object ToUInt32(object value)
+        {
+            if (value is uint) { return value; }
+            if (value is Enum) { return (uint)value; }
+            if (value != null)
+            {
+                uint result = 0;
+                string strValue = Convert.ToString(value).Split('.')[0];
+                if (uint.TryParse(strValue, out result))
+                {
+                    return result;
+                }
+            }
+            return 0;
+        }
+
         internal static object ToInt32(object value)
         {
             if (value is int) { return value; }
@@ -57,6 +105,22 @@ namespace CYQ.Data.Tool
                 int result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (int.TryParse(strValue, out result))
+                {
+                    return result;
+                }
+            }
+            return 0;
+        }
+
+        internal static object ToUInt64(object value)
+        {
+            if (value is ulong) { return value; }
+            if (value is Enum) { return (ulong)(int)value; }
+            if (value != null)
+            {
+                ulong result = 0;
+                string strValue = Convert.ToString(value).Split('.')[0];
+                if (ulong.TryParse(strValue, out result))
                 {
                     return result;
                 }

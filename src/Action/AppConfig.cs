@@ -469,7 +469,7 @@ namespace CYQ.Data
         public static class DB
         {
 
-            static string _DefaultConn = string.Empty;
+            static string _DefaultConn = null;
             /// <summary>
             /// 默认数据库链接（可赋完整链接语句或Web.config配置项名称）
             /// 如果不在配置文件(Web.Config）上配置Conn链接，可对此属性赋值进行配置。
@@ -478,7 +478,7 @@ namespace CYQ.Data
             {
                 get
                 {
-                    if (string.IsNullOrEmpty(_DefaultConn))
+                    if (_DefaultConn == null)
                     {
                         _DefaultConn = "Conn";
                         if (ConfigurationManager.ConnectionStrings != null && ConfigurationManager.ConnectionStrings[_DefaultConn] == null)
@@ -491,6 +491,7 @@ namespace CYQ.Data
                                     break;
                                 }
                             }
+                            _DefaultConn = "";
                         }
                     }
 
@@ -564,12 +565,15 @@ namespace CYQ.Data
             }
             private static void SetDefault()
             {
-                DalBase db = DalCreate.CreateDal(DefaultConn);
-                if (db != null)
+                if (!string.IsNullOrEmpty(DefaultConn))
                 {
-                    _DefaultDataBaseName = db.DataBaseName;
-                    _DefaultDataBaseType = db.DataBaseType;
-                    db.Dispose();
+                    DalBase db = DalCreate.CreateDal(DefaultConn);
+                    if (db != null)
+                    {
+                        _DefaultDataBaseName = db.DataBaseName;
+                        _DefaultDataBaseType = db.DataBaseType;
+                        db.Dispose();
+                    }
                 }
             }
             ///// <summary>

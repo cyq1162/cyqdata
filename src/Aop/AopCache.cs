@@ -180,10 +180,12 @@ namespace CYQ.Data.Aop
                         }
                         else
                         {
+                            var jsonOp = new JsonOp();
+                            jsonOp.EscapeOp = EscapeOp.Encode;
                             JsonHelper js = new JsonHelper(false, false);
                             foreach (MDataTable table in aopInfo.TableList)
                             {
-                                js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode));
+                                js.Add(Guid.NewGuid().ToString(), table.ToJson(true, true, jsonOp));
                             }
                             js.AddBr();
                             _AopCache.Set(key, js.ToString(), cacheTime);
@@ -200,7 +202,9 @@ namespace CYQ.Data.Aop
                         }
                         else
                         {
-                            _AopCache.Set(key, aopInfo.Table.ToJson(true, true, RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                            var jsonOp = new JsonOp();
+                            jsonOp.EscapeOp = EscapeOp.Encode;
+                            _AopCache.Set(key, aopInfo.Table.ToJson(true, true, jsonOp), cacheTime);
                         }
                     }
                     break;
@@ -213,19 +217,21 @@ namespace CYQ.Data.Aop
                 case AopEnum.ExeList:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
-                        _AopCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult, false, RowOp.IgnoreNull, EscapeOp.Encode), cacheTime);
+                        var jsonOp = new JsonOp();
+                        jsonOp.EscapeOp = EscapeOp.Encode;
+                        _AopCache.Set(key, JsonHelper.ToJson(aopInfo.ExeResult, jsonOp), cacheTime);
                     }
                     break;
                 case AopEnum.SelectList:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
-                        JsonHelper js = new JsonHelper(true, true);
-                        js.Escape = EscapeOp.Encode;
+                        var jsonOp = new JsonOp();
+                        jsonOp.EscapeOp = EscapeOp.Encode;
+                        JsonHelper js = new JsonHelper(true, true, jsonOp);
                         if (aopInfo.TotalCount > 0)
                         {
                             js.Total = aopInfo.TotalCount;
                         }
-                        js.LoopCheckList.Add(aopInfo.ExeResult.GetHashCode(), 0);
                         js.Fill(aopInfo.ExeResult);
                         string result = js.ToString(true);
                         _AopCache.Set(key, result, cacheTime);
@@ -235,8 +241,9 @@ namespace CYQ.Data.Aop
                 case AopEnum.SelectJson:
                     if (IsCanSetCache(aopInfo.ExeResult))
                     {
-                        JsonHelper js = new JsonHelper(false, false);
-                        js.Escape = EscapeOp.Encode;
+                        var jsonOp = new JsonOp();
+                        jsonOp.EscapeOp = EscapeOp.Encode;
+                        JsonHelper js = new JsonHelper(false, false, jsonOp);
                         js.Add("total", aopInfo.TotalCount.ToString(), true);
                         js.Add("rows", aopInfo.ExeResult.ToString());
                         _AopCache.Set(key, js.ToString(), cacheTime);
@@ -252,7 +259,9 @@ namespace CYQ.Data.Aop
                     }
                     else
                     {
-                        _AopCache.Set(key, aopInfo.Row.ToJson(RowOp.IgnoreNull, false, EscapeOp.Encode), cacheTime);
+                        var jsonOp = new JsonOp();
+                        jsonOp.EscapeOp = EscapeOp.Encode;
+                        _AopCache.Set(key, aopInfo.Row.ToJson(jsonOp), cacheTime);
                     }
                     break;
                 case AopEnum.GetCount:
@@ -769,6 +778,8 @@ namespace CYQ.Data.Aop
 
             switch (action)
             {
+                case AopEnum.ExeMDataTable:
+                case AopEnum.ExeJson:
                 case AopEnum.ExeMDataTableList:
                 case AopEnum.ExeScalar:
                     sb.Append(aopInfo.IsProc);
@@ -776,12 +787,11 @@ namespace CYQ.Data.Aop
                     sb.Append(".");
                     sb.Append(action);
                     break;
-                case AopEnum.ExeMDataTable:
                 case AopEnum.ExeList:
-                case AopEnum.ExeJson:
                     sb.Append(aopInfo.IsProc);
                     sb.Append(aopInfo.ProcName);
-                    sb.Append(".ExeTable");
+                    sb.Append("." + aopInfo.ListT.Name + ".");
+                    sb.Append(action);
                     break;
                 case AopEnum.Exists:
                 case AopEnum.Fill:
@@ -793,13 +803,21 @@ namespace CYQ.Data.Aop
                     sb.Append(action);
                     break;
                 case AopEnum.Select:
-                case AopEnum.SelectList:
                 case AopEnum.SelectJson:
                     sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.PageIndex);
                     sb.Append(aopInfo.PageSize);
                     sb.Append(aopInfo.Where);
-                    sb.Append(".Select");
+                    sb.Append(".");
+                    sb.Append(action);
+                    break;
+                case AopEnum.SelectList:
+                     sb.Append(aopInfo.TableName);
+                    sb.Append(aopInfo.PageIndex);
+                    sb.Append(aopInfo.PageSize);
+                    sb.Append(aopInfo.Where);
+                    sb.Append("." + aopInfo.ListT.Name + ".");
+                    sb.Append(action);
                     break;
             }
 
@@ -828,7 +846,7 @@ namespace CYQ.Data.Aop
 
         #endregion
 
-   
+
 
         class KeyTable
         {

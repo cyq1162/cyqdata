@@ -1016,6 +1016,7 @@ namespace CYQ.Data
                 _aop.Para.Where = where;
                 _aop.Para.SelectColumns = _sqlCreate.selectColumns;
                 _aop.Para.IsTransaction = dalHelper.IsOpenTrans;
+                _aop.Para.ListT = typeof(T);
                 aopResult = _aop.Begin(Aop.AopEnum.SelectList);
             }
             if (aopResult == AopResult.Default || aopResult == AopResult.Continue)
@@ -1108,7 +1109,7 @@ namespace CYQ.Data
         public string SelectJson()
         {
             int count;
-            return SelectJson(0, 0, null, out count, false, null);
+            return SelectJson(0, 0, null, out count, null);
         }
 
         /// <param name="where">Sql statement where the conditions: 88, "id = 88"
@@ -1116,37 +1117,33 @@ namespace CYQ.Data
         public string SelectJson(object where)
         {
             int count;
-            return SelectJson(0, 0, where, out count, false, null);
+            return SelectJson(0, 0, where, out count, null);
         }
         public string SelectJson(int topN, object where)
         {
             int count;
-            return SelectJson(0, topN, where, out count, false, null);
+            return SelectJson(0, topN, where, out count, null);
         }
         /// <param name="pageIndex">pageIndex<para>第几页</para></param>
         /// <param name="pageSize">pageSize<para>每页数量[为0时默认选择所有]</para></param>
         public string SelectJson(int pageIndex, int pageSize)
         {
             int count;
-            return SelectJson(pageIndex, pageSize, null, out count, false, null);
+            return SelectJson(pageIndex, pageSize, null, out count, null);
         }
         public string SelectJson(int pageIndex, int pageSize, object where)
         {
             int count;
-            return SelectJson(pageIndex, pageSize, where, out count, false, null);
+            return SelectJson(pageIndex, pageSize, where, out count, null);
         }
         public string SelectJson(int pageIndex, int pageSize, object where, out int count)
         {
-            return SelectJson(pageIndex, pageSize, where, out count, false, null);
-        }
-        public string SelectJson(int pageIndex, int pageSize, object where, out int count, bool isConvertNameToLower)
-        {
-            return SelectJson(pageIndex, pageSize, where, out count, isConvertNameToLower, null);
+            return SelectJson(pageIndex, pageSize, where, out count, null);
         }
         /// <summary>
         /// 查询后直接返回Json字符串（节省一次转换时间）。
         /// </summary>
-        public string SelectJson(int pageIndex, int pageSize, object where, out int count, bool isConvertNameToLower, string dateTimeFormatter)
+        public string SelectJson(int pageIndex, int pageSize, object where, out int count, JsonOp jsonOp)
         {
             if (CheckDisposed()) { count = -1; return "[{}]"; }
             string json = "";
@@ -1197,12 +1194,7 @@ namespace CYQ.Data
 
                 if (sdReader != null)
                 {
-                    JsonHelper js = new JsonHelper(false, false);
-                    js.IsConvertNameToLower = isConvertNameToLower;
-                    if (!string.IsNullOrEmpty(dateTimeFormatter))
-                    {
-                        js.DateTimeFormatter = dateTimeFormatter;
-                    }
+                    JsonHelper js = new JsonHelper(false, false, jsonOp);
                     json = ConvertTool.ChangeReaderToJson(sdReader, js, true);
                     _aop.Para.ExeResult = json;
                     if (!byPager)

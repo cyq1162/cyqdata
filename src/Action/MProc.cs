@@ -283,11 +283,16 @@ namespace CYQ.Data
         }
         private AopResult SetAopResult(AopEnum action)
         {
+            return SetAopResult(action, null);
+        }
+        private AopResult SetAopResult(AopEnum action, Type listT)
+        {
             if (_aop.IsLoadAop)
             {
                 _aop.Para.MProc = this;
                 _aop.Para.ProcName = _procName;
                 _aop.Para.IsProc = _isProc;
+                _aop.Para.ListT = listT;
                 if (dalHelper.Com != null)
                 {
                     _aop.Para.DBParameters = dalHelper.Com.Parameters;
@@ -327,11 +332,11 @@ namespace CYQ.Data
         /// <summary>
         /// 执行并返回泛型列表类型。
         /// </summary>
-        public List<T> ExeList<T>() where T : class
+        public List<T> ExeList<T>()
         {
             CheckDisposed();
             List<T> list;
-            AopResult aopResult = SetAopResult(AopEnum.ExeList);
+            AopResult aopResult = SetAopResult(AopEnum.ExeList, typeof(T));
             if (aopResult == AopResult.Return)
             {
                 object cacheObj = _aop.Para.ExeResult;
@@ -361,19 +366,13 @@ namespace CYQ.Data
         /// </summary>
         public string ExeJson()
         {
-            return ExeJson(false, null);
-        }
-        public string ExeJson(bool isConvertNameToLower)
-        {
-            return ExeJson(isConvertNameToLower, null);
+            return ExeJson(null);
         }
         /// <summary>
         /// 执行列表数据并返回Json格式字符串。
         /// </summary>
-        /// <param name="isConvertNameToLower">字段是否返回小写</param>
-        /// <param name="dateTimeFormatter">是否需要格式化时间，默认：yyyy-MM-dd HH:mm:ss</param>
         /// <returns></returns>
-        public string ExeJson(bool isConvertNameToLower, string dateTimeFormatter)
+        public string ExeJson(JsonOp jsonOp)
         {
             CheckDisposed();
             string json;
@@ -387,12 +386,7 @@ namespace CYQ.Data
             {
                 if (aopResult != AopResult.Break)
                 {
-                    JsonHelper js = new JsonHelper(false, false);
-                    js.IsConvertNameToLower = isConvertNameToLower;
-                    if (!string.IsNullOrEmpty(dateTimeFormatter))
-                    {
-                        js.DateTimeFormatter = dateTimeFormatter;
-                    }
+                    JsonHelper js = new JsonHelper(false, false, jsonOp);
                     json = ConvertTool.ChangeReaderToJson(dalHelper.ExeDataReader(_procName, _isProc), js, false);
                     _aop.Para.ExeResult = json;
                     _aop.Para.IsSuccess = json.Length > 4;
