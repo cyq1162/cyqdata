@@ -1090,9 +1090,18 @@
 826：优化：MDataRow GetIndex，提升取值性能。（2024-02-04）
 827：优化：ConvertTool 相关方法，提升转化性能。（2024-02-04）
 -------------------------------------------------------------------------------------
+版本简要：通过大范围使用 Emit 来替换反射，提升性能。
 828：新增：CYQ.Data.Emit（内部）优化反射代码，提升性能。【V5.9.2】
 829：新增：JsonOp 参数，调整（JsonHelper、MDataRow、MDataTable）ToJson 重载方法参数。（2024-02-06）
 830：优化：JsonHelper 实体转化性能：涉及：ToJson(),ToList<T>()。（2024-02-05、2024-02-22）
 831：优化：MDataTable 实体列表转化性能：涉及：CreateFrom。（2024-02-22）
 832：优化：MDataRow 实体转化性能：涉及：CreateFrom。。（2024-02-22）
-
+-------------------------------------------------------------------------------------
+版本简要：对 XHtmlAction 进行各种简化和优化，以供 Taurus.Mvc 便于使用。
+833：移除：XHtmlAction SetFor 系列方法（该方法使用门槛较高） 。（2024-02-23）【V5.9.2.1】
+834：移除：XHtmlAction SetForeach(MDataTable dataSource, string idOrName, SetType setType) 重载方法 。（2024-02-23）
+835：移除：XHtmlAction GetByID，GetByName 两个方法，其 Get 方法已可替代以上两者。（2024-02-23）
+836：移除：XHtmlAction IsCurrentLang，IsUseLangSplit 两个成员属性。（2024-02-23）
+837：移除：XHtmlBase LoadFromCache、SetCDATA、ClearCDATA 等方法。
+838：优化：XHtmlAction SetForeach 方法优化，支持绑定其它数据源。（2024-02-23）
+839：优化：XHtmlAction LoadData 方法优化，效果变更为批量对KeyValue赋值。（2024-02-23）

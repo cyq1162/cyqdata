@@ -126,7 +126,11 @@ namespace CYQ.Data.Json
                                 string key = json.Substring(keyStart, Math.Max(keyStart, keyEnd) - keyStart + 1);
                                 if (!dic.ContainsKey(key))
                                 {
-                                    string val = json.Substring(valueStart, Math.Max(valueStart, valueEnd) - valueStart + 1);
+                                    string val = string.Empty;
+                                    if (valueStart > 0)
+                                    {
+                                        val = json.Substring(valueStart, Math.Max(valueStart, valueEnd) - valueStart + 1);
+                                    }
                                     bool isNull = val.Length == 4 && val == "null" && i > 4 && json[i - 5] == ':' && json[i] != '"';
                                     if (isNull)
                                     {
@@ -138,6 +142,7 @@ namespace CYQ.Data.Json
                                     }
                                     dic.Add(key, val);
                                 }
+
                             }
                             cs.setDicValue = false;
                             keyStart = keyEnd = 0;

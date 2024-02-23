@@ -296,7 +296,7 @@ namespace CYQ.Data.Xml
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public bool LoadFromCache(string key)
+        protected bool LoadFromCache(string key)
         {
             if (theCache.Contains(key))//缓存中存在对应值是key的对象
             {
@@ -613,7 +613,7 @@ namespace CYQ.Data.Xml
         /// </summary>
         /// <param name="html">对象字符</param>
         /// <returns></returns>
-        public string SetCDATA(string html)
+        internal string SetCDATA(string html)
         {
             if (string.IsNullOrEmpty(html))
             {
@@ -634,7 +634,7 @@ namespace CYQ.Data.Xml
         /// </summary>
         /// <param name="html">对象字符</param>
         /// <returns></returns>
-        public string ClearCDATA(string html)
+        internal string ClearCDATA(string html)
         {
             if (string.IsNullOrEmpty(html))
             {
