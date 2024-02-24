@@ -9,13 +9,13 @@
 	  <Authors>路过秋天</Authors>
 	  <Description>CYQ.Data is a orm for .net or .net core.【附：自动缓存、读写分离，分布式缓存（带一致性hash）等功能】Support：Mssql、Mysql、Oracle、Sqlite、Sybase、Postgres、DB2、DaMeng、KingBaseES、Access、Excel、FoxPro、Txt、Xml。【开源：https://github.com/cyq1162/cyqdata】</Description>
 	  <Product>CYQ.Data 数据层(ORM)框架 V5 .NET Standard 版本</Product>
-	  <Company>路过秋天 （2024-02-23）</Company>
+	  <Company>路过秋天 （2024-02-24）</Company>
 	  <Copyright>版权所有 (C) 路过秋天 2010-2110</Copyright>
 	  <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	  <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Standard 版本</AssemblyTitle>
-	  <AssemblyVersion>5.9.2.1</AssemblyVersion>
-	  <FileVersion>5.9.2.1</FileVersion>
+	  <AssemblyVersion>5.9.2.2</AssemblyVersion>
+	  <FileVersion>5.9.2.2</FileVersion>
 	  <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>

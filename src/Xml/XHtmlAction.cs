@@ -32,10 +32,7 @@ namespace CYQ.Data.Xml
         public XHtmlAction(bool isForHtml)
             : base()
         {
-            if (isForHtml)
-            {
-                base.LoadNameSpace(htmlNameSpace);
-            }
+            base.IsForHtml = isForHtml;
         }
         /// <summary>
         /// ¹¹Ôìº¯Êý
@@ -45,10 +42,7 @@ namespace CYQ.Data.Xml
         public XHtmlAction(bool isForHtml, bool isReadOnly)
             : base()
         {
-            if (isForHtml)
-            {
-                base.LoadNameSpace(htmlNameSpace);
-            }
+            base.IsForHtml = isForHtml;
             IsReadOnly = isReadOnly;
         }
         /// <summary>
@@ -58,7 +52,7 @@ namespace CYQ.Data.Xml
         public XHtmlAction(string nameSpaceUrl)
             : base()
         {
-            base.LoadNameSpace(nameSpaceUrl);
+            NameSpace = nameSpaceUrl;
         }
         #endregion
 
@@ -862,7 +856,11 @@ namespace CYQ.Data.Xml
                     }
                     if (html.Contains(" xmlns="))
                     {
-                        html = html.Replace(" xmlns=\"\"", string.Empty).Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                        html = html.Replace(" xmlns=\"\"", string.Empty);
+                        if (xnm != null)
+                        {
+                            html = html.Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                        }
                     }
                     if (html.Contains("&"))
                     {

@@ -70,11 +70,12 @@ namespace CYQ.Data.Xml
         /// 缓存对象
         /// </summary>
         protected DistributedCache theCache;
+        protected bool IsForHtml = false;
         /// <summary>
-        /// Html名称空间
+        /// XHtml名称空间
         /// </summary>
-        protected string htmlNameSpace = "http://www.w3.org/1999/xhtml";
-        internal string PreXml = "preXml";
+        protected string NameSpace = "";
+        protected string PreXml = "preXml";
 
         private string _FileName = string.Empty;
         /// <summary>
@@ -190,11 +191,7 @@ namespace CYQ.Data.Xml
         }
 
         #region 加载xml
-        /// <summary>
-        /// docTypeHtml是一样的。
-        /// </summary>
-        //protected static string docTypeHtml = string.Empty;
-        //private const string docType = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+
         /// <summary>
         /// 从xml字符串加载
         /// </summary>
@@ -203,26 +200,26 @@ namespace CYQ.Data.Xml
         {
             try
             {
-                if (xnm != null)
+                if (IsForHtml)
                 {
                     if (xml.StartsWith("<!DOCTYPE html"))
                     {
                         //去除DTD头。
                         xml = xml.Substring(xml.IndexOf('>') + 1).Trim();
-                        //if (xml.Contains("&"))
-                        //{
-                        //    if (string.IsNullOrEmpty(docTypeHtml))
-                        //    {
-                        //        docTypeHtml = "<!DOCTYPE html PUBLIC \" -//W3C//DTD XHTML 1.0 Transitional//EN\" \"" + AppConfig.XHtml.DtdUri + "\">";
-                        //    }
-                        //    xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), docTypeHtml);
-                        //}
-                        //else if (xml.StartsWith(docType))
-                        //{
-                        //    xml = xml.Replace(xml.Substring(0, xml.IndexOf('>') + 1), "<!DOCTYPE html>");
-                        //}
                     }
-
+                    if (xml.Contains("http://www.w3.org/1999/xhtml"))
+                    {
+                        string xmlns = " xmlns=\"http://www.w3.org/1999/xhtml\"";
+                        //支除名称空间
+                        if (xml.Contains(xmlns))
+                        {
+                            xml = xml.Replace(xmlns, "");
+                        }
+                        else
+                        {
+                            NameSpace = "http://www.w3.org/1999/xhtml";
+                        }
+                    }
                     if (xml.IndexOf(AppConfig.XHtml.CDataLeft) == -1)
                     {
                         int body = Math.Max(xml.IndexOf("<body"), xml.IndexOf("</head>"));
@@ -245,6 +242,10 @@ namespace CYQ.Data.Xml
                     }
                 }
                 xml = Filter(xml);
+                if (!string.IsNullOrEmpty(NameSpace))
+                {
+                    LoadNameSpace(NameSpace);
+                }
                 _XmlDocument.LoadXml(xml);
             }
             catch (XmlException err)
@@ -337,31 +338,23 @@ namespace CYQ.Data.Xml
             }
             try
             {
-                string html = string.Empty;
-                if (xnm != null)
-                {
-                    html = IOHelper.ReadAllText(fileName, 0, _Encoding);
-                    //ResolverDtd.Resolver(ref _XmlDocument);//指定，才能生成DTD文件到本地目录。
-                }
 
-                if (html != string.Empty)
+                string text = string.Empty;
+                text = IOHelper.ReadAllText(fileName, 0, _Encoding);
+                if (text != string.Empty)
                 {
-                    LoadXml(html);//从字符串加载html
+                    LoadXml(text);//从字符串加载html
+                    if (clearCommentNode)
+                    {
+                        RemoveCommentNode();
+                    }
+                    xmlCacheKey = GenerateKey(fileName);
+                    if (!theCache.Contains(xmlCacheKey))
+                    {
+                        RefleshCache();
+                    }
+                    return true;
                 }
-                else
-                {
-                    _XmlDocument.Load(fileName);//从文件加载xml
-                }
-                if (clearCommentNode)
-                {
-                    RemoveCommentNode();
-                }
-                xmlCacheKey = GenerateKey(fileName);
-                if (!theCache.Contains(xmlCacheKey))
-                {
-                    RefleshCache();
-                }
-                return true;
             }
             catch (Exception err)
             {

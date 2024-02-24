@@ -30,14 +30,16 @@ namespace CYQ.Data.Xml
         /// （默认使用“数据源表名+View”或“defaultView”作为节点名，循环内容取值节点：InnerXml）
         /// </summary>
         /// <param name="dataSource"></param>
-        public void SetForeach(MDataTable dataSource)
+        public void SetForeach(object dataSource)
         {
             if (dataSource == null) { return; }
-            XmlNode node = Get(dataSource.TableName + "View");
-            if (node == null)
+            XmlNode node = Get("defaultView");
+            if(node == null && dataSource is MDataTable)
             {
-                node = Get("defaultView");
+                string name = ((MDataTable)dataSource).TableName + "View";
+                node = Get(name);
             }
+            if (node == null) { return; }
             SetForeach(dataSource, node, node.InnerXml, OnForeach);
 
         }
@@ -50,6 +52,7 @@ namespace CYQ.Data.Xml
         {
             if (dataSource == null) { return; }
             XmlNode node = Get(idOrName);
+            if (node == null) { return; }
             SetForeach(dataSource, node, node.InnerXml, OnForeach);
         }
         /// <summary>
@@ -71,6 +74,7 @@ namespace CYQ.Data.Xml
         /// <param name="node">节点，循环内容默认取值节点：InnerXml</param>
         public void SetForeach(object dataSource, XmlNode node)
         {
+            if (node == null) { return; }
             SetForeach(dataSource, node, node.InnerXml, OnForeach);
         }
         /// <summary>

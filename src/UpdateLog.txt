@@ -1105,3 +1105,4 @@
 837：移除：XHtmlBase LoadFromCache、SetCDATA、ClearCDATA 等方法。
 838：优化：XHtmlAction SetForeach 方法优化，支持绑定其它数据源。（2024-02-23）
 839：优化：XHtmlAction LoadData 方法优化，效果变更为批量对KeyValue赋值。（2024-02-23）
+840：优化：XHtmlAction 加载：去除 http://www.w3.org/1999/xhtml 名称空间。2024-02-24）【V5.9.2.2】
