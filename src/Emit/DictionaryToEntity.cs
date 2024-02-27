@@ -51,6 +51,7 @@ namespace CYQ.Data.Emit
             DynamicMethod method = new DynamicMethod("DictionaryToEntity", typeof(object), new Type[] { dicType }, entityType);
             MethodInfo getValue = dicType.GetMethod("TryGetValue");
             MethodInfo changeType = convertToolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(object), typeof(Type) }, null);
+            MethodInfo getTypeFromHandle = typeof(Type).GetMethod("GetTypeFromHandle");
 
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
 
@@ -65,7 +66,7 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    SetValueByRow(gen, getValue, changeType, property, null);
+                    SetValueByRow(gen, getValue, changeType, getTypeFromHandle, property, null);
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
@@ -73,7 +74,7 @@ namespace CYQ.Data.Emit
             {
                 foreach (var field in fields)
                 {
-                    SetValueByRow(gen, getValue, changeType, null, field);
+                    SetValueByRow(gen, getValue, changeType, getTypeFromHandle, null, field);
                 }
             }
 
@@ -83,7 +84,7 @@ namespace CYQ.Data.Emit
 
             return method;
         }
-        private static void SetValueByRow(ILGenerator gen, MethodInfo getValue, MethodInfo changeType, PropertyInfo pi, FieldInfo fi)
+        private static void SetValueByRow(ILGenerator gen, MethodInfo getValue, MethodInfo changeType, MethodInfo getTypeFromHandle, PropertyInfo pi, FieldInfo fi)
         {
             Type valueType = pi != null ? pi.PropertyType : fi.FieldType;
             string fieldName = pi != null ? pi.Name : fi.Name;
@@ -104,8 +105,10 @@ namespace CYQ.Data.Emit
             //-------------新增：o=ConvertTool.ChangeType(o, t);
             if (valueType.Name != "String")
             {
-                gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
+                //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
                 gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
+                //下面这句Call，解决在 .net 中无法获取Type值，抛的异常：尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
+                gen.Emit(OpCodes.Call, getTypeFromHandle);
                 gen.Emit(OpCodes.Stloc_2);
 
                 gen.Emit(OpCodes.Ldloc_1);//o
@@ -114,7 +117,7 @@ namespace CYQ.Data.Emit
                 gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
             }
             //-------------------------------------------
-            SetValue(gen,pi,fi);
+            SetValue(gen, pi, fi);
             gen.MarkLabel(labelContinue);//继续下一个循环
         }
 

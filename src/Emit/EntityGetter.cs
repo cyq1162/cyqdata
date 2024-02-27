@@ -7,6 +7,9 @@ using System.Text;
 
 namespace CYQ.Data.Emit
 {
+    /// <summary>
+    /// （未使用）
+    /// </summary>
     internal class EntityGetter
     {
         static Dictionary<PropertyInfo, Func<object, object>> piFuncs = new Dictionary<PropertyInfo, Func<object, object>>();

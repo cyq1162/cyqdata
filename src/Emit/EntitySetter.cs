@@ -6,6 +6,9 @@ using System.Reflection;
 
 namespace CYQ.Data.Emit
 {
+    /// <summary>
+    /// （未使用）
+    /// </summary>
     internal class EntitySetter
     {
         static Dictionary<PropertyInfo, Action<object, object>> piActions = new Dictionary<PropertyInfo, Action<object, object>>();

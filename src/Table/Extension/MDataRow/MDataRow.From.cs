@@ -25,27 +25,27 @@ namespace CYQ.Data.Table
         /// <returns></returns>
         public static MDataRow CreateFrom(object anyObj)
         {
-            return CreateFrom(anyObj, null, BreakOp.None, JsonHelper.DefaultEscape);
+            return CreateFrom(anyObj, null, BreakOp.None, EscapeOp.No);
         }
         public static MDataRow CreateFrom(object anyObj, Type valueType)
         {
-            return CreateFrom(anyObj, valueType, BreakOp.None, JsonHelper.DefaultEscape);
+            return CreateFrom(anyObj, valueType, BreakOp.None, EscapeOp.No);
         }
         public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp op)
         {
-            return CreateFrom(anyObj, valueType, op, JsonHelper.DefaultEscape);
+            return CreateFrom(anyObj, valueType, op, EscapeOp.No);
         }
         /// <summary>
         /// 从实体、Json、Xml、IEnumerable接口实现的类、MDataRow
         /// </summary>
         public static MDataRow CreateFrom(object anyObj, Type valueType, BreakOp breakOp, EscapeOp escapeOp)
         {
-            MDataRow row = new MDataRow();
             if (anyObj is MDataRow)
             {
-                row.LoadFrom(anyObj as MDataRow, (breakOp == BreakOp.Null ? RowOp.IgnoreNull : RowOp.None), true);
+                return anyObj as MDataRow;
             }
-            else if (anyObj is string)
+            MDataRow row = new MDataRow();
+            if (anyObj is string)
             {
                 row.LoadFrom(anyObj as string, escapeOp, breakOp);
             }
@@ -60,147 +60,6 @@ namespace CYQ.Data.Table
             row.SetState(1);//外部创建的状态默认置为1.
             return row;
         }
-        #endregion
-
-        #region ToJson、ToXml、ToTable、ToEntity
-        
-        /// <summary>
-        /// 输出行的数据Json
-        /// </summary>
-        public string ToJson()
-        {
-            return JsonHelper.ToJson(this);
-        }
-
-        /// <summary>
-        /// 输出Json
-        /// </summary>
-        /// <param name="jsonOp">Json 选项</param>
-        /// <returns></returns>
-        public string ToJson(JsonOp jsonOp)
-        {
-            return JsonHelper.ToJson(this, jsonOp);
-        }
-
-        internal string ToXml(bool isConvertNameToLower)
-        {
-            string xml = string.Empty;
-            foreach (MDataCell cell in this)
-            {
-                xml += cell.ToXml(isConvertNameToLower);
-            }
-            return xml;
-        }
-        /// <summary>
-        /// 将行的数据转成两列（ColumnName、Value）的表
-        /// </summary>
-        public MDataTable ToTable()
-        {
-            MDataTable dt = this.Columns.ToTable();
-            MCellStruct msValue = new MCellStruct("Value", SqlDbType.Variant);
-            MCellStruct msState = new MCellStruct("State", SqlDbType.Int);
-            dt.Columns.Insert(1, msValue);
-            dt.Columns.Insert(2, msState);
-            for (int i = 0; i < Count; i++)
-            {
-                dt.Rows[i][1].Value = this[i].Value;
-                dt.Rows[i][2].Value = this[i].State;
-            }
-            return dt;
-        }
-        /// <summary>
-        /// 将行的数据转成两列（ColumnName、Value、State）的表
-        /// </summary>
-        /// <param name="onlyData">仅数据（不含列头结构）</param>
-        /// <returns></returns>
-        public MDataTable ToTable(bool onlyData)
-        {
-            if (onlyData)
-            {
-                MDataTable dt = new MDataTable(this.TableName);
-                dt.Columns.Add("ColumnName", SqlDbType.NVarChar);
-                dt.Columns.Add("Value", SqlDbType.Variant);
-                dt.Columns.Add("State", SqlDbType.Int);
-                for (int i = 0; i < Count; i++)
-                {
-                    MDataCell cell = this[i];
-                    dt.NewRow(true)
-                        .Set(0, cell.ColumnName)
-                        .Set(1, cell.Value)
-                        .Set(2, cell.State);
-                }
-                return dt;
-            }
-            return ToTable();
-        }
-
-        /// <summary>
-        /// 转实体类
-        /// </summary>
-        /// <typeparam name="T">类型</typeparam>
-        /// <returns></returns>
-        public T ToEntity<T>()
-        {
-            Type t = typeof(T);
-            return (T)ToEntity(t);
-        }
-
-        internal object ToEntity(Type t)
-        {
-            if (t.Name == "MDataRow")
-            {
-                return this;
-            }
-            if (t.IsValueType || t.Name == "String")
-            {
-                return ConvertTool.ChangeType(this[0].Value, t);
-            }
-            bool isCustom = ReflectTool.GetSystemType(ref t) == SysType.Custom;
-
-            if (isCustom)
-            {
-                return MDataRowToEntity.Delegate(t, this.Columns)(this);
-            }
-            else
-            {
-                return ConvertTool.GetObj(t, this);
-            }
-        }
-
-        #endregion
-
-        #region SetToUI
-
-
-        /// <summary>
-        /// 将值批量赋给UI
-        /// </summary>
-        public void SetToAll(params object[] parentControls)
-        {
-            SetToAll(null, parentControls);
-        }
-        /// <summary>
-        /// 将值批量赋给UI
-        /// </summary>
-        /// <param name="autoPrefix">自动前缀，多个可用逗号分隔</param>
-        /// <param name="parentControls">页面控件</param>
-        public void SetToAll(string autoPrefix, params object[] parentControls)
-        {
-            if (Count > 0)
-            {
-                MDataRow row = this;
-                using (MActionUI mui = new MActionUI(ref row, null, null))
-                {
-                    if (!string.IsNullOrEmpty(autoPrefix))
-                    {
-                        string[] pres = autoPrefix.Split(',');
-                        mui.SetAutoPrefix(pres[0], pres);
-                    }
-                    mui.SetAll(parentControls);
-                }
-            }
-        }
-
         #endregion
 
         #region LoadFrom
@@ -346,17 +205,75 @@ namespace CYQ.Data.Table
         {
             if (!string.IsNullOrEmpty(json))
             {
-                Dictionary<string, string> dic = JsonHelper.Split(json);
-                if (dic != null && dic.Count > 0)
-                {
-                    LoadFrom(dic, null, op, breakOp);
-                }
-            }
-            else
-            {
-                LoadFrom(true);
+                Dictionary<string, string> dic = JsonHelper.Split(json, op);
+                LoadFrom(dic,breakOp);
             }
         }
+
+        public void LoadFrom(Dictionary<string, object> dic, BreakOp breakOp)
+        {
+            if (dic != null && dic.Count > 0)
+            {
+                bool isAddColumn = Columns.Count == 0;
+                foreach (var item in dic)
+                {
+                    switch (breakOp)
+                    {
+                        case BreakOp.Null:
+                            if (item.Value == null) { continue; }
+                            break;
+                        case BreakOp.Empty:
+                            if (Convert.ToString(item.Value) == string.Empty) { continue; }
+                            break;
+                        case BreakOp.NullOrEmpty:
+                            if (item.Value == null || Convert.ToString(item.Value) == string.Empty) { continue; }
+                            break;
+                    }
+                    if (isAddColumn)
+                    {
+                        Add(item.Key, SqlDbType.Variant, item.Value);
+                    }
+                    else
+                    {
+                        Set(item.Key, item.Value);
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 从字典里加载值
+        /// </summary>
+        public void LoadFrom(Dictionary<string, string> dic,BreakOp breakOp)
+        {
+            if (dic != null && dic.Count > 0)
+            {
+                bool isAddColumn = Columns.Count == 0;
+                foreach (var item in dic)
+                {
+                    switch (breakOp)
+                    {
+                        case BreakOp.Null:
+                            if (item.Value == null) { continue; }
+                            break;
+                        case BreakOp.Empty:
+                            if (item.Value == string.Empty) { continue; }
+                            break;
+                        case BreakOp.NullOrEmpty:
+                            if (string.IsNullOrEmpty(item.Value)) { continue; }
+                            break;
+                    }
+                    if (isAddColumn)
+                    {
+                        Add(item.Key, item.Value);
+                    }
+                    else
+                    {
+                        Set(item.Key, item.Value);
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// 从泛型字典集合里加载
         /// </summary>
@@ -366,6 +283,7 @@ namespace CYQ.Data.Table
         }
         internal void LoadFrom(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
         {
+
             if (dic != null)
             {
                 if (dic is MDataRow)
@@ -373,6 +291,18 @@ namespace CYQ.Data.Table
                     LoadFrom(dic as MDataRow, RowOp.None, true);
                     return;
                 }
+                if (dic is Dictionary<string, string> || dic is MDictionary<string, string>)
+                {
+                    LoadFrom(dic as Dictionary<string, string>, breakOp);
+                    return;
+                }
+                if (dic is Dictionary<string, object> || dic is MDictionary<string, object>)
+                {
+                    LoadFrom(dic as Dictionary<string, object>, breakOp);
+                    return;
+                }
+                #region 需要创建列时，如果是HashTable时，值的类型如果是Object，尝试先取值的类型。
+
                 bool isNameValue = dic is NameValueCollection;
                 bool isAddColumn = Columns.Count == 0;
                 SqlDbType sdt = SqlDbType.NVarChar;
@@ -483,129 +413,11 @@ namespace CYQ.Data.Table
                     }
                     // }
                 }
+
+                #endregion
             }
         }
-        //internal void LoadFrom2(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
-        //{
-        //    if (dic != null)
-        //    {
-        //        if (dic is MDataRow)
-        //        {
-        //            LoadFrom(dic as MDataRow, RowOp.None, true);
-        //            return;
-        //        }
-        //        bool isNameValue = dic is NameValueCollection;
-        //        bool isAddColumn = Columns.Count == 0;
-        //        SqlDbType sdt = SqlDbType.NVarChar;
-        //        if (isAddColumn)
-        //        {
-        //            if (valueType != null)
-        //            {
-        //                sdt = DataType.GetSqlType(valueType);
-        //            }
-        //            else if (!isNameValue)
-        //            {
-        //                Type type = dic.GetType();
-        //                if (type.IsGenericType)
-        //                {
-        //                    sdt = DataType.GetSqlType(type.GetGenericArguments()[1]);
-        //                }
-        //                else
-        //                {
-        //                    sdt = SqlDbType.Variant;
-        //                }
-        //            }
-        //        }
-        //        string key = null; object value = null;
-        //        Type t = null;
-        //        PropertyInfo keyPro = null;
-        //        PropertyInfo valuePro = null;
-        //        int i = -1;
-        //        foreach (object o in dic)
-        //        {
-        //            i++;
-        //            if (isNameValue)
-        //            {
-        //                if (o == null)
-        //                {
-        //                    key = "null";
-        //                    value = ((NameValueCollection)dic)[i];
-        //                }
-        //                else
-        //                {
-        //                    key = Convert.ToString(o);
-        //                    value = ((NameValueCollection)dic)[key];
-        //                }
-        //            }
-        //            else
-        //            {
-        //                if (t == null)
-        //                {
-        //                    t = o.GetType();
-        //                    keyPro = t.GetProperty("Key");
-        //                    valuePro = t.GetProperty("Value");
-        //                }
-        //                value = valuePro.GetValue(o, null);
-        //                bool isContinue = false;
-        //                switch (breakOp)
-        //                {
-        //                    case BreakOp.Null:
-        //                        if (value == null)
-        //                        {
-        //                            isContinue = true;
-        //                        }
-        //                        break;
-        //                    case BreakOp.Empty:
-        //                        if (value != null && Convert.ToString(value) == "")
-        //                        {
-        //                            isContinue = true;
-        //                        }
-        //                        break;
-        //                    case BreakOp.NullOrEmpty:
-        //                        if (Convert.ToString(value) == "")
-        //                        {
-        //                            isContinue = true;
-        //                        }
-        //                        break;
 
-        //                }
-        //                if (isContinue) { continue; }
-        //                key = Convert.ToString(keyPro.GetValue(o, null));
-        //                //if (value != null)
-        //                //{
-
-        //                //}
-        //            }
-        //            //if (value != null)
-        //            //{
-        //            if (isAddColumn)
-        //            {
-        //                SqlDbType sdType = sdt;
-        //                if (sdt == SqlDbType.Variant)
-        //                {
-        //                    if (value == null)
-        //                    {
-        //                        sdType = SqlDbType.NVarChar;
-        //                    }
-        //                    else
-        //                    {
-        //                        sdType = DataType.GetSqlType(value.GetType());
-        //                    }
-        //                }
-        //                Add(key, sdType, value);
-        //            }
-        //            else
-        //            {
-        //                if (value != null && value is string)
-        //                {
-        //                    value = JsonHelper.UnEscape(value.ToString(), op);
-        //                }
-        //                Set(key, value);
-        //            }
-        //            // }
-        //        }
-        //    }
-        //}
         /// <summary>
         /// 将实体转成数据行。
         /// </summary>
@@ -774,91 +586,6 @@ namespace CYQ.Data.Table
         //}
         #endregion
 
-        #region SetToEntity
-
-        /// <summary>
-        /// 将行中的数据值赋给实体对象
-        /// </summary>
-        /// <param name="obj">实体对象</param>
-        public void SetToEntity(object obj)
-        {
-            if (obj == null || this.Count == 0)
-            {
-                return;
-            }
-            Type objType = obj.GetType();
-            var setToEntity = MDataRowSetToEntity.Delegate(objType, this.Columns);
-            setToEntity(this, obj);
-
-            //string objName = objType.FullName, cellName = "";
-            //try
-            //{
-            //    #region 处理核心
-            //    List<PropertyInfo> pis = ReflectTool.GetPropertyList(objType);
-            //    if (pis.Count > 0)
-            //    {
-            //        foreach (PropertyInfo p in pis)//遍历实体
-            //        {
-            //            if (p.CanWrite)
-            //            {
-            //                SetValueToPropertyOrField(ref obj, row, p, null, op, out cellName);
-            //            }
-            //        }
-            //    }
-            //    else
-            //    {
-            //        List<FieldInfo> fis = ReflectTool.GetFieldList(objType);
-            //        if (fis.Count > 0)
-            //        {
-            //            foreach (FieldInfo f in fis)//遍历实体
-            //            {
-            //                SetValueToPropertyOrField(ref obj, row, null, f, op, out cellName);
-            //            }
-            //        }
-            //    }
-            //    #endregion
-            //}
-            //catch (Exception err)
-            //{
-            //    string msg = "[AttachInfo]:" + string.Format("ObjName:{0} PropertyName:{1}", objName, cellName) + "\r\n";
-            //    msg += Log.GetExceptionMessage(err);
-            //    Log.WriteLogToTxt(msg, LogType.Error);
-            //}
-        }
-
-        //private void SetValueToPropertyOrField(ref object obj, MDataRow row, PropertyInfo p, FieldInfo f, RowOp op, out string cellName)
-        //{
-        //    cellName = p != null ? p.Name : f.Name;
-        //    MDataCell cell = row[cellName];
-        //    if (cell == null)
-        //    {
-        //        return;
-        //    }
-        //    if (op == RowOp.IgnoreNull && cell.IsNull)
-        //    {
-        //        return;
-        //    }
-        //    else if (op == RowOp.Insert && cell.State == 0)
-        //    {
-        //        return;
-        //    }
-        //    else if (op == RowOp.Update && cell.State != 2)
-        //    {
-        //        return;
-        //    }
-        //    Type propType = p != null ? p.PropertyType : f.FieldType;
-        //    object objValue = GetObj(propType, cell.Value);
-
-        //    if (p != null)
-        //    {
-        //        p.SetValue(obj, objValue, null);
-        //    }
-        //    else
-        //    {
-        //        f.SetValue(obj, objValue);
-        //    }
-        //}
-        #endregion
 
     }
 

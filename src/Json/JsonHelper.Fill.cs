@@ -22,6 +22,7 @@ namespace CYQ.Data.Json
 
         private bool CheckIsLoop(object value)
         {
+            if (value is ValueType) { return false; }
             int hash = value.GetHashCode();
             //检测是否循环引用
             if (JsonOp.LoopCheckList.ContainsKey(hash))
@@ -448,14 +449,16 @@ namespace CYQ.Data.Json
                 entityType = entity.GetType();
             }
 
-            var funcToDic = EntityToDictionary.Delegate(entityType);
-            //if (dicFunc != null)
-            //{
-            var dic = funcToDic(entity);
-            Fill(dic);
-            //}
-            //else
-            //{
+            var func = JsonHelperFillEntity.Delegate(entityType);
+            func(this, entity);
+
+
+            //var funcToDic = EntityToDictionary.Delegate(entityType);
+
+            //var dic = funcToDic(entity);
+            //Fill(dic);
+
+
             //    List<PropertyInfo> pList = ReflectTool.GetPropertyList(entityType);
             //    if (pList.Count > 0)
             //    {
@@ -472,7 +475,7 @@ namespace CYQ.Data.Json
             //            SetJson(entity, null, item);
             //        }
             //    }
-            //}
+
             AddBr();
         }
         /*

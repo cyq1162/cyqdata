@@ -73,7 +73,7 @@ namespace CYQ.Data.Json
             }
             StringBuilder xml = new StringBuilder();
             xml.Append("<?xml version=\"1.0\"  standalone=\"yes\"?>");
-            List<Dictionary<string, string>> dicList = JsonSplit.Split(json);
+            List<Dictionary<string, string>> dicList = JsonSplit.Split(json, 0, op);
             if (dicList != null && dicList.Count > 0)
             {
                 bool addRoot = dicList.Count > 1 || dicList[0].Count > 1;
@@ -126,7 +126,7 @@ namespace CYQ.Data.Json
                         xml.AppendFormat("<{0}>", key);
                         key = key.Substring(0, key.Length - 4);
                     }
-                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(item.Value);
+                    List<Dictionary<string, string>> jsonList = JsonSplit.Split(item.Value, 0, op);
                     if (jsonList != null && jsonList.Count > 0)
                     {
                         if (!isWithAttr)
@@ -189,7 +189,7 @@ namespace CYQ.Data.Json
             xml.Append(">");
             if (useForInnerText)
             {
-                xml.Append(FormatCDATA(UnEscape(dic[parentName], op)));//InnerText。
+                xml.Append(FormatCDATA(dic[parentName]));//InnerText。
             }
             else if (jsonDic.Count > 0)
             {

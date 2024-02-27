@@ -18,7 +18,7 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
-        internal static object ToDateTime(object value)
+        internal static object ToDateTime(object value, bool isGenericType)
         {
             if (value is DateTime) { return value; }
             if (value != null)
@@ -37,6 +37,7 @@ namespace CYQ.Data.Tool
                         return DateTime.Now;
                 }
             }
+            if (isGenericType) { return null; }
             return (DateTime)SqlDateTime.MinValue;
         }
     }

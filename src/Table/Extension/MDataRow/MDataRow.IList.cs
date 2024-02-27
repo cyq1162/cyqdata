@@ -103,7 +103,11 @@ namespace CYQ.Data.Table
 
         #region IEnumerable<MDataCell> 成员
 
-        IEnumerator<MDataCell> IEnumerable<MDataCell>.GetEnumerator()
+        /// <summary>
+        /// 开放给Emit调用：MDataRowToKeyValue
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<MDataCell> GetEnumerator()
         {
             return CellList.GetEnumerator();
         }

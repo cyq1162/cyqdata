@@ -21,7 +21,8 @@ namespace CYQ.Data.Emit
          
          */
 
-        private static MDictionary<string, Func<MDataRow, object>> emitHandleDic = new MDictionary<string, Func<MDataRow, object>>();
+        private static Dictionary<string, Func<MDataRow, object>> emitHandleDic = new Dictionary<string, Func<MDataRow, object>>();
+        private static readonly object lockObj = new object();
 
         public static Func<MDataRow, object> Delegate(Type t, MDataColumn schema)
         {
@@ -30,8 +31,12 @@ namespace CYQ.Data.Emit
             {
                 return emitHandleDic[key];
             }
-            else
+            lock (lockObj)
             {
+                if (emitHandleDic.ContainsKey(key))
+                {
+                    return emitHandleDic[key];
+                }
                 DynamicMethod method = CreateMethod(t, schema);
                 var handle = method.CreateDelegate(typeof(Func<MDataRow, object>)) as Func<MDataRow, object>;
                 emitHandleDic.Add(key, handle);
@@ -47,8 +52,6 @@ namespace CYQ.Data.Emit
         private static DynamicMethod CreateMethod(Type entityType, MDataColumn schema)
         {
 
-            #region 创建动态方法
-
             Type rowType = typeof(MDataRow);
             Type toolType = typeof(ConvertTool);
             DynamicMethod method = new DynamicMethod("MDataRowToEntity", entityType, new Type[] { rowType }, entityType);
@@ -63,6 +66,7 @@ namespace CYQ.Data.Emit
             }
 
             MethodInfo changeType = toolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(object), typeof(Type) }, null);
+            MethodInfo getTypeFromHandle = typeof(Type).GetMethod("GetTypeFromHandle");
 
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
 
@@ -77,7 +81,7 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    SetValueByRow(gen, schema, getValue, changeType, property, null);
+                    SetValueByRow(gen, schema, getValue, changeType, getTypeFromHandle, property, null);
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
@@ -85,18 +89,18 @@ namespace CYQ.Data.Emit
             {
                 foreach (var field in fields)
                 {
-                    SetValueByRow(gen, schema, getValue, changeType, null, field);
+                    SetValueByRow(gen, schema, getValue, changeType, getTypeFromHandle, null, field);
                 }
             }
 
             gen.Emit(OpCodes.Ldloc_0);
             gen.Emit(OpCodes.Ret);
-            #endregion
+
 
             return method;
         }
 
-        private static void SetValueByRow(ILGenerator gen, MDataColumn schema, MethodInfo getValue, MethodInfo changeType, PropertyInfo pi, FieldInfo fi)
+        private static void SetValueByRow(ILGenerator gen, MDataColumn schema, MethodInfo getValue, MethodInfo changeType, MethodInfo getTypeFromHandle, PropertyInfo pi, FieldInfo fi)
         {
             Type valueType = pi != null ? pi.PropertyType : fi.FieldType;
             string fieldName = pi != null ? pi.Name : fi.Name;
@@ -130,15 +134,17 @@ namespace CYQ.Data.Emit
 
 
                 //-------------新增：o=ConvertTool.ChangeType(o, t);
-                gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
+                //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
                 gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
+                //下面这句Call，解决在 .net 中抛的异常：无法获取Type值，尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
+                gen.Emit(OpCodes.Call, getTypeFromHandle);
                 gen.Emit(OpCodes.Stloc_2);
 
                 gen.Emit(OpCodes.Ldloc_1);//o
                 gen.Emit(OpCodes.Ldloc_2);
                 gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
                 gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
-                                           //-------------------------------------------
+                //-------------------------------------------
                 #region 为属性设置值
                 SetValue(gen, pi, fi);
                 #endregion

@@ -121,7 +121,7 @@ namespace CYQ.Data.Tool
                     len = argTypes.Length;
                     for (int i = 0; i < argTypes.Length; i++)
                     {
-                        if (argTypes[i].IsGenericType && argTypes[i].Name.StartsWith("Nullable"))
+                        if (argTypes[i].IsGenericType && argTypes[i].IsValueType)
                         {
                             argTypes[i] = Nullable.GetUnderlyingType(argTypes[i]);
                         }
@@ -184,7 +184,7 @@ namespace CYQ.Data.Tool
             }
             if (t.IsGenericType)
             {
-                if (t.Name.StartsWith("Nullable"))
+                if (t.IsValueType)
                 {
                     t = Nullable.GetUnderlyingType(t);
                 }
@@ -317,39 +317,38 @@ namespace CYQ.Data.Tool
             {
                 return SysType.Enum;
             }
+            if (t.IsValueType || t.Name == "String")//int? id
+            {
+                if (t.IsGenericType)
+                {
+                    t = Nullable.GetUnderlyingType(t);
+                }
+                return SysType.Base;
+            }
+            if (t.IsGenericType)
+            {
+                return SysType.Generic;
+            }
             if (t.FullName.EndsWith("[]"))
             {
                 return SysType.Array;
             }
-            if (t.FullName.StartsWith("System.") || t.Name.StartsWith("MDictionary") || t.Name.StartsWith("MList")) // 系统类型
+            if (t.FullName.StartsWith("System.Collections."))
             {
-                if (t.IsGenericType)
-                {
-                    if (t.Name.StartsWith("Nullable"))//int? id
-                    {
-                        t = Nullable.GetUnderlyingType(t);
-                        return SysType.Base;
-                    }
-                    return SysType.Generic;
-                }
-                else if (t.FullName.StartsWith("System.Collections."))
-                {
-                    return SysType.Collection;
-                }
-                else if (t.Name.EndsWith("[]"))
-                {
-                    return SysType.Array;
-                }
-                if (t.FullName.Split('.').Length > 2)
-                {
-                    return SysType.Custom;
-                }
-                return SysType.Base;
+                return SysType.Collection;
             }
-            else
-            {
-                return SysType.Custom;
-            }
+
+            //if (t.FullName.StartsWith("System.")) // 系统类型
+            //{
+            //    if (t.FullName.Split('.').Length > 2)
+            //    {
+            //        return SysType.Custom;
+            //    }
+            //    return SysType.Base;
+            //}
+
+            return SysType.Custom;
+
         }
 
     }

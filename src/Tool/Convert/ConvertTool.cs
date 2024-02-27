@@ -1,4 +1,5 @@
-﻿using CYQ.Data.Json;
+﻿using CYQ.Data.Emit;
+using CYQ.Data.Json;
 using CYQ.Data.SQL;
 using CYQ.Data.Table;
 using System;
@@ -37,133 +38,144 @@ namespace CYQ.Data.Tool
             if (t == null) { return null; }
             if (value == null)
             {
-                return t.IsValueType ? Activator.CreateInstance(t) : null;
+                return (t.IsValueType && !t.IsGenericType) ? Activator.CreateInstance(t) : null;
             }
-            //对基础类型进行单独处理，提升转化性能。
-            switch (t.Name)
-            {
-                case "SByte":
-                    return ToSByte(value);
-                case "Byte":
-                    return ToByte(value);
-                case "UInt16":
-                    return ToUInt16(value);
-                case "Int16":
-                    return ToInt16(value);
-                case "UInt32":
-                    return ToUInt32(value);
-                case "Int32":
-                    return ToInt32(value);
-                case "UInt64":
-                    return ToUInt64(value);
-                case "Int64":
-                    return ToInt64(value);
-                case "String":
-                    return ToString(value);
-                case "DateTime":
-                    return ToDateTime(value);
-                case "Boolean":
-                    return ToBoolean(value);
-                case "Guid":
-                    return ToGuid(value);
-                case "Single":
-                    return ToSingle(value);
-                case "Double":
-                    return ToDouble(value);
-                case "Decimal":
-                    return ToDecimal(value);
-            }
-
-            if (t.IsEnum)
-            {
-                return ToEnum(value, t);
-            }
-            if (t.FullName.StartsWith("System."))
-            {
-                if (t.FullName == "System.Object")
-                {
-                    return value;
-                }
-                if (t.FullName == "System.Type")
-                {
-                    return (Type)value;
-                }
-                if (t.FullName == "System.IO.Stream" && value is HttpPostedFile)
-                {
-                    return ((HttpPostedFile)value).InputStream;
-                }
-                if (t.FullName == "System.Text.StringBuilder")
-                {
-                    return value as StringBuilder;
-                }
-                if (t.FullName == "System.Text.Encoding")
-                {
-                    return value as Encoding;
-                }
-            }
-            string strValue = Convert.ToString(value);
-            if (t.IsGenericType && t.Name.StartsWith("Nullable"))
-            {
-                t = Nullable.GetUnderlyingType(t);
-                if (strValue == "")
-                {
-                    return null;
-                }
-            }
-
-            if (strValue.Trim() == "")
-            {
-                if (t.Name.EndsWith("[]")) { return null; }
-                return Activator.CreateInstance(t);
-            }
-
             if (t.IsValueType)
             {
-                strValue = strValue.Trim('\r', '\n', '\t', ' ');
-                return Convert.ChangeType(strValue, t);
-            }
-            else
-            {
-                Type valueType = value.GetType();
-
-                if (valueType.FullName != t.FullName)
+                #region 值类型处理
+                bool isGenericType = t.IsGenericType;
+                if (isGenericType && t.Name.StartsWith("Nullable"))
                 {
-                    if ((strValue.StartsWith("{") || strValue.StartsWith("[")) && (strValue.EndsWith("}") || strValue.EndsWith("]")))
-                    {
-                        return JsonHelper.ToEntity(t, strValue, EscapeOp.No);
-                    }
-                    switch (ReflectTool.GetSystemType(ref t))
-                    {
-                        case SysType.Custom:
-                            return MDataRow.CreateFrom(value).ToEntity(t);
-                        case SysType.Collection:
-                            return MDataTable.CreateFrom(value).ToList(t);
-                        case SysType.Generic:
-                            if (t.Name.StartsWith("List") || t.Name.StartsWith("IList") || t.Name.StartsWith("MList"))
-                            {
-                                return MDataTable.CreateFrom(value).ToList(t);
-                            }
-                            return MDataRow.CreateFrom(value).ToEntity(t);
-                        case SysType.Array:
-                            if (t.Name == "Byte[]")
-                            {
-                                if (valueType.Name == "String")
-                                {
-                                    return Convert.FromBase64String(strValue);
-                                }
-                                using (MemoryStream ms = new MemoryStream())
-                                {
-                                    new BinaryFormatter().Serialize(ms, value);
-                                    return ms.ToArray();
-                                }
-                            }
-                            break;
-                    }
+                    t = Nullable.GetUnderlyingType(t);
                 }
-                return Convert.ChangeType(value, t);
+                //对基础类型进行单独处理，提升转化性能。
+                switch (t.Name)
+                {
+                    case "Char":
+                        return ToChar(value, isGenericType);
+                    case "SByte":
+                        return ToSByte(value, isGenericType);
+                    case "Byte":
+                        return ToByte(value, isGenericType);
+                    case "UInt16":
+                        return ToUInt16(value, isGenericType);
+                    case "Int16":
+                        return ToInt16(value, isGenericType);
+                    case "UInt32":
+                        return ToUInt32(value, isGenericType);
+                    case "Int32":
+                        return ToInt32(value, isGenericType);
+                    case "UInt64":
+                        return ToUInt64(value, isGenericType);
+                    case "Int64":
+                        return ToInt64(value, isGenericType);
+                    case "DateTime":
+                        return ToDateTime(value, isGenericType);
+                    case "Boolean":
+                        return ToBoolean(value, isGenericType);
+                    case "Guid":
+                        return ToGuid(value, isGenericType);
+                    case "Single":
+                        return ToSingle(value, isGenericType);
+                    case "Double":
+                        return ToDouble(value, isGenericType);
+                    case "Decimal":
+                        return ToDecimal(value, isGenericType);
+                    default:
+                        if (t.IsEnum)
+                        {
+                            return ToEnum(value, t, isGenericType);
+                        }
+                        //值类型：只剩下结构体
+                        if (t == value.GetType()) { return value; }
+                        if (isGenericType && t.Name.StartsWith("Nullable"))
+                        {
+                            return null;
+                        }
+                        return Activator.CreateInstance(t);
+                }
+                #endregion
             }
-        }
+            #region 引用类型处理
+            if (t.FullName.StartsWith("System."))
+            {
+                switch (t.Name)
+                {
+                    case "String":
+                        return ToString(value);
+                    case "Object":
+                        return value;
+                    case "Type":
+                        return value as Type;
+                    case "StringBuilder":
+                        if (value is StringBuilder)
+                        {
+                            return value as StringBuilder;
+                        }
+                        return new StringBuilder(Convert.ToString(value));
+                    case "Encoding":
+                        return value as Encoding;
+                    case "Stream":
+                        if (value is HttpPostedFile)
+                        {
+                            return ((HttpPostedFile)value).InputStream;
+                        }
+                        return value as Stream;
+                    case "Byte[]":
+                        if (value is Byte[]) { return value; }
+                        if (value is string)
+                        {
+                            return Convert.FromBase64String(value.ToString());
+                        }
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            new BinaryFormatter().Serialize(ms, value);
+                            return ms.ToArray();
+                        }
+                }
+            }
+            if (value is ValueType) { return null; }
+            if (value is string)
+            {
+                string strValue = value as string;
+                bool isJson = (strValue.StartsWith("{") && strValue.EndsWith("}")) || (strValue.StartsWith("[") && strValue.EndsWith("]"));
+                if (isJson)
+                {
+                    return JsonHelper.ToEntity(t, strValue, EscapeOp.No);
+                }
+                else if (strValue.Contains("="))
+                {
+                    return MDataRow.CreateFrom(value).ToEntity(t);
+                }
+                return null;
+            }
+            if (value is MDataRow)
+            {
+                return (value as MDataRow).ToEntity(t);
+            }
 
+            Type valueType = value.GetType();
+            if (valueType == t) { return value; }
+
+            switch (ReflectTool.GetSystemType(ref t))
+            {
+                case SysType.Custom:
+                    return MDataRow.CreateFrom(value).ToEntity(t);
+                case SysType.Collection:
+                case SysType.Generic:
+                case SysType.Array:
+                    int len = ReflectTool.GetArgumentLength(ref t);
+                    if (len == 1) // Table
+                    {
+                        return MDataTable.CreateFrom(value).ToList(t);
+                    }
+                    return MDataRow.CreateFrom(value).ToEntity(t);
+            }
+
+            return null;
+            #endregion
+        }
+        /* 终于把这个给消灭了。
         internal static object GetObj(Type toType, object objValue)
         {
             if (objValue == null) { return null; }
@@ -174,7 +186,7 @@ namespace CYQ.Data.Tool
             switch (sysType)
             {
                 case SysType.Enum:
-                    returnObj = ConvertTool.ChangeType(objValue, toType);// Enum.Parse(propType, value);
+                    returnObj = ChangeType(objValue, toType);// Enum.Parse(propType, value);
                     break;
                 case SysType.Base:
                     #region 基础类型处理
@@ -192,7 +204,7 @@ namespace CYQ.Data.Tool
                     }
                     else
                     {
-                        returnObj = ConvertTool.ChangeType(value, returnType);
+                        returnObj = ChangeType(value, returnType);
                     }
                     #endregion
                     break;
@@ -225,39 +237,41 @@ namespace CYQ.Data.Tool
                                 #region 单纯的基础类型数组处理["xxx","xxx2","xx3"]
                                 List<string> items = JsonSplit.SplitEscapeArray(value);//内部去掉转义符号
                                 if (items == null) { return null; }
-                                returnObj = Activator.CreateInstance(returnType, items.Count);//创建实例
-                                //Type objListType = returnObj.GetType();
-                                bool isArray = sysType == SysType.Array;
-                                MethodInfo method;
-                                if (isArray)
-                                {
-                                    method = returnType.GetMethod("Set");
-                                    if (method != null)
-                                    {
-                                        for (int i = 0; i < items.Count; i++)
-                                        {
-                                            Object item = ConvertTool.ChangeType(items[i], returnType.GetElementType());//Type.GetType(propType.FullName.Replace("[]", "")
-                                            method.Invoke(returnObj, new object[] { i, item });
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    method = returnType.GetMethod("Add");
-                                    if (method == null)
-                                    {
-                                        method = returnType.GetMethod("Push");
-                                    }
-                                    if (method != null)
-                                    {
-                                        for (int i = 0; i < items.Count; i++)
-                                        {
-                                            Object item = ConvertTool.ChangeType(items[i], argTypes[0]);
-                                            method.Invoke(returnObj, new object[] { item });
-                                        }
+                                var func = ListStringToList.Delegate(returnType, argTypes[0]);
+                                returnObj = func(items);
+                                //returnObj = Activator.CreateInstance(returnType, items.Count);//创建实例
+                                ////Type objListType = returnObj.GetType();
+                                //bool isArray = sysType == SysType.Array;
+                                //MethodInfo method;
+                                //if (isArray)
+                                //{
+                                //    method = returnType.GetMethod("Set");
+                                //    if (method != null)
+                                //    {
+                                //        for (int i = 0; i < items.Count; i++)
+                                //        {
+                                //            Object item = ChangeType(items[i], returnType.GetElementType());//Type.GetType(propType.FullName.Replace("[]", "")
+                                //            method.Invoke(returnObj, new object[] { i, item });
+                                //        }
+                                //    }
+                                //}
+                                //else
+                                //{
+                                //    method = returnType.GetMethod("Add");
+                                //    if (method == null)
+                                //    {
+                                //        method = returnType.GetMethod("Push");
+                                //    }
+                                //    if (method != null)
+                                //    {
+                                //        for (int i = 0; i < items.Count; i++)
+                                //        {
+                                //            Object item = ChangeType(items[i], argTypes[0]);
+                                //            method.Invoke(returnObj, new object[] { item });
+                                //        }
 
-                                    }
-                                }
+                                //    }
+                                //}
 
 
                                 #endregion
@@ -265,56 +279,58 @@ namespace CYQ.Data.Tool
                         }
                         else if (len == 2) // row
                         {
-                            MDataRow mRow = MDataRow.CreateFrom(objValue, argTypes[1]);
-                            returnObj = returnType.Name.Contains("Dictionary") ? Activator.CreateInstance(returnType, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(returnType);
-                            //Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
-                            Type objListType = returnObj.GetType();
-                            MethodInfo mi = objListType.GetMethod("Add");
-                            foreach (MDataCell mCell in mRow)
+                            Type argType = argTypes[1];
+                            // bool isObjectType = argType.Name == "Object";
+                            MDataRow mRow;
+                            if (objValue is MDataRow)
                             {
-                                object mObj = GetValue(mCell.ToRow(), argTypes[1]);
-                                mi.Invoke(returnObj, new object[] { mCell.ColumnName, mObj });
+                                mRow = objValue as MDataRow;
                             }
-                            mRow = null;
+                            else
+                            {
+                                mRow = MDataRow.CreateFrom(objValue, argType);
+                            }
+                            var func = MDataRowToKeyValue.Delegate(returnType);
+                            var obj = func(mRow);
+                            return obj;
+
+                            //returnObj = returnType.Name.Contains("Dictionary") ? Activator.CreateInstance(returnType, StringComparer.OrdinalIgnoreCase) : Activator.CreateInstance(returnType);
+                            ////Activator.CreateInstance(propType, mRow.Columns.Count);//创建实例
+                            //Type objListType = returnObj.GetType();
+                            //MethodInfo mi = objListType.GetMethod("Add");
+                            //foreach (MDataCell mCell in mRow)
+                            //{
+                            //    object mObj = ChangeType(mCell.Value, argType);//  isObjectType ? mCell.Value : GetValue(mCell.ToRow(), argType);
+                            //    mi.Invoke(returnObj, new object[] { mCell.ColumnName, mObj });
+                            //}
+                            //mRow = null;
                         }
                     }
                     #endregion
                     break;
                 case SysType.Custom://继续递归
-                    MDataRow mr = null;
-                    if (objValue is MDataRow)
-                    {
-                        mr = objValue as MDataRow;
-                    }
-                    else
-                    {
-                        mr = new MDataRow(TableSchema.GetColumnByType(returnType));
-                        mr.LoadFrom(objValue);
-                    }
-                    returnObj = mr.ToEntity(returnType);
-                    //returnObj = Activator.CreateInstance(returnType);
-                    //SetToEntity(ref returnObj, mr);
-                    //mr = null;
+                    returnObj = MDataRow.CreateFrom(objValue).ToEntity(returnType);
                     break;
 
             }
             return returnObj;
         }
 
-        private static object GetValue(MDataRow row, Type type)
-        {
-            switch (ReflectTool.GetSystemType(ref type))
-            {
-                case SysType.Base:
-                    return ConvertTool.ChangeType(row[0].Value, type);
-                case SysType.Enum:
-                    return Enum.Parse(type, row[0].ToString());
-                default:
-                    return row.ToEntity(type);
-                //object o = Activator.CreateInstance(type);
-                //SetToEntity(ref o, row);
-                //return o;
-            }
-        }
+        //private static object GetValue(MDataRow row, Type type)
+        //{
+        //    switch (ReflectTool.GetSystemType(ref type))
+        //    {
+        //        case SysType.Base:
+        //            return ConvertTool.ChangeType(row[0].Value, type);
+        //        case SysType.Enum:
+        //            return Enum.Parse(type, row[0].ToString());
+        //        default:
+        //            return row.ToEntity(type);
+        //        //object o = Activator.CreateInstance(type);
+        //        //SetToEntity(ref o, row);
+        //        //return o;
+        //    }
+        //}
+        */
     }
 }

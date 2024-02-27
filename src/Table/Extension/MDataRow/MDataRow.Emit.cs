@@ -66,6 +66,11 @@ namespace CYQ.Data.Table
             {
                 cell.Value = value;
                 cell.State = state;
+                ////外部调用已进行类型转换，直接赋原始值，避免取值时重复进行类型转换。
+                //cell.CellValue.SourceValue = value;
+                //cell.CellValue.StringValue = Convert.ToString(value);
+                //cell.CellValue.State = state;
+                //cell.CellValue.IsNull = value == null || value == DBNull.Value;
             }
         }
         /// <summary>

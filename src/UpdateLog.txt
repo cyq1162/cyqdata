@@ -1106,3 +1106,17 @@
 838：优化：XHtmlAction SetForeach 方法优化，支持绑定其它数据源。（2024-02-23）
 839：优化：XHtmlAction LoadData 方法优化，效果变更为批量对KeyValue赋值。（2024-02-23）
 840：优化：XHtmlAction 加载：去除 http://www.w3.org/1999/xhtml 名称空间。2024-02-24）【V5.9.2.2】
+-------------------------------------------------------------------------------------
+版本简要：持续优化，提升性能。
+840：优化：ConvertTool、ReflectTool 相关方法。（2024-02-26）【V5.9.2.3】
+841：优化：MDataRow Load(json)。（2024-02-26）
+842：优化：MDataTable ToList(t) 内部方法。（2024-02-26）
+845：优化：JsonHelper（2024-02-27）
+
+
+
+ConvertTool.GetObj(...)
+JsonSplit.To(...)
+
+MDataRow LoadFrom
+JsonHelper.FillEntity(...)

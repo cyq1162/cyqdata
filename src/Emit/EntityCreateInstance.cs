@@ -14,7 +14,7 @@ namespace CYQ.Data.Emit
     //    }
     //}
     /// <summary>
-    /// Emit 实现动态委托创建实例
+    /// Emit 实现动态委托创建实例（未使用）
     /// </summary>
     internal class EntityCreateInstance
     {

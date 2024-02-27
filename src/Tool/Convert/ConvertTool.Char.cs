@@ -18,20 +18,21 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
-        internal static object ToGuid(object value, bool isGenericType)
+        internal static object ToChar(object value, bool isGenericType)
         {
-            if (value is Guid) { return value; }
-            string strValue = Convert.ToString(value);
-            if (strValue.Length == 36)
+            if (value is Char) { return value; }
+            if (value != null)
             {
-                return new Guid(strValue);
-            }
-            if (strValue == SqlValue.Guid || strValue.StartsWith("newid"))
-            {
-                return Guid.NewGuid();
+                if (value is Enum) { value = (int)value; }
+                char result;
+                string strValue = Convert.ToString(value);
+                if (char.TryParse(strValue, out result))
+                {
+                    return result;
+                }
             }
             if (isGenericType) { return null; }
-            return Guid.Empty;
+            return '\0';
         }
     }
 }

@@ -197,7 +197,16 @@ namespace CYQ.Data.Json
             if (_AddHead)
             {
                 footText.Append(",");
-                footText.Append(Format(name, value, noQuotes));
+                if (noQuotes)
+                {
+                    string item = "\"" + name + "\":" + value;
+                    footText.Append(item);
+                }
+                else
+                {
+                    string item = "\"" + name + "\":\"" + value + "\"";
+                    footText.Append(item);
+                }
             }
         }
 
@@ -207,7 +216,7 @@ namespace CYQ.Data.Json
         /// </summary>
         public void Add(string name, string value)
         {
-            bodyItems.Add(Format(name, value, false));
+            Add(name, value, false);
         }
 
         /// <param name="noQuotes">value is no quotes
@@ -217,6 +226,11 @@ namespace CYQ.Data.Json
             bodyItems.Add(Format(name, value, noQuotes));
         }
         public void Add(string name, int value)
+        {
+            string item = "\"" + name + "\":" + value;
+            bodyItems.Add(item);
+        }
+        public void Add(string name, long value)
         {
             string item = "\"" + name + "\":" + value;
             bodyItems.Add(item);
@@ -236,20 +250,23 @@ namespace CYQ.Data.Json
             string item = "\"" + name + "\":\"" + value + "\"";
             bodyItems.Add(item);
         }
+        internal void Add(string name, ValueType value)
+        {
+            if (value is bool) { Add(name, (bool)value); return; }
+            if (value is DateTime) { Add(name, (DateTime)value); return; }
+            if (value is Guid) { Add(name, (Guid)value); return; }
+            if (value is Enum) { AddEnum(name, value); return; }
+
+            string item = "\"" + name + "\":" + value;
+            bodyItems.Add(item);
+        }
         public void Add(string name, object value)
         {
             if (value != null)
             {
                 if (value is ValueType)
                 {
-                    if (value is int) { Add(name, (int)value); return; }
-                    if (value is bool) { Add(name, (bool)value); return; }
-                    if (value is DateTime) { Add(name, (DateTime)value); return; }
-                    if (value is Guid) { Add(name, (Guid)value); return; }
-                    if (value is Enum) { AddEnum(name, value); return; }
-
-                    string item = "\"" + name + "\":" + value;
-                    bodyItems.Add(item);
+                    Add(name, (ValueType)value);
                 }
                 else if (value is string)
                 {
@@ -257,34 +274,8 @@ namespace CYQ.Data.Json
                 }
                 else
                 {
-                    Add(name, ToJson(value, this.JsonOp.Clone()));
+                    Add(name, ToJson(value, this.JsonOp.Clone()), true);
                 }
-                //string v = null;
-                //Type t = value.GetType();
-                //if (t.IsEnum)
-                //{
-
-
-                //}
-                //else
-                //{
-                //    DataGroupType group = DataType.GetGroup(DataType.GetSqlType(t));
-                //    bool noQuotes = group == DataGroupType.Number || group == DataGroupType.Bool;
-                //    if (group == DataGroupType.Object)
-                //    {
-                //        v = ToJson(value);
-                //    }
-                //    else
-                //    {
-                //        v = Convert.ToString(value);
-                //        if (group == DataGroupType.Bool)
-                //        {
-                //            v = v.ToLower();
-                //        }
-                //    }
-
-                //    Add(name, v, noQuotes);
-                //}
             }
             else
             {
@@ -324,16 +315,27 @@ namespace CYQ.Data.Json
         }
         #endregion
 
-        private string Format(string name, string value, bool children)
+        private string Format(string name, string value, bool isChild)
         {
-            value = value ?? "";
-            children = children && !string.IsNullOrEmpty(value);
-            if (!children && value.Length > 1 &&
-                ((value[0] == '{' && value[value.Length - 1] == '}') || (value[0] == '[' && value[value.Length - 1] == ']')))
+            if (string.IsNullOrEmpty(value))
             {
-                children = IsJson(value);
+                if (isChild)
+                {
+                    return "\"" + name + "\":null";
+                }
+                return "\"" + name + "\":\"\"";
             }
-            if (!children)
+
+            if (!isChild && value.Length > 1)
+            {
+                //智能检测一下：
+                bool isCheck = (value[0] == '{' && value[value.Length - 1] == '}') || (value[0] == '[' && value[value.Length - 1] == ']');
+                if (isCheck)
+                {
+                    isChild = IsJson(value);
+                }
+            }
+            if (!isChild && JsonOp.EscapeOp != EscapeOp.No)
             {
                 SetEscape(ref value);
             }
@@ -341,9 +343,9 @@ namespace CYQ.Data.Json
             sb.Append("\"");
             sb.Append(name);
             sb.Append("\":");
-            sb.Append(!children ? "\"" : "");
+            sb.Append(!isChild ? "\"" : "");
             sb.Append(value);
-            sb.Append(!children ? "\"" : "");
+            sb.Append(!isChild ? "\"" : "");
             return sb.ToString();
             //return "\"" + name + "\":" + (!children ? "\"" : "") + value + (!children ? "\"" : "");//;//.Replace("\",\"", "\" , \"").Replace("}{", "} {").Replace("},{", "}, {")
         }
@@ -496,6 +498,7 @@ namespace CYQ.Data.Json
         public static T GetValue<T>(string json, string key)
         {
             string v = GetValue(json, key);
+            if (v == null) { return default(T); }
             return ConvertTool.ChangeType<T>(v);
         }
         public static T GetValue<T>(string json, string key, EscapeOp op)
@@ -505,7 +508,7 @@ namespace CYQ.Data.Json
         }
         public static string GetValue(string json, string key)
         {
-            return GetValue(json, key, DefaultEscape);
+            return GetValue(json, key, EscapeOp.No);
         }
         /// <summary>
         /// Get json value
@@ -517,6 +520,7 @@ namespace CYQ.Data.Json
         public static string GetValue(string json, string key, EscapeOp op)
         {
             string value = GetSourceValue(json, key);
+            if (value == null) { return null; }
             return UnEscape(value, op);
         }
         /// <summary>
@@ -530,7 +534,7 @@ namespace CYQ.Data.Json
         }
         private static string GetSourceValue(string json, string key)
         {
-            string result = string.Empty;
+            string result = null;
             if (!string.IsNullOrEmpty(json))
             {
                 Dictionary<string, string> jsonDic = Split(json);//先取top1
@@ -600,7 +604,7 @@ namespace CYQ.Data.Json
         public static string OutResult(bool result, string msg, bool noQuates)
         {
             JsonHelper js = new JsonHelper(false, false);
-            js.Add("success", result.ToString().ToLower(), true);
+            js.Add("success", result ? "true" : "false", true);
             js.Add("msg", msg, noQuates);
             return js.ToString();
         }
@@ -653,12 +657,20 @@ namespace CYQ.Data.Json
             }
             return js.ToString();
         }
-
         /// <summary>
         ///  split json to dicationary
         /// <para>将Json分隔成键值对。</para>
         /// </summary>
         public static Dictionary<string, string> Split(string json)
+        {
+            return Split(json, EscapeOp.No);
+        }
+        /// <summary>
+        ///  split json to dicationary
+        /// <para>将Json分隔成键值对。</para>
+        /// </summary>
+        public static Dictionary<string, string> Split(string json, EscapeOp op)
+
         {
             if (!string.IsNullOrEmpty(json))
             {
@@ -667,7 +679,7 @@ namespace CYQ.Data.Json
                 {
                     json = ToJson(json);
                 }
-                List<Dictionary<string, string>> result = JsonSplit.Split(json, 1, EscapeOp.No);
+                List<Dictionary<string, string>> result = JsonSplit.Split(json, 1, op);
                 if (result != null && result.Count > 0)
                 {
                     return result[0];
@@ -675,22 +687,21 @@ namespace CYQ.Data.Json
             }
             return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         }
-        //public static List<Dictionary<string, string>> SplitArray(string jsonArray)
-        //{
-        //    return SplitArray(jsonArray, DefaultEscape);
-        //}
+        public static List<Dictionary<string, string>> SplitArray(string jsonArray)
+        {
+            return SplitArray(jsonArray, EscapeOp.No);
+        }
         /// <summary>
         ///  split json to dicationary array
         /// <para>将Json 数组分隔成多个键值对。</para>
         /// </summary>
-        public static List<Dictionary<string, string>> SplitArray(string jsonArray)
+        public static List<Dictionary<string, string>> SplitArray(string jsonArray, EscapeOp op)
         {
             if (string.IsNullOrEmpty(jsonArray))
             {
                 return null;
             }
-            jsonArray = jsonArray.Trim();
-            return JsonSplit.Split(jsonArray);
+            return JsonSplit.Split(jsonArray, 0, op);
         }
         private void SetEscape(ref string value)
         {

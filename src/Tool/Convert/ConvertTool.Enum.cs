@@ -18,13 +18,12 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
-        internal static object ToEnum(object value, Type t)
+        internal static object ToEnum(object value, Type t, bool isGenericType)
         {
             if (value is Enum) { return value; }
             string strValue = Convert.ToString(value);
             if (strValue != "")
             {
-
                 if (Enum.IsDefined(t, strValue))
                 {
                     return Enum.Parse(t, strValue);
@@ -49,7 +48,7 @@ namespace CYQ.Data.Tool
                 }
 
             }
-
+            if (isGenericType) { return null; }
             //取第一个值。
             string firstKey = Enum.GetName(t, -1);
             if (!string.IsNullOrEmpty(firstKey))

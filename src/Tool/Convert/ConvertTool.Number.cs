@@ -18,7 +18,7 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
-        internal static object ToSByte(object value)
+        internal static object ToSByte(object value, bool isGenericType)
         {
             if (value is sbyte) { return value; }
             if (value is Enum) { return (sbyte)(int)value; }
@@ -31,9 +31,10 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
-        internal static object ToByte(object value)
+        internal static object ToByte(object value, bool isGenericType)
         {
             if (value is byte) { return value; }
             if (value is Enum) { return (byte)(int)value; }
@@ -46,10 +47,11 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToUInt16(object value)
+        internal static object ToUInt16(object value, bool isGenericType)
         {
             if (value is ushort) { return value; }
             if (value is Enum) { return (ushort)(int)value; }
@@ -62,9 +64,10 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
-        internal static object ToInt16(object value)
+        internal static object ToInt16(object value, bool isGenericType)
         {
             if (value is short) { return value; }
             if (value is Enum) { return (short)(int)value; }
@@ -77,10 +80,11 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToUInt32(object value)
+        internal static object ToUInt32(object value, bool isGenericType)
         {
             if (value is uint) { return value; }
             if (value is Enum) { return (uint)value; }
@@ -93,10 +97,11 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToInt32(object value)
+        internal static object ToInt32(object value, bool isGenericType)
         {
             if (value is int) { return value; }
             if (value is Enum) { return (int)value; }
@@ -109,10 +114,11 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToUInt64(object value)
+        internal static object ToUInt64(object value, bool isGenericType)
         {
             if (value is ulong) { return value; }
             if (value is Enum) { return (ulong)(int)value; }
@@ -125,9 +131,10 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
-        internal static object ToInt64(object value)
+        internal static object ToInt64(object value, bool isGenericType)
         {
             if (value is long) { return value; }
             if (value is Enum) { return (long)(int)value; }
@@ -140,10 +147,11 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToSingle(object value)
+        internal static object ToSingle(object value, bool isGenericType)
         {
             if (value is float) { return value; }
             if (value is Enum) { return (float)(int)value; }
@@ -155,7 +163,7 @@ namespace CYQ.Data.Tool
                 {
                     return result;
                 }
-                switch(strValue)
+                switch (strValue)
                 {
                     case "infinity":
                     case "正无穷大":
@@ -165,9 +173,10 @@ namespace CYQ.Data.Tool
                         return float.NegativeInfinity;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
-        internal static object ToDouble(object value)
+        internal static object ToDouble(object value, bool isGenericType)
         {
             if (value is double) { return value; }
             if (value is Enum) { return (double)(int)value; }
@@ -189,10 +198,11 @@ namespace CYQ.Data.Tool
                         return double.NegativeInfinity;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
 
-        internal static object ToDecimal(object value)
+        internal static object ToDecimal(object value, bool isGenericType)
         {
             if (value is decimal) { return value; }
             if (value is Enum) { return (decimal)(int)value; }
@@ -205,6 +215,7 @@ namespace CYQ.Data.Tool
                     return result;
                 }
             }
+            if (isGenericType) { return null; }
             return 0;
         }
     }

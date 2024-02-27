@@ -177,18 +177,14 @@ namespace CYQ.Data.Table
             IsNeedRefleshIndex = false;
             if (Count == 0) { return; }
             MDictionary<string, int> newIndexs = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            string[] items = AppConfig.UI.AutoPrefixs.Split(',');
             for (int i = 0; i < Count; i++)
             {
                 string name = this[i].ColumnName;
+                newIndexs.Add(name, i);
                 if (name.IndexOf('_') > -1)
                 {
                     name = name.Replace("_", "");
-                }
-                newIndexs.Add(name, i);
-                foreach (string item in items)
-                {
-                    newIndexs.Add(item + name, i);//事先存好，加快速度。
+                    newIndexs.Add(name, i);
                 }
             }
             this.columnIndex = newIndexs;

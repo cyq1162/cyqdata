@@ -19,9 +19,9 @@ namespace CYQ.Data.Json
         /// </summary>
         public NameCaseOp NameCaseOp = NameCaseOp.None;
         /// <summary>
-        /// Json string value Escape : EscapeOp.Default （default）
+        /// Json string value Escape : EscapeOp.No （default）
         /// </summary>
-        public EscapeOp EscapeOp = EscapeOp.Default;
+        public EscapeOp EscapeOp = EscapeOp.No;
 
         /// <summary>
         /// convert enum to string

@@ -18,9 +18,9 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class ConvertTool
     {
-        internal static object ToBoolean(object value)
+        internal static object ToBoolean(object value, bool isGenericType)
         {
-            if(value is Boolean) { return  value; }
+            if (value is Boolean) { return value; }
             string strValue = Convert.ToString(value).Trim('\r', '\n', '\t', ' ');
 
             switch (strValue.ToLower())
@@ -34,7 +34,16 @@ namespace CYQ.Data.Tool
                 case "是":
                 case "√":
                     return true;
+                case "no":
+                case "false":
+                case "fail":
+                case "0":
+                case "off":
+                case "not":
+                case "否":
+                case "×":
                 default:
+                    if (isGenericType) { return null; }
                     return false;
             }
         }
