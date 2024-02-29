@@ -53,12 +53,19 @@ namespace CYQ.Data.Emit
             MethodInfo changeType = convertToolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(object), typeof(Type) }, null);
             MethodInfo getTypeFromHandle = typeof(Type).GetMethod("GetTypeFromHandle");
 
+            var constructor = entityType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { }, null);
+
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
+            if (constructor == null)
+            {
+                gen.Emit(OpCodes.Ret);
+                return method;
+            }
 
             var instance = gen.DeclareLocal(entityType);//0 ： Entity t0;
             gen.DeclareLocal(typeof(string));//1 string s1;
             gen.DeclareLocal(typeof(Type));//2   Type t2;
-            gen.Emit(OpCodes.Newobj, entityType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { }, null));
+            gen.Emit(OpCodes.Newobj, constructor);
             gen.Emit(OpCodes.Stloc_0, instance);//t0= new T();
 
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
@@ -123,7 +130,7 @@ namespace CYQ.Data.Emit
 
         private static void SetValue(ILGenerator gen, PropertyInfo pi, FieldInfo fi)
         {
-            if (pi != null)
+            if (pi != null && pi.CanWrite)
             {
                 gen.Emit(OpCodes.Ldloc_0);//实体对象obj
                 gen.Emit(OpCodes.Ldloc_1);//属性的值 objvalue

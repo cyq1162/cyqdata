@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="Action\AppConst.cs" />
     <Compile Include="Action\AppDebug.cs" />
+    <Compile Include="Action\AppStart.cs" />
     <Compile Include="Action\MAction.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -132,16 +133,18 @@
     <Compile Include="DistributedCache\CacheImplement\Redis\RedisCommand.cs" />
     <Compile Include="DistributedCache\CacheType.cs" />
     <Compile Include="DistributedCache\DistributedCache.cs" />
-    <Compile Include="DotNet\Action\AppConfig.cs" />
+    <Compile Include="DotNet\Action\AppConst.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
+    <Compile Include="Emit\DbDataReaderToEntity.cs" />
     <Compile Include="Emit\Delegate\Action.cs" />
     <Compile Include="Emit\Delegate\Func.cs" />
     <Compile Include="Emit\DictionaryToEntity.cs" />
     <Compile Include="Emit\DictionaryToKeyValue.cs" />
+    <Compile Include="Emit\EmitPreheat.cs" />
     <Compile Include="Emit\EntityCreateInstance.cs" />
     <Compile Include="Emit\EntityGetter.cs" />
     <Compile Include="Emit\EntitySetter.cs" />
@@ -170,9 +173,6 @@
     <Compile Include="Json\JsonImplement\JsonSplit.ToList.cs" />
     <Compile Include="Json\Options\JsonOp.cs" />
     <Compile Include="Json\Options\NameCaseOp.cs" />
-    <Compile Include="Log\LocalEnvironment.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Log\LogType.cs" />
     <Compile Include="Log\LogWorker.cs" />
     <Compile Include="Log\SysLogs.cs" />

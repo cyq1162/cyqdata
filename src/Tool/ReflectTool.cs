@@ -8,7 +8,7 @@ namespace CYQ.Data.Tool
     /// <summary>
     /// 反射工具（带缓存）
     /// </summary>
-    public static class ReflectTool
+    public static partial class ReflectTool
     {
         static readonly object[] lockObjs = new object[5];
         static ReflectTool()

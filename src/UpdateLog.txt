@@ -1112,11 +1112,20 @@
 841：优化：MDataRow Load(json)。（2024-02-26）
 842：优化：MDataTable ToList(t) 内部方法。（2024-02-26）
 845：优化：JsonHelper（2024-02-27）
+-------------------------------------------------------------------------------------
+846：变更：将 AppConfig 中的一些和配置无关的只读属性转移到AppConst中。（2024-02-29）【V5.9.2.4】
+847：移除：LocalEnvironment 内部类。（2024-02-29）
+848：优化：ConvertTool.ChangeReaderToList<T> 内部类。（2024-02-29）
+849：新增：开放：CYQ.Data.Emit.EmitPreheat 类，允许处理 Emit 委托预热。（2024-02-29）
 
-
-
-ConvertTool.GetObj(...)
 JsonSplit.To(...)
 
-MDataRow LoadFrom
 JsonHelper.FillEntity(...)
+
+MDataRow LoadFrom(...)
+
+DataReader To List
+
+AppConfig 中常量=》AppConst 中。
+
+Init 反射类。

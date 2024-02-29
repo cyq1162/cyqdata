@@ -73,7 +73,7 @@ namespace CYQ.Data.Tool
             }
             if (string.IsNullOrEmpty(id))
             {
-                id = LocalEnvironment.ProcessID.ToString();//winform
+                id = AppConst.ProcessID.ToString();//winform
             }
             return id;
         }

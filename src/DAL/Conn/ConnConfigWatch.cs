@@ -28,7 +28,7 @@ namespace CYQ.Data
         {
             lock (o)
             {
-                string path = AppConfig.RunPath + connPath;
+                string path = AppConst.RunPath + connPath;
                 string json = JsonHelper.ReadJson(path);
                 if (string.IsNullOrEmpty(json))
                 {

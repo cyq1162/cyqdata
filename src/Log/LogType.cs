@@ -16,7 +16,7 @@ namespace CYQ.Data
            // return msg;
             //#else
 #endif
-            throw new Exception("V" + AppConfig.Version + " " + msg);
+            throw new Exception("V" + AppConst.Version + " " + msg);
 
         }
     }

@@ -100,6 +100,10 @@ namespace CYQ.Data.Table
                             object value = null;
                             try
                             {
+                                if (ms.SqlType == SqlDbType.DateTime)
+                                {
+ 
+                                }
                                 if (errIndex.Contains(i))
                                 {
                                     value = sdr.GetString(ms.ReaderIndex);

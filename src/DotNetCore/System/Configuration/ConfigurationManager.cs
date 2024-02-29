@@ -29,7 +29,7 @@ namespace System.Configuration
         {
             RegGB2312(null);
             //ThreadBreak.AddGlobalThread(new ParameterizedThreadStart(RegGB2312));
-            string filePath = AppConfig.RunPath + "appsettings.json";
+            string filePath = AppConst.RunPath + "appsettings.json";
             ReInitConfig(filePath);
             IOWatch.On(filePath, delegate (FileSystemEventArgs e)
             {
@@ -132,7 +132,7 @@ namespace System.Configuration
                 {
                     foreach (string item in items)
                     {
-                        string path = AppConfig.RunPath + item;
+                        string path = AppConst.RunPath + item;
                         string json = JsonHelper.ReadJson(path);
                         if (string.IsNullOrEmpty(json))
                         {

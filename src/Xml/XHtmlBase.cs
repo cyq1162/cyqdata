@@ -186,7 +186,7 @@ namespace CYQ.Data.Xml
         private string GenerateKey(string fileName)
         {
             _FileName = fileName;
-            string xmlKey = fileName.Replace(AppConfig.WebRootPath, "XHtmlBase_").Replace("/", "").Replace("\\", "");
+            string xmlKey = fileName.Replace(AppConst.WebRootPath, "XHtmlBase_").Replace("/", "").Replace("\\", "");
             return xmlKey;
         }
 

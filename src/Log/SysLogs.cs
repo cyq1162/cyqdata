@@ -80,7 +80,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_HostName))
                 {
-                    _HostName = LocalEnvironment.HostName;
+                    _HostName = Environment.MachineName;
                 }
                 return _HostName;
             }
@@ -100,7 +100,7 @@ namespace CYQ.Data
             {
                 if (string.IsNullOrEmpty(_Host))
                 {
-                    _Host = LocalEnvironment.HostIP;
+                    _Host = AppConst.HostIP;
                 }
                 return _Host;
             }
@@ -240,7 +240,7 @@ namespace CYQ.Data
         internal string GetFormatterText()
         {
             string title = string.Format("V{0} Record On : {1} : {2} {3}",
-                AppConfig.Version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), HttpMethod, RequestUrl ?? "");// + Log.Url;
+                AppConst.Version, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), HttpMethod, RequestUrl ?? "");// + Log.Url;
             if (!string.IsNullOrEmpty(ClientIP))
             {
                 title += " - " + ClientIP;

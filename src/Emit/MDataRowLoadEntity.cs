@@ -57,22 +57,25 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    ilGen.Emit(OpCodes.Ldarg_1);
-                    //ilGen.Emit(OpCodes.Castclass, entityType);
-                    ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());//Load object value
-
-                    if (property.PropertyType.IsValueType)
+                    if (property.CanRead)
                     {
-                        ilGen.Emit(OpCodes.Box, property.PropertyType);
-                        if (property.PropertyType.IsEnum)
+                        ilGen.Emit(OpCodes.Ldarg_1);
+                        //ilGen.Emit(OpCodes.Castclass, entityType);
+                        ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());//Load object value
+
+                        if (property.PropertyType.IsValueType)
                         {
-                            if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(property, null) != null)
+                            ilGen.Emit(OpCodes.Box, property.PropertyType);
+                            if (property.PropertyType.IsEnum)
                             {
-                                ilGen.Emit(OpCodes.Callvirt, typeof(object).GetMethod("ToString"));
+                                if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(property, null) != null)
+                                {
+                                    ilGen.Emit(OpCodes.Callvirt, typeof(object).GetMethod("ToString"));
+                                }
                             }
                         }
+                        SetValue(ilGen, toStringMethod, setMethod, property.Name);
                     }
-                    SetValue(ilGen, toStringMethod, setMethod, property.Name);
                 }
             }
 

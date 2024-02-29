@@ -14,29 +14,28 @@ namespace CYQ.Data.Emit
     /// </summary>
     internal class MDataRowSetToEntity
     {
-        private static MDictionary<string, Action<MDataRow, object>> typeFuncs = new MDictionary<string, Action<MDataRow, object>>();
+        private static MDictionary<Type, Action<MDataRow, object>> typeFuncs = new MDictionary<Type, Action<MDataRow, object>>();
         private static readonly object lockObj = new object();
-        public static Action<MDataRow, object> Delegate(Type t, MDataColumn schema)
+        public static Action<MDataRow, object> Delegate(Type t)
         {
-            string key = t.FullName + (schema == null ? "" : schema.GetHashCode().ToString());
-            if (typeFuncs.ContainsKey(key))
+            if (typeFuncs.ContainsKey(t))
             {
-                return typeFuncs[key];
+                return typeFuncs[t];
             }
             lock (lockObj)
             {
-                if (typeFuncs.ContainsKey(key))
+                if (typeFuncs.ContainsKey(t))
                 {
-                    return typeFuncs[key];
+                    return typeFuncs[t];
                 }
-                DynamicMethod method = CreateMethod(t, schema);
+                DynamicMethod method = CreateMethod(t);
                 var func = method.CreateDelegate(typeof(Action<MDataRow, object>)) as Action<MDataRow, object>;
-                typeFuncs.Add(key, func);
+                typeFuncs.Add(t, func);
                 return func;
             }
         }
 
-        private static DynamicMethod CreateMethod(Type entityType, MDataColumn schema)
+        private static DynamicMethod CreateMethod(Type entityType)
         {
 
             #region 创建动态方法
@@ -44,16 +43,8 @@ namespace CYQ.Data.Emit
             Type rowType = typeof(MDataRow);
             Type toolType = typeof(ConvertTool);
             DynamicMethod method = new DynamicMethod("MDataRowSetToEntity", typeof(void), new Type[] { rowType, typeof(object) }, entityType);
-            MethodInfo getValue = null;
-            if (schema == null)
-            {
-                getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(string) }, null);
-            }
-            else
-            {
-                getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(int) }, null);
-            }
-            MethodInfo changeType = toolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(object), typeof(Type) }, null);
+            MethodInfo getValue = rowType.GetMethod("GetItemValue", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(string) }, null);
+            MethodInfo changeType = toolType.GetMethod("ChangeType", BindingFlags.Static | BindingFlags.Public, null, new Type[] { typeof(object), typeof(Type) }, null);
             MethodInfo getTypeFromHandle = typeof(Type).GetMethod("GetTypeFromHandle");
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
 
@@ -68,7 +59,7 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    SetValueByRow(gen, schema, getValue, changeType, getTypeFromHandle, property, null);
+                    SetValueByRow(gen, getValue, changeType, getTypeFromHandle, property, null);
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
@@ -76,7 +67,7 @@ namespace CYQ.Data.Emit
             {
                 foreach (var field in fields)
                 {
-                    SetValueByRow(gen, schema, getValue, changeType, getTypeFromHandle, null, field);
+                    SetValueByRow(gen, getValue, changeType, getTypeFromHandle, null, field);
                 }
             }
             gen.Emit(OpCodes.Ret);
@@ -85,62 +76,46 @@ namespace CYQ.Data.Emit
 
             return method;
         }
-        private static void SetValueByRow(ILGenerator gen, MDataColumn schema, MethodInfo getValue, MethodInfo changeType, MethodInfo getTypeFromHandle, PropertyInfo pi, FieldInfo fi)
+        private static void SetValueByRow(ILGenerator gen, MethodInfo getValue, MethodInfo changeType, MethodInfo getTypeFromHandle, PropertyInfo pi, FieldInfo fi)
         {
             Type valueType = pi != null ? pi.PropertyType : fi.FieldType;
             string fieldName = pi != null ? pi.Name : fi.Name;
-            int ordinal = -1;
-            if (schema != null)
-            {
-                ordinal = schema.GetIndex(fieldName.TrimStart('_'));
-                if (ordinal == -1)
-                {
-                    ordinal = schema.GetIndex(fieldName);
-                }
-            }
-            if (schema == null || ordinal > -1)
-            {
-                Label labelContinue = gen.DefineLabel();//定义标签；goto;
-                gen.Emit(OpCodes.Ldarg_0);//设置参数0 ：row 将索引为 0 的自变量加载到计算堆栈上。
-                if (schema == null)
-                {
-                    gen.Emit(OpCodes.Ldstr, fieldName);//设置参数值：string 推送对元数据中存储的字符串的新对象引用。
-                }
-                else
-                {
-                    gen.Emit(OpCodes.Ldc_I4, ordinal);//设置参数值：1 int 将所提供的 int32 类型的值作为 int32 推送到计算堆栈上。
-                }
 
-                gen.Emit(OpCodes.Call, getValue);//Call GetItemValue(ordinal);=> invoke(row,1)
-                gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal); 从计算堆栈的顶部弹出当前值并将其存储到索引 1 处的局部变量列表中。
+            Label labelContinue = gen.DefineLabel();//定义标签；goto;
+            gen.Emit(OpCodes.Ldarg_0);//设置参数0 ：row 将索引为 0 的自变量加载到计算堆栈上。
 
-                gen.Emit(OpCodes.Ldloc_1);//将索引 1 处的局部变量加载到计算堆栈上。
-                gen.Emit(OpCodes.Brfalse, labelContinue); // break out of switch
+            gen.Emit(OpCodes.Ldstr, fieldName);//设置参数值：string 推送对元数据中存储的字符串的新对象引用。
+
+            gen.Emit(OpCodes.Call, getValue);//Call GetItemValue(ordinal);=> invoke(row,1)
+            gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal); 从计算堆栈的顶部弹出当前值并将其存储到索引 1 处的局部变量列表中。
+
+            gen.Emit(OpCodes.Ldloc_1);//将索引 1 处的局部变量加载到计算堆栈上。
+            gen.Emit(OpCodes.Brfalse, labelContinue); // break out of switch
 
 
-                //-------------新增：o=ConvertTool.ChangeType(o, t);
-                //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
-                gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
-                //下面这句Call，解决在 .net 中抛的异常：无法获取Type值，尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
-                gen.Emit(OpCodes.Call, getTypeFromHandle);
-                gen.Emit(OpCodes.Stloc_2);
+            //-------------新增：o=ConvertTool.ChangeType(o, t);
+            //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
+            gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
+                                                 //下面这句Call，解决在 .net 中抛的异常：无法获取Type值，尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
+            gen.Emit(OpCodes.Call, getTypeFromHandle);
+            gen.Emit(OpCodes.Stloc_2);
 
-                gen.Emit(OpCodes.Ldloc_1);//o
-                gen.Emit(OpCodes.Ldloc_2);
-                gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
-                gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
-                //-------------------------------------------
-                #region 为属性设置值
-                SetValue(gen, pi, fi);
-                #endregion
+            gen.Emit(OpCodes.Ldloc_1);//o
+            gen.Emit(OpCodes.Ldloc_2);
+            gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
+            gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
+                                       //-------------------------------------------
+            #region 为属性设置值
+            SetValue(gen, pi, fi);
+            #endregion
 
-                gen.MarkLabel(labelContinue);//继续下一个循环
+            gen.MarkLabel(labelContinue);//继续下一个循环
 
-            }
+
         }
         private static void SetValue(ILGenerator gen, PropertyInfo pi, FieldInfo fi)
         {
-            if (pi != null)
+            if (pi != null && pi.CanWrite)
             {
                 gen.Emit(OpCodes.Ldloc_0);//实体对象obj
                 gen.Emit(OpCodes.Ldloc_1);//属性的值 objvalue

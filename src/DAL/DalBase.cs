@@ -290,7 +290,7 @@ namespace CYQ.Data
             {
                 if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
                 {
-                    string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\') + "/" + key + ".json";
+                    string fullPath = AppConst.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\') + "/" + key + ".json";
                     if (System.IO.File.Exists(fullPath))
                     {
                         string json = IOHelper.ReadAllText(fullPath);
@@ -350,7 +350,7 @@ namespace CYQ.Data
                     //缓存写入硬盘
                     Thread thread = new Thread(() =>
                     {
-                        string fullPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\') + "/" + key + ".json";
+                        string fullPath = AppConst.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\') + "/" + key + ".json";
                         string folder = Path.GetDirectoryName(fullPath);
                         if (!System.IO.Directory.Exists(folder))
                         {

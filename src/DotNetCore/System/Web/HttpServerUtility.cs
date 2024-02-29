@@ -29,7 +29,7 @@ namespace System.Web
         }
         public string MapPath(string path)
         {
-            return AppConfig.WebRootPath + path.TrimStart('~', '/');//.Replace("/", "\\");
+            return AppConst.WebRootPath + path.TrimStart('~', '/');//.Replace("/", "\\");
         }
     }
 }

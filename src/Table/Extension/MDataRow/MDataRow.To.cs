@@ -115,7 +115,7 @@ namespace CYQ.Data.Table
 
             if (sysType == SysType.Custom)
             {
-                var func = MDataRowToEntity.Delegate(t, this.Columns);
+                var func = MDataRowToEntity.Delegate(t);
                 return func(this);
             }
             else
@@ -150,7 +150,7 @@ namespace CYQ.Data.Table
                 return;
             }
             Type objType = obj.GetType();
-            var setToEntity = MDataRowSetToEntity.Delegate(objType, this.Columns);
+            var setToEntity = MDataRowSetToEntity.Delegate(objType);
             setToEntity(this, obj);
 
             //string objName = objType.FullName, cellName = "";

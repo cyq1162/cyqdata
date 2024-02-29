@@ -35,7 +35,7 @@ namespace CYQ.Data.Tool
             if (ClearThreadBreak(threadName))
             {
                 //创建自身线程
-                threadPath = AppConfig.RunPath + AppConfig.Tool.ThreadBreakPath + threadName + "_" + threadID + ".threadbreak";
+                threadPath = AppConst.RunPath + AppConfig.Tool.ThreadBreakPath + threadName + "_" + threadID + ".threadbreak";
                 try
                 {
                     File.Create(threadPath).Close();
@@ -74,7 +74,7 @@ namespace CYQ.Data.Tool
                 {
                     if (threadPath.IndexOf(":\\") == -1)
                     {
-                        threadPath = AppConfig.RunPath + threadPath;
+                        threadPath = AppConst.RunPath + threadPath;
                         if (!Directory.Exists(threadPath))
                         {
                             Directory.CreateDirectory(threadPath);

@@ -128,7 +128,7 @@ namespace CYQ.Data
                 else
                 {
                     connBeanDicCache.Remove(hash);
-                    string connString = string.Format(AppConfig.GetConn(key), AppConfig.WebRootPath);
+                    string connString = string.Format(AppConfig.GetConn(key), AppConst.WebRootPath);
                     connBeanDicCache.Remove(connString.GetHashCode());
                 }
             }
@@ -149,7 +149,7 @@ namespace CYQ.Data
         /// <returns></returns>
         public static ConnBean Create(string connNameOrString)
         {
-            string connString = string.Format(AppConfig.GetConn(connNameOrString), AppConfig.WebRootPath);
+            string connString = string.Format(AppConfig.GetConn(connNameOrString), AppConst.WebRootPath);
             if (string.IsNullOrEmpty(connString))
             {
                 return null;
@@ -422,7 +422,7 @@ namespace CYQ.Data
         }
         private static bool Exists(string dll)
         {
-            return File.Exists(AppConfig.AssemblyPath + dll);
+            return File.Exists(AppConst.AssemblyPath + dll);
         }
     }
 }

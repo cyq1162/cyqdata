@@ -7,7 +7,7 @@ using System.Web;
 namespace CYQ.Data
 {
        
-    public static partial class AppConfig
+    public static partial class AppConst
     {
         /// <summary>
         /// 当前是否.NET Core环境。

@@ -541,7 +541,7 @@ namespace CYQ.Data.SQL
         /// <returns></returns>
         internal static string GetSchemaFile(string key)
         {
-            string folderPath = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\');
+            string folderPath = AppConst.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\');
 
             if (!System.IO.Directory.Exists(folderPath))
             {

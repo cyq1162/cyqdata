@@ -26,7 +26,7 @@ namespace CYQ.Data
                 }
                 try
                 {
-                    if (AppConfig.AssemblyPath.StartsWith("/"))
+                    if (AppConst.AssemblyPath.StartsWith("/"))
                     {
                         ass = Assembly.LoadFrom("MySql.Data.dll");//netcore6 linux 环境限定只能用这种模式加载，其它抛了异常。
                     }

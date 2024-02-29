@@ -52,25 +52,28 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    ilGen.Emit(OpCodes.Ldloc_0);//load Dicationary 
-                    ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
-                                                             //----------------------------------------------------
-                    ilGen.Emit(OpCodes.Ldarg_0);// load Entity object
-                    ilGen.Emit(OpCodes.Castclass, entityType);// object as Entity
-                    ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());// xxx.Name get value.
-                    if (property.PropertyType.IsValueType)
+                    if (property.CanRead)
                     {
-                        ilGen.Emit(OpCodes.Box, property.PropertyType);
-
-                        if (property.PropertyType.IsEnum)
+                        ilGen.Emit(OpCodes.Ldloc_0);//load Dicationary 
+                        ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
+                                                                 //----------------------------------------------------
+                        ilGen.Emit(OpCodes.Ldarg_0);// load Entity object
+                        ilGen.Emit(OpCodes.Castclass, entityType);// object as Entity
+                        ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());// xxx.Name get value.
+                        if (property.PropertyType.IsValueType)
                         {
-                            if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(property, null) != null)
+                            ilGen.Emit(OpCodes.Box, property.PropertyType);
+
+                            if (property.PropertyType.IsEnum)
                             {
-                                ilGen.Emit(OpCodes.Callvirt, typeof(object).GetMethod("ToString"));
+                                if (ReflectTool.GetAttr<JsonEnumToStringAttribute>(property, null) != null)
+                                {
+                                    ilGen.Emit(OpCodes.Callvirt, typeof(object).GetMethod("ToString"));
+                                }
                             }
                         }
+                        ilGen.Emit(OpCodes.Callvirt, addMethod);//dic.Add(string,object)
                     }
-                    ilGen.Emit(OpCodes.Callvirt, addMethod);//dic.Add(string,object)
                 }
             }
 

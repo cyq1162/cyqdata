@@ -466,7 +466,7 @@ namespace CYQ.Data.Cache
             NoSqlAction.Clear();//清空文本数据库相关缓存
             if (!string.IsNullOrEmpty(AppConfig.DB.SchemaMapPath))
             {
-                string path = AppConfig.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\');
+                string path = AppConst.WebRootPath + AppConfig.DB.SchemaMapPath.Trim('/', '\\');
                 if (Directory.Exists(path))
                 {
                     Directory.Delete(path, true);

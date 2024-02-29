@@ -219,7 +219,7 @@ namespace CYQ.Data
         {
             if (conn.IndexOf("{0}") > -1)
             {
-                conn = string.Format(conn, AppConfig.WebRootPath);//链接相关的用WebRootPath，支持ASPNETCore
+                conn = string.Format(conn, AppConst.WebRootPath);//链接相关的用WebRootPath，支持ASPNETCore
             }
             int start = conn.IndexOf('=') + 1;//1=2;3 -- 1
             int end = conn.IndexOf(";");//3

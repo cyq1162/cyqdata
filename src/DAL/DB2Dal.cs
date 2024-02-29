@@ -19,7 +19,7 @@ namespace CYQ.Data
         {
             get
             {
-                if (AppConfig.IsNetCore)
+                if (AppConst.IsNetCore)
                 {
                     return "IBM.Data.DB2.Core";
                 }

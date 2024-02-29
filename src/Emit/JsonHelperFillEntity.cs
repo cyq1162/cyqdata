@@ -51,13 +51,16 @@ namespace CYQ.Data.Emit
             {
                 foreach (var property in properties)
                 {
-                    ilGen.Emit(OpCodes.Ldarg_0);//load JsonHelper 
-                    ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
-                    //----------------------------------------------------
-                    ilGen.Emit(OpCodes.Ldarg_1);// load Entity object
-                    ilGen.Emit(OpCodes.Castclass, entityType);// object as Entity
-                    ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());// xxx.Name get value.
-                    SetValue(ilGen, property, null, addObjMethod, addStringMethod, addIntMethod, addLongMethod, addDateTimeMethod, addBoolMethod, addGuidMethod);
+                    if (property.CanRead)
+                    {
+                        ilGen.Emit(OpCodes.Ldarg_0);//load JsonHelper 
+                        ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
+                                                                 //----------------------------------------------------
+                        ilGen.Emit(OpCodes.Ldarg_1);// load Entity object
+                        ilGen.Emit(OpCodes.Castclass, entityType);// object as Entity
+                        ilGen.Emit(OpCodes.Callvirt, property.GetGetMethod());// xxx.Name get value.
+                        SetValue(ilGen, property, null, addObjMethod, addStringMethod, addIntMethod, addLongMethod, addDateTimeMethod, addBoolMethod, addGuidMethod);
+                    }
                 }
             }
 

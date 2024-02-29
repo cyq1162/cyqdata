@@ -23,7 +23,7 @@ namespace CYQ.Data.Cache
             if (string.IsNullOrEmpty(configValue)) { return; }
             if (configValue.EndsWith(".txt") || configValue.EndsWith(".ini"))
             {
-                string path = AppConfig.RunPath + configValue;
+                string path = AppConst.RunPath + configValue;
                 if (File.Exists(path))
                 {
                     IOWatch.On(path, delegate (FileSystemEventArgs e)

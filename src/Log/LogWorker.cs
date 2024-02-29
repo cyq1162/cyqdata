@@ -43,14 +43,14 @@ namespace CYQ.Data
         private static void DoWork(object p)
         {
             //检测文件夹
-            string folder = AppConfig.WebRootPath;
+            string folder = AppConst.WebRootPath;
             string logPath = AppConfig.Log.Path;
             logPath = logPath.Trim('/', '\\') + "/";
             if (logPath.StartsWith("~/"))
             {
                 logPath = logPath.Substring(2);
             }
-            if (!AppConfig.IsWeb && logPath.Contains(":"))//winform 自定义绝对路径
+            if (!AppConst.IsWeb && logPath.Contains(":"))//winform 自定义绝对路径
             {
                 string c = logPath.Contains("\\") ? "\\" : "/";
                 if (!logPath.EndsWith(c))

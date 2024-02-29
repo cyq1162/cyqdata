@@ -1,4 +1,5 @@
-﻿using CYQ.Data.Json;
+﻿using CYQ.Data.Emit;
+using CYQ.Data.Json;
 using CYQ.Data.SQL;
 using CYQ.Data.Table;
 using System;
@@ -7,7 +8,6 @@ using System.Data.Common;
 using System.Data.SqlTypes;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Web;
 
@@ -24,54 +24,93 @@ namespace CYQ.Data.Tool
         /// </summary>
         internal static List<T> ChangeReaderToList<T>(DbDataReader reader)
         {
-            Type t = typeof(T);
-            List<T> list = new List<T>();
-            if (t.Name == "MDataRow")
-            {
-                MDataTable dt = reader;
-                foreach (object row in dt.Rows)
-                {
-                    list.Add((T)row);
-                }
-            }
-            else if (reader != null)
-            {
-                if (reader.HasRows)
-                {
-                    if (t.IsValueType || t.Name == "String")
-                    {
-                        SetValueTypeFromReader<T>(reader, list, t);
-                    }
-                    else
-                    {
-                        SetEntityTypeFromReader<T>(reader, list, t);
-                    }
+            if (reader == null) { return null; }
 
+            if (!reader.HasRows || reader.FieldCount == 0) { return new List<T>(); }
+            try
+            {
+                Type t = typeof(T);
+                if (t.IsValueType || t.Name == "String")
+                {
+                    return ReaderToListValueType<T>(reader);
                 }
+                if (t.Name == "MDataRow")
+                {
+                    return ReaderToListMDataRow<T>(reader);
+                }
+                return ReaderToListEntity<T>(reader);
+                //List<T> list = new List<T>();
+                //SetEntityTypeFromReader<T>(reader, list, t);
+                //return list;
+            }
+            finally
+            {
                 reader.Close();
                 reader.Dispose();
                 reader = null;
             }
+        }
+        private static List<T> ReaderToListValueType<T>(DbDataReader reader)
+        {
+            List<T> list = new List<T>();
+            Type t = typeof(T);
+            bool isError = false;
+            bool isT = reader.GetFieldType(0) == t;
+            while (reader.Read())
+            {
+                object value;
+                try
+                {
+                    if (isError)
+                    {
+                        //兼容Sqlite的底版本异常。
+                        value = reader.GetString(0);
+                    }
+                    else
+                    {
+                        value = reader[0];
+                    }
+                }
+                catch
+                {
+                    isError = true;
+                    value = reader.GetString(0);
+                }
+                if (!isT)
+                {
+                    value = ConvertTool.ChangeType(value, t);
+                }
+                list.Add((T)value);
+            }
+            return list;
+        }
+        private static List<T> ReaderToListMDataRow<T>(DbDataReader reader)
+        {
+            List<T> list = new List<T>();
+            MDataTable dt = reader;
+            foreach (object row in dt.Rows)
+            {
+                list.Add((T)row);
+            }
             return list;
         }
 
-        private static void SetValueTypeFromReader<T>(DbDataReader reader, List<T> list, Type t)
+        private static List<T> ReaderToListEntity<T>(DbDataReader reader)
         {
-            if (reader.FieldCount > 0)
+            List<T> list = new List<T>();
+            var func = DbDataReaderToEntity.Delegate(typeof(T));
+            while (reader.Read())
             {
-                bool isT = reader.GetFieldType(0) == t;
-                while (reader.Read())
+                object obj = func(reader);
+                if (obj != null)
                 {
-                    object o = reader[0];
-                    if (!isT)
-                    {
-                        o = ConvertTool.ChangeType(o, t);
-                    }
-                    T obj = (T)o;
-                    list.Add(obj);
+                    list.Add((T)obj);
                 }
             }
+            return list;
         }
+
+        /*
         private static void SetEntityTypeFromReader<T>(DbDataReader reader, List<T> list, Type t)
         {
             Dictionary<string, Type> kv = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
@@ -176,7 +215,7 @@ namespace CYQ.Data.Tool
                 list.Add(obj);
             }
         }
-
+        */
         /// <summary>
         /// DbDataReader To Json
         /// </summary>

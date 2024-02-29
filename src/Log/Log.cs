@@ -137,7 +137,7 @@ namespace CYQ.Data
             try
             {
                 HttpContext context = HttpContext.Current;
-                if (AppConfig.IsWeb && context != null)// && context.Handler != null (这里会导致非常规请求丢失下面内容)
+                if (AppConst.IsWeb && context != null)// && context.Handler != null (这里会导致非常规请求丢失下面内容)
                 {
                     HttpRequest request = context.Request;
                     log.HttpMethod = request.HttpMethod;
@@ -152,7 +152,7 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    log.TraceID = LocalEnvironment.ProcessID.ToString();
+                    log.TraceID = AppConst.ProcessID.ToString();
                 }
             }
             catch
