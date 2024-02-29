@@ -14,8 +14,8 @@
 	  <PackageProjectUrl>https://github.com/cyq1162/cyqdata</PackageProjectUrl>
 	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	  <AssemblyTitle>CYQ.Data 数据层(ORM)框架 V5 .NET Standard 版本</AssemblyTitle>
-	  <AssemblyVersion>5.9.2.4</AssemblyVersion>
-	  <FileVersion>5.9.2.4</FileVersion>
+	  <AssemblyVersion>5.9.2.5</AssemblyVersion>
+	  <FileVersion>5.9.2.5</FileVersion>
 	  <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>

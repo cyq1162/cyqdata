@@ -51,7 +51,7 @@ namespace CYQ.Data.Table
             }
             else if (anyObj is IEnumerable)
             {
-                row.LoadFrom(anyObj as IEnumerable, valueType, escapeOp, breakOp);
+                row.LoadIEnumerable(anyObj as IEnumerable, valueType, escapeOp, breakOp);
             }
             else
             {
@@ -64,13 +64,8 @@ namespace CYQ.Data.Table
 
         #region LoadFrom
 
-        /// <summary>
-        /// 从Web Post表单里取值。
-        /// </summary>
-        public void LoadFrom()
-        {
-            LoadFrom(true);
-        }
+        #region 从 UI 中获取
+
         /// <summary>
         /// 从Web Post表单里取值 或 从Winform、WPF的表单控件里取值。
         /// <param name="isWeb">True为Web应用，反之为Win应用</param>
@@ -101,6 +96,10 @@ namespace CYQ.Data.Table
                 }
             }
         }
+
+        #endregion
+
+        #region 从数据行中获取
 
         /// <summary>
         /// 从别的行加载值
@@ -173,11 +172,16 @@ namespace CYQ.Data.Table
 
             }
         }
+
+        #endregion
+
+        #region 从数组中加载【内部方法】
+
         /// <summary>
         /// 从数组里加载值
         /// </summary>
         /// <param name="values"></param>
-        public void LoadFrom(object[] values)
+        internal void LoadFrom(object[] values)
         {
             if (values != null && values.Length <= Count)
             {
@@ -187,6 +191,10 @@ namespace CYQ.Data.Table
                 }
             }
         }
+        #endregion
+
+        #region 从 Json 中加载数据
+
         public void LoadFrom(string json)
         {
             LoadFrom(json, JsonHelper.DefaultEscape);
@@ -206,11 +214,76 @@ namespace CYQ.Data.Table
             if (!string.IsNullOrEmpty(json))
             {
                 Dictionary<string, string> dic = JsonHelper.Split(json, op);
-                LoadFrom(dic,breakOp);
+                LoadDictionary(dic, breakOp);
             }
         }
+        #endregion
 
-        public void LoadFrom(Dictionary<string, object> dic, BreakOp breakOp)
+        #region 从任意对象中加载数据
+        /// <summary>
+        /// 将实体转成数据行。
+        /// </summary>
+        /// <param name="anyObj">实体对象</param>
+        public void LoadFrom(object anyObj)
+        {
+            LoadFrom(anyObj, BreakOp.None, 2);
+        }
+        /// <summary>
+        /// 将实体转成数据行。
+        /// </summary>
+        /// <param name="anyObj">实体对象</param>
+        public void LoadFrom(object anyObj, BreakOp op)
+        {
+            LoadFrom(anyObj, op, 2);
+        }
+        /// <summary>
+        /// 将实体转成数据行。
+        /// </summary>
+        /// <param name="anyObj">实体对象</param>
+        /// <param name="op">跳过设置的选项</param>
+        /// <param name="initState">初始值：0无法插入和更新；1可插入；2可插入可更新(默认值)</param>
+        public void LoadFrom(object anyObj, BreakOp op, int initState)
+        {
+            if (anyObj == null) { return; }
+
+            if (anyObj is Boolean)
+            {
+                LoadFrom((bool)anyObj);
+            }
+            else if (anyObj is String)
+            {
+                LoadFrom(anyObj as String);
+            }
+            else if (anyObj is MDataRow)
+            {
+                LoadFrom(anyObj as MDataRow);
+            }
+            else if (anyObj is IEnumerable)
+            {
+                LoadIEnumerable(anyObj as IEnumerable, null, EscapeOp.No, op);
+            }
+            else
+            {
+
+                if (anyObj is KeyValuePair<string, string>)
+                {
+                    var kv = (KeyValuePair<string, string>)anyObj;
+                    Set("Key", kv.Key).Set("Value", kv.Value);
+                    return;
+                }
+                if (anyObj is KeyValuePair<string, object>)
+                {
+                    var kv = (KeyValuePair<string, object>)anyObj;
+                    Set("Key", kv.Key).Set("Value", kv.Value);
+                    return;
+                }
+
+                LoadEntity(anyObj, op, initState);
+            }
+        }
+        #endregion
+
+        private void LoadDictionary(Dictionary<string, object> dic, BreakOp breakOp)
         {
             if (dic != null && dic.Count > 0)
             {
@@ -243,7 +316,7 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 从字典里加载值
         /// </summary>
-        public void LoadFrom(Dictionary<string, string> dic,BreakOp breakOp)
+        private void LoadDictionary(Dictionary<string, string> dic, BreakOp breakOp)
         {
             if (dic != null && dic.Count > 0)
             {
@@ -277,28 +350,19 @@ namespace CYQ.Data.Table
         /// <summary>
         /// 从泛型字典集合里加载
         /// </summary>
-        public void LoadFrom(IEnumerable dic)
-        {
-            LoadFrom(dic, null, JsonHelper.DefaultEscape, BreakOp.None);
-        }
-        internal void LoadFrom(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
+        internal void LoadIEnumerable(IEnumerable dic, Type valueType, EscapeOp op, BreakOp breakOp)
         {
 
             if (dic != null)
             {
-                if (dic is MDataRow)
-                {
-                    LoadFrom(dic as MDataRow, RowOp.None, true);
-                    return;
-                }
                 if (dic is Dictionary<string, string> || dic is MDictionary<string, string>)
                 {
-                    LoadFrom(dic as Dictionary<string, string>, breakOp);
+                    LoadDictionary(dic as Dictionary<string, string>, breakOp);
                     return;
                 }
                 if (dic is Dictionary<string, object> || dic is MDictionary<string, object>)
                 {
-                    LoadFrom(dic as Dictionary<string, object>, breakOp);
+                    LoadDictionary(dic as Dictionary<string, object>, breakOp);
                     return;
                 }
                 #region 需要创建列时，如果是HashTable时，值的类型如果是Object，尝试先取值的类型。
@@ -418,56 +482,19 @@ namespace CYQ.Data.Table
             }
         }
 
-        /// <summary>
-        /// 将实体转成数据行。
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        public void LoadFrom(object entity)
+
+
+
+
+        private void LoadEntity(object anyObj, BreakOp op, int initState)
         {
-            if (entity == null || entity is Boolean)
-            {
-                LoadFrom(true);
-            }
-            else if (entity is String)
-            {
-                LoadFrom(entity as String);
-            }
-            else if (entity is MDataRow)
-            {
-                LoadFrom(entity as MDataRow);
-            }
-            else if (entity is IEnumerable)
-            {
-                LoadFrom(entity as IEnumerable);
-            }
-            else
-            {
-                LoadFrom(entity, BreakOp.None);
-            }
-        }
-        /// <summary>
-        /// 将实体转成数据行。
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        public void LoadFrom(object entity, BreakOp op)
-        {
-            LoadFrom(entity, op, 2);
-        }
-        /// <summary>
-        /// 将实体转成数据行。
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="op">跳过设置的选项</param>
-        /// <param name="initState">初始值：0无法插入和更新；1可插入；2可插入可更新(默认值)</param>
-        public void LoadFrom(object entity, BreakOp op, int initState)
-        {
-            if (entity == null)
+            if (anyObj == null)
             {
                 return;
             }
             try
             {
-                Type t = entity.GetType();
+                Type t = anyObj.GetType();
                 if (Columns.Count == 0)
                 {
                     MDataColumn mcs = TableSchema.GetColumnByType(t);
@@ -486,32 +513,31 @@ namespace CYQ.Data.Table
                 }
 
                 var loadEntityAction = MDataRowLoadEntity.Delegate(t);
-                loadEntityAction(this, entity, op, initState);
-
-                //List<PropertyInfo> pis = ReflectTool.GetPropertyList(t);
-                //if (pis.Count > 0)
-                //{
-                //    foreach (PropertyInfo p in pis)
-                //    {
-                //        SetValueToCell(entity, op, p, null, initState);
-                //    }
-                //}
-
-                //List<FieldInfo> fis = ReflectTool.GetFieldList(t);
-                //if (fis.Count > 0)
-                //{
-                //    foreach (FieldInfo f in fis)
-                //    {
-                //        SetValueToCell(entity, op, null, f, initState);
-                //    }
-                //}
-
+                loadEntityAction(this, anyObj, op, initState);
             }
             catch (Exception err)
             {
                 Log.Write(err, LogType.Error);
             }
+            //List<PropertyInfo> pis = ReflectTool.GetPropertyList(t);
+            //if (pis.Count > 0)
+            //{
+            //    foreach (PropertyInfo p in pis)
+            //    {
+            //        SetValueToCell(entity, op, p, null, initState);
+            //    }
+            //}
+
+            //List<FieldInfo> fis = ReflectTool.GetFieldList(t);
+            //if (fis.Count > 0)
+            //{
+            //    foreach (FieldInfo f in fis)
+            //    {
+            //        SetValueToCell(entity, op, null, f, initState);
+            //    }
+            //}
         }
+
         //private void SetValueToCell(object entity, BreakOp op, PropertyInfo p, FieldInfo f, int initState)
         //{
         //    string name = p != null ? p.Name : f.Name;
