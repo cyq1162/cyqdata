@@ -823,49 +823,64 @@ namespace CYQ.Data.Xml
             {
                 if (_XmlDocument != null)
                 {
+                    string html = _XmlDocument.InnerXml;
                     #region 处理clearflag标签
                     string key = "clearflag";
-                    XmlNodeList xnl = GetList("*", key);
-                    if (xnl != null)
+                    if (html.Contains(key))
                     {
-                        XmlNode xNode = null;
-                        for (int i = xnl.Count - 1; i >= 0; i--)
+                        XmlNodeList xnl = GetList("*", key);
+                        if (xnl != null)
                         {
-                            xNode = xnl[i];
-                            switch (GetAttrValue(xnl[i], key))
+                            XmlNode xNode = null;
+                            for (int i = xnl.Count - 1; i >= 0; i--)
                             {
-                                case "0":
-                                    RemoveAttr(xNode, key);
-                                    xNode.InnerXml = "";
-                                    break;
-                                case "1":
-                                    Remove(xNode);
-                                    break;
-                            }
+                                xNode = xnl[i];
+                                switch (GetAttrValue(xnl[i], key))
+                                {
+                                    case "0":
+                                        RemoveAttr(xNode, key);
+                                        xNode.InnerXml = "";
+                                        break;
+                                    case "1":
+                                        Remove(xNode);
+                                        break;
+                                }
 
+                            }
+                            html = _XmlDocument.InnerXml;
                         }
+
                     }
                     #endregion
+                    StringBuilder sb = new StringBuilder(html);
+
 
                     #region 处理XHtml 头前缀、清空CData
 
-                    string html = _XmlDocument.InnerXml;
+
                     if (html.Contains(".dtd\"[]>"))
                     {
-                        html = html.Replace(".dtd\"[]>", ".dtd\">");
+                        sb.Replace(".dtd\"[]>", ".dtd\">");
+                        //html = html.Replace(".dtd\"[]>", ".dtd\">");
                     }
                     if (html.Contains(" xmlns="))
                     {
-                        html = html.Replace(" xmlns=\"\"", string.Empty);
                         if (xnm != null)
                         {
-                            html = html.Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                            sb.Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                            //html = html.Replace(" xmlns=\"" + xnm.LookupNamespace(PreXml) + "\"", string.Empty);
+                        }
+                        else
+                        {
+                            sb.Replace(" xmlns=\"\"", string.Empty);
+                            //html = html.Replace(" xmlns=\"\"", string.Empty);
                         }
                     }
                     if (html.Contains("&"))
                     {
                         //先把&符号替换回来，再替换后面的。
-                        html = html.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
+                        //html = html.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
+                        sb.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");
                     }
                     //if (!string.IsNullOrEmpty(docTypeHtml))
                     //{
@@ -876,21 +891,25 @@ namespace CYQ.Data.Xml
                     #region 处理剩余的占位符替换
                     if (html.IndexOf("${") > -1 || html.IndexOf("<%#") > -1)
                     {
-                        html = FormatHtml(html, null);
+                        FormatHtml(html, sb, null);
+                        //html = FormatHtml(html, sb, null);
                     }
                     #endregion
 
                     #region 清除CData标签
-                    html = ClearCDATA(html);
+                    ClearCDATA(html, sb);
+                    //html = ClearCDATA(html);
                     #endregion
 
                     if (html.StartsWith("<html"))
                     {
                         //从缓存节点读XmlDocument时，不加载dtd，输出需要补充
-                        html = "<!DOCTYPE html>" + html;
+                        //html = "<!DOCTYPE html>" + html;
+                        sb.Insert(0, "<!DOCTYPE html>");
                     }
 
-                    return html;
+                    return sb.ToString();
+                    //return html;
                 }
                 return string.Empty;
             }
@@ -901,9 +920,12 @@ namespace CYQ.Data.Xml
         /// <param name="html">需要被替换的内容</param>
         /// <param name="values">用于值替换搜索的字典数据</param>
         /// <returns></returns>
-        private string FormatHtml(string html, MDictionary<string, string> values)
+        private string FormatHtml(string html, StringBuilder sb, MDictionary<string, string> values)
         {
-
+            if (sb == null)
+            {
+                sb = new StringBuilder(html);
+            }
             if (html.IndexOf("${") > -1)
             {
                 #region 替换占位符号
@@ -965,8 +987,8 @@ namespace CYQ.Data.Xml
                             replaceValue = GetValueByRequest3(columnName, key);
                         }
                         #endregion
-
-                        html = html.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
+                        sb.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
+                        //html = html.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
 
                     }
                     keys.Clear();
@@ -995,13 +1017,14 @@ namespace CYQ.Data.Xml
                         {
                             Log.WriteLogToTxt(err, LogType.Error);
                         }
-                        html = html.Replace(value, evalValue);
+                        sb.Replace(value, evalValue);
+                        //html = html.Replace(value, evalValue);
                     }
                 }
                 #endregion
             }
 
-            return html;
+            return sb.ToString();
         }
         private string GetValue1(string columnName, MDictionary<string, string> values)//, MDataRow row
         {
@@ -1042,7 +1065,7 @@ namespace CYQ.Data.Xml
             string replaceValue = string.Empty;
             if (HttpContext.Current != null && HttpContext.Current.Handler != null)
             {
-                replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.Headers[columnName];
+                replaceValue = HttpContext.Current.Request[columnName] ?? HttpContext.Current.Request.GetHeader(columnName);
             }
             if (string.IsNullOrEmpty(replaceValue) && key.Contains(":"))//如果为空，设置默认的说明。
             {

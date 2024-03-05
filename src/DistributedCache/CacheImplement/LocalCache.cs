@@ -43,7 +43,7 @@ namespace CYQ.Data.Cache
         private MDictionary<string, MList<string>> theFolderKeys = new MDictionary<string, MList<string>>();//folderPath,keylist
 
         private static object lockAdd = new object();
-        private static object lockObj= new object();
+        private static object lockObj = new object();
         private DateTime workTime, startTime;
 
         DateTime allowCacheTableTime = DateTime.Now;
@@ -105,6 +105,7 @@ namespace CYQ.Data.Cache
         {
             System.Diagnostics.Debug.WriteLine("LocalCache.ClearState on Thread :" + threadID);
             startTime = DateTime.Now;
+            bool isThreadAbort = false;
             while (true)
             {
                 try
@@ -127,9 +128,12 @@ namespace CYQ.Data.Cache
                 }
                 catch (ThreadAbortException e)
                 {
+                    isThreadAbort = true;
                 }
                 catch (OutOfMemoryException)
-                { errorCount++; }
+                {
+                    errorCount++;
+                }
                 catch (Exception err)
                 {
                     errorCount++;
@@ -141,23 +145,26 @@ namespace CYQ.Data.Cache
                 }
                 finally
                 {
-                    taskCount++;
-                    if (taskCount % 10 == 9)
+                    if (!isThreadAbort)
                     {
+                        taskCount++;
                         try
                         {
-                            if (theCache.Count > 100000)// theKey.Count > 100000)
+                            if (taskCount % 10 == 9)
                             {
-                                NoSqlAction.ResetStaticVar();
-                                GC.Collect();
+                                if (theCache.Count > 100000)// theKey.Count > 100000)
+                                {
+                                    NoSqlAction.ResetStaticVar();
+                                    GC.Collect();
+                                }
                             }
+                            CheckIsSafe();
                         }
                         catch
                         {
                             errorCount++;
                         }
                     }
-                    CheckIsSafe();
                 }
 
             }
@@ -247,7 +254,7 @@ namespace CYQ.Data.Cache
             {
                 if (string.IsNullOrEmpty(key)) { return false; }
                 if (value == null) { return Remove(key); }
-                
+
                 lock (lockObj)
                 {
                     if (theCache.ContainsKey(key))
@@ -524,5 +531,5 @@ namespace CYQ.Data.Cache
         #endregion
     }
 
-    
+
 }

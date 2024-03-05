@@ -34,7 +34,7 @@ namespace CYQ.Data.Xml
         {
             if (dataSource == null) { return; }
             XmlNode node = Get("defaultView");
-            if(node == null && dataSource is MDataTable)
+            if (node == null && dataSource is MDataTable)
             {
                 string name = ((MDataTable)dataSource).TableName + "View";
                 node = Get(name);
@@ -139,7 +139,7 @@ namespace CYQ.Data.Xml
                     {
                         if (newText.IndexOf("${") > -1 || newText.IndexOf("<%#") > -1)
                         {
-                            newText = FormatHtml(newText, values);
+                            newText = FormatHtml(newText, null, values);
                         }
                         innerXml.Append(newText);
                     }

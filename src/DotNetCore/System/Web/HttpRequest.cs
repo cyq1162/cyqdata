@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace System.Web
 {
-    public class HttpRequest
+    public partial class HttpRequest
     {
         Microsoft.AspNetCore.Http.HttpContext context
         {
@@ -23,16 +23,41 @@ namespace System.Web
 
         }
 
+        /// <summary>
+        /// 返回 QueryString=》Form =》Cookies。
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public string this[string name]
         {
             get
             {
-                string value = QueryString[name];
-                if (string.IsNullOrEmpty(value))
+                string text = request.Query[name];
+                if (text != null)
                 {
-                    value = Form[name];
+                    return text;
                 }
-                return value;
+                if (request.HasFormContentType)
+                {
+                    text = request.Form[name];
+                    if (text != null)
+                    {
+                        return text;
+                    }
+                }
+                text = request.Cookies[name];
+                if (text != null)
+                {
+                    return text;
+                }
+                return null;
+
+                //string value = QueryString[name];
+                //if (string.IsNullOrEmpty(value))
+                //{
+                //    value = Form[name];
+                //}
+                //return value;
             }
         }
         public NameValueCollection Form
@@ -46,7 +71,7 @@ namespace System.Web
                 else
                 {
                     NameValueCollection nvc = new NameValueCollection();
-                    if (request.Method == "POST" && request.HasFormContentType && request.Form != null && request.Form.Keys.Count > 0)
+                    if (request.HasFormContentType && request.Form.Keys.Count > 0)
                     {
                         foreach (string key in request.Form.Keys)
                         {
@@ -60,6 +85,7 @@ namespace System.Web
 
             }
         }
+
         public HttpFileCollection Files
         {
             get
@@ -71,8 +97,7 @@ namespace System.Web
                 else
                 {
                     HttpFileCollection files = new HttpFileCollection();
-                    if (request.Method == "POST" && request.HasFormContentType && request.Form != null
-                     && request.Form.Files != null && request.Form.Files.Count > 0)
+                    if (request.HasFormContentType && request.Form.Files.Count > 0)
                     {
                         foreach (IFormFile file in request.Form.Files)
                         {
@@ -239,6 +264,13 @@ namespace System.Web
             }
         }
 
+        /// <summary>
+        /// 兼容 Net、NetCore的写法，同时保持性能。
+        /// </summary>
+        public string GetHeader(string name)
+        {
+            return request.Headers[name];
+        }
         public NameValueCollection ServerVariables
         {
             get
@@ -268,5 +300,91 @@ namespace System.Web
                 return IO.Path.GetExtension(request.Path);
             }
         }
+    }
+
+    public partial class HttpRequest
+    {
+        /// <summary>
+        /// 兼容 Net、NetCore的写法，同时保持性能。
+        /// </summary>
+        public string GetForm(string name)
+        {
+            if (request.HasFormContentType)
+            {
+                return request.Form[name];
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 兼容 Net、NetCore的写法，同时保持性能。
+        /// </summary>
+        public HttpPostedFile GetFile(string name)
+        {
+            if (request.HasFormContentType && request.Form.Files.Count > 0)
+            {
+                var file = request.Form.Files[name];
+                if (file != null)
+                {
+                    return new HttpPostedFile(file);
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 兼容 Net、NetCore的写法，同时保持性能。
+        /// </summary>
+        public string GetQueryString(string name)
+        {
+            return request.Query[name];
+        }
+
+        /// <summary>
+        /// 兼容 Net、NetCore的写法，同时保持性能。
+        /// </summary>
+        public HttpCookie GetCookie(string name)
+        {
+            var value = request.Cookies[name];
+            if (value == null) { return null; }
+            return new HttpCookie(name, value);
+        }
+
+        /// <summary>
+        /// 兼容NET、NET Core 写法。
+        /// </summary>
+        /// <returns></returns>
+        public bool GetIsFormContentType()
+        {
+            return request.HasFormContentType;
+        }
+
+        /// <summary>
+        /// 从 Stream 中读取数据
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ReadBytes(bool isAllowReuse)
+        {
+            return ReadBytesAsync(isAllowReuse).GetAwaiter().GetResult();
+        }
+        private async Task<byte[]> ReadBytesAsync(bool isAllowReuse)
+        {
+            if (request.Body == null) { return null; }
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                if (isAllowReuse)
+                {
+                    request.EnableBuffering();
+                }
+                await request.Body.CopyToAsync(memoryStream);
+                if (isAllowReuse)
+                {
+                    request.Body.Position = 0;
+                }
+                byte[] bytes = memoryStream.ToArray();
+                return bytes;
+            }
+        }
+
     }
 }

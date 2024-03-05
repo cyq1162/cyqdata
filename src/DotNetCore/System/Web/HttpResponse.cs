@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using System.Text;
 using CYQ.Data;
 using static System.Net.Mime.MediaTypeNames;
+using System.Runtime.InteropServices;
 
 namespace System.Web
 {
@@ -42,69 +43,88 @@ namespace System.Web
                 return context.Items.ContainsKey("IsRunToEnd");
             }
         }
+        private string _Charset;
+        /// <summary>
+        ///  字符编码【Net、NetCore】兼容
+        /// </summary>
         public string Charset
         {
             get
             {
-                string ct = ContentType;
-                int i = ct.IndexOf("charset=");
-                if (i > -1)
+                if (_Charset == null)
                 {
-                    return ct.Substring(i + 8);
+                    string ct = response.ContentType;
+                    if (ct != null)
+                    {
+                        int i = ct.IndexOf("charset=");
+                        if (i > -1)
+                        {
+                            _Charset = ct.Substring(i + 8);
+                        }
+                    }
+                    if (_Charset == null)
+                    {
+                        _Charset = "utf-8";
+                    }
                 }
-
-                return "utf-8";
+                return _Charset;
             }
             set
             {
                 //Headers are read-only, response has already started
                 if (HasStarted) { return; }
+                _Charset = value;
                 string ct = ContentType;
-                if (string.IsNullOrEmpty(ct))
+                if (ct != null)
                 {
-                    ContentType = "text/html; charset=" + value.Replace("charset=", "");
+                    if (!ct.Contains(":"))
+                    {
+                        response.ContentType = ct + "; charset=" + value;
+                    }
+                    //ContentType = "text/html; charset=" + value.Replace("charset=", "");
                 }
-                else if (!ct.Contains("charset="))
-                {
-                    ContentType = ct.TrimEnd(';') + "; charset=" + value;
-                }
+                //else if (!ct.Contains("charset="))
+                //{
+                //    ContentType = ct.TrimEnd(';') + "; charset=" + value;
+                //}
             }
         }
         public string ContentType
         {
-            get => response.ContentType ?? "";
+            get => response.ContentType;
             set
             {
-                try
-                {
-                    if (response.ContentType != value)
-                    {
-                        if (value.Contains("charset") || string.IsNullOrEmpty(response.ContentType))
-                        {
-                            response.ContentType = value;
-                        }
-                        else
-                        {
-                            string[] items = response.ContentType.Split(';');
-                            if (items.Length == 2)//包含两个，只改前面的，不改编码
-                            {
-                                response.ContentType = value + ";" + items[1];
-                            }
-                            else if (response.ContentType.Contains("charset"))//只有charset
-                            {
-                                response.ContentType = value + "; " + items[0].Trim();
-                            }
-                            else//只有text/html
-                            {
-                                response.ContentType = value + "; charset=utf-8";
-                            }
-                        }
-                    }
-                }
-                catch (Exception err)
-                {
-                    Log.Write(err, LogType.Error);
-                }
+                response.ContentType = value;
+                //try
+                //{
+                //    if (response.ContentType != value)
+                //    {
+                //        if (value.Contains("charset") || string.IsNullOrEmpty(response.ContentType))
+                //        {
+                //            response.ContentType = value;
+                //        }
+                //        else
+                //        {
+                //            string[] items = response.ContentType.Split(';');
+                //            if (items.Length == 2)//包含两个，只改前面的，不改编码
+                //            {
+                //                response.ContentType = value + ";" + items[1];
+                //            }
+                //            else if (response.ContentType.Contains("charset"))//只有charset
+                //            {
+                //                response.ContentType = value + "; " + items[0].Trim();
+                //            }
+                //            else//只有text/html
+                //            {
+                //                response.ContentType = value + "; charset=utf-8";
+                //            }
+                //        }
+                //    }
+                //}
+                //catch (Exception err)
+                //{
+                //    Log.Write(err, LogType.Error);
+                //}
 
             }
         }
@@ -143,7 +163,7 @@ namespace System.Web
         //public DateTime ExpiresAbsolute { get; set; }
         public string CacheControl
         {
-            get => Headers["Cache-Control"];
+            get => Convert.ToString(response.Headers["Cache-Control"]);
             set => AppendHeader("Cache-Control", value);
         }
 
@@ -278,7 +298,7 @@ namespace System.Web
             if (!IsEnd && data != null)
             {
                 SetWriteFlag();
-                response.Body.WriteAsync(data, 0, data.Length).Wait();
+                response.Body.WriteAsync(data, 0, data.Length);//.Wait()
                 End();
             }
         }
@@ -291,7 +311,7 @@ namespace System.Web
             if (!IsEnd && data != null)
             {
                 SetWriteFlag();
-                response.Body.WriteAsync(data, 0, data.Length).Wait();
+                response.Body.WriteAsync(data, 0, data.Length);//.Wait()
             }
         }
         private void SetWriteFlag()

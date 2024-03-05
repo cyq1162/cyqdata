@@ -32,6 +32,7 @@ namespace CYQ.Data.Json
 
         public static string ToJson(object obj, JsonOp jsonOp)
         {
+            if (obj == null) { return null; }
             if (obj is string)
             {
                 string text = Convert.ToString(obj);

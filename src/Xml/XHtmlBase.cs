@@ -612,36 +612,52 @@ namespace CYQ.Data.Xml
             {
                 return html;
             }
-            html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
-            html = html.Replace("<![CDATA[", "&lt;![CDATA[").Replace("]]>", "]]&gt;");
+            StringBuilder sb = new StringBuilder(html);
+            if (html.Contains(AppConfig.XHtml.CDataLeft))
+            {
+                sb.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+            }
+            //html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+            //html = html.Replace("<![CDATA[", "&lt;![CDATA[").Replace("]]>", "]]&gt;");
             //text = text.Replace(((char)10).ToString(), "<BR>");
             //text = text.Replace(((char)13).ToString(), "<BR>");
             //text = text.Replace(((char)34).ToString(), "&quot;");
             //text = text.Replace(((char)39).ToString(), "&#39;");
-            html = html.Replace("\\", "#!!#").Replace("\0", "#!0!#");
-            html = Filter(html);
-            return AppConfig.XHtml.CDataLeft + html + AppConfig.XHtml.CDataRight;
+            if (html.Contains("\\"))
+            {
+                sb.Replace("\\", "#!!#");
+            }
+            if (html.Contains("\0"))
+            {
+                sb.Replace("\0", "#!0!#");
+            }
+            // html = html.Replace("\\", "#!!#").Replace("\0", "#!0!#");
+            //html = Filter(html);
+            return AppConfig.XHtml.CDataLeft + Filter(sb.ToString()) + AppConfig.XHtml.CDataRight;
         }
         /// <summary>
         /// Çå³ýCDATA
         /// </summary>
         /// <param name="html">¶ÔÏó×Ö·û</param>
         /// <returns></returns>
-        internal string ClearCDATA(string html)
+        protected void ClearCDATA(string html, StringBuilder sb)
         {
             if (string.IsNullOrEmpty(html))
             {
-                return html;
+                return;
+                //return html;
             }
             if (html.Contains("#!"))
             {
-                html = html.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
+                sb.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
+                //html = html.Replace("#!!#", "\\").Replace("#!0!#", "\\0");
             }
             if (html.Contains(AppConfig.XHtml.CDataLeft))
             {
-                html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+                sb.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
+                //html = html.Replace(AppConfig.XHtml.CDataLeft, string.Empty).Replace(AppConfig.XHtml.CDataRight, string.Empty);
             }
-            return html;
+            //return html;
         }
 
         #endregion

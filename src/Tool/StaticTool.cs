@@ -58,9 +58,9 @@ namespace CYQ.Data.Tool
                 {
                     id = request["token"];
                 }
-                else if (request.Headers["token"] != null)
+                else if (request.GetHeader("token") != null)
                 {
-                    id = request.Headers["token"];
+                    id = request.GetHeader("token");
                 }
                 else if (context.Session != null)
                 {

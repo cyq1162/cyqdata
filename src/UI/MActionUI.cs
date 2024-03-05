@@ -573,10 +573,10 @@ namespace CYQ.Data.UI
                     {
                         key = autoPrefix + columnName;
                         if (isContainLine) { noLineKey = key.Replace("_", ""); }
-                        string requestValue = rq.QueryString[key] ?? rq.Form[key];
+                        string requestValue = rq[key];
                         if (requestValue == null && isContainLine)
                         {
-                            requestValue = rq.QueryString[noLineKey] ?? rq.Form[noLineKey];
+                            requestValue = rq[noLineKey];
                         }
                         if (requestValue != null)
                         {

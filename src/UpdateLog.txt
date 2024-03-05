@@ -1117,6 +1117,11 @@
 847：移除：LocalEnvironment 内部类。（2024-02-29）
 848：优化：ConvertTool.ChangeReaderToList<T> 内部类。（2024-02-29）
 849：新增：开放：CYQ.Data.Emit.EmitPreheat 类，允许处理 Emit 委托预热。（2024-02-29）
+-------------------------------------------------------------------------------------
+版本简要：针对 Taurus.MVC 进行全方位细节进行性能优化。【V5.9.2.6】
+850：新增：HttpRequest 扩展方法：GetHeader、GetForm、GetQuery、GetCookie 等。（2024-03-04）
+851：优化：XHtmlAction OutXml 等多项细节优化。（2024-03-05）
+
 
 JsonSplit.To(...)
 

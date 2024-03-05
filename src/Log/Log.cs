@@ -137,11 +137,11 @@ namespace CYQ.Data
             try
             {
                 HttpContext context = HttpContext.Current;
-                if (AppConst.IsWeb && context != null)// && context.Handler != null (这里会导致非常规请求丢失下面内容)
+                if (context != null && AppConst.IsWeb)// && context.Handler != null (这里会导致非常规请求丢失下面内容)
                 {
                     HttpRequest request = context.Request;
                     log.HttpMethod = request.HttpMethod;
-                    log.ClientIP = request.Headers["X-Real-IP"] ?? request.UserHostAddress;
+                    log.ClientIP = request.GetHeader("X-Real-IP") ?? request.UserHostAddress;
                     log.TraceID = context.GetTraceID();
                     Uri uri = request.Url;
                     log.RequestUrl = uri.Scheme + "://" + uri.Authority + HttpUtility.UrlDecode(request.RawUrl);

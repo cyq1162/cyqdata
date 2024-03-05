@@ -156,7 +156,7 @@ namespace System.Web
         /// <returns></returns>
         public string GetTraceID()
         {
-            string tid = request.Headers["X-Request-ID"];
+            string tid = request.GetHeader("X-Request-ID");
             if (!string.IsNullOrEmpty(tid))
             {
                 return tid;

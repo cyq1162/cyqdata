@@ -89,17 +89,17 @@ namespace CYQ.Data
                     return appConfigs[item];
                 }
                 string value = appSettings[item];
-                if (string.IsNullOrEmpty(value))
+                if (value == null)
                 {
                     if (item.IndexOf('.') > 0)
                     {
                         value = appSettings[item.Replace(".", "")];
-                        if (string.IsNullOrEmpty(value))
+                        if (value == null)
                         {
                             value = appSettings[item.Substring(item.IndexOf('.') + 1)];
                         }
                     }
-                    if (string.IsNullOrEmpty(value) && AppConst.IsNetCore)
+                    if (value == null && AppConst.IsNetCore)
                     {
                         value = Convert.ToString(ConfigurationManager.GetSection(item));
                     }

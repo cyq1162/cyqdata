@@ -144,7 +144,7 @@ namespace CYQ.Data.Tool
             }
         }
         */
-        private static List<Thread> globalThread = new List<Thread>();
+        public static List<Thread> globalThread = new List<Thread>();
         private static List<string> globalThreadKey = new List<string>();
         private static readonly object lockThreadObj = new object();
         /// <summary>

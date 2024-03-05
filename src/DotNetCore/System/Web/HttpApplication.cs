@@ -9,7 +9,7 @@ namespace System.Web
     /// </summary>
     public class HttpApplication
     {
-        private static Dictionary<string, HttpApplication> keyValues= new Dictionary<string, HttpApplication>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, HttpApplication> keyValues = new Dictionary<string, HttpApplication>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 根据指定 Key 获得唯一实例
         /// </summary>
@@ -17,7 +17,7 @@ namespace System.Web
         /// <returns></returns>
         public static HttpApplication GetInstance(string key)
         {
-            if(keyValues.ContainsKey(key)) return keyValues[key];
+            if (keyValues.ContainsKey(key)) return keyValues[key];
             HttpApplication instance = new HttpApplication();
             keyValues.Add(key, instance);
             return instance;
@@ -50,16 +50,22 @@ namespace System.Web
         {
             try
             {
-                BeginRequest?.Invoke(this, null);
-                if (!Context.Items.Contains("IsRunToEnd"))
+                if (BeginRequest != null)
                 {
-                    AcquireRequestState?.Invoke(this, null);
+                    BeginRequest(this, null);
+                }
+                if (AcquireRequestState != null)
+                {
+                    AcquireRequestState(this, null);
                 }
             }
             catch (Exception err)
             {
                 Context.Error = err;
-                Error?.Invoke(this, null);//这个只有异常才调用，所以不需要在这里调用
+                if (this.Error != null)
+                {
+                    Error(this, null);//这个只有异常才调用，所以不需要在这里调用
+                }
             }
 
         }
