@@ -683,7 +683,7 @@ namespace CYQ.Data.Json
             {
                 Fill(obj as ValueType);
             }
-            else if (obj is String)
+            else if (obj is String || obj is Type || obj is Type[])
             {
                 Fill(Convert.ToString(obj));
             }

@@ -10,15 +10,14 @@ using System.Text;
 namespace CYQ.Data.Emit
 {
     /// <summary>
-    /// 实体转字典(先取 PropertyInfo，否则再取：FieldInfo)
+    /// 实体转字典 Dictionary&lt;string, object&gt;
     /// </summary>
-    internal class EntityToDictionary
+    public static partial class EntityToDictionary
     {
         static Dictionary<Type, Func<object, Dictionary<string, object>>> typeFuncs = new Dictionary<Type, Func<object, Dictionary<string, object>>>();
 
-
         private static readonly object lockDicObj = new object();
-        public static Func<object, Dictionary<string, object>> Delegate(Type entityType)
+        internal static Func<object, Dictionary<string, object>> Delegate(Type entityType)
         {
             if (typeFuncs.ContainsKey(entityType))
             {
@@ -30,7 +29,7 @@ namespace CYQ.Data.Emit
                 {
                     return typeFuncs[entityType];
                 }
-                var dynamicMethod= CreateDynamicMethod(entityType);
+                var dynamicMethod = CreateDynamicMethod(entityType);
                 var func = (Func<object, Dictionary<string, object>>)dynamicMethod.CreateDelegate(typeof(Func<object, Dictionary<string, object>>));
                 typeFuncs.Add(entityType, func);
                 return func;
@@ -54,6 +53,10 @@ namespace CYQ.Data.Emit
                 {
                     if (property.CanRead)
                     {
+                        if (property.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
+                        {
+                            continue;
+                        }
                         ilGen.Emit(OpCodes.Ldloc_0);//load Dicationary 
                         ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
                                                                  //----------------------------------------------------
@@ -82,6 +85,10 @@ namespace CYQ.Data.Emit
             {
                 foreach (var field in fields)
                 {
+                    if (field.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
+                    {
+                        continue;
+                    }
                     ilGen.Emit(OpCodes.Ldloc_0);
                     ilGen.Emit(OpCodes.Ldstr, field.Name);
                     //----------------------------------------------------
@@ -106,6 +113,22 @@ namespace CYQ.Data.Emit
             ilGen.Emit(OpCodes.Ldloc_0);
             ilGen.Emit(OpCodes.Ret);
             return dynamicMethod;
+        }
+    }
+
+    public static partial class EntityToDictionary
+    {
+        /// <summary>
+        /// 调用返回字典数据。
+        /// </summary>
+        public static Dictionary<string, object> Invoke(object entity)
+        {
+            if (entity == null) { return null; }
+            var type = entity.GetType();
+            if (type.IsArray || type.IsValueType || type.IsGenericType) { return null; }
+            var func = Delegate(type);
+            if (func == null) { return null; };
+            return func(entity);
         }
     }
 }

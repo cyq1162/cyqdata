@@ -36,6 +36,10 @@ namespace CYQ.Data.Tool
         /// <returns></returns>
         public static List<PropertyInfo> GetPropertyList(Type t)
         {
+            if (t.FullName.StartsWith("System.Reflection.")) { return null; }
+            if (t.FullName.StartsWith("System.Runtime.")) { return null; }
+            if (t.FullName.StartsWith("System.Diagnostics.")) { return null; }
+            if (t.BaseType != null && t.BaseType.Name == "Attribute") { return null; }
             bool isAnonymousType = t.Name.Contains("f__AnonymousType");//忽略匿名类型
             string key = t.FullName;// t.GUID.ToString();由泛型 XX<T> 引起的如： Ge<A> 和 Ge<B> ,Guid名相同,所以用FullName
             if (!isAnonymousType && propCache.ContainsKey(key))
@@ -67,6 +71,10 @@ namespace CYQ.Data.Tool
         /// </summary>
         public static List<FieldInfo> GetFieldList(Type t)
         {
+            if (t.FullName.StartsWith("System.Reflection.")) { return null; }
+            if (t.FullName.StartsWith("System.Runtime.")) { return null; }
+            if (t.FullName.StartsWith("System.Diagnostics.")) { return null; }
+            if (t.BaseType != null && t.BaseType.Name == "Attribute") { return null; }
             string key = t.GUID.ToString();
             if (fieldCache.ContainsKey(key))
             {

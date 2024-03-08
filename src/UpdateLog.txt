@@ -1121,7 +1121,10 @@
 版本简要：针对 Taurus.MVC 进行全方位细节进行性能优化。【V5.9.2.6】
 850：新增：HttpRequest 扩展方法：GetHeader、GetForm、GetQuery、GetCookie 等。（2024-03-04）
 851：优化：XHtmlAction OutXml 等多项细节优化。（2024-03-05）
-
+-------------------------------------------------------------------------------------
+852：新增 HttpPostedFileCreator.Create 用于创建 HttpPostedFile 实例。（因 Taurus RpcProxy 添加）（2024-03-07）【V5.9.2.7】
+853：新增：开放几个和实体转换相关的 Emit 接口。（2024-03-08）
+854：修正：JsonHelper.ToJson 未处理 IgnoreJson 属性标记的问题、其它优化。（2024-03-08）
 
 JsonSplit.To(...)
 
@@ -1134,3 +1137,6 @@ DataReader To List
 AppConfig 中常量=》AppConst 中。
 
 Init 反射类。
+
+1、文件上传
+2、过滤系统的控制器。

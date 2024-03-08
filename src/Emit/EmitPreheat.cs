@@ -11,12 +11,13 @@ namespace CYQ.Data.Emit
     public static class EmitPreheat
     {
         /// <summary>
-        /// 添加对需要预热的类型对象
+        /// 添加对需要预热的实体类型对象。
         /// </summary>
-        /// <param name="type">预热的类型对象</param>
+        /// <param name="type">预热的实体类型对象</param>
         public static void Add(Type type)
         {
-            if (type == null) return;
+            if (type == null || type.IsValueType) return;
+            if (type.FullName.StartsWith("System.")) { return; }
             var sysType = ReflectTool.GetSystemType(ref type);
             if (sysType == SysType.Custom)
             {

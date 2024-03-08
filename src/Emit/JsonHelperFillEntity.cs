@@ -47,12 +47,16 @@ namespace CYQ.Data.Emit
             var ilGen = dynamicMethod.GetILGenerator();
 
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
-            if (properties.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 foreach (var property in properties)
                 {
                     if (property.CanRead)
                     {
+                        if (property.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
+                        {
+                            continue;
+                        }
                         ilGen.Emit(OpCodes.Ldarg_0);//load JsonHelper 
                         ilGen.Emit(OpCodes.Ldstr, property.Name);//load name
                                                                  //----------------------------------------------------
@@ -65,10 +69,14 @@ namespace CYQ.Data.Emit
             }
 
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
-            if (fields.Count > 0)
+            if (fields != null && fields.Count > 0)
             {
                 foreach (var field in fields)
                 {
+                    if (field.GetCustomAttributes(typeof(JsonIgnoreAttribute), true).Length > 0)
+                    {
+                        continue;
+                    }
                     ilGen.Emit(OpCodes.Ldarg_0);
                     ilGen.Emit(OpCodes.Ldstr, field.Name);
                     //----------------------------------------------------

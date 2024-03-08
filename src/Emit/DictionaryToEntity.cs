@@ -12,14 +12,14 @@ namespace CYQ.Data.Emit
     /// <summary>
     /// 字典转实体（遍历实体所有成员变量：FieldInfo）
     /// </summary>
-    internal class DictionaryToEntity
+    internal static partial class DictionaryToEntity
     {
 
         static Dictionary<Type, Func<Dictionary<string, string>, object>> typeFuncs = new Dictionary<Type, Func<Dictionary<string, string>, object>>();
 
         private static readonly object lockObj = new object();
 
-        public static Func<Dictionary<string, string>, object> Delegate(Type t)
+        internal static Func<Dictionary<string, string>, object> Delegate(Type t)
         {
             if (typeFuncs.ContainsKey(t))
             {
@@ -69,7 +69,7 @@ namespace CYQ.Data.Emit
             gen.Emit(OpCodes.Stloc_0, instance);//t0= new T();
 
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
-            if (properties.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 foreach (var property in properties)
                 {
@@ -77,7 +77,7 @@ namespace CYQ.Data.Emit
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
-            if (fields.Count > 0)
+            if (fields != null && fields.Count > 0)
             {
                 foreach (var field in fields)
                 {
@@ -180,4 +180,20 @@ namespace CYQ.Data.Emit
          */
 
     }
+
+    //public static partial class DictionaryToEntity
+    //{
+    //    /// <summary>
+    //    /// 调用返回字典数据。
+    //    /// </summary>
+    //    public static T Invoke<T>(object entity)
+    //    {
+    //        if (entity == null) { return null; }
+    //        var type = entity.GetType();
+    //        if (type.IsArray || type.IsValueType || type.IsGenericType) { return null; }
+    //        var func = Delegate(type);
+    //        if (func == null) { return null; };
+    //        return func(entity);
+    //    }
+    //}
 }

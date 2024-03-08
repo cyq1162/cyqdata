@@ -1,83 +1,21 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CYQ.Data;
+using Microsoft.AspNetCore.Http;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace System.Web
 {
-    /// <summary>
-    /// 新增（为了Taurus.MVC 动态创建HttpPostedFile参数）
-    /// </summary>
-    internal class FormFile : IFormFile
-    {
-        string path;
-        public FormFile(string path)
-        {
-            this.path = path;
-        }
-        public string ContentType
-        {
-            get
-            {
-                return "image/" + Path.GetExtension(path).ToLower().Substring(1);
-            }
-        }
-
-        public string ContentDisposition => null;
-
-        public IHeaderDictionary Headers => null;
-
-        private long length = -1;
-        public long Length
-        {
-            get
-            {
-                if (length == -1)
-                {
-                    Stream stream = OpenReadStream();
-                    length = stream.Length;
-                    stream.Close();
-                }
-                return length;
-            }
-        }
-
-        public string Name => FileName;
-
-        public string FileName
-        {
-            get
-            {
-                return Path.GetFileName(path);
-            }
-        }
-
-        public void CopyTo(Stream target)
-        {
-            Stream stream = OpenReadStream();
-            stream.CopyTo(target);
-            stream.Close();
-        }
-
-        public Task CopyToAsync(Stream target, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-        public Stream OpenReadStream()
-        {
-            return File.OpenRead(path);
-        }
-    }
     public class HttpPostedFile
     {
         IFormFile file;
-        public HttpPostedFile(IFormFile file)
+        internal HttpPostedFile(IFormFile file)
         {
             this.file = file;
         }
-        public HttpPostedFile(string path)
+        internal HttpPostedFile(string filePath)
         {
-            file = new FormFile(path);
+            file = new FormFile(filePath);
         }
         // 摘要:
         //     获取上载文件的大小（以字节为单位）。
@@ -120,6 +58,11 @@ namespace System.Web
         //     属性设置为 true，但 fileName 不是绝对路径。
         public void SaveAs(string fileName)
         {
+            string rootPath = AppConst.WebRootPath;
+            if (!fileName.StartsWith(rootPath))
+            {
+                fileName = rootPath + fileName;
+            }
             using (FileStream fs = System.IO.File.Create(fileName))
             {
                 file.CopyTo(fs);

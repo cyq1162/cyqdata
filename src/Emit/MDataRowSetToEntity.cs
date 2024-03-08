@@ -55,7 +55,7 @@ namespace CYQ.Data.Emit
             gen.Emit(OpCodes.Stloc_0);//t= new T();
 
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
-            if (properties.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 foreach (var property in properties)
                 {
@@ -63,7 +63,7 @@ namespace CYQ.Data.Emit
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
-            if (fields.Count > 0)
+            if (fields != null && fields.Count > 0)
             {
                 foreach (var field in fields)
                 {

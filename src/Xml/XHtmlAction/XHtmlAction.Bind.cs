@@ -20,7 +20,7 @@ namespace CYQ.Data.Xml
 
         #region 加载表格循环方式
 
-        public delegate string SetForeachEventHandler(string text, MDictionary<string, string> values, int rowIndex);
+        public delegate string SetForeachEventHandler(string text, Dictionary<string, string> values, int rowIndex);
         /// <summary>
         /// 对于SetForeach函数调用的格式化事件
         /// </summary>
@@ -129,7 +129,7 @@ namespace CYQ.Data.Xml
                 for (int k = 0; k < table.Rows.Count; k++)
                 {
                     #region 循环每一行
-                    MDictionary<string, string> values = GetFromRow(table.Rows[k]);
+                    Dictionary<string, string> values = GetFromRow(table.Rows[k]);
                     string newText = text;
                     if (eventOnForeach != null)
                     {
@@ -189,9 +189,9 @@ namespace CYQ.Data.Xml
         /// <summary>
         /// 能减少反射就减少反射
         /// </summary>
-        private MDictionary<string, string> GetFromRow(MDataRow row)
+        private Dictionary<string, string> GetFromRow(MDataRow row)
         {
-            MDictionary<string, string> keyValuePairs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in row)
             {
                 keyValuePairs.Add(item.ColumnName, item.StringValue);

@@ -8,6 +8,7 @@ using System.Text;
 using System.Web;
 using System.Threading;
 using CYQ.Data.Json;
+using System.ComponentModel;
 
 namespace CYQ.Data.Xml
 {
@@ -835,7 +836,12 @@ namespace CYQ.Data.Xml
                             for (int i = xnl.Count - 1; i >= 0; i--)
                             {
                                 xNode = xnl[i];
-                                switch (GetAttrValue(xnl[i], key))
+                                string attrValue = GetAttrValue(xnl[i], key);
+                                if (attrValue.IndexOf("${") > -1)
+                                {
+                                    attrValue = GetCMSValue(attrValue, null, KeyValue);
+                                }
+                                switch (attrValue)
                                 {
                                     case "0":
                                         RemoveAttr(xNode, key);
@@ -843,6 +849,9 @@ namespace CYQ.Data.Xml
                                         break;
                                     case "1":
                                         Remove(xNode);
+                                        break;
+                                    default:
+                                        RemoveAttr(xNode, key);
                                         break;
                                 }
 
@@ -876,11 +885,11 @@ namespace CYQ.Data.Xml
                             //html = html.Replace(" xmlns=\"\"", string.Empty);
                         }
                     }
-                    if (html.Contains("&"))
+                    if (html.Contains("&amp;"))
                     {
                         //先把&符号替换回来，再替换后面的。
                         //html = html.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");//html标签符号。
-                        sb.Replace("&amp;", "&").Replace("&gt;", ">").Replace("&lt;", "<");
+                        sb.Replace("&amp;", "&");//.Replace("&gt;", ">").Replace("&lt;", "<");
                     }
                     //if (!string.IsNullOrEmpty(docTypeHtml))
                     //{
@@ -920,7 +929,7 @@ namespace CYQ.Data.Xml
         /// <param name="html">需要被替换的内容</param>
         /// <param name="values">用于值替换搜索的字典数据</param>
         /// <returns></returns>
-        private string FormatHtml(string html, StringBuilder sb, MDictionary<string, string> values)
+        private string FormatHtml(string html, StringBuilder sb, Dictionary<string, string> values)
         {
             if (sb == null)
             {
@@ -937,59 +946,16 @@ namespace CYQ.Data.Xml
                     foreach (Match match in matchs)
                     {
                         //原始的占位符 ${txt#name:xx#xx}
-                        string value = match.Groups[0].Value;//${txt#name:xx#xx}，${'aaa'+txt#name:xx#xx+'bbb'}
-                        if (string.IsNullOrEmpty(value) || keys.Contains(value))
+                        string cmsCode = match.Groups[0].Value;//${txt#name:xx#xx}，${'aaa'+txt#name:xx#xx+'bbb'}
+                        if (string.IsNullOrEmpty(cmsCode) || keys.Contains(cmsCode))
                         {
                             continue;
                         }
-                        keys.Add(value);
-
-                        #region 分解占位符
-                        //先处理+号 ${'aaa'+txt#name:xx#xx+'bbb'} formatter= 'aaa'{0}
-                        string formatter = "", key = "";
-                        string[] items = match.Groups[1].Value.Trim().Split('+');//['aa',txt#name]
-                        foreach (string item in items)
-                        {
-                            if (item[0] == '"')
-                            {
-                                formatter += item.Trim('"');
-                            }
-                            else if (item[0] == '\'')
-                            {
-                                formatter += item.Trim('\'');
-                            }
-                            else
-                            {
-                                if (!string.IsNullOrEmpty(key))
-                                {
-                                    break;//只允许存在一个key : txt#name:这是描述说明。
-                                }
-                                formatter += "{0}";
-                                key = item.Trim();
-                            }
-                        }
-                        string columnName = key.Split(':')[0];//name
-                        #endregion
-
-                        string replaceValue = "";
-
-                        #region 获取占位符的值
-                        if (values != null)
-                        {
-                            replaceValue = GetValue1(columnName, values);
-                        }
-                        if (string.IsNullOrEmpty(replaceValue))
-                        {
-                            replaceValue = GetValueByKeyValue2(columnName);
-                        }
-                        if (string.IsNullOrEmpty(replaceValue))
-                        {
-                            replaceValue = GetValueByRequest3(columnName, key);
-                        }
-                        #endregion
-                        sb.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
+                        keys.Add(cmsCode);
+                        string cmsConent = match.Groups[1].Value;//['aa',txt#name]
+                        string cmsValue = GetCMSValue(cmsCode, cmsConent, values);
+                        sb.Replace(cmsCode, cmsValue);
                         //html = html.Replace(value, string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue));
-
                     }
                     keys.Clear();
                     keys = null;
@@ -1026,7 +992,71 @@ namespace CYQ.Data.Xml
 
             return sb.ToString();
         }
-        private string GetValue1(string columnName, MDictionary<string, string> values)//, MDataRow row
+
+        private string GetCMSValue(string cmsCode, string cmsConent, Dictionary<string, string> values)
+        {
+            //cmsCode：${txt#name:xx#xx}
+            //cmsContent：txt#name:xx#xx
+            #region 分解占位符
+            if (string.IsNullOrEmpty(cmsCode)) { return string.Empty; }
+            if (string.IsNullOrEmpty(cmsConent))
+            {
+                cmsConent = cmsCode.Substring(2, cmsCode.Length - 3);
+            }
+            //先处理+号 ${'aaa'+txt#name:xx#xx+'bbb'} formatter= 'aaa'{0}
+            string formatter = "", key = "";
+            string[] items = cmsConent.Trim().Split('+');//['aa',txt#name]
+            foreach (string item in items)
+            {
+                if (item[0] == '"')
+                {
+                    formatter += item.Trim('"');
+                }
+                else if (item[0] == '\'')
+                {
+                    formatter += item.Trim('\'');
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        break;//只允许存在一个key : txt#name:这是描述说明。
+                    }
+                    formatter += "{0}";
+                    key = item.Trim();
+                }
+            }
+            string columnName = key.Split(':')[0];//name
+            #endregion
+
+            string replaceValue = "";
+
+            #region 获取占位符的值
+            if (values != null)
+            {
+                replaceValue = GetValue1(columnName, values);
+            }
+            if (string.IsNullOrEmpty(replaceValue))
+            {
+                replaceValue = GetValueByKeyValue2(columnName);
+            }
+            if (string.IsNullOrEmpty(replaceValue))
+            {
+                replaceValue = GetValueByRequest3(columnName, key);
+            }
+            if (replaceValue.Contains("<"))
+            {
+                replaceValue = replaceValue.Replace("<", "&lt;");
+            }
+            if (replaceValue.Contains(">"))
+            {
+                replaceValue = replaceValue.Replace(">", "&gt;");
+            }
+            #endregion
+            return string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue);
+        }
+
+        private string GetValue1(string columnName, Dictionary<string, string> values)//, MDataRow row
         {
             if (values.ContainsKey(columnName))//值可能被格式化过，所以优先取值。
             {
@@ -1037,7 +1067,15 @@ namespace CYQ.Data.Xml
                 int i = 0;
                 if (int.TryParse(columnName, out i) && i < values.Count)
                 {
-                    return values[i]; //数字
+
+                    foreach (var item in values)
+                    {
+                        if (i == 0)
+                        {
+                            return item.Value;
+                        }
+                        i--;
+                    }
                 }
             }
             //else

@@ -11,16 +11,16 @@ using System.Data.Common;
 namespace CYQ.Data.Emit
 {
     /// <summary>
-    /// 字典转实体（遍历实体所有成员变量：FieldInfo）
+    /// DbDataReader 转实体
     /// </summary>
-    internal class DbDataReaderToEntity
+    internal static partial class DbDataReaderToEntity
     {
 
         static Dictionary<Type, Func<DbDataReader, object>> typeFuncs = new Dictionary<Type, Func<DbDataReader, object>>();
 
         private static readonly object lockObj = new object();
 
-        public static Func<DbDataReader, object> Delegate(Type t)
+        internal static Func<DbDataReader, object> Delegate(Type t)
         {
             if (typeFuncs.ContainsKey(t))
             {
@@ -45,8 +45,8 @@ namespace CYQ.Data.Emit
         /// <param name="entityType">转换的目标类型</param>
         private static DynamicMethod CreateDynamicMethod(Type entityType)
         {
-            
-           
+
+
             #region 创建动态方法
 
             var readerType = typeof(DbDataReader);
@@ -57,7 +57,7 @@ namespace CYQ.Data.Emit
 
             DynamicMethod method = new DynamicMethod("DbDataReaderToEntity", typeof(object), new Type[] { readerType }, entityType);
             var constructor = entityType.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { }, null);
-           
+
             ILGenerator gen = method.GetILGenerator();//开始编写IL方法。
             if (constructor == null)
             {
@@ -71,7 +71,7 @@ namespace CYQ.Data.Emit
             gen.Emit(OpCodes.Stloc_0, instance);//t0= new T();
 
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
-            if (properties.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 foreach (var property in properties)
                 {
@@ -79,7 +79,7 @@ namespace CYQ.Data.Emit
                 }
             }
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
-            if (fields.Count > 0)
+            if (fields != null && fields.Count > 0)
             {
                 foreach (var field in fields)
                 {
@@ -183,4 +183,17 @@ namespace CYQ.Data.Emit
          */
 
     }
+    //internal static partial class DbDataReaderToEntity
+    //{
+    //    /// <summary>
+    //    /// 调用返回实体类。
+    //    /// </summary>
+    //    public static T Invoke<T>(DbDataReader reader)
+    //    {
+    //        if (reader == null) { return default(T); }
+    //        var func = Delegate(typeof(T));
+    //        if (func == null) { return default(T); };
+    //        return (T)func(reader);
+    //    }
+    //}
 }

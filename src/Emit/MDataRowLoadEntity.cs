@@ -53,7 +53,7 @@ namespace CYQ.Data.Emit
             var setMethod = typeof(MDataRow).GetMethod("SetItemValue", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { typeof(string), typeof(object), typeof(int) }, null);
             var toStringMethod = typeof(Convert).GetMethod("ToString", new Type[] { typeof(object) });
             List<PropertyInfo> properties = ReflectTool.GetPropertyList(entityType);
-            if (properties.Count > 0)
+            if (properties != null && properties.Count > 0)
             {
                 foreach (var property in properties)
                 {
@@ -80,7 +80,7 @@ namespace CYQ.Data.Emit
             }
 
             List<FieldInfo> fields = ReflectTool.GetFieldList(entityType);
-            if (fields.Count > 0)
+            if (fields != null && fields.Count > 0)
             {
                 foreach (var field in fields)
                 {
