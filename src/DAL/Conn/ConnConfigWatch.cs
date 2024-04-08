@@ -16,7 +16,7 @@ namespace CYQ.Data
         /// <summary>
         /// 监控列表。
         /// </summary>
-        private static MDictionary<string, string> watchList = new MDictionary<string, string>();
+        private static Dictionary<string, string> watchList = new Dictionary<string, string>();
         private static readonly object o = new object();
         /// <summary>
         /// 开启加载一个配置。
@@ -37,16 +37,16 @@ namespace CYQ.Data
                 WatchConfig config = JsonHelper.ToEntity<WatchConfig>(JsonHelper.GetValue(json, connName));
                 if (config != null && !string.IsNullOrEmpty(config.Master))
                 {
-                    AppConfig.SetConn(connName, config.Master);
+                    AppConfig.SetConfigConn(connName, config.Master);
                     if (!string.IsNullOrEmpty(config.Backup))
                     {
-                        AppConfig.SetConn(connName + "_Bak", config.Backup);
+                        AppConfig.SetConfigConn(connName + "_Bak", config.Backup);
                     }
                     if (config.Slave != null && config.Slave.Length > 0)
                     {
                         for (int i = 0; i < config.Slave.Length; i++)
                         {
-                            AppConfig.SetConn(connName + "_Slave" + (i + 1), config.Slave[i]);
+                            AppConfig.SetConfigConn(connName + "_Slave" + (i + 1), config.Slave[i]);
                         }
                     }
                     if (!watchList.ContainsValue(connPath))
@@ -75,11 +75,11 @@ namespace CYQ.Data
                 foreach (KeyValuePair<string, string> item in dic)
                 {
                     //移除所有缓存的Key
-                    AppConfig.SetConn(item.Key, null);
-                    AppConfig.SetConn(item.Key + "_Bak", null);
+                    AppConfig.SetConfigConn(item.Key, null);
+                    AppConfig.SetConfigConn(item.Key + "_Bak", null);
                     for (int i = 1; i < 1000; i++)
                     {
-                        if (!AppConfig.SetConn(item.Key + "_Slave" + i, null))
+                        if (!AppConfig.SetConfigConn(item.Key + "_Slave" + i, null))
                         {
                             break;
                         }

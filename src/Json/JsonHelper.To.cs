@@ -107,6 +107,12 @@ namespace CYQ.Data.Json
                 case "MDataTable": return MDataTable.CreateFrom(json, null, op);
                 case "DataTable": return MDataTable.CreateFrom(json, null, op).ToDataTable();
                 case "MDataRow": return MDataRow.CreateFrom(json, null, BreakOp.None, op);
+                case "Dictionary`2":
+                    if (t == typeof(Dictionary<string, string>))
+                    {
+                        return Split(json, op);
+                    }
+                    break;
             }
             if (t.IsValueType || t.Name == "String")
             {

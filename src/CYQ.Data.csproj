@@ -11,7 +11,7 @@
     <RootNamespace>CYQ.Data</RootNamespace>
     <AssemblyName>CYQ.Data</AssemblyName>
     <SignAssembly>false</SignAssembly>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
@@ -134,6 +134,8 @@
     <Compile Include="DistributedCache\CacheType.cs" />
     <Compile Include="DistributedCache\DistributedCache.cs" />
     <Compile Include="DotNet\Action\AppConst.cs" />
+    <Compile Include="DotNet\DAL\DbCommandExtend.cs" />
+    <Compile Include="DotNet\DAL\DbDataReaderExtend.cs" />
     <Compile Include="DotNet\ExtensionAttribute.cs" />
     <Compile Include="DotNet\HttpContexExtend.cs">
       <SubType>Code</SubType>
@@ -141,6 +143,7 @@
     <Compile Include="DotNet\HttpPostedFileExtend.cs" />
     <Compile Include="DotNet\HttpRequestExtend.cs" />
     <Compile Include="DotNet\ReaderWriterLockSlim.cs" />
+    <Compile Include="DotNet\Tool\IO\IOHelperAsync.cs" />
     <Compile Include="Emit\DbDataReaderToEntity.cs" />
     <Compile Include="Emit\Delegate\Action.cs" />
     <Compile Include="Emit\Delegate\Func.cs" />
@@ -347,9 +350,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="DotNetCore\System\Web\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

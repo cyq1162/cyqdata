@@ -563,7 +563,10 @@ namespace CYQ.Data.Xml
             {
                 return sourceValue;
             }
-            newValue = newValue.Replace(ValueReplace.Source, sourceValue);
+            if (newValue.Contains(ValueReplace.Source))
+            {
+                newValue = newValue.Replace(ValueReplace.Source, sourceValue);
+            }
             if (IsUseLangSplit)
             {
                 int split = newValue.IndexOf(ValueReplace.LangSplit);
@@ -989,7 +992,7 @@ namespace CYQ.Data.Xml
                 }
                 #endregion
             }
-
+            if (values == null) { return null; }
             return sb.ToString();
         }
 
@@ -1039,19 +1042,19 @@ namespace CYQ.Data.Xml
             if (string.IsNullOrEmpty(replaceValue))
             {
                 replaceValue = GetValueByKeyValue2(columnName);
+                if (string.IsNullOrEmpty(replaceValue))
+                {
+                    replaceValue = GetValueByRequest3(columnName, key);
+                }
             }
-            if (string.IsNullOrEmpty(replaceValue))
-            {
-                replaceValue = GetValueByRequest3(columnName, key);
-            }
-            if (replaceValue.Contains("<"))
-            {
-                replaceValue = replaceValue.Replace("<", "&lt;");
-            }
-            if (replaceValue.Contains(">"))
-            {
-                replaceValue = replaceValue.Replace(">", "&gt;");
-            }
+            //if (replaceValue.Contains("<"))
+            //{
+            //    replaceValue = replaceValue.Replace("<", "&lt;");
+            //}
+            //if (replaceValue.Contains(">"))
+            //{
+            //    replaceValue = replaceValue.Replace(">", "&gt;");
+            //}
             #endregion
             return string.IsNullOrEmpty(replaceValue) ? "" : string.Format(formatter, replaceValue);
         }

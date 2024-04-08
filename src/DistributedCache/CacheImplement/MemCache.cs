@@ -20,11 +20,11 @@ namespace CYQ.Data.Cache
         internal MemCache()
         {
             client = MemcachedClient.Create(AppConfig.MemCache.Servers);
-            //if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
-            //{
-            //    MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
-            //    client.HostServer.HostServerBak = clientBak.HostServer;
-            //}
+            if (!string.IsNullOrEmpty(AppConfig.MemCache.ServersBak))
+            {
+                MemcachedClient clientBak = MemcachedClient.Create(AppConfig.MemCache.ServersBak);
+                client.HostServer.HostServerBak = clientBak.HostServer;
+            }
         }
         public override void RefleshConfig(string newConfigValue)
         {

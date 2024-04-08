@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using CYQ.Data.Tool;
 using System.Threading;
+using Microsoft.JScript;
 
 namespace CYQ.Data.Cache
 {
@@ -33,11 +34,11 @@ namespace CYQ.Data.Cache
                 return serverType;
             }
         }
+        private HostServer hostServerBak;
         /// <summary>
         /// 备份的主机池，如果某主机挂了，在配置了备份的情况下，会由备份提供服务。
         /// </summary>
-        //private HostServer hostServerBak;
-        //public HostServer HostServerBak { get { return hostServerBak; } set { hostServerBak = value; } }
+        public HostServer HostServerBak { get { return hostServerBak; } set { hostServerBak = value; } }
 
         //Expose the socket pools.
         //private HostInstance[] hostList;
@@ -443,11 +444,18 @@ namespace CYQ.Data.Cache
         //}
         internal HostNode GetHost(uint hash)
         {
+            int serverCount = hostList.Count;
             //Quick return if we only have one host.
-            if (hostList.Count == 1)
+            switch (serverCount)
             {
-                return hostList[0];
+                case 1:
+                    return hostList[0];
+                case 2:
+                    int hashIndex = (int)Math.Abs(hash % serverCount);
+                    return hostList[hashIndex];
+
             }
+
             uint index = 0;
             int i = 0;
             lock (this)

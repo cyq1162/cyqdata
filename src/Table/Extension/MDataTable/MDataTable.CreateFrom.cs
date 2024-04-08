@@ -47,7 +47,7 @@ namespace CYQ.Data.Table
                 {
                     try
                     {
-                        dt = sdr.GetSchemaTable();
+                        dt = sdr.GetSchemaTableSync();
                     }
                     catch { noSchema = true; }
                 }
@@ -304,7 +304,7 @@ namespace CYQ.Data.Table
         }
         public static MDataTable CreateFrom(string jsonOrXml, MDataColumn mdc)
         {
-            return CreateFrom(jsonOrXml, mdc, JsonHelper.DefaultEscape);
+            return CreateFrom(jsonOrXml, mdc, EscapeOp.No);
         }
         /// <summary>
         /// 从Json或Xml字符串反加载成MDataTable

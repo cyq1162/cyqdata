@@ -563,12 +563,13 @@ namespace CYQ.Data.UI
         {
             try
             {
-                if (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Handler != null)
+                var context = System.Web.HttpContext.Current;
+                if (context != null && context.Handler != null)
                 {
                     string columnName = cell.ColumnName;
                     bool isContainLine = columnName.Contains("_");
                     string key = string.Empty, noLineKey = null;
-                    System.Web.HttpRequest rq = System.Web.HttpContext.Current.Request;
+                    System.Web.HttpRequest rq = context.Request;
                     foreach (string autoPrefix in autoPrefixList)
                     {
                         key = autoPrefix + columnName;
@@ -580,7 +581,8 @@ namespace CYQ.Data.UI
                         }
                         if (requestValue != null)
                         {
-                            if (requestValue.Trim().Length == 0)//空字符串
+                            requestValue = requestValue.Trim();
+                            if (requestValue.Length == 0)//空字符串
                             {
                                 #region Set Value
                                 DataGroupType group = DataType.GetGroup(cell.Struct.SqlType);
@@ -625,7 +627,16 @@ namespace CYQ.Data.UI
                             }
                             else
                             {
-                                cell.Value = requestValue.Trim(' ');
+                                //对网页请求标签，进行格式转换。
+                                if (requestValue.Contains("<"))
+                                {
+                                    requestValue = requestValue.Replace("<", "&lt;");
+                                }
+                                if (requestValue.Contains(">"))
+                                {
+                                    requestValue = requestValue.Replace(">", "&gt;");
+                                }
+                                cell.Value = requestValue;
                             }
                             break;
                         }

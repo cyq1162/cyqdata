@@ -37,13 +37,16 @@ namespace CYQ.Data
         }
 
         #region 基方法
-        private static MDictionary<string, string> appConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private static MDictionary<string, string> connConfigs = new MDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        //internal static void Clear()
-        //{
-        //    appConfigs.Clear();
-        //    connConfigs.Clear();
-        //}
+
+        #region 代码层级
+        /// <summary>
+        /// 通过代码配置键值对【一级缓存】，该配置不随配置文件改变而清空。
+        /// </summary>
+        private static Dictionary<string, string> appDicByCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
+        /// 通过代码配置数据库链接
+        /// </summary>
+        private static Dictionary<string, string> connDicByCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         /// <summary>
         /// 设置Web.config或App.config的值 value为null时移除缓存。
         /// </summary>
@@ -51,21 +54,134 @@ namespace CYQ.Data
         {
             if (string.IsNullOrEmpty(key)) { return false; }
             //if (OnAppChangeEvent != null) { OnAppChangeEvent(key, value); }
-            if (value == null)
+            try
             {
-                return appConfigs.Remove(key);
+                //if (value == null)
+                //{
+                //    return appDicByConfig.Remove(key);
+                //}
+                if (appDicByCode.ContainsKey(key))
+                {
+                    appDicByCode[key] = value;
+                }
+                else
+                {
+                    appDicByCode.Add(key, value);
+                }
             }
-            if (appConfigs.ContainsKey(key))
+            catch
             {
-                appConfigs[key] = value;
-            }
-            else
-            {
-                appConfigs.Add(key, value);
-            }
 
+
+            }
             return true;
         }
+        /// <summary>
+        /// 添加自定义链接（内存有效，并未写入config文件） value为null时移除缓存
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="connectionString">链接字符串</param>
+        public static bool SetConn(string name, string connectionString)
+        {
+            if (string.IsNullOrEmpty(name)) { return false; }
+            //if (OnConnChangeEvent != null) { OnConnChangeEvent(name, connectionString); }
+            try
+            {
+                //if (connectionString == null)
+                //{
+                //    return connDicByConfig.Remove(name);
+                //}
+                if (connDicByCode.ContainsKey(name))
+                {
+                    connDicByCode[name] = connectionString;
+                }
+                else
+                {
+                    connDicByCode.Add(name, connectionString);
+                }
+            }
+            catch
+            {
+
+            }
+            return true;
+        }
+
+        #endregion
+
+
+        #region 配置层级
+        /// <summary>
+        /// 通过配置文件读取键值对【二级缓存】，该配置随配置文件改变而清空。
+        /// </summary>
+        private static Dictionary<string, string> appDicByConfig = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, string> connDicByConfig = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        internal static bool SetConfigApp(string key, string value)
+        {
+            try
+            {
+                if (value == null)
+                {
+                    return appDicByConfig.Remove(key);
+                }
+                if (appDicByConfig.ContainsKey(key))
+                {
+                    appDicByConfig[key] = value;
+                }
+                else
+                {
+                    appDicByConfig.Add(key, value);
+                }
+            }
+            catch
+            {
+
+
+            }
+            return true;
+        }
+
+        internal static bool SetConfigConn(string name, string connectionString)
+        {
+            try
+            {
+                if (connectionString == null)
+                {
+                    return connDicByConfig.Remove(name);
+                }
+                if (connDicByConfig.ContainsKey(name))
+                {
+                    connDicByConfig[name] = connectionString;
+                }
+                else
+                {
+                    connDicByConfig.Add(name, connectionString);
+                }
+            }
+            catch
+            {
+
+            }
+            return true;
+        }
+
+        internal static void ClearConfig()
+        {
+            appDicByConfig.Clear();
+            connDicByConfig.Clear();
+        }
+
+        #endregion
+
+
+
+
+        //internal static void Clear()
+        //{
+        //    appConfigs.Clear();
+        //    connConfigs.Clear();
+        //}
+
         /// <summary>
         /// 获取Web.config或App.config的值。
         /// </summary>
@@ -78,16 +194,28 @@ namespace CYQ.Data
         /// </summary>
         public static string GetApp(string key, string defaultValue)
         {
-            // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
             if (string.IsNullOrEmpty(key)) { return defaultValue; }
+
+            try
+            {
+                if (appDicByCode.ContainsKey(key)) { return appDicByCode[key]; }
+                if (appDicByConfig.ContainsKey(key))
+                {
+                    return appDicByConfig[key] ?? defaultValue;
+                }
+            }
+            catch
+            {
+
+            }
+
+
+            #region 读取配置文件
+
             var appSettings = ConfigurationManager.AppSettings;
             string[] items = key.Split(',');
             foreach (string item in items)
             {
-                if (appConfigs.ContainsKey(item))
-                {
-                    return appConfigs[item];
-                }
                 string value = appSettings[item];
                 if (value == null)
                 {
@@ -106,10 +234,29 @@ namespace CYQ.Data
                 }
                 if (!string.IsNullOrEmpty(value))
                 {
+                    try
+                    {
+                        appDicByConfig.Add(key, value);
+                    }
+                    catch
+                    {
+
+
+                    }
                     return value;
                 }
             }
+
+            try
+            {
+                appDicByConfig.Add(key, null);
+            }
+            catch
+            {
+            }
             return defaultValue;
+
+            #endregion
         }
         /// <summary>
         /// 获取Web.config或App.config的数字值（允许值不存在或为空时输出默认值）。
@@ -146,15 +293,25 @@ namespace CYQ.Data
             if (string.IsNullOrEmpty(name))
             {
                 name = DB.DefaultConn;
+                if (string.IsNullOrEmpty(name)) { return ""; }
             }
             if (name.Trim().Contains(" "))
             {
                 return name;
             }
-            if (connConfigs.ContainsKey(name))
+            try
             {
-                return connConfigs[name];
+                if (connDicByCode.ContainsKey(name)) { return connDicByCode[name]; }
+                if (connDicByConfig.ContainsKey(name)) { return connDicByConfig[name]; }
             }
+            catch
+            {
+
+            }
+
+
+            #region 读取配置文件
+
             ConnectionStringSettings conn = ConfigurationManager.ConnectionStrings[name];
             if (conn == null)
             {
@@ -168,65 +325,66 @@ namespace CYQ.Data
                 string connString = conn.ConnectionString;
                 if (name == connString || string.IsNullOrEmpty(connString))//避免误写自己造成死循环。
                 {
-                    return name;
+                    connString = name;
                 }
-
-
-                if (connString.EndsWith(".txt") || connString.EndsWith(".ini") || connString.EndsWith(".json"))
+                else if (connString.EndsWith(".txt") || connString.EndsWith(".ini") || connString.EndsWith(".json"))
                 {
-                    return ConnConfigWatch.Start(name, connString);
+                    connString = ConnConfigWatch.Start(name, connString);
                 }
                 //允许配置文件里加密。
-                if (connString.Length > 32 && connString.Split(';', '=', ' ').Length == 1)
+                else if (connString.Length > 32 && connString.Split(';', '=', ' ').Length == 1)
                 {
                     connString = EncryptHelper.Decrypt(connString);
                 }
                 //启动高可用配置加载方式
                 if (connString.Length < 32 && connString.Split(' ').Length == 1)
                 {
-                    return GetConn(connString);
+                    connString = GetConn(connString);
                 }
                 // 注释以下代码：读取时，配置面不写入缓存字典【修改配置文件不重置通过代码设置的配置项。】
-                //if (!connConfigs.ContainsKey(name))
-                //{
-                //    connConfigs.Add(name, connString);
-                //}
-                return connString;
-            }
-            if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况 txt path={0}
-            {
-                return name;
-            }
-            if (name == "Conn" && name != DB.DefaultConn)
-            {
-                return GetConn(DB.DefaultConn);
-            }
-            return "";
-        }
+                try
+                {
+                    if (!connDicByConfig.ContainsKey(name))
+                    {
+                        connDicByConfig.Add(name, connString);
+                    }
+                }
+                catch
+                {
 
-        /// <summary>
-        /// 添加自定义链接（内存有效，并未写入config文件） value为null时移除缓存
-        /// </summary>
-        /// <param name="name">名称</param>
-        /// <param name="connectionString">链接字符串</param>
-        public static bool SetConn(string name, string connectionString)
-        {
-            if (string.IsNullOrEmpty(name)) { return false; }
-            //if (OnConnChangeEvent != null) { OnConnChangeEvent(name, connectionString); }
-            if (connectionString == null)
-            {
-                return connConfigs.Remove(name);
-            }
-            if (!connConfigs.ContainsKey(name))
-            {
-                connConfigs.Add(name, connectionString);
+                }
+
+                return connString;
             }
             else
             {
-                connConfigs[name] = connectionString;
+                string connString = string.Empty;
+                if (name.Length > 32 && name.Split('=').Length > 3 && name.Contains(";")) //链接字符串很长，没空格的情况 txt path={0}
+                {
+                    connString = name;
+                }
+                if (name == "Conn" && name != DB.DefaultConn)
+                {
+                    connString = GetConn(DB.DefaultConn);
+                }
+
+                try
+                {
+                    if (!connDicByConfig.ContainsKey(name))
+                    {
+                        connDicByConfig.Add(name, connString);
+                    }
+                }
+                catch
+                {
+
+                }
+                return connString;
             }
-            return true;
+            #endregion
         }
+
+
         #endregion
 
 
@@ -978,17 +1136,17 @@ namespace CYQ.Data
             /// 格式：ip:port - password
             /// 配置项：Redis.ServersBak ：192.168.1.9:6379 - 888888
             /// </summary>
-            //public static string ServersBak
-            //{
-            //    get
-            //    {
-            //        return GetApp("Redis.ServersBak", string.Empty);
-            //    }
-            //    set
-            //    {
-            //        SetApp("Redis.ServersBak", value);
-            //    }
-            //}
+            public static string ServersBak
+            {
+                get
+                {
+                    return GetApp("Redis.ServersBak", string.Empty);
+                }
+                set
+                {
+                    SetApp("Redis.ServersBak", value);
+                }
+            }
 
 
             /// <summary>
@@ -1066,17 +1224,17 @@ namespace CYQ.Data
             /// 格式：ip:port
             /// 配置项：MemCache.ServersBak ：192.168.1.9:12121
             /// </summary>
-            //public static string ServersBak
-            //{
-            //    get
-            //    {
-            //        return GetApp("MemCache.ServersBak", string.Empty);
-            //    }
-            //    set
-            //    {
-            //        SetApp("MemCache.ServersBak", value);
-            //    }
-            //}
+            public static string ServersBak
+            {
+                get
+                {
+                    return GetApp("MemCache.ServersBak", string.Empty);
+                }
+                set
+                {
+                    SetApp("MemCache.ServersBak", value);
+                }
+            }
 
             /// <summary>
             /// MemCache Socket 链接建立超时时间（毫秒ms）
@@ -1436,32 +1594,6 @@ namespace CYQ.Data
                 }
             }
         }
-        #endregion
-
-        #region Json 相关配置
-
-        /// <summary>
-        /// JsonHelper 相关配置
-        /// </summary>
-        public static class Json
-        {
-            /// <summary>
-            /// ToJson 输出时是否自动转义特殊符号("\ \r \t等)
-            /// 配置：Json.Escape = Default （可选：Default、Yes、No）
-            /// </summary>
-            public static string Escape
-            {
-                get
-                {
-                    return GetApp("Json.Escape", "Default");
-                }
-                set
-                {
-                    SetApp("Json.Escape", value);
-                }
-            }
-        }
-
         #endregion
 
     }

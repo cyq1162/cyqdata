@@ -20,11 +20,11 @@ namespace CYQ.Data.Cache
         internal RedisCache()
         {
             client = RedisClient.Create(AppConfig.Redis.Servers);
-            //if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
-            //{
-            //    RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
-            //    client.HostServer.HostServerBak = clientBak.HostServer;
-            //}
+            if (!string.IsNullOrEmpty(AppConfig.Redis.ServersBak))
+            {
+                RedisClient clientBak = RedisClient.Create(AppConfig.Redis.ServersBak);
+                client.HostServer.HostServerBak = clientBak.HostServer;
+            }
         }
 
         public override void RefleshConfig(string newConfigValue)

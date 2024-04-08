@@ -11,6 +11,11 @@ namespace CYQ.Data.Tool
     /// </summary>
     public static partial class IOHelper
     {
+        /*
+         * 由于IO的读取使用 Mutex 来锁点范围，因此IO的读写不能使用异步。
+           使用异步，可能导致线程切换，而线程的切换，会导致Mutex 无法正常释放锁。 
+           如果异步时指定后续由原有线程上下文执行，那么该线程切换来去，效率会降低？
+         */
         private static DistributedCache _cache = null;
         private static DistributedCache cache
         {
@@ -102,7 +107,7 @@ namespace CYQ.Data.Tool
             {
                 if (File.Exists(fileName))
                 {
-                    buff = File.ReadAllBytes(fileName);
+                    buff = ReadAllBytesSync(fileName);
                 }
             }
             catch (Exception e)
@@ -200,35 +205,7 @@ namespace CYQ.Data.Tool
                 return false;
             }
 
-            var mutex = GetMutex(fileName);
-
-            try
-            {
-                using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
-                {
-                    //if (!isAppend && fileName.EndsWith(".txt"))
-                    //{
-                    //    //写入bom头
-
-                    //}
-                    writer.Write(text);
-
-                }
-            }
-            catch (Exception err)
-            {
-                if (writeLogOnError)
-                {
-                    Log.Write(err, LogType.Error);
-                }
-                return false;
-            }
-            finally
-            {
-                // 释放互斥锁
-                mutex.ReleaseMutex();
-            }
-            return true;
+            return StreamWriterSync(fileName, text, isAppend, writeLogOnError, encode);
         }
         /// <summary>
         /// 检测文件是否存在

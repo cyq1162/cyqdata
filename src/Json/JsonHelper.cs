@@ -21,13 +21,13 @@ namespace CYQ.Data.Json
     public partial class JsonHelper
     {
 
-        internal static EscapeOp DefaultEscape
-        {
-            get
-            {
-                return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.Json.Escape);
-            }
-        }
+        //internal static EscapeOp DefaultEscape
+        //{
+        //    get
+        //    {
+        //        return (EscapeOp)Enum.Parse(typeof(EscapeOp), AppConfig.Json.Escape);
+        //    }
+        //}
 
         #region 实例属性
 
@@ -356,12 +356,12 @@ namespace CYQ.Data.Json
         /// </summary>
         public override string ToString()
         {
-            int capacity = 100;
-            if (bodyItems.Count > 0)
-            {
-                capacity = bodyItems.Count * bodyItems[0].Length;
-            }
-            StringBuilder sb = new StringBuilder(capacity);//
+            //int capacity = 100;
+            //if (bodyItems.Count > 0)
+            //{
+            //    capacity = bodyItems.Count * bodyItems[0].Length;
+            //}
+            StringBuilder sb = new StringBuilder();//
 
             if (_AddHead)
             {

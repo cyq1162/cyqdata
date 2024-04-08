@@ -215,28 +215,36 @@ namespace CYQ.Data
             #region 分析是Sql或者存储过程
             if (procNameOrSql != null)
             {
+                _procName = procNameOrSql.ToString().Trim();
+                _isProc = _procName.IndexOf(' ') == -1;//不包含空格
                 if (string.IsNullOrEmpty(conn))
                 {
-                    if (procNameOrSql is Enum)
+                    if (procNameOrSql is String)
+                    {
+                        string fixName;
+                        conn = CrossDB.GetConn(_procName, out fixName, conn);
+                    }
+                    else if (procNameOrSql is Enum)
                     {
                         conn = CrossDB.GetConnByEnum(procNameOrSql as Enum);
                     }
-                    if (string.IsNullOrEmpty(conn) && !string.IsNullOrEmpty(ConnName))
-                    {
-                        conn = ConnName;
-                    }
+                    //if (string.IsNullOrEmpty(conn) && !string.IsNullOrEmpty(ConnName))
+                    //{
+                    //    conn = ConnName;
+                    //}
 
-                }
-                if (procNameOrSql is String)
-                {
-                    string fixName;
-                    conn = CrossDB.GetConn(procNameOrSql.ToString(), out fixName, conn);
-                }
-                _procName = procNameOrSql.ToString().Trim();
-                _isProc = _procName.IndexOf(' ') == -1;//不包含空格
-                if (string.IsNullOrEmpty(conn) && dalHelper == null)
-                {
-                    conn = AppConfig.DB.DefaultConn;
+                    if (string.IsNullOrEmpty(conn))// && dalHelper == null
+                    {
+                        if (dalHelper == null)
+                        {
+                            conn = AppConfig.DB.DefaultConn;
+                        }
+                        else
+                        {
+                            //Reset(...)
+                            conn = dalHelper.UsingConnBean.ConnName;
+                        }
+                    }
                 }
             }
             #endregion

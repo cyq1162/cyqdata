@@ -1125,18 +1125,22 @@
 852：新增 HttpPostedFileCreator.Create 用于创建 HttpPostedFile 实例。（因 Taurus RpcProxy 添加）（2024-03-07）【V5.9.2.7】
 853：新增：开放几个和实体转换相关的 Emit 接口。（2024-03-08）
 854：修正：JsonHelper.ToJson 未处理 IgnoreJson 属性标记的问题、其它优化。（2024-03-08）
+-------------------------------------------------------------------------------------
+855：恢复：Redis 和 MemCache 的 ServersBak 备用节点功能。（2024-03-12）【V5.9.2.8】
+856：优化：Redis 或 MemCache 的 节点数<3时，用%取余数代替一致性hash。（2024-03-14）
+857：移除：AppConfig.Json.Escape 配置项。（2024-03-14）
+858：优化：ReflectTool MDictionary 变更：Dictionary，优化掉锁机制。（2024-03-18）
+859：优化：AppConfig  MDictionary 变更：Dictionary，优化掉锁机制。（2024-04-6）
+860：优化：XHtmlAction 显示时去掉默认的<>标签转义。（2024-04-6）
+861：优化：MActionUI Web 自动取值时默认对<>标签进行转义。（2024-04-6）
+862：优化：NetCore 下读写使用异步（IOHelper）。（2024-04-7）
+863：优化：NetCore 下读写使用异步（DAL 数据库读写）。（2024-04-8）
+864：修复：ConverTool.ChangeType<数字类型>("");（2024-04-8）
 
-JsonSplit.To(...)
 
-JsonHelper.FillEntity(...)
+1、MProc 优化，对 Sql 语句不进行跨库查询
+2、优化Excel操作。
+Redis 命令再合并。
 
-MDataRow LoadFrom(...)
-
-DataReader To List
-
-AppConfig 中常量=》AppConst 中。
-
-Init 反射类。
-
-1、文件上传
-2、过滤系统的控制器。
+IO 异步
+数据库 异步。

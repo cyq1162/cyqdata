@@ -22,9 +22,9 @@ namespace CYQ.Data.Tool
         {
             if (value is sbyte) { return value; }
             if (value is Enum) { return (sbyte)(int)value; }
+            sbyte result = 0;
             if (value != null)
             {
-                sbyte result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (sbyte.TryParse(strValue, out result))
                 {
@@ -32,15 +32,15 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
         internal static object ToByte(object value, bool isGenericType)
         {
             if (value is byte) { return value; }
             if (value is Enum) { return (byte)(int)value; }
+            byte result = 0;
             if (value != null)
             {
-                byte result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (byte.TryParse(strValue, out result))
                 {
@@ -48,16 +48,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToUInt16(object value, bool isGenericType)
         {
             if (value is ushort) { return value; }
             if (value is Enum) { return (ushort)(int)value; }
+            ushort result = 0;
             if (value != null)
             {
-                ushort result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (ushort.TryParse(strValue, out result))
                 {
@@ -65,15 +65,15 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
         internal static object ToInt16(object value, bool isGenericType)
         {
             if (value is short) { return value; }
             if (value is Enum) { return (short)(int)value; }
+            short result = 0;
             if (value != null)
             {
-                short result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (short.TryParse(strValue, out result))
                 {
@@ -81,16 +81,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToUInt32(object value, bool isGenericType)
         {
             if (value is uint) { return value; }
             if (value is Enum) { return (uint)value; }
+            uint result = 0;
             if (value != null)
             {
-                uint result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (uint.TryParse(strValue, out result))
                 {
@@ -98,16 +98,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToInt32(object value, bool isGenericType)
         {
             if (value is int) { return value; }
             if (value is Enum) { return (int)value; }
+            int result = 0;
             if (value != null)
             {
-                int result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (int.TryParse(strValue, out result))
                 {
@@ -115,16 +115,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToUInt64(object value, bool isGenericType)
         {
             if (value is ulong) { return value; }
             if (value is Enum) { return (ulong)(int)value; }
+            ulong result = 0;
             if (value != null)
             {
-                ulong result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (ulong.TryParse(strValue, out result))
                 {
@@ -132,15 +132,15 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
         internal static object ToInt64(object value, bool isGenericType)
         {
             if (value is long) { return value; }
             if (value is Enum) { return (long)(int)value; }
+            long result = 0;
             if (value != null)
             {
-                long result = 0;
                 string strValue = Convert.ToString(value).Split('.')[0];
                 if (long.TryParse(strValue, out result))
                 {
@@ -148,16 +148,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToSingle(object value, bool isGenericType)
         {
             if (value is float) { return value; }
             if (value is Enum) { return (float)(int)value; }
+            float result = 0;
             if (value != null)
             {
-                float result = 0;
                 string strValue = Convert.ToString(value);
                 if (float.TryParse(strValue, out result))
                 {
@@ -174,15 +174,15 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
         internal static object ToDouble(object value, bool isGenericType)
         {
             if (value is double) { return value; }
             if (value is Enum) { return (double)(int)value; }
+            double result = 0;
             if (value != null)
             {
-                double result = 0;
                 string strValue = Convert.ToString(value);
                 if (double.TryParse(strValue, out result))
                 {
@@ -199,16 +199,16 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
 
         internal static object ToDecimal(object value, bool isGenericType)
         {
             if (value is decimal) { return value; }
             if (value is Enum) { return (decimal)(int)value; }
+            decimal result = 0;
             if (value != null)
             {
-                decimal result = 0;
                 string strValue = Convert.ToString(value);
                 if (decimal.TryParse(strValue, out result))
                 {
@@ -216,7 +216,7 @@ namespace CYQ.Data.Tool
                 }
             }
             if (isGenericType) { return null; }
-            return 0;
+            return result;
         }
     }
 }

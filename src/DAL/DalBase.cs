@@ -955,7 +955,7 @@ namespace CYQ.Data
                     {
                         cb = CommandBehavior.Default;//避免事务时第一次拿表结构链接被关闭。
                     }
-                    sdr = _com.ExecuteReader(cb);
+                    sdr = _com.ExecuteReaderSync(cb);
                     if (sdr != null)
                     {
                         RecordsAffected = sdr.RecordsAffected;
@@ -1024,7 +1024,7 @@ namespace CYQ.Data
                         {
                             _com.CommandText = "PRAGMA synchronous=Off;" + _com.CommandText;
                         }
-                        RecordsAffected = _com.ExecuteNonQuery();
+                        RecordsAffected = _com.ExecuteNonQuerySync();
                     }
                 }
                 catch (DbException err)
@@ -1085,7 +1085,7 @@ namespace CYQ.Data
                     }
                     else
                     {
-                        returnValue = _com.ExecuteScalar();
+                        returnValue = _com.ExecuteScalarSync();
                         RecordsAffected = returnValue == null ? 0 : 1;
                     }
                 }

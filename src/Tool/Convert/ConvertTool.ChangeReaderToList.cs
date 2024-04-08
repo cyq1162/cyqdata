@@ -37,7 +37,7 @@ namespace CYQ.Data.Tool
                 if (t.Name == "MDataRow")
                 {
                     return ReaderToListMDataRow<T>(reader);
-                }
+                } 
                 return ReaderToListEntity<T>(reader);
                 //List<T> list = new List<T>();
                 //SetEntityTypeFromReader<T>(reader, list, t);

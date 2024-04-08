@@ -21,11 +21,11 @@ namespace CYQ.Data.Tool
         /// <summary>
         /// 将PropertyInfo[] 改成PropertyInfo List，是因为.NET的CLR会引发内存读写异常（启用IntelliTrace时）
         /// </summary>
-        static MDictionary<string, List<PropertyInfo>> propCache = new MDictionary<string, List<PropertyInfo>>();
-        static MDictionary<string, List<FieldInfo>> fieldCache = new MDictionary<string, List<FieldInfo>>();
-        static MDictionary<string, object[]> attrCache = new MDictionary<string, object[]>();
-        static MDictionary<string, Type[]> argumentCache = new MDictionary<string, Type[]>();
-        static MDictionary<int, bool> attrExistsCache = new MDictionary<int, bool>();
+        static Dictionary<Type, List<PropertyInfo>> propCache = new Dictionary<Type, List<PropertyInfo>>();
+        static Dictionary<Type, List<FieldInfo>> fieldCache = new Dictionary<Type, List<FieldInfo>>();
+        static Dictionary<string, object[]> attrCache = new Dictionary<string, object[]>();
+        static Dictionary<Type, Type[]> argumentCache = new Dictionary<Type, Type[]>();
+        static Dictionary<int, bool> attrExistsCache = new Dictionary<int, bool>();
 
 
 
@@ -41,10 +41,10 @@ namespace CYQ.Data.Tool
             if (t.FullName.StartsWith("System.Diagnostics.")) { return null; }
             if (t.BaseType != null && t.BaseType.Name == "Attribute") { return null; }
             bool isAnonymousType = t.Name.Contains("f__AnonymousType");//忽略匿名类型
-            string key = t.FullName;// t.GUID.ToString();由泛型 XX<T> 引起的如： Ge<A> 和 Ge<B> ,Guid名相同,所以用FullName
-            if (!isAnonymousType && propCache.ContainsKey(key))
+            //string key = t.FullName;// t.GUID.ToString();由泛型 XX<T> 引起的如： Ge<A> 和 Ge<B> ,Guid名相同,所以用FullName
+            if (!isAnonymousType && propCache.ContainsKey(t))
             {
-                return propCache[key];
+                return propCache[t];
             }
 
             bool isInheritOrm = t.BaseType != null && t.BaseType.FullName.StartsWith("CYQ.Data.Orm");
@@ -56,12 +56,12 @@ namespace CYQ.Data.Tool
                 list.AddRange(pInfo);
                 if (!isAnonymousType)
                 {
-                    propCache.Add(key, list);
+                    propCache.Add(t, list);
                 }
             }
-            catch (Exception err)
+            catch// (Exception err)
             {
-                Log.Write(err, LogType.Error);
+                //Log.Write(err, LogType.Error);
             }
             return list;
 
@@ -75,28 +75,26 @@ namespace CYQ.Data.Tool
             if (t.FullName.StartsWith("System.Runtime.")) { return null; }
             if (t.FullName.StartsWith("System.Diagnostics.")) { return null; }
             if (t.BaseType != null && t.BaseType.Name == "Attribute") { return null; }
-            string key = t.GUID.ToString();
-            if (fieldCache.ContainsKey(key))
+            //string key = t.GUID.ToString();
+            if (fieldCache.ContainsKey(t))
             {
-                return fieldCache[key];
+                return fieldCache[t];
             }
-            else
-            {
-                bool isInheritOrm = t.BaseType != null && t.BaseType.FullName.StartsWith("CYQ.Data.Orm");
-                FieldInfo[] pInfo = isInheritOrm ? t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetFields();
-                List<FieldInfo> list = new List<FieldInfo>(pInfo.Length);
-                try
-                {
 
-                    list.AddRange(pInfo);
-                    fieldCache.Set(key, list);
-                }
-                catch (Exception err)
-                {
-                    Log.Write(err, LogType.Error);
-                }
-                return list;
+            bool isInheritOrm = t.BaseType != null && t.BaseType.FullName.StartsWith("CYQ.Data.Orm");
+            FieldInfo[] pInfo = isInheritOrm ? t.GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly) : t.GetFields();
+            List<FieldInfo> list = new List<FieldInfo>(pInfo.Length);
+            try
+            {
+                list.AddRange(pInfo);
+                fieldCache.Add(t, list);
             }
+            catch// (Exception err)
+            {
+                //Log.Write(err, LogType.Error);
+            }
+            return list;
+
         }
 
         /// <summary>
@@ -114,9 +112,9 @@ namespace CYQ.Data.Tool
         {
             argTypes = null;
             string key = t.FullName;
-            if (argumentCache.ContainsKey(key))
+            if (argumentCache.ContainsKey(t))
             {
-                argTypes = argumentCache[key];
+                argTypes = argumentCache[t];
             }
             else
             {
@@ -187,8 +185,15 @@ namespace CYQ.Data.Tool
                     }
                     #endregion
                 }
+                try
+                {
+                    argumentCache.Add(t, argTypes);
+                }
+                catch
+                {
 
-                argumentCache.Set(key, argTypes);
+                }
+
             }
             if (t.IsGenericType)
             {
@@ -245,32 +250,29 @@ namespace CYQ.Data.Tool
             {
                 return attrCache[key];
             }
+            object[] items = null;
+            if (pi != null)
+            {
+                items = searchType == null ? pi.GetCustomAttributes(false) : pi.GetCustomAttributes(searchType, true);
+            }
+            else if (fi != null)
+            {
+                items = searchType == null ? fi.GetCustomAttributes(false) : fi.GetCustomAttributes(searchType, true);
+            }
             else
             {
-                try
-                {
-                    object[] items = null;
-                    if (pi != null)
-                    {
-                        items = searchType == null ? pi.GetCustomAttributes(false) : pi.GetCustomAttributes(searchType, true);
-                    }
-                    else if (fi != null)
-                    {
-                        items = searchType == null ? fi.GetCustomAttributes(false) : fi.GetCustomAttributes(searchType, true);
-                    }
-                    else
-                    {
-                        items = searchType == null ? t.GetCustomAttributes(false) : t.GetCustomAttributes(searchType, true);
-                    }
-                    attrCache.Add(key, items);
-                    return items;
-                }
-                catch (Exception err)
-                {
-                    Log.Write(err, LogType.Error);
-                }
-                return null;
+                items = searchType == null ? t.GetCustomAttributes(false) : t.GetCustomAttributes(searchType, true);
             }
+            try
+            {
+                attrCache.Add(key, items);
+            }
+            catch //(Exception err)
+            {
+                //Log.Write(err, LogType.Error);
+            }
+            return items;
+
         }
         internal static T GetAttr<T>(PropertyInfo pi, FieldInfo fi)
         {
@@ -309,10 +311,24 @@ namespace CYQ.Data.Tool
             object[] items = pi != null ? pi.GetCustomAttributes(searchType, true) : fi.GetCustomAttributes(searchType, true);
             if (items != null && items.Length > 0)
             {
-                attrExistsCache.Add(code, true);
+                try
+                {
+                    attrExistsCache.Add(code, true);
+                }
+                catch
+                {
+
+                }
                 return true;
             }
-            attrExistsCache.Add(code, false);
+            try
+            {
+                attrExistsCache.Add(code, false);
+            }
+            catch
+            {
+
+            }
             return false;
         }
 

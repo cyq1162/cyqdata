@@ -58,7 +58,7 @@ namespace CYQ.Data.Cache
                 typeBit[0] = (byte)type;
 
                 // CheckDB(socket, hash);
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
                 int skipCmd = 0;
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -118,53 +118,49 @@ namespace CYQ.Data.Cache
             {
                 checkKey(key);
             }
+            UseSocket<string> useSocket = delegate (MSocket socket, out bool isNoResponse)
+            {
+                SerializedType type;
+                byte[] bytes;
+                byte[] typeBit = new byte[1];
 
-            string result = hostServer.Execute<string>(hash, "", delegate (MSocket socket, out bool isNoResponse)
-              {
-                  SerializedType type;
-                  byte[] bytes;
-                  byte[] typeBit = new byte[1];
 
+                bytes = Serializer.Serialize(value, out type, compressionThreshold);
+                typeBit[0] = (byte)type;
 
-                  bytes = Serializer.Serialize(value, out type, compressionThreshold);
-                  typeBit[0] = (byte)type;
+                // CheckDB(socket, hash);
+                int db = GetDBIndex(hash);
+                // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
+                int skipCmd = 0;
+                using (RedisCommand cmd = new RedisCommand(socket))
+                {
+                    if (db > -1)
+                    {
+                        cmd.Reset(2, "Select");
+                        cmd.AddKey(db.ToString());
+                        skipCmd++;
+                    }
+                    cmd.Reset(3, command);
+                    cmd.AddKey(key);
+                    cmd.AddValue(typeBit, bytes);
+                    skipCmd++;
 
-                  // CheckDB(socket, hash);
-                  int db = GetDBIndex(socket, hash);
-                  // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
-                  int skipCmd = 0;
-                  using (RedisCommand cmd = new RedisCommand(socket))
-                  {
-                      if (db > -1)
-                      {
-                          cmd.Reset(2, "Select");
-                          cmd.AddKey(db.ToString());
-                          skipCmd++;
-                      }
-                      cmd.Reset(3, command);
-                      cmd.AddKey(key);
-                      cmd.AddValue(typeBit, bytes);
-                      skipCmd++;
+                    if (expirySeconds > 0)
+                    {
+                        cmd.Reset(3, "EXPIRE");
+                        cmd.AddKey(key);
+                        cmd.AddKey(expirySeconds.ToString());
+                        skipCmd++;
+                    }
+                }
+                socket.SkipToEndOfLine(skipCmd - 1);//取最后1次命令的结果
+                string responseText = socket.ReadResponse();
+                isNoResponse = string.IsNullOrEmpty(responseText);
+                return responseText;
 
-                      if (expirySeconds > 0)
-                      {
-                          cmd.Reset(3, "EXPIRE");
-                          cmd.AddKey(key);
-                          cmd.AddKey(expirySeconds.ToString());
-                          skipCmd++;
-                      }
-                  }
-                  socket.SkipToEndOfLine(skipCmd - 1);//取最后1次命令的结果
-                  result = socket.ReadResponse();
-                  isNoResponse = string.IsNullOrEmpty(result);
-                  return result;
-
-              });
+            };
+            string result = hostServer.Execute<string>(hash, "", useSocket);
             bool ret = result == "+OK" || result == ":1";
-            //if (!ret)
-            //{
-
-            //}
             return ret;
         }
 
@@ -181,7 +177,7 @@ namespace CYQ.Data.Cache
             }
             object value = hostServer.Execute<object>(hash, null, delegate (MSocket socket, out bool isNoResponse)
             {
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
                 {
                     if (db > -1)
@@ -229,7 +225,7 @@ namespace CYQ.Data.Cache
             }
             return hostServer.Execute<bool>(hash, false, delegate (MSocket socket, out bool isNoResponse)
             {
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 //Console.WriteLine("ContainsKey :" + key + ":" + hash + " db." + db);
                 using (RedisCommand cmd = new RedisCommand(socket))
                 {
@@ -251,11 +247,21 @@ namespace CYQ.Data.Cache
         #endregion
 
         #region Select DB
-        internal int GetDBIndex(MSocket socket, uint hash)
+        internal int GetDBIndex(uint hash)
         {
-            if (AppConfig.Redis.UseDBCount > 1 || AppConfig.Redis.UseDBIndex > 0)
+            int dbIndex = AppConfig.Redis.UseDBIndex;
+            if (dbIndex > 0)
             {
-                return AppConfig.Redis.UseDBIndex > 0 ? AppConfig.Redis.UseDBIndex : (int)(hash % AppConfig.Redis.UseDBCount);//默认分散在16个DB中。
+                return dbIndex;
+            }
+            int dbCount = AppConfig.Redis.UseDBCount;
+
+            if (dbCount > 1)
+            {
+                //再取hash，是因为hash在选节点的时候，可能已经被分过一次。
+                //如果不再取hash，节点进来后，就变成当前节点可能全是单或全是双。
+                int index = Math.Abs(hash.ToString().GetHashCode() % dbCount);
+                return index;//默认分散在16个DB中。
             }
             return -1;
         }
@@ -276,7 +282,7 @@ namespace CYQ.Data.Cache
 
             return hostServer.Execute<bool>(hash, false, delegate (MSocket socket, out bool isNoResponse)
             {
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
                 {
                     if (db > -1)
@@ -429,7 +435,7 @@ namespace CYQ.Data.Cache
                 typeBit[0] = (byte)type;
 
                 // CheckDB(socket, hash);
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
                 int skipCmd = 0;
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -475,7 +481,7 @@ namespace CYQ.Data.Cache
             }
             UseSocket<bool> useSocket = delegate (MSocket socket, out bool isNoResponse)
             {
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 using (RedisCommand cmd = new RedisCommand(socket))
                 {
                     if (db > -1)
@@ -515,7 +521,7 @@ namespace CYQ.Data.Cache
                 typeBit[0] = (byte)type;
 
                 // CheckDB(socket, hash);
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
                 int skipCmd = 0;
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -628,7 +634,7 @@ namespace CYQ.Data.Cache
                 typeBit[0] = (byte)type;
 
                 // CheckDB(socket, hash);
-                int db = GetDBIndex(socket, hash);
+                int db = GetDBIndex(hash);
                 // Console.WriteLine("Set :" + key + ":" + hash + " db." + db);
                 int skipCmd = 0;
                 using (RedisCommand cmd = new RedisCommand(socket))
@@ -699,7 +705,7 @@ namespace CYQ.Data.Cache
                 {
                     hostServer.Execute(node, delegate (MSocket socket)
                     {
-                        int db = GetDBIndex(socket, hash);
+                        int db = GetDBIndex(hash);
                         using (RedisCommand cmd = new RedisCommand(socket))
                         {
                             if (db > -1)

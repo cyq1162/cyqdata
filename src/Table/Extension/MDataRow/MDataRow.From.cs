@@ -197,7 +197,7 @@ namespace CYQ.Data.Table
 
         public void LoadFrom(string json)
         {
-            LoadFrom(json, JsonHelper.DefaultEscape);
+            LoadFrom(json, EscapeOp.No);
         }
         /// <summary>
         /// 从json里加载值

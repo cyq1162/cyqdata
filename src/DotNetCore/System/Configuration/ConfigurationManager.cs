@@ -47,7 +47,7 @@ namespace System.Configuration
             settings = JsonHelper.Split(appSettingJson);
             _AppSettings.Clear();
             _ConnectionStrings.Clear();
-            //  AppConfig.Clear();通过代码设置的数据，不随配置文件修改而改变。
+            AppConfig.ClearConfig();
             ConnBean.Clear();
             ConnObject.Clear();
             InitAddtionalConfigFiles();//加载额外的附加配置。

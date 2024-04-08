@@ -52,7 +52,23 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 备份的Socket池，如果某主机挂了，在配置了备份的情况下，会由备份Socket池提供服务。
         /// </summary>
-        // public HostNode HostNodeBak;
+        public HostNode HostNodeBak
+        {
+            get
+            {
+                if (hostServer.HostServerBak != null)
+                {
+                    //设定备份主机
+                    int hostCount = hostServer.HostServerBak.HostList.Count;
+                    if (hostCount > 0)
+                    {
+                        int index = Math.Abs(Host.GetHashCode() % hostCount);
+                        return hostServer.HostServerBak.HostList[index];
+                    }
+                }
+                return null;
+            }
+        }
         /// <summary>
         /// Socket的挂科时间。
         /// </summary>
@@ -165,19 +181,20 @@ namespace CYQ.Data.Cache
         /// </summary>
         internal MSocket Acquire()
         {
-            if (IsEndPointDead) { return null; }
             //If we know the endpoint is dead, check if it is time for a retry, otherwise return null.
+            if (IsEndPointDead)
+            {
+                //检测当前是否挂科，由备份服务器提供服务//如果是(15分钟内)， && socketDeadTime.AddMinutes(15) >= DateTime.Now
+                if (HostNodeBak != null)
+                {
+                    return HostNodeBak.Acquire();
+                }
+                return null;
+            }
 
-            //检测当前是否挂科，如果是(15分钟内)，由备份服务器提供服务
-            //if (socketDeadTime.AddMinutes(15) >= DateTime.Now && HostNodeBak != null)
-            //{
-            //    return HostNodeBak.Acquire();
-            //}
-            //else
-            //{
             Interlocked.Increment(ref Acquired);
 
-            //}
+
             //已经生产超过最大队列值
             MSocket socket = GetFromQueue(0);
             if (socket != null) { return socket; }
@@ -323,7 +340,6 @@ namespace CYQ.Data.Cache
         /// <summary>
         /// 添加故障节点
         /// </summary>
-        /// <param name="hostNode"></param>
         public void AddToDeadPool()
         {
             if (!IsEndPointDead)

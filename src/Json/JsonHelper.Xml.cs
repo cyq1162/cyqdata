@@ -57,7 +57,7 @@ namespace CYQ.Data.Json
 
         public static string ToXml(string json, bool isWithAttr)
         {
-            return ToXml(json, isWithAttr, DefaultEscape);
+            return ToXml(json, isWithAttr, EscapeOp.No);
         }
         public static string ToXml(string json, bool isWithAttr, EscapeOp op)
         {
