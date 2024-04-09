@@ -204,14 +204,14 @@ namespace CYQ.Data
             this.ConnObj = co;
             this.UsingConnBean = co.Master;
             _fac = GetFactory();
+            if (_fac == null)
+            {
+                Error.Throw("Create factory fail!");
+            }
             _con = _fac.CreateConnection();
             try
             {
                 _con.ConnectionString = co.Master.ConnString;
-                //if (DataBaseName.Contains("dm"))
-                //{
-
-                //}
             }
             catch (Exception err)
             {

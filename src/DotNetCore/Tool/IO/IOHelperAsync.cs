@@ -19,13 +19,17 @@ namespace CYQ.Data.Tool
 
         private static bool StreamWriterSync(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode)
         {
-            return StreamWriterSync2(fileName, text, isAppend, writeLogOnError, encode).GetAwaiter().GetResult();
+            var mutex = GetMutex(fileName);
+
+            bool result = StreamWriterSync2(fileName, text, isAppend, writeLogOnError, encode).GetAwaiter().GetResult();
+
+            mutex.ReleaseMutex();
+
+            return result;
         }
 
         private static async Task<bool> StreamWriterSync2(string fileName, string text, bool isAppend, bool writeLogOnError, Encoding encode)
         {
-            var mutex = GetMutex(fileName);
-
             try
             {
                 using (StreamWriter writer = new StreamWriter(fileName, isAppend, encode))
@@ -41,11 +45,7 @@ namespace CYQ.Data.Tool
                 }
                 return false;
             }
-            finally
-            {
-                // 释放互斥锁
-                mutex.ReleaseMutex();
-            }
+
             return true;
         }
 

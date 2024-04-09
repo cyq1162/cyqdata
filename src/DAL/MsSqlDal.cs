@@ -57,7 +57,12 @@ namespace CYQ.Data
         }
         protected override DbProviderFactory GetFactory()
         {
-            return SqlClientFactory.Instance;//发布到Linux 发现为null，查了半天，发现是发布模式问题【可移值，该选项不支持】=》Linux x64
+            var fac = SqlClientFactory.Instance;
+            if (fac == null)
+            {
+                throw new Exception("Error in System.Data.SqlClient.dll : When publishing, the target runtime should choose: Linux-x64");
+            }
+            return fac;//发布到Linux 发现为null，查了半天，发现是发布模式问题【可移值，该选项不支持】=》Linux x64
         }
         protected override bool IsExistsDbName(string dbName)
         {
