@@ -117,11 +117,12 @@ namespace CYQ.Data.Cache
                 stream.Flush();//把这个放前面，性能有很大提升（同时舍弃Redis回发的数据）。
                 stream.Write(bytes, 0, bytes.Length);//有异常直接往上抛。
                 //IAsyncResult result = stream.BeginWrite(bytes, 0, bytes.Length, null, null);
+                //result.AsyncWaitHandle.WaitOne(3000);
+                ////if ()
+                ////{
+                ////    stream.EndWrite(result);
+                ////}
                 //stream.EndWrite(result);
-                //if (result.AsyncWaitHandle.WaitOne(3000))
-                //{
-                //    stream.EndWrite(result);
-                //}
             }
         }
         /// <summary>

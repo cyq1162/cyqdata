@@ -29,10 +29,6 @@ namespace CYQ.Data
     {
         public override Dictionary<string, string> GetTables(bool isIgnoreCache)
         {
-            return GetTables();
-        }
-        public override Dictionary<string, string> GetTables()
-        {
             Dictionary<string, string> tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             string[] files = Directory.GetFiles(Con.DataSource, "*.ts");
             if (files.Length == 0)

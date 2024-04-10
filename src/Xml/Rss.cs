@@ -172,7 +172,7 @@ namespace CYQ.Data.Xml
             item.Description = description;
             channel.Items.Add(item);
         }
-        public delegate string SetForeachEventHandler(string text, MDictionary<string, string> values, int rowIndex);
+        public delegate string SetForeachEventHandler(string text, Dictionary<string, string> values, int rowIndex);
         /// <summary>
         ///LoadData（MDataTable）进行映射后，在格式化每一行数据时触发事件
         /// </summary>
@@ -213,14 +213,16 @@ namespace CYQ.Data.Xml
                         item = mapList[k];
                         if (item.TableColumnNames.Length > 0)
                         {
-                            MDictionary<string, string> dic = new MDictionary<string, string>(item.TableColumnNames.Length, StringComparer.OrdinalIgnoreCase);
+                            Dictionary<string, string> dic = new Dictionary<string, string>(item.TableColumnNames.Length, StringComparer.OrdinalIgnoreCase);
                             object[] values = new object[item.TableColumnNames.Length];
                             for (int i = 0; i < item.TableColumnNames.Length; i++)
                             {
                                 string columnName = item.TableColumnNames[i].ToString();
                                 values[i] = row[columnName].Value;
-                                dic.Set(columnName, Convert.ToString(values[i]));
-
+                                if (!dic.ContainsKey(columnName))
+                                {
+                                    dic.Add(columnName, Convert.ToString(values[i]));
+                                }
                             }
                             if (OnForeach != null)
                             {

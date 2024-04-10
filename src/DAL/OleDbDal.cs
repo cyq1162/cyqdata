@@ -70,11 +70,11 @@ namespace CYQ.Data
 
     internal partial class OleDbDal
     {
-        public override Dictionary<string, string> GetTables()
+        public override Dictionary<string, string> GetTables(bool isIgnoreCache)
         {
             return GetSchemaDic("U");
         }
-        public override Dictionary<string, string> GetViews()
+        public override Dictionary<string, string> GetViews(bool isIgnoreCache)
         {
             switch (ConnObj.Master.ConnDataBaseType)
             {

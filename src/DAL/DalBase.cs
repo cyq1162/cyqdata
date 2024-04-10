@@ -76,7 +76,7 @@ namespace CYQ.Data
         {
             get { return DataBaseName; }
         }
-        private static MDictionary<string, string> _VersionCache = new MDictionary<string, string>();
+        private static Dictionary<string, string> _VersionCache = new Dictionary<string, string>();
         private string _Version = string.Empty;
         /// <summary>
         /// 数据库的版本号
@@ -102,7 +102,16 @@ namespace CYQ.Data
                             _Version = _con.ServerVersion;
                             if (!_VersionCache.ContainsKey(ConnName))
                             {
-                                _VersionCache.Set(ConnName, _Version);
+                                try
+                                {
+                                    _VersionCache.Add(ConnName, _Version);
+                                }
+                                catch
+                                {
+
+                                    
+                                }
+                                
                             }
                             if (!IsOpenTrans)//避免把事务给关闭了。
                             {
@@ -246,26 +255,17 @@ namespace CYQ.Data
         }
         protected abstract DbProviderFactory GetFactory();
         #region 拿表、视图、存储过程等元数据。
-        public virtual Dictionary<string, string> GetTables()
-        {
-            return GetSchemaDic(GetUVPSql("U"), "U", false);
-        }
+
         public virtual Dictionary<string, string> GetTables(bool isIgnoreCache)
         {
             return GetSchemaDic(GetUVPSql("U"), "U", isIgnoreCache);
         }
-        public virtual Dictionary<string, string> GetViews()
-        {
-            return GetSchemaDic(GetUVPSql("V"), "V", false);
-        }
+
         public virtual Dictionary<string, string> GetViews(bool isIgnoreCache)
         {
             return GetSchemaDic(GetUVPSql("V"), "V", isIgnoreCache);
         }
-        public virtual Dictionary<string, string> GetProcs()
-        {
-            return GetSchemaDic(GetUVPSql("P"), "P", false);
-        }
+
         public virtual Dictionary<string, string> GetProcs(bool isIgnoreCache)
         {
             return GetSchemaDic(GetUVPSql("P"), "P", isIgnoreCache);
@@ -468,7 +468,7 @@ namespace CYQ.Data
             return UsingConnBean.ConnString.Replace(DataBaseName, dbName);
         }
 
-        static MDictionary<string, bool> dbList = new MDictionary<string, bool>(3);
+        static Dictionary<string, bool> dbList = new Dictionary<string, bool>(3);
         private bool IsExistsDbNameWithCache(string dbName)
         {
             try
@@ -479,7 +479,15 @@ namespace CYQ.Data
                     return dbList[key];
                 }
                 bool result = IsExistsDbName(dbName);
-                dbList.Add(key, result);
+                try
+                {
+                    dbList.Add(key, result);
+                }
+                catch
+                {
+
+                }
+                
                 return result;
             }
             catch

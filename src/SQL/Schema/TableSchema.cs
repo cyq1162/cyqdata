@@ -120,7 +120,7 @@ namespace CYQ.Data.SQL
                             }
                             else
                             {
-                                Dictionary<string, string> tables = helper.GetTables();
+                                Dictionary<string, string> tables = helper.GetTables(false);
                                 if (tables.ContainsKey(noKeywordTableName))
                                 {
                                     mdcs.Description = tables[noKeywordTableName];
@@ -218,7 +218,7 @@ namespace CYQ.Data.SQL
                                     }
                                     else if (dalType == DataBaseType.Sybase)
                                     {
-                                       // tableName = SqlFormat.NotKeyword(tableName);
+                                        // tableName = SqlFormat.NotKeyword(tableName);
                                         sql = GetSybaseColumns();
                                     }
                                     else if (dalType == DataBaseType.PostgreSQL)

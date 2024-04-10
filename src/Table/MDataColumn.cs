@@ -176,7 +176,7 @@ namespace CYQ.Data.Table
         {
             IsNeedRefleshIndex = false;
             if (Count == 0) { return; }
-            MDictionary<string, int> newIndexs = new MDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, int> newIndexs = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < Count; i++)
             {
                 string name = this[i].ColumnName;
