@@ -144,6 +144,7 @@ namespace CYQ.Data.Json
                     c = json[i];
                     if (!cs.IsKeyword(c))//设置关键符号状态。
                     {
+                        //非正常关键字不可能结束，这里应该不会被调用到。
                         if (!cs.jsonStart && !cs.arrayStart)//json结束，又不是数组，则退出。
                         {
                             break;

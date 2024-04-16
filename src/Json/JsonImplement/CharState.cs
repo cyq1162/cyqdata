@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -43,7 +44,10 @@ namespace CYQ.Data.Json
 
         internal bool isError = false;//是否语法错误。
 
-        internal void CheckIsError(char c)//只当成一级处理（因为GetLength会递归到每一个子项处理）
+        /// <summary>
+        /// 只当成一级处理（因为GetLength会递归到每一个子项处理）
+        /// </summary>
+        internal void CheckIsError(char c)
         {
             switch (c)
             {
@@ -91,40 +95,29 @@ namespace CYQ.Data.Json
                 //  break;
                 default: //值开头。。
                     isError = (!jsonStart && !arrayStart) || (keyStart == 0 && valueStart == 0 && keyValueState == 0);//
-                    if (!isError && keyStart < 2)
+                    if (!isError)
                     {
-                        //if ((jsonStart && !arrayStart) && state != 1)
-                        if (jsonStart && keyValueState <= 0)//取名阶段
+                        bool isCheckValue = false;
+                        if (jsonStart)
                         {
-                            //不是引号开头的，只允许字母 {aaa:1}
-                            isError = isStrictMode || (c < 65 || (c > 90 && c < 97) || c > 122);
-                        }
-                        else if (!jsonStart && arrayStart && valueStart < 2)//
-                        {
-                            switch (c)
+                            if (keyValueState < 1 && keyStart < 2)
                             {
-                                case ' ':
-                                case 'n'://null
-                                case 'u':
-                                case 'l':
-                                case 't'://true
-                                case 'r':
-                                case 'e':
-                                case 'f'://false
-                                case 'a':
-                                case 's':
-                                    break;
-                                default:
-                                    //不是引号开头的，只允许数字[1] 空格、null,true,false
-                                    isError = c < 48 || c > 57;
-                                    break;
+                                //不是引号开头的，只允许字母 {aaa:1}
+                                isError = c < 65 || (c > 90 && c < 97) || c > 122;
+                                break;
                             }
-
+                            else if (valueStart == 1)
+                            {
+                                //验证取取值
+                                isCheckValue = true;
+                            }
                         }
-                    }
-                    if (!isError && isStrictMode)
-                    {
-                        if (jsonStart && valueStart == 1)//检测值value:true 或value:false
+                        else if (arrayStart)
+                        {
+                            //验证取取值
+                            isCheckValue = valueStart < 2;
+                        }
+                        if (isCheckValue)
                         {
                             switch (c)
                             {
@@ -166,9 +159,53 @@ namespace CYQ.Data.Json
                                     isError = c < 48 || c > 57;
                                     break;
                             }
+                            //值开头的，只能是：["xxx"] {[{}]
                         }
-                        //值开头的，只能是：["xxx"] {[{}]
                     }
+
+                    //if (!isError && keyStart < 2)
+                    //{
+                    //if ((jsonStart && !arrayStart) && state != 1)
+                    //if (jsonStart)//取名阶段
+                    //{
+                    //    if (keyValueState <= 0)
+                    //    {
+                    //        //不是引号开头的，只允许字母 {aaa:1}
+                    //        isError = isStrictMode || (c < 65 || (c > 90 && c < 97) || c > 122);
+                    //    }
+
+                    //}
+                    //else if (arrayStart)
+                    //{
+                    //    if (valueStart < 2)
+                    //    {
+                    //        switch (c)
+                    //        {
+                    //            case ' ': break;
+                    //            case 'n'://null
+                    //                isError = !(lastChar == ' ' || lastChar == '['); break;
+                    //            case 'u':
+                    //                isError = !(lastChar == 'n' || lastChar == 'r'); break;
+                    //            case 'l':
+                    //                isError = !(lastChar == 'u' || lastChar == 'a' || lastChar == 'l'); break;
+                    //            case 't'://true
+                    //                isError = !(lastChar == ' ' || lastChar == '['); break;
+                    //            case 'r':
+
+                    //            case 'e':
+                    //            case 'f'://false
+                    //            case 'a':
+                    //            case 's':
+                    //                break;
+                    //            default:
+                    //                //不是引号开头的，只允许数字[1] 空格、null,true,false
+                    //                isError = c < 48 || c > 57;
+                    //                break;
+                    //        }
+                    //    }
+                    //}
+                    //}
+
                     break;
             }
             if (isError)
@@ -179,74 +216,103 @@ namespace CYQ.Data.Json
 
         /// <summary>
         /// 设置字符状态(返回true则为关键词，返回false则当为普通字符处理）
+        /// 注意：只当成一级处理（因为GetLength会递归到每一个子项处理），所以条件只要考虑一级。
         /// </summary>
         internal bool IsKeyword(char c)
         {
             bool isKeyword = false;
             switch (c)
             {
-                case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]
+                case '{'://[{ "[{A}]":[{"[{B}]":3,"m":"C"}]}]{}
                     #region 大括号
-                    if (keyStart <= 0 && valueStart <= 0)
+                    if (jsonStart)
                     {
-                        if (jsonStart && keyValueState == 1)
+                        //{"a":{}} 或者 [{"a":{}}]
+                        if (keyValueState == 1 && valueStart < 2)
                         {
+                            isKeyword = true;
                             valueStart = 0;
                             childrenStart = true;
                         }
-                        else
+                    }
+                    else
+                    {
+                        //{} 或者 [{},{}]
+                        if (keyValueState == -1 || (arrayStart && keyValueState == 0 && lastKeywordChar == ','))
                         {
+                            isKeyword = true;
+                            jsonStart = true;
                             keyValueState = 0;
                         }
-                        jsonStart = true;//开始。
-                        isKeyword = true;
                     }
+                    //if (keyStart <= 0 && valueStart <= 0)
+                    //{
+                    //    if (jsonStart && keyValueState == 1)
+                    //    {
+                    //        valueStart = 0;
+                    //        childrenStart = true;
+                    //    }
+                    //    else
+                    //    {
+                    //        keyValueState = 0;
+                    //    }
+                    //    jsonStart = true;//开始。
+                    //    isKeyword = true;
+                    //}
                     #endregion
                     break;
                 case '}':
-                    #region 大括号结束
-                    if (lastChar != '.')
+                    if (jsonStart)
                     {
-                        if (keyStart <= 0 && valueStart < 2)
+                        #region 大括号结束
+                        if (lastChar != '.')
                         {
-                            if (jsonStart)
+                            if (keyStart < 1 && valueStart < 2)
                             {
+                                isKeyword = true;
                                 jsonStart = false;//正常结束。
                                 valueStart = -1;
                                 keyValueState = 0;
                                 setDicValue = true;
                             }
-                            isKeyword = true;
                         }
                     }
                     #endregion
                     break;
                 case '[':
                     #region 中括号开始
-                    if (!jsonStart)
+                    if (jsonStart)
                     {
-                        arrayStart = true;
-                        isKeyword = true;
+                        //{"a":[]}
+                        if (keyValueState == 1 && valueStart < 1)
+                        {
+                            isKeyword = true;
+                            childrenStart = true;
+                        }
                     }
-                    else if (jsonStart && keyValueState == 1 && valueStart < 2)
+                    else
                     {
-                        childrenStart = true;
-                        isKeyword = true;
+                        //[{}]
+                        if (keyValueState == -1)
+                        {
+                            arrayStart = true;
+                            isKeyword = true;
+                        }
                     }
                     #endregion
                     break;
                 case ']':
-
-                    #region 中括号结束
-                    if (lastChar != '.')
+                    if (arrayStart)
                     {
-                        if (!jsonStart && (keyStart <= 0 && valueStart <= 0) || (keyStart == -1 && valueStart == 1))
+                        #region 中括号结束
+                        if (lastChar != '.')
                         {
-                            if (arrayStart)// && !childrenStart
+                            if (!jsonStart && (keyStart < 1 && valueStart < 1) || (keyStart == -1 && valueStart == 1))
                             {
+                                //不支持数组嵌套
                                 arrayStart = false;
+                                isKeyword = true;
                             }
-                            isKeyword = true;
                         }
                     }
                     #endregion
@@ -267,12 +333,12 @@ namespace CYQ.Data.Json
                         }
                         if (keyValueState == 0)//key阶段
                         {
-                            keyStart = (keyStart <= 0 ? (c == '"' ? 3 : 2) : -2);
+                            keyStart = (keyStart < 1 ? (c == '"' ? 3 : 2) : -2);
                             isKeyword = true;
                         }
                         else if (keyValueState == 1)//值阶段
                         {
-                            if (valueStart <= 0)
+                            if (valueStart < 1)
                             {
                                 valueStart = (c == '"' ? 3 : 2);
                                 isKeyword = true;
@@ -307,18 +373,25 @@ namespace CYQ.Data.Json
                     break;
                 case ',':
                     #region 逗号 {"a": [11,"22", ], "Type": 2.}
+                    //{"a":1,"b":"3",...}
                     if (lastChar != '.')
                     {
-                        if (jsonStart && keyStart < 2 && valueStart < 2 && keyValueState == 1)
+                        if (jsonStart)
                         {
-                            keyValueState = 0;
-                            valueStart = 0;
-                            setDicValue = true;
-                            isKeyword = true;
+                            if (keyValueState == 1 && valueStart < 2)// && keyStart < 2 &&  && 
+                            {
+                                keyValueState = 0;
+                                valueStart = 0;
+                                setDicValue = true;
+                                isKeyword = true;
+                            }
                         }
-                        else if (arrayStart && !jsonStart) //[a,b]  [",",33] [{},{}]
+                        else if (arrayStart) //[a,b]  [",",33]
                         {
-                            if ((keyValueState == -1 && valueStart == -1) || (valueStart < 2 && keyValueState == 1))
+                            //[{ },{ }]
+                            //if ()
+                            // || (keyValueState == -1 && valueStart == -1) || (valueStart < 2 && keyValueState == 1)
+                            if (keyValueState == 0)
                             {
                                 valueStart = 0;
                                 isKeyword = true;
@@ -331,7 +404,7 @@ namespace CYQ.Data.Json
                 case '\r':
                 case '\n':
                 case '\t':
-                    if (jsonStart && keyStart <= 1 && valueStart <= 1)
+                    if (jsonStart && keyStart < 2 && valueStart < 2)
                     {
                         isKeyword = true;
                         // return true;//跳过空格。
@@ -343,7 +416,7 @@ namespace CYQ.Data.Json
                 case '-'://-388.8 //负的数字符号
                     if (lastKeywordChar != c && lastKeywordChar != '.')
                     {
-                        if (valueStart <= 1 && ((arrayStart && !jsonStart && keyStart == -1) || (jsonStart && keyValueState == 1 && valueStart <= 0)))
+                        if (valueStart < 2 && ((arrayStart && !jsonStart && keyStart == -1) || (jsonStart && keyValueState == 1 && valueStart < 1)))
                         {
                             //只改状态，不是关键字
                             valueStart = 1;
@@ -376,11 +449,11 @@ namespace CYQ.Data.Json
                     }
                     if (jsonStart)
                     {
-                        if (keyStart <= 0 && keyValueState <= 0)
+                        if (keyStart < 1 && keyValueState < 1)
                         {
                             keyStart = 1;//无引号的
                         }
-                        else if (valueStart <= 0 && keyValueState == 1)
+                        else if (valueStart < 1 && keyValueState == 1)
                         {
                             valueStart = 1;//无引号的
                         }

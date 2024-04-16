@@ -58,7 +58,7 @@ namespace CYQ.Data.Json
                 int count = ((ICollection)obj).Count;
                 if (count > 50)
                 {
-                    int batchSize = Math.Max(20, count / (Environment.ProcessorCount * 2));//按CPU核数量进行分批。
+                    int batchSize = Math.Max(20, count / Environment.ProcessorCount);//按CPU核数量进行分批。
                     var objIEnumerable = obj as IEnumerable;
                     StringBuilder sb = new StringBuilder();
                     sb.Append("[");

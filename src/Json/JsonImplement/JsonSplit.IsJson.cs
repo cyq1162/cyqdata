@@ -47,6 +47,13 @@ namespace CYQ.Data.Json
                         errIndex = i + err;
                         return false;
                     }
+                    else
+                    {
+                        //÷ÿ÷√◊¥Ã¨£¨±‹√‚£∫{\"a\":[]{}}
+                        cs.keyValueState = -1;
+                        cs.keyStart = 0;
+                        cs.valueStart = 0;
+                    }
                     i = i + length - 1;
                 }
                 if (cs.isError)

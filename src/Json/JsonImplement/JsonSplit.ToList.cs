@@ -116,7 +116,7 @@ namespace CYQ.Data.Json
 
             #region 数量较多，多线程分批处理
 
-            int batchSize = Math.Max(20, dicCount / (Environment.ProcessorCount * 2));
+            int batchSize = Math.Max(20, dicCount / Environment.ProcessorCount);
             int batchCount = (dicCount % batchSize) == 0 ? dicCount / batchSize : dicCount / batchSize + 1;//页数
             T[] items = new T[dicCount];
             int i = -1, batchID = 1;
