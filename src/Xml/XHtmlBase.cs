@@ -556,7 +556,7 @@ namespace CYQ.Data.Xml
                 }
                 else if (c == '&')
                 {
-                    info.Append("&amp;");
+                    info.Append("&amp;");//模板引擎会去掉DTD头，因此需要转义掉实体定义。
                     //                    &(逻辑与)  &amp;        
                     //<(小于)    &lt;        
                     //>(大于)    &gt;        
@@ -565,25 +565,25 @@ namespace CYQ.Data.Xml
                 }
                 else
                 {
-                    if (i > 50 && i != text.Length - 1)
-                    {
-                        char nc = text[i + 1];
-                        if (c == '<' && nc != '/' && nc != '!' && !IsEnChar(nc)) // 非英文字母。
-                        {
-                            info.Append("&lt;");
-                            continue;
-                        }
-                    }
+                    //if (i > 50 && i != text.Length - 1)
+                    //{
+                    //    char nc = text[i + 1];
+                    //    if (c == '<' && nc != '/' && nc != '!' && !IsEnChar(nc)) // 非英文字母。
+                    //    {
+                    //        info.Append("&lt;");
+                    //        continue;
+                    //    }
+                    //}
                     info.Append(c);
 
                 }
             }
             return info.ToString();
         }
-        private bool IsEnChar(char c)//英文字母
-        {
-            return (c > 64 && c < 91) || (c > 96 && c < 123);
-        }
+        //private bool IsEnChar(char c)//英文字母
+        //{
+        //    return (c > 64 && c < 91) || (c > 96 && c < 123);
+        //}
         ///// <summary>
         ///// 二次正则替换。
         ///// </summary>
