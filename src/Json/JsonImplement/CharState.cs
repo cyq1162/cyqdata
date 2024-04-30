@@ -331,7 +331,7 @@ namespace CYQ.Data.Json
                         {
                             keyValueState = 1;//如果是数组，只有取值，没有Key，所以直接跳过0
                         }
-                        if (keyValueState == 0)//key阶段
+                        if (keyValueState < 1)//key阶段
                         {
                             keyStart = (keyStart < 1 ? (c == '"' ? 3 : 2) : -2);
                             isKeyword = true;

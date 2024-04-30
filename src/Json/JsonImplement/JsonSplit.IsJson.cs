@@ -36,25 +36,28 @@ namespace CYQ.Data.Json
             CharState cs = new CharState(isStrictMode);
             for (int i = 0; i < json.Length; i++)
             {
-                //char c = ;
-                if (cs.IsKeyword(json[i]) && cs.childrenStart)//…Ë÷√πÿº¸∑˚∫≈◊¥Ã¨°£
+                char c = json[i];
+                if (cs.IsKeyword(c))//…Ë÷√πÿº¸∑˚∫≈◊¥Ã¨°£
                 {
-                    int err;
-                    int length = GetValueLength(isStrictMode, ref json, i, true, out err);
-                    cs.childrenStart = false;
-                    if (err > 0)
+                    if (cs.childrenStart)
                     {
-                        errIndex = i + err;
-                        return false;
+                        int err;
+                        int length = GetValueLength(isStrictMode, ref json, i, true, out err);
+                        cs.childrenStart = false;
+                        if (err > 0)
+                        {
+                            errIndex = i + err;
+                            return false;
+                        }
+                        else
+                        {
+                            //÷ÿ÷√◊¥Ã¨£¨±‹√‚£∫{\"a\":[]{}}
+                            cs.keyValueState = -1;
+                            cs.keyStart = 0;
+                            cs.valueStart = 0;
+                        }
+                        i = i + length - 1;
                     }
-                    else
-                    {
-                        //÷ÿ÷√◊¥Ã¨£¨±‹√‚£∫{\"a\":[]{}}
-                        cs.keyValueState = -1;
-                        cs.keyStart = 0;
-                        cs.valueStart = 0;
-                    }
-                    i = i + length - 1;
                 }
                 if (cs.isError)
                 {

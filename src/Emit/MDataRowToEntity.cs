@@ -112,19 +112,21 @@ namespace CYQ.Data.Emit
             gen.Emit(OpCodes.Ldloc_1);//将索引 1 处的局部变量加载到计算堆栈上。
             gen.Emit(OpCodes.Brfalse, labelContinue); // break out of switch
 
+            if (valueType.Name != "Object")
+            {
+                //-------------新增：o=ConvertTool.ChangeType(o, t);
+                //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
+                gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
+                                                     //下面这句Call，解决在 .net 中抛的异常：无法获取Type值，尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
+                gen.Emit(OpCodes.Call, getTypeFromHandle);
+                gen.Emit(OpCodes.Stloc_2);
 
-            //-------------新增：o=ConvertTool.ChangeType(o, t);
-            //gen.Emit(OpCodes.Nop);//如果修补操作码，则填充空间。 尽管可能消耗处理周期，但未执行任何有意义的操作。
-            gen.Emit(OpCodes.Ldtoken, valueType);//这个卡我卡的有点久。将元数据标记转换为其运行时表示形式，并将其推送到计算堆栈上。
-                                                 //下面这句Call，解决在 .net 中抛的异常：无法获取Type值，尝试读取或写入受保护的内存。这通常指示其他内存已损坏。
-            gen.Emit(OpCodes.Call, getTypeFromHandle);
-            gen.Emit(OpCodes.Stloc_2);
-
-            gen.Emit(OpCodes.Ldloc_1);//o
-            gen.Emit(OpCodes.Ldloc_2);
-            gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
-            gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
-                                       //-------------------------------------------
+                gen.Emit(OpCodes.Ldloc_1);//o
+                gen.Emit(OpCodes.Ldloc_2);
+                gen.Emit(OpCodes.Call, changeType);//Call ChangeType(o,type);=> invoke(o,type) 调用由传递的方法说明符指示的方法。
+                gen.Emit(OpCodes.Stloc_1); // o=GetItemValue(ordinal);
+                                           //-------------------------------------------
+            }
             #region 为属性设置值
             SetValue(gen, pi, fi);
             #endregion
