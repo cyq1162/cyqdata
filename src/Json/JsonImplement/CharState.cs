@@ -333,6 +333,7 @@ namespace CYQ.Data.Json
                         }
                         if (keyValueState < 1)//key阶段
                         {
+                            keyValueState = 0;//如果为-1，赋值
                             keyStart = (keyStart < 1 ? (c == '"' ? 3 : 2) : -2);
                             isKeyword = true;
                         }

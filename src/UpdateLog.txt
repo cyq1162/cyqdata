@@ -1141,7 +1141,7 @@
 867：优化：MDictionary 非必要使用的场景转 Dictionary。（2024-04-10）
 868：优化：JsonHelper IsJson 检测。（2024-04-16）【V5.9.3.1】
 869：修复：XHtmlAction 对Html内js的<>符号转义问题。（2024-04-24）【V5.9.3.2】
-870：修复：JsonHelper IsJson 检测。（2024-04-24）【V5.9.3.3】
+870：修复：JsonHelper IsJson 检测。（2024-04-24）【V5.9.3.4】
 
 1、MProc 优化，对 Sql 语句不进行跨库查询
 2、优化Excel操作。
