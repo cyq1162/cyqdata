@@ -498,7 +498,7 @@ namespace CYQ.Data.Table
                     }
                     else
                     {
-                        con = new SqlConnection(conn);
+                        con = new SqlConnection(ConnBean.Create(conn).ConnString);
                         con.Open();
                         if (TranLevel != IsolationLevel.Unspecified)
                         {

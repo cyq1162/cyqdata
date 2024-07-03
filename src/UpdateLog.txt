@@ -1142,6 +1142,7 @@
 868：优化：JsonHelper IsJson 检测。（2024-04-16）【V5.9.3.1】
 869：修复：XHtmlAction 对Html内js的<>符号转义问题。（2024-04-24）【V5.9.3.2】
 870：修复：JsonHelper IsJson 检测。（2024-04-24）【V5.9.3.4】
+871：修复：MDataTable 批处理的链接问题【链接语句带provider时】。（2024-07-03）【V5.9.3.5】
 
 1、MProc 优化，对 Sql 语句不进行跨库查询
 2、优化Excel操作。
