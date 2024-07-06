@@ -789,6 +789,7 @@ namespace CYQ.Data.SQL
                                 return "sql_variant";
                             }
                             if (maxSize > 0 && maxSize <= 16) { maxSize = 255; }//兼容MySql，16的字节存了36的数据
+                            if (maxSize > 8000 && key == "binary") { key = "varbinary";maxSize = -1; }
                             return key + "(" + (maxSize < 0 ? "max" : maxSize.ToString()) + ")";
                         case DataBaseType.PostgreSQL:
                             return "bytea";
@@ -829,6 +830,22 @@ namespace CYQ.Data.SQL
                                     t = "uni" + t.Substring(1);
                                 }
                                 if (t.EndsWith("text")) return t;
+                                /*
+                                    mysql varchar(100)能存的汉字数
+                                    这和mysql的版本有关系：
+                                    4.0版本以下，varchar(100)，代表100字节。UTF8编码下存放汉字时，只能存33个（每个汉字3字节） 。
+
+                                    5.0版本以上，varchar(100)，代表100字符。即：无论存放的是数字、字母还是UTF8汉字（每个汉字3字节），都可以存放100个。
+
+                                nvarchar 1-4000
+                                varchar 1-8000
+                                 * 
+                                 */
+                                if (t == "varchar" && dalFrom == DataBaseType.MySql) 
+                                {
+                                    if (maxSize > 4000) { return "nvarchar(max)"; }
+                                    t = "nvarchar"; 
+                                }
                                 return t + "(" + maxSize + ")";
                             }
                         #endregion
