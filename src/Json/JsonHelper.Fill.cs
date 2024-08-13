@@ -361,7 +361,8 @@ namespace CYQ.Data.Json
         // 可能是数组的值,字符串 或 值类型
         private void FillItem(string item)
         {
-            bodyItems.Add(item);
+            bodyItems.Add("\"" + item + "\"");
+            //bodyItems.Add(item);
         }
         //填充查询字符串
         private void FillQuery(string query)
