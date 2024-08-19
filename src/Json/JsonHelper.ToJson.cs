@@ -58,64 +58,70 @@ namespace CYQ.Data.Json
                 int count = ((ICollection)obj).Count;
                 if (count > 50)
                 {
-                    int batchSize = Math.Max(20, count / Environment.ProcessorCount);//按CPU核数量进行分批。
-                    var objIEnumerable = obj as IEnumerable;
-                    StringBuilder sb = new StringBuilder();
-                    sb.Append("[");
-                    int batchCount = (count % batchSize) == 0 ? count / batchSize : count / batchSize + 1;//页数
-                    string[] items = new string[batchCount];
-                    int i = -1, batchID = 1;
-                    List<object> firstList = new List<object>(batchSize);
-                    ThreadEntity entity = null;
-                    foreach (var o in objIEnumerable)
+                    Type t = obj.GetType();
+                    Type[] argTypes;
+                    int len = ReflectTool.GetArgumentLength(ref t, out argTypes);
+                    if (len == 1)
                     {
-                        i++;
-
-                        //自己处理的条数
-                        if (i < batchSize) { firstList.Add(o); continue; }
-
-                        if (i % batchSize == 0)
+                        int batchSize = Math.Max(20, count / Environment.ProcessorCount);//按CPU核数量进行分批。
+                        var objIEnumerable = obj as IEnumerable;
+                        StringBuilder sb = new StringBuilder();
+                        sb.Append("[");
+                        int batchCount = (count % batchSize) == 0 ? count / batchSize : count / batchSize + 1;//页数
+                        string[] items = new string[batchCount];
+                        int i = -1, batchID = 1;
+                        List<object> firstList = new List<object>(batchSize);
+                        ThreadEntity entity = null;
+                        foreach (var o in objIEnumerable)
                         {
-                            entity = new ThreadEntity();
-                            entity.Items = items;
-                            entity.BatchID = batchID;
-                            entity.Objs = new List<object>(batchSize);
-                            entity.Objs.Add(o);
-                            entity.JsonOp = jsonOp;
-                        }
-                        else
-                        {
-                            entity.Objs.Add(o);
-                        }
-                        if (entity.Objs.Count == batchSize || i == count - 1)
-                        {
-                            // new Thread(new ParameterizedThreadStart(ToInThread)).Start(entity);
-                            ThreadPool.QueueUserWorkItem(new WaitCallback(ToInThread), entity);
-                            batchID++;
-                        }
-
-                    }
-                    //自己处理前100条数据。
-                    string json = ListToJson(firstList, jsonOp);
-                    sb.Append(json);
-                    i = 1;
-                    while (true)
-                    {
-                        if (items[i] != null)
-                        {
-                            json = items[i];
-                            sb.Append(',');
-                            sb.Append(json);
                             i++;
-                        }
 
-                        if (i > items.Length - 1)
-                        {
-                            break;
+                            //自己处理的条数
+                            if (i < batchSize) { firstList.Add(o); continue; }
+
+                            if (i % batchSize == 0)
+                            {
+                                entity = new ThreadEntity();
+                                entity.Items = items;
+                                entity.BatchID = batchID;
+                                entity.Objs = new List<object>(batchSize);
+                                entity.Objs.Add(o);
+                                entity.JsonOp = jsonOp;
+                            }
+                            else
+                            {
+                                entity.Objs.Add(o);
+                            }
+                            if (entity.Objs.Count == batchSize || i == count - 1)
+                            {
+                                // new Thread(new ParameterizedThreadStart(ToInThread)).Start(entity);
+                                ThreadPool.QueueUserWorkItem(new WaitCallback(ToInThread), entity);
+                                batchID++;
+                            }
+
                         }
+                        //自己处理前100条数据。
+                        string json = ListToJson(firstList, jsonOp);
+                        sb.Append(json);
+                        i = 1;
+                        while (true)
+                        {
+                            if (items[i] != null)
+                            {
+                                json = items[i];
+                                sb.Append(',');
+                                sb.Append(json);
+                                i++;
+                            }
+
+                            if (i > items.Length - 1)
+                            {
+                                break;
+                            }
+                        }
+                        sb.Append(']');
+                        return sb.ToString();
                     }
-                    sb.Append(']');
-                    return sb.ToString();
                 }
             }
 
