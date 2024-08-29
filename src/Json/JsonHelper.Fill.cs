@@ -282,6 +282,10 @@ namespace CYQ.Data.Json
                         {
                             if (objType.Name == "Object") { objType = o.GetType(); }
                             FillObject(o, objType);
+                            if(objType.Name.Contains("Dictionary"))
+                            {
+                                AddBr();
+                            }
                         }
                     }
                     else if (len == 2)

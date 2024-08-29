@@ -1146,7 +1146,7 @@
 871：修复：MDataTable 批处理的链接问题【链接语句带provider时】。（2024-07-03）【V5.9.3.5】
 872：优化：DataType 类型转换细节。（2024-07-06）
 873：修复：JsonHelper Fill(String) 转[]数组未加双引号问题。（2024-08-13）【V5.9.3.6】
-874：修复：JsonHelper ToJson（Dictionary) 多线程分拆机制问题。（2024-08-19）
+874：修复：JsonHelper ToJson（Dictionary、List<Dictionary>) 问题。（2024-08-19、2024-08-29）
 
 1、MProc 优化，对 Sql 语句不进行跨库查询
 2、优化Excel操作。
