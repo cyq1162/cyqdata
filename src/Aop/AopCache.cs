@@ -102,7 +102,7 @@ namespace CYQ.Data.Aop
                         }
                         else
                         {
-                            row = MDataRow.CreateFrom(obj);
+                            row = MDataRow.CreateFrom(obj, null, BreakOp.None, EscapeOp.Encode);
                         }
                         aopInfo.Row = row;
                         aopInfo.IsSuccess = true;
@@ -812,7 +812,7 @@ namespace CYQ.Data.Aop
                     sb.Append(action);
                     break;
                 case AopEnum.SelectList:
-                     sb.Append(aopInfo.TableName);
+                    sb.Append(aopInfo.TableName);
                     sb.Append(aopInfo.PageIndex);
                     sb.Append(aopInfo.PageSize);
                     sb.Append(aopInfo.Where);

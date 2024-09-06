@@ -1147,6 +1147,7 @@
 872：优化：DataType 类型转换细节。（2024-07-06）
 873：修复：JsonHelper Fill(String) 转[]数组未加双引号问题。（2024-08-13）【V5.9.3.6】
 874：修复：JsonHelper ToJson（Dictionary、List<Dictionary>) 问题。（2024-08-19、2024-08-29）
+875：修复：MDataTable Fill() 方法在自动缓存时对转义的数据读取时未转义还原的问题。（2024-09-06）
 
 1、MProc 优化，对 Sql 语句不进行跨库查询
 2、优化Excel操作。
