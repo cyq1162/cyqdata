@@ -65,7 +65,13 @@ namespace CYQ.Data
                 }
                 else
                 {
-                    return System.IO.Path.GetFileNameWithoutExtension(_con.DataSource);
+                    string path = _con.DataSource;
+                    if (path.StartsWith("|DataDirectory|"))
+                    {
+                        path = path.Replace("|DataDirectory|", "");
+                    }
+
+                    return System.IO.Path.GetFileNameWithoutExtension(path);
                 }
             }
         }

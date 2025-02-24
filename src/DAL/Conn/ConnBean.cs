@@ -149,10 +149,15 @@ namespace CYQ.Data
         /// <returns></returns>
         public static ConnBean Create(string connNameOrString)
         {
+
             string connString = string.Format(AppConfig.GetConn(connNameOrString), AppConst.WebRootPath);
             if (string.IsNullOrEmpty(connString))
             {
                 return null;
+            }
+            if (connString.Contains("|DataDirectory|"))
+            {
+                connString = connString.Replace("|DataDirectory|", AppConst.WebRootPath + "App_Data");
             }
             //¼ì²â»º´æÖÐÓÐÄ¾ÓÐ
             int hash = connString.GetHashCode();
